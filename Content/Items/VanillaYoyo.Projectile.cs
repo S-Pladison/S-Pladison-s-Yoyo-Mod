@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common;
 using SPYoyoMod.Common.Configs;
+using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.ModLoader;
 

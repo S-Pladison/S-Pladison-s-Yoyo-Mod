@@ -1,6 +1,6 @@
 ﻿using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Utils.DataStructures
 {
     public struct YoyoStatModifiers
     {

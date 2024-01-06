@@ -1,4 +1,5 @@
 ﻿using SPYoyoMod.Common;
+using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using Terraria;
 using Terraria.ID;

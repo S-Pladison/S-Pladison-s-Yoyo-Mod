@@ -113,16 +113,17 @@ namespace SPYoyoMod.Utils
                         }
                     }
 
-                    float segmentRotation = (float)Math.Atan2((double)y, (double)x) - 1.57f;
-                    Color color = Color.White;
+                    var color = Color.White;
                     color.A = (byte)(color.A * 0.40000000596046448);
-                    color = TryApplyingPlayerStringColor(Main.player[proj.owner].stringColor, color);
-                    float num21 = 0.5f;
-                    color = Lighting.GetColor((int)startPos.X / 16, (int)(startPos.Y / 16.0), color);
-                    Color segmentColor = new(color.R * num21, color.G * num21, color.B * num21, color.A * num21);
-                    var segmentPos = new Vector2((float)(startPos.X + TextureAssets.FishingLine.Width() * 0.5), (float)(startPos.Y + TextureAssets.FishingLine.Height() * 0.5)) - new Vector2(6f, 0.0f);
 
-                    drawSegment(counter++, segmentPos, segmentRotation, segmentHeight, segmentColor);
+                    var stringColor = TryApplyingPlayerStringColor(Main.player[proj.owner].stringColor, color);
+                    stringColor = Lighting.GetColor((int)startPos.X / 16, (int)(startPos.Y / 16.0), stringColor);
+
+                    var segmentColor = new Color(stringColor.R * 0.5f, stringColor.G * 0.5f, stringColor.B * 0.5f, stringColor.A * 0.5f);
+                    var segmentPosition = new Vector2((float)(startPos.X + TextureAssets.FishingLine.Width() * 0.5), (float)(startPos.Y + TextureAssets.FishingLine.Height() * 0.5)) - new Vector2(6f, 0.0f);
+                    var segmentRotation = (float)Math.Atan2((double)y, (double)x) - 1.57f;
+
+                    drawSegment(counter++, segmentPosition, segmentRotation, segmentHeight, segmentColor);
                 }
             }
         }

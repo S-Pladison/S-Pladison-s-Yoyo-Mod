@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common;
 using SPYoyoMod.Common.Global.Projectiles;
+using SPYoyoMod.Utils.DataStructures;
 using System.IO;
 using Terraria;
 using Terraria.ID;

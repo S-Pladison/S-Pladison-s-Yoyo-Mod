@@ -1,4 +1,5 @@
 ﻿using MonoMod.Cil;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using Terraria;
 using Terraria.ID;
