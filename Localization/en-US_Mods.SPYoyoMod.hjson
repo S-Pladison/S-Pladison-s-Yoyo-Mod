@@ -7,6 +7,15 @@ Configs: {
 			Tooltip: ""
 		}
 	}
+
+	ClientSideConfig: {
+		DisplayName: Client Side Config
+
+		ReworkedYoyoUseStyle: {
+			Label: Reworked Yoyo Use Style
+			Tooltip: ""
+		}
+	}
 }
 
 Items: {

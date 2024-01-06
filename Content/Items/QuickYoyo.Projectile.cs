@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common;
-using SPYoyoMod.Common.Global.Projectiles;
 using SPYoyoMod.Utils.DataStructures;
 using System.IO;
 using Terraria;
@@ -46,7 +45,7 @@ namespace SPYoyoMod.Content.Items
             Projectile.width = 16;
             Projectile.height = 16;
 
-            Projectile.aiStyle = YoyoGlobalProjectile.YoyoAIStyle;
+            Projectile.aiStyle = 99;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
 
