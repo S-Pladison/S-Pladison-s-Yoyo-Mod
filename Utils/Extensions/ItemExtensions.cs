@@ -8,7 +8,7 @@ namespace SPYoyoMod.Utils.Extensions
         public static bool IsYoyo(this Item item)
         {
             if (ItemID.Sets.Yoyo[item.type]) return true;
-            if (item.shoot < ProjectileID.Count) return false;
+            if (item.shoot <= ProjectileID.None) return false;
 
             return ContentSamples.ProjectilesByType[item.shoot].IsYoyo();
         }
