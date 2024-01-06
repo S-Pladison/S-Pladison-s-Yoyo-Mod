@@ -3,6 +3,7 @@ using MonoMod.Cil;
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Utils.Extensions;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using static Mono.Cecil.Cil.OpCodes;
 
@@ -52,7 +53,7 @@ namespace SPYoyoMod.Common
 
         public override void UseStyle(Item item, Player player, Rectangle heldItemFrame)
         {
-            /*if (!item.useStyle.Equals(ItemUseStyleID.Shoot) || !ModContent.GetInstance<PladConfig>().YoyoCustomUseStyle) return;*/
+            if (!item.useStyle.Equals(ItemUseStyleID.Shoot) || !ModContent.GetInstance<ClientSideConfig>().ReworkedYoyoUseStyle) return;
 
             float rotation = player.itemRotation * player.gravDir - 1.57079637f * player.direction;
             player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, rotation);
