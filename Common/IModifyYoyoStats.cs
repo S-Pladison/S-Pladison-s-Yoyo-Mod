@@ -1,9 +1,9 @@
-﻿using Terraria.ModLoader;
-using Terraria;
-using MonoMod.Cil;
-using Terraria.ID;
-using Terraria.ModLoader.Core;
+﻿using MonoMod.Cil;
 using System;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.Core;
 using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Common

@@ -4,7 +4,7 @@ using System;
 
 namespace SPYoyoMod.Utils.DataStructures
 {
-    public class SpriteBatchSnapshot
+    public struct SpriteBatchSnapshot
     {
         private static readonly Func<SpriteBatch, SpriteSortMode> sortModeFieldAccessor;
         private static readonly Func<SpriteBatch, BlendState> blendStateFieldAccessor;

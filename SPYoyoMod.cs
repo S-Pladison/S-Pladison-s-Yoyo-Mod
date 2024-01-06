@@ -2,7 +2,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod
 {
-	public partial class SPYoyoMod : Mod
-	{
-	}
+    public partial class SPYoyoMod : Mod
+    {
+    }
 }

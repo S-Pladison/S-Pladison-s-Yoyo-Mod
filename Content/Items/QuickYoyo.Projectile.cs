@@ -1,10 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common;
 using SPYoyoMod.Common.Global.Projectiles;
-using System;
 using System.IO;
-using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -15,13 +12,13 @@ namespace SPYoyoMod.Content.Items
     {
         public bool YoyoGloveActivated { get; private set; }
         public bool IsReturning { get => Projectile.ai[0] == -1; }
-        public float ReturningProgress { get; private set; } = 1f; // 1 -> 0
+        public float ReturnToPlayerProgress { get; private set; }
 
         private readonly float lifeTime;
         private readonly float maxRange;
         private readonly float topSpeed;
 
-        private Vector2? positionBeforeReturning;
+        private Vector2? startToReturnPosition;
 
         public YoyoProjectile(float lifeTime, float maxRange, float topSpeed)
         {
@@ -63,13 +60,13 @@ namespace SPYoyoMod.Content.Items
 
             if (IsReturning)
             {
-                if (!positionBeforeReturning.HasValue)
+                if (!startToReturnPosition.HasValue)
                 {
-                    positionBeforeReturning = Projectile.Center;
+                    startToReturnPosition = Projectile.Center;
                 }
 
-                var progress = Vector2.DistanceSquared(owner.Center, Projectile.Center) / Vector2.DistanceSquared(owner.Center, positionBeforeReturning.Value);
-                ReturningProgress = MathHelper.Clamp(progress, 0f, 1f);
+                var progress = 1f - Vector2.DistanceSquared(owner.Center, Projectile.Center) / Vector2.DistanceSquared(owner.Center, startToReturnPosition.Value);
+                ReturnToPlayerProgress = MathHelper.Clamp(progress, 0f, 1f);
             }
 
             return true;

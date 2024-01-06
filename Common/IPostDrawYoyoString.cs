@@ -1,7 +1,7 @@
-﻿using Terraria.ModLoader.Core;
-using Terraria.ModLoader;
+﻿using Microsoft.Xna.Framework;
 using Terraria;
-using Microsoft.Xna.Framework;
+using Terraria.ModLoader;
+using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Common
 {
