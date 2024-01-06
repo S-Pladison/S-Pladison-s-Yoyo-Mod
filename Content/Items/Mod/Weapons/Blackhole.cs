@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Content.Items.Mod
+namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
     [Autoload(false)]
     public class BlackholeYoyoItem : YoyoItem

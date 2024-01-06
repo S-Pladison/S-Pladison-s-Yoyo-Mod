@@ -8,3 +8,10 @@ Configs: {
 		}
 	}
 }
+
+Items: {
+	Bearing: {
+		DisplayName: Bearing
+		Tooltip: ""
+	}
+}

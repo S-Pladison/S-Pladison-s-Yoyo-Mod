@@ -11,7 +11,7 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Content.Items.Vanilla
+namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class ArteryYoyoItem : VanillaYoyoItem
     {
