@@ -1,1 +1,10 @@
+Configs: {
+	ServerSideConfig: {
+		DisplayName: Server Side Config
 
+		ReworkedVanillaYoyos: {
+			Label: Reworked Vanilla Yoyos
+			Tooltip: ""
+		}
+	}
+}

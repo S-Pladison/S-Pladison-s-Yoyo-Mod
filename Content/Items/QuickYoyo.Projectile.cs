@@ -121,7 +121,6 @@ namespace SPYoyoMod.Content.Items
 
         public virtual void OnActivateYoyoGlove() { }
         public virtual void ModifyYoyoStats(ref YoyoStatModifiers statModifiers) { }
-        public virtual void ModifyYoyoMaximumRange(ref float maxRange) { }
         public virtual void PostDrawYoyoString(Vector2 mountedCenter) { }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common;
+using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,26 +13,24 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla
 {
-    public class ArteryYoyoItem : GlobalItem
+    public class ArteryYoyoItem : VanillaYoyoItem
     {
-        public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type.Equals(ItemID.CrimsonYoyo); }
+        public ArteryYoyoItem() : base(yoyoType: ItemID.CrimsonYoyo) { }
     }
 
-    public class ArteryYoyoProjectile : GlobalProjectile, IModifyYoyoStats, IPostDrawYoyoString
+    public class ArteryYoyoProjectile : VanillaYoyoProjectile
     {
-        public override bool AppliesToEntity(Projectile proj, bool lateInstantiation) { return proj.type.Equals(ProjectileID.CrimsonYoyo); }
+        public ArteryYoyoProjectile() : base(yoyoType: ProjectileID.CrimsonYoyo) { }
 
-        public void ModifyYoyoStats(Projectile _, ref YoyoStatModifiers statModifiers)
-        {
-            if (Main.dayTime) return;
-
-            statModifiers.LifeTime += 2f;
-            statModifiers.MaxRange += 2f;
-        }
-
-        public void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
             //Main.spriteBatch.Draw(TextureAssets.Sun.Value, proj.Center - Main.screenPosition, Color.White);
+
+            DrawUtils.DrawYoyoString(proj, mountedCenter, (index, position, rotation, height, color) =>
+            {
+                Main.spriteBatch.Draw(TextureAssets.FishingLine.Value, position - Main.screenPosition, new Rectangle(0, 0, TextureAssets.FishingLine.Width(), (int)height), Color.Red, rotation, Vector2.Zero, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0f);
+                //Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, position - Main.screenPosition, new Rectangle(0, 0, 1, 1), Color.Red, rotation, Vector2.Zero, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0f);
+            });
         }
     }
 }
