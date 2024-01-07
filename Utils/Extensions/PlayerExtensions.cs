@@ -1,4 +1,5 @@
 ﻿using Terraria;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils.Extensions
 {
@@ -13,5 +14,11 @@ namespace SPYoyoMod.Utils.Extensions
 
             return false;
         }
+
+        public static int OwnedProjectileCounts(this Player player, int projectileType)
+            => player.ownedProjectileCounts[projectileType];
+
+        public static int OwnedProjectileCounts<T>(this Player player) where T : ModProjectile
+            => player.ownedProjectileCounts[ModContent.ProjectileType<T>()];
     }
 }
