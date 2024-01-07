@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Common;
+﻿using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using Terraria;
@@ -22,7 +22,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
-    public class BearingGlobalProjectile : GlobalProjectile, IModifyYoyoStats
+    public class BearingGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
     {
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation) { return proj.IsYoyo(); }
 

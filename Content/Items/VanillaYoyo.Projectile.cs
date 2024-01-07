@@ -1,13 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
-using SPYoyoMod.Common;
 using SPYoyoMod.Common.Configs;
+using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items
 {
-    public abstract class VanillaYoyoProjectile : GlobalProjectile, IModifyYoyoStats, IPostDrawYoyoString
+    public abstract class VanillaYoyoProjectile : GlobalProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
         private readonly int yoyoType;
 

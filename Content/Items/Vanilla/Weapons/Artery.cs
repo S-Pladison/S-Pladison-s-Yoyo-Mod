@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SPYoyoMod.Common;
+using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.GameContent;
@@ -13,7 +13,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public ArteryYoyoItem() : base(yoyoType: ItemID.CrimsonYoyo) { }
     }
 
-    public class ArteryYoyoProjectile : VanillaYoyoProjectile, IPostDrawPixelatedProjectile
+    public class ArteryYoyoProjectile : VanillaYoyoProjectile, IDrawDistortionProjectile
     {
         public ArteryYoyoProjectile() : base(yoyoType: ProjectileID.CrimsonYoyo) { }
 
@@ -25,9 +25,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             });
         }
 
-        public void PostDrawPixelated(Projectile proj)
+        public void DrawDistortion()
         {
-            Main.spriteBatch.Draw(TextureAssets.Sun2.Value, proj.Center - Main.screenPosition, null, Color.White, MathHelper.PiOver4, TextureAssets.Sun2.Size() * 0.5f, 1f, SpriteEffects.None, 0);
+            // ...
         }
     }
 }

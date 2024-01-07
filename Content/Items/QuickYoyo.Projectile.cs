@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using SPYoyoMod.Common;
+using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
 using System.IO;
 using Terraria;
@@ -8,7 +8,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items
 {
-    public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStats, IPostDrawYoyoString
+    public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
         public bool YoyoGloveActivated { get; private set; }
         public bool IsReturning { get => Projectile.ai[0] == -1; }
@@ -97,12 +97,12 @@ namespace SPYoyoMod.Content.Items
             YoyoReceiveExtraAI(reader);
         }
 
-        void IModifyYoyoStats.ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
+        void IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
             ModifyYoyoStats(ref statModifiers);
         }
 
-        void IPostDrawYoyoString.PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        void IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
             PostDrawYoyoString(mountedCenter);
         }

@@ -7,15 +7,15 @@ using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 using static Mono.Cecil.Cil.OpCodes;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Interfaces
 {
-    public interface IModifyYoyoStats
+    public interface IModifyYoyoStatsProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook;
 
-        static IModifyYoyoStats()
+        static IModifyYoyoStatsProjectile()
         {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IModifyYoyoStats).GetMethod(nameof(ModifyYoyoStats))));
+            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IModifyYoyoStatsProjectile).GetMethod(nameof(ModifyYoyoStats))));
         }
 
         void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers);
@@ -36,9 +36,9 @@ namespace SPYoyoMod.Common
                     {
                         currentStatModifiers = YoyoStatModifiers.Default;
 
-                        (proj.ModProjectile as IModifyYoyoStats)?.ModifyYoyoStats(proj, ref currentStatModifiers);
+                        (proj.ModProjectile as IModifyYoyoStatsProjectile)?.ModifyYoyoStats(proj, ref currentStatModifiers);
 
-                        foreach (IModifyYoyoStats g in Hook.Enumerate(proj))
+                        foreach (IModifyYoyoStatsProjectile g in Hook.Enumerate(proj))
                         {
                             g.ModifyYoyoStats(proj, ref currentStatModifiers);
                         }

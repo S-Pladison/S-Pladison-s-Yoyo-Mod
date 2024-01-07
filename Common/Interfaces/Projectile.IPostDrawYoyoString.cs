@@ -3,15 +3,15 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Interfaces
 {
-    public interface IPostDrawYoyoString
+    public interface IPostDrawYoyoStringProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook;
 
-        static IPostDrawYoyoString()
+        static IPostDrawYoyoStringProjectile()
         {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPostDrawYoyoString).GetMethod(nameof(PostDrawYoyoString))));
+            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPostDrawYoyoStringProjectile).GetMethod(nameof(PostDrawYoyoString))));
         }
 
         void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter);
@@ -24,9 +24,9 @@ namespace SPYoyoMod.Common
                 {
                     orig(main, proj, mountedCenter);
 
-                    (proj.ModProjectile as IPostDrawYoyoString)?.PostDrawYoyoString(proj, mountedCenter);
+                    (proj.ModProjectile as IPostDrawYoyoStringProjectile)?.PostDrawYoyoString(proj, mountedCenter);
 
-                    foreach (IPostDrawYoyoString g in Hook.Enumerate(proj))
+                    foreach (IPostDrawYoyoStringProjectile g in Hook.Enumerate(proj))
                     {
                         g.PostDrawYoyoString(proj, mountedCenter);
                     }

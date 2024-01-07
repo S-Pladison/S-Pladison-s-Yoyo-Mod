@@ -23,11 +23,11 @@ namespace SPYoyoMod.Common.RenderTargets
                 var device = Main.graphics.GraphicsDevice;
                 var targets = device.GetRenderTargets();
 
-                foreach (var screenTarget in contentThatNeedsRenderTargets)
+                foreach (var content in contentThatNeedsRenderTargets)
                 {
-                    if (!screenTarget.Active) continue;
+                    if (!content.Active) continue;
 
-                    screenTarget.Render(device);
+                    content.Render(device);
                 }
 
                 device.SetRenderTargets(targets);
@@ -40,9 +40,9 @@ namespace SPYoyoMod.Common.RenderTargets
             contentThatNeedsRenderTargets = null;
         }
 
-        internal static void Register(RenderTargetContent screenTarget)
+        internal static void Register(RenderTargetContent content)
         {
-            contentThatNeedsRenderTargets.Add(screenTarget);
+            contentThatNeedsRenderTargets.Add(content);
         }
     }
 }

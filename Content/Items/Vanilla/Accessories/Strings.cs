@@ -1,5 +1,5 @@
 ﻿using MonoMod.Cil;
-using SPYoyoMod.Common;
+using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.ID;
@@ -13,7 +13,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
         public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
     }
 
-    public class StringsGlobalProjectile : GlobalProjectile, IModifyYoyoStats
+    public class StringsGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
     {
         public override void Load()
         {

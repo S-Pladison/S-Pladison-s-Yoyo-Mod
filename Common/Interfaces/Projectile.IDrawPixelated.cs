@@ -5,7 +5,7 @@ using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Interfaces
 {
     public interface IDrawPixelatedProjectile : IPreDrawPixelatedProjectile, IPostDrawPixelatedProjectile { }
 

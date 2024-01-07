@@ -12,7 +12,7 @@ namespace SPYoyoMod.Common.RenderTargets
         public virtual Color ClearColor { get => Color.Transparent; }
 
         private RenderTarget2D renderTarget;
-        private bool wasPrepared;
+        private bool wasRendered;
 
         public abstract void DrawToTarget();
 
@@ -25,12 +25,12 @@ namespace SPYoyoMod.Common.RenderTargets
 
             DrawToTarget();
 
-            wasPrepared = true;
+            wasRendered = true;
         }
 
         public bool TryGetRenderTarget(out RenderTarget2D renderTarget)
         {
-            if (!wasPrepared)
+            if (!wasRendered)
             {
                 renderTarget = null;
                 return false;
@@ -53,7 +53,7 @@ namespace SPYoyoMod.Common.RenderTargets
                 && renderTarget.Width == Size.X
                 && renderTarget.Height == Size.Y) return;
 
-            wasPrepared = false;
+            wasRendered = false;
             renderTarget = new(device, Size.X, Size.Y, false, device.PresentationParameters.BackBufferFormat, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
         }
     }
