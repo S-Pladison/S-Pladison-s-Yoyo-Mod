@@ -16,16 +16,6 @@ namespace SPYoyoMod.Common.RenderTargets
 
         public abstract void DrawToTarget();
 
-        public sealed override void Load()
-        {
-            OnLoad();
-        }
-
-        public sealed override void Unload()
-        {
-            OnUnload();
-        }
-
         public void Render(GraphicsDevice device)
         {
             PrepareRenderTarget(device);
@@ -49,9 +39,6 @@ namespace SPYoyoMod.Common.RenderTargets
             renderTarget = this.renderTarget;
             return true;
         }
-
-        protected virtual void OnLoad() { }
-        protected virtual void OnUnload() { }
 
         protected sealed override void Register()
         {

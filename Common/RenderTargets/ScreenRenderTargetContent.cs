@@ -5,6 +5,6 @@ namespace SPYoyoMod.Common.RenderTargets
 {
     public abstract class ScreenRenderTargetContent : RenderTargetContent
     {
-        public override Point Size { get => new(Main.screenWidth, Main.screenHeight); }
+        public sealed override Point Size { get => new(Main.screenWidth, Main.screenHeight); }
     }
 }
