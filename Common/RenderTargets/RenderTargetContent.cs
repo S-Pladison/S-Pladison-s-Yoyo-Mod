@@ -11,7 +11,8 @@ namespace SPYoyoMod.Common.RenderTargets
         public abstract Point Size { get; }
         public virtual Color ClearColor { get => Color.Transparent; }
 
-        private RenderTarget2D renderTarget;
+        protected RenderTarget2D renderTarget;
+
         private bool wasRendered;
 
         public abstract void DrawToTarget();

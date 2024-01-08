@@ -28,16 +28,16 @@ namespace SPYoyoMod.Common.Interfaces
 
             public override void Load()
             {
-                On_Main.DrawProjectiles += (orig, main) =>
+                On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
                 {
-                    if (TryGetRenderTarget(out RenderTarget2D target))
+                    if (projCache == Main.instance.DrawCacheProjsBehindProjectiles && TryGetRenderTarget(out RenderTarget2D target))
                     {
                         Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
                         Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
                         Main.spriteBatch.End();
                     }
 
-                    orig(main);
+                    orig(main, projCache, startSpriteBatch);
                 };
             }
 
