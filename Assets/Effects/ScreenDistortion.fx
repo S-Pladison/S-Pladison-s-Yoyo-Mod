@@ -19,12 +19,11 @@ float2 uZoom;
 
 float4 ScreenDistortion(float2 coords : TEXCOORD0) : COLOR0
 {
-    float4 screenColor = tex2D(uImage0, coords);
     float4 distortionColor = tex2D(uImage1, coords);
 
-    if (!any(distortionColor)) return screenColor;
+    if (!any(distortionColor)) return tex2D(uImage0, coords);
     
-    float2 offset = float2(distortionColor.r - 0.5, distortionColor.g - 0.5) * distortionColor.b * 0.025;
+    float2 offset = float2(distortionColor.r - 0.5, distortionColor.g - 0.5) * distortionColor.b * 0.0225;
 
     return tex2D(uImage0, coords + offset);
 }
