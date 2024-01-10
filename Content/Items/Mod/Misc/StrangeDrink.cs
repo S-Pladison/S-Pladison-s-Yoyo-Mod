@@ -87,7 +87,7 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
 
                 var player = Main.player[Main.myPlayer];
 
-                if (player.talkNPC < 0 || !Main.npc[player.talkNPC].type.Equals(NPCID.Nurse) || !Main.LocalPlayer.HasItem(GiftForNurseType)) return;
+                if (!IsPlayerTalksWithNurse(player) || !player.HasItem(GiftForNurseType)) return;
 
                 button2 = GiftButtonText.Value;
             });
@@ -99,17 +99,35 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
 
             MonoModHooks.Add(onChatButtonClickedMethodInfo, (orig_OnChatButtonClickedMethod orig, bool firstButton) =>
             {
-                if (firstButton) return;
+                var player = Main.LocalPlayer;
 
-                var slotIndex = Main.LocalPlayer.FindItem(GiftForNurseType);
+                if (!IsPlayerTalksWithNurse(player) || firstButton)
+                {
+                    orig(firstButton);
+                    return;
+                }
+
+                var slotIndex = player.FindItem(GiftForNurseType);
                 var hasGiftForNurse = slotIndex >= 0;
 
-                if (!hasGiftForNurse) return;
+                if (!hasGiftForNurse)
+                {
+                    orig(firstButton);
+                    return;
+                }
 
                 Main.npcChatText = GiftDialogueText.Value;
-                Main.LocalPlayer.inventory[slotIndex].TurnToAir();
-                Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_GiftOrReward(), GiftForPlayerType);
+
+                player.inventory[slotIndex].TurnToAir();
+                player.QuickSpawnItem(Main.LocalPlayer.GetSource_GiftOrReward(), GiftForPlayerType);
+
+                orig(firstButton);
             });
+        }
+
+        public static bool IsPlayerTalksWithNurse(Player player)
+        {
+            return player.talkNPC >= 0 && Main.npc[player.talkNPC].type.Equals(NPCID.Nurse);
         }
 
         private delegate void orig_SetChatButtonsMethod(ref string button, ref string button2);
