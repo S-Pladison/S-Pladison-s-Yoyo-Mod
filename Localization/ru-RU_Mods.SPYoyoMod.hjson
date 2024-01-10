@@ -20,7 +20,7 @@ Configs: {
 
 Items: {
 	BearingItem: {
-		DisplayName: Bearing
+		DisplayName: Подшипник
 		Tooltip: ""
 	}
 
@@ -32,19 +32,19 @@ Items: {
 	StrangeDrinkItem: {
 		Tooltip:
 			'''
-			Can be gifted to a nurse
-			'Surprisingly, it smells really good'
+			Можно подарить медсестре
+			«Удивительно, но пахнет он восхитительно»
 			'''
-		DisplayName: Strange Drink
+		DisplayName: Странный напиток
 	}
 
 	MyocardialInfarctionItem: {
-		Tooltip: ""
-		DisplayName: Myocardial Infarction
+		// Tooltip: ""
+		// DisplayName: Myocardial Infarction
 	}
 }
 
-NPCs.NurseNPC.GiftButton: Gift
+NPCs.NurseNPC.GiftButton: Подарок
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
 	Ah.. it wasn’t necessary, thank you. Take this in exchange. I think, it will be more worth to you than me.
@@ -54,5 +54,5 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 
 Projectiles: {
 	SiriusProjectile.DisplayName: Sirius Projectile
-	MyocardialInfarctionProjectile.DisplayName: Myocardial Infarction Projectile
+	// MyocardialInfarctionProjectile.DisplayName: Myocardial Infarction Projectile
 }

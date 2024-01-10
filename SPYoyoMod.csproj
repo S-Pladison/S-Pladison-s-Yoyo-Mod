@@ -14,6 +14,10 @@
     <None Remove="Assets\BellowingThunder.png" />
     <None Remove="Assets\Textures\BellowingThunderProjectile.png" />
     <None Remove="Assets\Textures\Items\Bearing.png" />
+    <None Remove="Assets\Textures\Items\MyocardialInfarction.png" />
+    <None Remove="Assets\Textures\Items\StrangeDrink.png" />
+    <None Remove="Assets\Textures\Projectiles\MyocardialInfarction.png" />
+    <None Remove="Localization\ru-RU_Mods.SPYoyoMod.hjson" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="tModLoader.CodeAssist" Version="0.1.*" />
