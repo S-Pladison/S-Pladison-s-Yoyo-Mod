@@ -19,59 +19,62 @@ namespace SPYoyoMod.Common.Interfaces
 
         void DrawDistortion(Projectile proj);
 
-        #region Implementation
-        private class DrawDistortionFilterSystem : ModSystem
+        public static void Invoke()
         {
-            public const string EffectName = "ScreenDistortion";
-            public const string FilterName = $"{nameof(SPYoyoMod)}:{EffectName}";
-
-            public override void Load()
+            foreach (var proj in Main.projectile)
             {
-                var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + EffectName, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
-                var refEffect = new Ref<Effect>(effect);
-                var screenShaderData = new ScreenShaderData(refEffect, EffectName + "Pass");
+                if (!proj.active) continue;
 
-                Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
-            }
+                (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
 
-            public override void OnWorldLoad()
-            {
-                Filters.Scene.Activate(FilterName);
-            }
-
-            public override void OnWorldUnload()
-            {
-                Filters.Scene.Deactivate(FilterName);
-            }
-        }
-
-        private class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
-        {
-            public override bool Active { get => Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive(); }
-
-            public override void DrawToTarget()
-            {
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-                foreach (var proj in Main.projectile)
+                foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
                 {
-                    if (!proj.active) continue;
-
-                    (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
-
-                    foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
-                    {
-                        g.DrawDistortion(proj);
-                    }
+                    g.DrawDistortion(proj);
                 }
-
-                Main.spriteBatch.End();
-
-                Main.graphics.GraphicsDevice.SetRenderTarget(null);
-
-                Filters.Scene[DrawDistortionFilterSystem.FilterName].GetShader().UseImage(renderTarget);
             }
         }
-        #endregion
+    }
+
+    public class DrawDistortionFilterSystem : ModSystem
+    {
+        public const string EffectName = "ScreenDistortion";
+        public const string FilterName = $"{nameof(SPYoyoMod)}:{EffectName}";
+
+        public override void Load()
+        {
+            var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + EffectName, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+            var refEffect = new Ref<Effect>(effect);
+            var screenShaderData = new ScreenShaderData(refEffect, EffectName + "Pass");
+
+            Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
+        }
+
+        public override void OnWorldLoad()
+        {
+            Filters.Scene.Activate(FilterName);
+        }
+
+        public override void OnWorldUnload()
+        {
+            Filters.Scene.Deactivate(FilterName);
+        }
+    }
+
+    public class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
+    {
+        public override bool Active { get => Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive(); }
+
+        public override void DrawToTarget()
+        {
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+            IDrawDistortionProjectile.Invoke();
+
+            Main.spriteBatch.End();
+
+            Main.graphics.GraphicsDevice.SetRenderTarget(null);
+
+            Filters.Scene[DrawDistortionFilterSystem.FilterName].GetShader().UseImage(renderTarget);
+        }
     }
 }

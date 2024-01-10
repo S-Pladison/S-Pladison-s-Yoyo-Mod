@@ -20,7 +20,6 @@ namespace SPYoyoMod.Common.Interfaces
 
         void PreDrawPixelated(Projectile proj);
 
-        #region Implementation
         private class PreDrawPixelizationRenderTargetContent : RenderTargetContent
         {
             public override bool Active { get => true; }
@@ -60,7 +59,6 @@ namespace SPYoyoMod.Common.Interfaces
                 Main.spriteBatch.End();
             }
         }
-        #endregion
     }
 
     public interface IPostDrawPixelatedProjectile
@@ -74,7 +72,6 @@ namespace SPYoyoMod.Common.Interfaces
 
         void PostDrawPixelated(Projectile proj);
 
-        #region Implementation
         private class PostDrawPixelizationRenderTargetContent : RenderTargetContent
         {
             public override bool Active { get => true; }
@@ -113,6 +110,5 @@ namespace SPYoyoMod.Common.Interfaces
                 Main.spriteBatch.End();
             }
         }
-        #endregion
     }
 }

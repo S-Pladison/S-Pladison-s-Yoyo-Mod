@@ -41,6 +41,11 @@ namespace SPYoyoMod.Common.RenderTargets
             return true;
         }
 
+        public sealed override void SetupContent()
+        {
+            SetStaticDefaults();
+        }
+
         protected sealed override void Register()
         {
             ModTypeLookup<RenderTargetContent>.Register(this);

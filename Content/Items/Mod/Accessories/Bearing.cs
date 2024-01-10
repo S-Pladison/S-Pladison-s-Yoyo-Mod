@@ -7,9 +7,9 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
-    public class Bearing : ModItem
+    public class BearingItem : ModItem
     {
-        public override string Texture { get => ModAssets.ItemsPath + nameof(Bearing); }
+        public override string Texture { get => ModAssets.ItemsPath + "Bearing"; }
 
         public override void SetDefaults()
         {
@@ -30,7 +30,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var owner = Main.player[proj.owner];
 
-            if (!owner.HasEquipped(ModContent.ItemType<Bearing>())) return;
+            if (!owner.HasEquipped(ModContent.ItemType<BearingItem>())) return;
 
             statModifiers.LifeTime += 0.5f;
         }

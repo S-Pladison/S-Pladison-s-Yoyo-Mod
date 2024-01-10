@@ -1,6 +1,8 @@
 ﻿using MonoMod.Cil;
 using SPYoyoMod.Common.Interfaces;
+using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils.DataStructures;
+using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -8,12 +10,12 @@ using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 {
-    public class StringsGlobalItem : GlobalItem
+    public class StringsItem : GlobalItem
     {
         public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
     }
 
-    public class StringsGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
+    public class StringsProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
     {
         public override void Load()
         {
@@ -43,7 +45,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchAdd(),
                     i => i.MatchStloc(num10Index))) return;
 
-                c.Emit(Ldarg_0);
                 c.Emit(Ldloca, num10Index);
                 c.EmitDelegate<RemoveStringBonusDelegate>(RemoveStringBonus);
             };
@@ -58,11 +59,52 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             statModifiers.MaxRange.Flat += 16 * 3;
         }
 
-        private static void RemoveStringBonus(Projectile proj, ref float length)
+        private static void RemoveStringBonus(ref float length)
         {
             length = (length - 30) / 1.25f;
         }
 
-        private delegate void RemoveStringBonusDelegate(Projectile proj, ref float value);
+        private delegate void RemoveStringBonusDelegate(ref float value);
+    }
+
+    public class StringsThoriumCompatibility : ThoriumCompatibility
+    {
+        public override void Load()
+        {
+            var projectileExtrasTypeInfo = Assembly.GetType("ThoriumMod.Projectiles.ProjectileExtras");
+            var yoyoAIMethodInfo = projectileExtrasTypeInfo?.GetMethod("YoyoAI", BindingFlags.Public | BindingFlags.Static);
+
+            if (yoyoAIMethodInfo is null) return;
+
+            MonoModHooks.Modify(yoyoAIMethodInfo, (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // if (player.yoyoString)
+                // {
+                //     num3 = (float)((double)num3 * 1.25 + 30.0);
+                // }
+
+                int num3Index = -1;
+
+                if (!c.TryGotoNext(MoveType.After,
+                    i => i.MatchLdloc(out num3Index),
+                    i => i.MatchLdcR4(1.25f),
+                    i => i.MatchMul(),
+                    i => i.MatchLdcR4(30f),
+                    i => i.MatchAdd(),
+                    i => i.MatchStloc(num3Index))) return;
+
+                c.Emit(Ldloca, num3Index);
+                c.EmitDelegate<RemoveStringBonusDelegate>(RemoveStringBonus);
+            });
+        }
+
+        private static void RemoveStringBonus(ref float length)
+        {
+            length = (length - 30) / 1.25f;
+        }
+
+        private delegate void RemoveStringBonusDelegate(ref float value);
     }
 }

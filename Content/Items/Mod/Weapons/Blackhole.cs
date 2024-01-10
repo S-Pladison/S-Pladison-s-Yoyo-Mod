@@ -4,16 +4,16 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
     [Autoload(false)]
-    public class BlackholeYoyoItem : YoyoItem
+    public class BlackholeItem : YoyoItem
     {
-        public BlackholeYoyoItem() : base(gamepadExtraRange: 15) { }
+        public BlackholeItem() : base(gamepadExtraRange: 15) { }
 
         public override void YoyoSetDefaults()
         {
             Item.damage = 43;
             Item.knockBack = 2.5f;
 
-            Item.shoot = ModContent.ProjectileType<BlackholeYoyoProjectile>();
+            Item.shoot = ModContent.ProjectileType<BlackholeProjectile>();
 
             Item.rare = ItemRarityID.Lime;
             Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
@@ -21,8 +21,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     }
 
     [Autoload(false)]
-    public class BlackholeYoyoProjectile : YoyoProjectile
+    public class BlackholeProjectile : YoyoProjectile
     {
-        public BlackholeYoyoProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
+        public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
     }
 }

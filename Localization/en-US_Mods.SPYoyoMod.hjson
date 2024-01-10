@@ -23,4 +23,16 @@ Items: {
 		DisplayName: Bearing
 		Tooltip: ""
 	}
+
+	BearingItem: {
+		DisplayName: Bearing Item
+		Tooltip: ""
+	}
+
+	SiriusItem: {
+		DisplayName: Sirius Item
+		Tooltip: ""
+	}
 }
+
+Projectiles.SiriusProjectile.DisplayName: Sirius Projectile
