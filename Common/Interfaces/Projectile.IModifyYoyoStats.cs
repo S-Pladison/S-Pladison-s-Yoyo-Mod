@@ -23,7 +23,7 @@ namespace SPYoyoMod.Common.Interfaces
 
         void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers);
 
-        public static void GetModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
+        public static void GetYoyoStatModifiers(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
             (proj.ModProjectile as IModifyYoyoStatsProjectile)?.ModifyYoyoStats(proj, ref statModifiers);
 
@@ -113,7 +113,7 @@ namespace SPYoyoMod.Common.Interfaces
         {
             statModifiers = YoyoStatModifiers.Default;
 
-            IModifyYoyoStatsProjectile.GetModifyYoyoStats(proj, ref statModifiers);
+            IModifyYoyoStatsProjectile.GetYoyoStatModifiers(proj, ref statModifiers);
         }
 
         public void Unload() { }
@@ -137,7 +137,7 @@ namespace SPYoyoMod.Common.Interfaces
                 var lifeTime = lifeTimeSeconds * 60;
                 ref var proj = ref Main.projectile[projIndex];
 
-                IModifyYoyoStatsProjectile.GetModifyYoyoStats(proj, ref statModifiers);
+                IModifyYoyoStatsProjectile.GetYoyoStatModifiers(proj, ref statModifiers);
                 IModifyYoyoStatsProjectile.ModifyYoyoLifeTime(proj, ref statModifiers, ref lifeTime);
                 IModifyYoyoStatsProjectile.ModifyYoyoMaxRange(proj, ref statModifiers, ref maxRange);
 
