@@ -59,12 +59,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             statModifiers.MaxRange.Flat += 16 * 3;
         }
 
-        private static void RemoveStringBonus(ref float length)
+        public static void RemoveStringBonus(ref float length)
         {
             length = (length - 30) / 1.25f;
         }
 
-        private delegate void RemoveStringBonusDelegate(ref float value);
+        public delegate void RemoveStringBonusDelegate(ref float value);
     }
 
     public class StringsThoriumCompatibility : ThoriumCompatibility
@@ -96,15 +96,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchStloc(num3Index))) return;
 
                 c.Emit(Ldloca, num3Index);
-                c.EmitDelegate<RemoveStringBonusDelegate>(RemoveStringBonus);
+                c.EmitDelegate<StringsProjectile.RemoveStringBonusDelegate>(StringsProjectile.RemoveStringBonus);
             });
         }
-
-        private static void RemoveStringBonus(ref float length)
-        {
-            length = (length - 30) / 1.25f;
-        }
-
-        private delegate void RemoveStringBonusDelegate(ref float value);
     }
 }
