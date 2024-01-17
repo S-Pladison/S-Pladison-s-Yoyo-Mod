@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Terraria;
 using Terraria.GameContent;
@@ -36,7 +37,7 @@ namespace SPYoyoMod.Utils
                 y = proj.position.Y + (float)proj.height * 0.5f - startPos.Y;
             }
 
-            int counter = 0;
+            var segments = new List<Tuple<Vector2, float, float, Color>>();
 
             while (flag1)
             {
@@ -123,12 +124,17 @@ namespace SPYoyoMod.Utils
                     var segmentPosition = new Vector2((float)(startPos.X + TextureAssets.FishingLine.Width() * 0.5), (float)(startPos.Y + TextureAssets.FishingLine.Height() * 0.5)) - new Vector2(6f, 0.0f);
                     var segmentRotation = (float)Math.Atan2((double)y, (double)x) - 1.57f;
 
-                    drawSegment(counter++, segmentPosition, segmentRotation, segmentHeight, segmentColor);
+                    segments.Add(new(segmentPosition, segmentRotation, segmentHeight, segmentColor));
                 }
+            }
+
+            for (int i = 0; i < segments.Count; i++)
+            {
+                drawSegment(segments.Count, i, segments[i].Item1, segments[i].Item2, segments[i].Item3, segments[i].Item4);
             }
         }
 
-        public delegate void DrawYoyoStringSegmentDelegate(int index, Vector2 position, float rotation, float height, Color color);
+        public delegate void DrawYoyoStringSegmentDelegate(int segmentCount, int segmentIndex, Vector2 position, float rotation, float height, Color color);
 
         private static Color TryApplyingPlayerStringColor(int playerStringColor, Color stringColor)
         {

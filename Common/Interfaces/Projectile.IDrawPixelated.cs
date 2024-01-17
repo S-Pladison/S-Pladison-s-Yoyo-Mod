@@ -1,7 +1,4 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using SPYoyoMod.Common.RenderTargets;
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 
@@ -20,43 +17,18 @@ namespace SPYoyoMod.Common.Interfaces
 
         void PreDrawPixelated(Projectile proj);
 
-        private class PreDrawPixelizationRenderTargetContent : RenderTargetContent
+        public static void Invoke()
         {
-            public override bool Active { get => true; }
-            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-
-            public override void Load()
+            foreach (var proj in Main.projectile)
             {
-                On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
+                if (!proj.active) continue;
+
+                (proj.ModProjectile as IPreDrawPixelatedProjectile)?.PreDrawPixelated(proj);
+
+                foreach (IPreDrawPixelatedProjectile g in Hook.Enumerate(proj))
                 {
-                    if (projCache == Main.instance.DrawCacheProjsBehindProjectiles && TryGetRenderTarget(out RenderTarget2D target))
-                    {
-                        Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
-                        Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
-                        Main.spriteBatch.End();
-                    }
-
-                    orig(main, projCache, startSpriteBatch);
-                };
-            }
-
-            public override void DrawToTarget()
-            {
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
-
-                foreach (var proj in Main.projectile)
-                {
-                    if (!proj.active) continue;
-
-                    (proj.ModProjectile as IPreDrawPixelatedProjectile)?.PreDrawPixelated(proj);
-
-                    foreach (IPreDrawPixelatedProjectile g in Hook.Enumerate(proj))
-                    {
-                        g.PreDrawPixelated(proj);
-                    }
+                    g.PreDrawPixelated(proj);
                 }
-
-                Main.spriteBatch.End();
             }
         }
     }
@@ -72,42 +44,18 @@ namespace SPYoyoMod.Common.Interfaces
 
         void PostDrawPixelated(Projectile proj);
 
-        private class PostDrawPixelizationRenderTargetContent : RenderTargetContent
+        public static void Invoke()
         {
-            public override bool Active { get => true; }
-            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-
-            public override void Load()
+            foreach (var proj in Main.projectile)
             {
-                On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
+                if (!proj.active) continue;
+
+                (proj.ModProjectile as IPostDrawPixelatedProjectile)?.PostDrawPixelated(proj);
+
+                foreach (IPostDrawPixelatedProjectile g in Hook.Enumerate(proj))
                 {
-                    orig(main, projCache, startSpriteBatch);
-
-                    if (projCache != Main.instance.DrawCacheProjsOverPlayers || !TryGetRenderTarget(out RenderTarget2D target)) return;
-
-                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
-                    Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
-                    Main.spriteBatch.End();
-                };
-            }
-
-            public override void DrawToTarget()
-            {
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
-
-                foreach (var proj in Main.projectile)
-                {
-                    if (!proj.active) continue;
-
-                    (proj.ModProjectile as IPostDrawPixelatedProjectile)?.PostDrawPixelated(proj);
-
-                    foreach (IPostDrawPixelatedProjectile g in Hook.Enumerate(proj))
-                    {
-                        g.PostDrawPixelated(proj);
-                    }
+                    g.PostDrawPixelated(proj);
                 }
-
-                Main.spriteBatch.End();
             }
         }
     }

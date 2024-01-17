@@ -15,7 +15,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
         public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
     }
 
-    public class StringsProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
+    public class StringsGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
     {
         public override void Load()
         {
@@ -96,7 +96,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchStloc(num3Index))) return;
 
                 c.Emit(Ldloca, num3Index);
-                c.EmitDelegate<StringsProjectile.RemoveStringBonusDelegate>(StringsProjectile.RemoveStringBonus);
+                c.EmitDelegate<StringsGlobalProjectile.RemoveStringBonusDelegate>(StringsGlobalProjectile.RemoveStringBonus);
             });
         }
     }
