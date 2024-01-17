@@ -58,23 +58,13 @@ namespace SPYoyoMod.Common.Renderers
         public bool Loop
         {
             get => innerLoop;
-            set
-            {
-                if (innerLoop == value) return;
-
-                SetLoop(value);
-            }
+            set => SetLoop(value);
         }
 
         public float Width
         {
             get => innerWidth;
-            set
-            {
-                if (innerWidth == value) return;
-
-                SetWidth(value);
-            }
+            set => SetWidth(value);
         }
 
         private readonly PrimitiveRenderer renderer;
@@ -119,6 +109,9 @@ namespace SPYoyoMod.Common.Renderers
 
         public LineRenderer SetWidth(float width)
         {
+            if (innerWidth == width)
+                return this;
+
             innerWidth = width;
             halfWidth = innerWidth / 2f;
 
@@ -128,6 +121,9 @@ namespace SPYoyoMod.Common.Renderers
 
         public LineRenderer SetLoop(bool value)
         {
+            if (innerLoop == value)
+                return this;
+
             innerLoop = value;
 
             RecalculateMesh();

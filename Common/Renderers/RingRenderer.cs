@@ -13,37 +13,19 @@ namespace SPYoyoMod.Common.Renderers
         public Vector2 Position
         {
             get => innerPosition;
-            set
-            {
-                if (innerPosition == value) return;
-
-                lineRenderer.Offset(value - innerPosition);
-                innerPosition = value;
-            }
+            set => SetPosition(value);
         }
 
         public float Thickness
         {
             get => innerThickness;
-            set
-            {
-                if (innerThickness == value) return;
-
-                innerThickness = value;
-                lineRenderer.Width = value;
-            }
+            set => SetThickness(value);
         }
 
         public float Radius
         {
             get => innerRadius;
-            set
-            {
-                if (innerRadius == value) return;
-
-                innerRadius = value;
-                RecalculateMesh();
-            }
+            set => SetRadius(value);
         }
 
         private readonly LineRenderer lineRenderer;
@@ -67,7 +49,31 @@ namespace SPYoyoMod.Common.Renderers
 
         public RingRenderer SetPosition(Vector2 position)
         {
-            Position = position;
+            if (innerPosition == position)
+                return this;
+
+            lineRenderer.Offset(position - innerPosition);
+            innerPosition = position;
+            return this;
+        }
+
+        public RingRenderer SetThickness(float thickness)
+        {
+            if (innerRadius == thickness)
+                return this;
+
+            innerThickness = thickness;
+            lineRenderer.SetWidth(thickness);
+            return this;
+        }
+
+        public RingRenderer SetRadius(float radius)
+        {
+            if (innerRadius == radius)
+                return this;
+
+            innerRadius = radius;
+            RecalculateMesh();
             return this;
         }
 
