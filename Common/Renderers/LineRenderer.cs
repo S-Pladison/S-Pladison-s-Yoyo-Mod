@@ -72,6 +72,7 @@ namespace SPYoyoMod.Common.Renderers
         private readonly short[] indices;
 
         private IList<Vector2> points;
+        private bool isDirty;
         private bool innerLoop;
         private float innerWidth;
         private float halfWidth;
@@ -86,6 +87,7 @@ namespace SPYoyoMod.Common.Renderers
             vertices = new VertexPositionColorTexture[truePointCount * 2];
             indices = new short[truePointCount * 6 - 6];
 
+            isDirty = true;
             innerLoop = loop;
             innerWidth = width;
             halfWidth = width / 2f;
@@ -102,8 +104,8 @@ namespace SPYoyoMod.Common.Renderers
                 throw new ArgumentException($"Points count is not equal to lineRenderer.PointCount...");
 
             this.points = points;
+            isDirty = true;
 
-            RecalculateMesh();
             return this;
         }
 
@@ -114,8 +116,8 @@ namespace SPYoyoMod.Common.Renderers
 
             innerWidth = width;
             halfWidth = innerWidth / 2f;
+            isDirty = true;
 
-            RecalculateMesh();
             return this;
         }
 
@@ -125,8 +127,8 @@ namespace SPYoyoMod.Common.Renderers
                 return this;
 
             innerLoop = value;
+            isDirty = true;
 
-            RecalculateMesh();
             return this;
         }
 
@@ -151,7 +153,7 @@ namespace SPYoyoMod.Common.Renderers
             return this;
         }
 
-        private LineRenderer RecalculateMesh()
+        private LineRenderer Recalculate()
         {
             CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
             CalculateVertexPositions();
@@ -171,6 +173,13 @@ namespace SPYoyoMod.Common.Renderers
         {
             if (points is null)
                 throw new NullReferenceException(nameof(points));
+
+            if (isDirty)
+            {
+                Recalculate();
+
+                isDirty = false;
+            }
 
             renderer.Draw(effect);
         }

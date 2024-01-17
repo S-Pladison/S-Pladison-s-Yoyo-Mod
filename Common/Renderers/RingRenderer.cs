@@ -30,6 +30,7 @@ namespace SPYoyoMod.Common.Renderers
 
         private readonly LineRenderer lineRenderer;
 
+        private bool isDirty;
         private Vector2 innerPosition;
         private float innerThickness;
         private float innerRadius;
@@ -40,11 +41,10 @@ namespace SPYoyoMod.Common.Renderers
 
             lineRenderer = new LineRenderer(pointCount, thickness, true);
 
+            isDirty = true;
             innerPosition = Vector2.Zero;
             innerThickness = thickness;
             innerRadius = radius;
-
-            RecalculateMesh();
         }
 
         public RingRenderer SetPosition(Vector2 position)
@@ -73,7 +73,7 @@ namespace SPYoyoMod.Common.Renderers
                 return this;
 
             innerRadius = radius;
-            RecalculateMesh();
+            isDirty = true;
             return this;
         }
 
@@ -84,10 +84,17 @@ namespace SPYoyoMod.Common.Renderers
 
         public void Draw(Effect effect)
         {
+            if (isDirty)
+            {
+                Recalculate();
+
+                isDirty = false;
+            }
+
             lineRenderer.Draw(effect);
         }
 
-        private void RecalculateMesh()
+        private void Recalculate()
         {
             var points = new List<Vector2>();
 
