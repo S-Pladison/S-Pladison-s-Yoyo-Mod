@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace SPYoyoMod.Common.Renderers
 {
-    public class LineRenderer
+    public class LineRenderer : IDisposable
     {
         private class Line
         {
@@ -132,36 +132,13 @@ namespace SPYoyoMod.Common.Renderers
             return this;
         }
 
-        public LineRenderer Offset(Vector2 offset)
-        {
-            if (points is null)
-                throw new NullReferenceException(nameof(points));
-
-            for (int i = 0; i < points.Count; i++)
-            {
-                points[i] += offset;
-            }
-
-            for (int i = 0; i < vertices.Length; i++)
-            {
-                vertices[i].Position.X += offset.X;
-                vertices[i].Position.Y += offset.Y;
-            }
-
-            renderer.SetVertices(vertices);
-
-            return this;
-        }
-
-        private LineRenderer Recalculate()
+        private void Recalculate()
         {
             CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
             CalculateVertexPositions();
             CalculateVertexUVs(factorsFromStartToEnd);
 
             renderer.SetVertices(vertices);
-
-            return this;
         }
 
         public void Draw(Asset<Effect> effect)
@@ -181,7 +158,12 @@ namespace SPYoyoMod.Common.Renderers
                 isDirty = false;
             }
 
-            renderer.Draw(effect);
+            renderer.Draw(effect, vertices.Length, indices.Length / 3);
+        }
+
+        public void Dispose()
+        {
+            renderer?.Dispose();
         }
 
         private void CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd)

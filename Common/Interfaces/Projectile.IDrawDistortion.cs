@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.RenderTargets;
+using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
@@ -17,21 +18,7 @@ namespace SPYoyoMod.Common.Interfaces
 
         void DrawDistortion(Projectile proj);
 
-        public static void Draw()
-        {
-            foreach (var proj in Main.projectile)
-            {
-                if (!proj.active) continue;
-
-                (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
-
-                foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
-                {
-                    g.DrawDistortion(proj);
-                }
-            }
-        }
-
+        [Autoload(Side = ModSide.Client)]
         private class DrawDistortionFilterSystem : ModSystem
         {
             public const string EffectName = "ScreenDistortion";
@@ -64,7 +51,17 @@ namespace SPYoyoMod.Common.Interfaces
             public override void DrawToTarget()
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-                Draw();
+
+                foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
+                {
+                    (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
+
+                    foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
+                    {
+                        g.DrawDistortion(proj);
+                    }
+                }
+
                 Main.spriteBatch.End();
 
                 Main.graphics.GraphicsDevice.SetRenderTarget(null);

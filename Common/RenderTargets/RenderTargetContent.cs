@@ -1,11 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.RenderTargets
 {
     [Autoload(Side = ModSide.Client)]
-    public abstract class RenderTargetContent : ModType
+    public abstract class RenderTargetContent : ModType, IDisposable
     {
         public abstract bool Active { get; }
         public abstract Point Size { get; }
@@ -46,6 +47,11 @@ namespace SPYoyoMod.Common.RenderTargets
             SetStaticDefaults();
         }
 
+        public void Dispose()
+        {
+            renderTarget?.Dispose();
+        }
+
         protected sealed override void Register()
         {
             ModTypeLookup<RenderTargetContent>.Register(this);
@@ -60,6 +66,8 @@ namespace SPYoyoMod.Common.RenderTargets
                 && renderTarget.Height == Size.Y) return;
 
             wasRendered = false;
+
+            renderTarget?.Dispose();
             renderTarget = new(device, Size.X, Size.Y, false, device.PresentationParameters.BackBufferFormat, DepthFormat.None, 0, RenderTargetUsage.DiscardContents);
         }
     }

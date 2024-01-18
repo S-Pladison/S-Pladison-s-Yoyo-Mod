@@ -13,25 +13,26 @@ namespace SPYoyoMod.Common.Interfaces
             );
 
         void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter);
-    }
 
-    public class PostDrawYoyoStringImplementation : ILoadable
-    {
-        public void Load(Mod mod)
+        [Autoload(Side = ModSide.Client)]
+        private class PostDrawYoyoStringImplementation : ILoadable
         {
-            On_Main.DrawProj_DrawYoyoString += (orig, main, proj, mountedCenter) =>
+            public void Load(Mod mod)
             {
-                orig(main, proj, mountedCenter);
-
-                (proj.ModProjectile as IPostDrawYoyoStringProjectile)?.PostDrawYoyoString(proj, mountedCenter);
-
-                foreach (IPostDrawYoyoStringProjectile g in IPostDrawYoyoStringProjectile.Hook.Enumerate(proj))
+                On_Main.DrawProj_DrawYoyoString += (orig, main, proj, mountedCenter) =>
                 {
-                    g.PostDrawYoyoString(proj, mountedCenter);
-                }
-            };
-        }
+                    orig(main, proj, mountedCenter);
 
-        public void Unload() { }
+                    (proj.ModProjectile as IPostDrawYoyoStringProjectile)?.PostDrawYoyoString(proj, mountedCenter);
+
+                    foreach (IPostDrawYoyoStringProjectile g in IPostDrawYoyoStringProjectile.Hook.Enumerate(proj))
+                    {
+                        g.PostDrawYoyoString(proj, mountedCenter);
+                    }
+                };
+            }
+
+            public void Unload() { }
+        }
     }
 }

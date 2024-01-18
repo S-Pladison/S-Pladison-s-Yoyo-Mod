@@ -36,8 +36,12 @@ namespace SPYoyoMod.Common.RenderTargets
 
         public override void Unload()
         {
-            contentThatNeedsRenderTargets.Clear();
-            contentThatNeedsRenderTargets = null;
+            Main.QueueMainThreadAction(() =>
+            {
+                contentThatNeedsRenderTargets.ForEach(x => x?.Dispose());
+                contentThatNeedsRenderTargets.Clear();
+                contentThatNeedsRenderTargets = null;
+            });
         }
 
         internal static void Register(RenderTargetContent content)

@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 using Terraria;
 
 namespace SPYoyoMod.Common.Renderers
 {
-    public class PrimitiveRenderer
+    public class PrimitiveRenderer : IDisposable
     {
         private readonly DynamicVertexBuffer vertexBuffer;
         private readonly DynamicIndexBuffer indexBuffer;
@@ -27,12 +28,12 @@ namespace SPYoyoMod.Common.Renderers
             indexBuffer.SetData(0, indices, 0, indices.Length, SetDataOptions.Discard);
         }
 
-        public void Draw(Asset<Effect> effect)
+        public void Draw(Asset<Effect> effect, int vertexCount, int primitiveCount)
         {
-            Draw(effect.Value);
+            Draw(effect.Value, vertexCount, primitiveCount);
         }
 
-        public void Draw(Effect effect)
+        public void Draw(Effect effect, int vertexCount, int primitiveCount)
         {
             var device = Main.graphics.GraphicsDevice;
 
@@ -42,8 +43,14 @@ namespace SPYoyoMod.Common.Renderers
             foreach (var pass in effect.CurrentTechnique.Passes)
             {
                 pass.Apply();
-                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexBuffer.VertexCount, 0, indexBuffer.IndexCount / 3);
+                device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, primitiveCount);
             }
+        }
+
+        public void Dispose()
+        {
+            vertexBuffer?.Dispose();
+            indexBuffer?.Dispose();
         }
     }
 }

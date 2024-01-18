@@ -1,5 +1,4 @@
-﻿using Mono.Cecil.Cil;
-using MonoMod.Cil;
+﻿using MonoMod.Cil;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils.DataStructures;

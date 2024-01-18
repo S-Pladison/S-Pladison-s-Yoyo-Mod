@@ -1,56 +1,28 @@
-﻿using Terraria;
+﻿using SPYoyoMod.Utils;
+using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Common.Interfaces
 {
-    public interface IDrawPixelatedProjectile : IPreDrawPixelatedProjectile, IPostDrawPixelatedProjectile { }
-
-    public interface IPreDrawPixelatedProjectile
+    public interface IDrawPixelatedProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook =
             ProjectileLoader.AddModHook(
-                new GlobalHookList<GlobalProjectile>(typeof(IPreDrawPixelatedProjectile).GetMethod(nameof(PreDrawPixelated)))
+                new GlobalHookList<GlobalProjectile>(typeof(IDrawPixelatedProjectile).GetMethod(nameof(DrawPixelated)))
             );
 
-        void PreDrawPixelated(Projectile proj);
+        void DrawPixelated(Projectile proj);
 
         public static void Draw()
         {
-            foreach (var proj in Main.projectile)
+            foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
             {
-                if (!proj.active) continue;
+                (proj.ModProjectile as IDrawPixelatedProjectile)?.DrawPixelated(proj);
 
-                (proj.ModProjectile as IPreDrawPixelatedProjectile)?.PreDrawPixelated(proj);
-
-                foreach (IPreDrawPixelatedProjectile g in Hook.Enumerate(proj))
+                foreach (IDrawPixelatedProjectile g in Hook.Enumerate(proj))
                 {
-                    g.PreDrawPixelated(proj);
-                }
-            }
-        }
-    }
-
-    public interface IPostDrawPixelatedProjectile
-    {
-        public static readonly GlobalHookList<GlobalProjectile> Hook =
-            ProjectileLoader.AddModHook(
-                new GlobalHookList<GlobalProjectile>(typeof(IPostDrawPixelatedProjectile).GetMethod(nameof(PostDrawPixelated)))
-            );
-
-        void PostDrawPixelated(Projectile proj);
-
-        public static void Draw()
-        {
-            foreach (var proj in Main.projectile)
-            {
-                if (!proj.active) continue;
-
-                (proj.ModProjectile as IPostDrawPixelatedProjectile)?.PostDrawPixelated(proj);
-
-                foreach (IPostDrawPixelatedProjectile g in Hook.Enumerate(proj))
-                {
-                    g.PostDrawPixelated(proj);
+                    g.DrawPixelated(proj);
                 }
             }
         }

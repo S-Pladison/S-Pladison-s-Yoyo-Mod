@@ -4,12 +4,68 @@ using System.Collections.Generic;
 using System.Reflection;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
 {
     public static class DrawUtils
     {
-        // Copy from Main.DrawProj_DrawYoyoString
+        /// <summary>
+        /// More or less safe only for drawing.<br/>
+        /// Don't use when update game logic.
+        /// </summary>
+        [Autoload(Side = ModSide.Client)]
+        private class ActiveEntities : ILoadable
+        {
+            public static readonly List<Projectile> Projectiles;
+
+            private static uint lastUpdateTick;
+
+            static ActiveEntities()
+            {
+                Projectiles = new List<Projectile>();
+                lastUpdateTick = 0;
+            }
+
+            private void UpdateActiveEntityLists(GameTime time)
+            {
+                if (lastUpdateTick.Equals(Main.GameUpdateCount)) return;
+
+                Projectiles.Clear();
+
+                foreach (var proj in Main.projectile)
+                {
+                    if (!proj.active) continue;
+
+                    Projectiles.Add(proj);
+                }
+
+                lastUpdateTick = Main.GameUpdateCount;
+            }
+
+            void ILoadable.Load(Mod mod)
+            {
+                Main.OnPreDraw += UpdateActiveEntityLists;
+            }
+
+            void ILoadable.Unload()
+            {
+                Main.OnPreDraw -= UpdateActiveEntityLists;
+
+                Projectiles.Clear();
+            }
+        }
+
+        /// <summary>
+        /// More or less safe only for drawing.<br/>
+        /// Don't use when update game logic.
+        /// </summary>
+        public static IReadOnlyList<Projectile> GetActiveForDrawProjectiles()
+            => ActiveEntities.Projectiles;
+
+        /// <summary>
+        /// Copy from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
+        /// </summary>
         public static void DrawYoyoString(Projectile proj, Vector2 mountedCenter, DrawYoyoStringSegmentDelegate drawSegment)
         {
             Vector2 startPos = mountedCenter;
@@ -71,8 +127,8 @@ namespace SPYoyoMod.Utils
                         startPos.Y += num10;
                     }
 
-                    x = proj.position.X + (float)proj.width * 0.5f - startPos.X;
-                    y = proj.position.Y + (float)proj.height * 0.1f - startPos.Y;
+                    x = proj.position.X + proj.width * 0.5f - startPos.X;
+                    y = proj.position.Y + proj.height * 0.1f - startPos.Y;
 
                     if ((double)f2 > 12.0)
                     {
