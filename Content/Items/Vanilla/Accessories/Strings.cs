@@ -24,16 +24,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             {
                 var c = new ILCursor(il);
 
-                // YoyoStatModifiers statModifiers;
-
-                int statModifiersIndex = il.Body.Variables.Count;
-
-                il.Body.Variables.Add(new VariableDefinition(c.Context.Import(typeof(YoyoStatModifiers))));
-
-                c.Emit(Ldarg_0);
-                c.Emit(Ldloca, statModifiersIndex);
-                c.EmitDelegate<GetYoyoStatModifierDelegate>(GetYoyoStatModifier);
-
                 // if (yoyoString)
                 // {
                 //     num5 += (float)((double)num5 * 0.25 + 10.0);
