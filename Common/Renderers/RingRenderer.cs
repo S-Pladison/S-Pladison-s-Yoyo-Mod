@@ -45,6 +45,8 @@ namespace SPYoyoMod.Common.Renderers
             innerPosition = Vector2.Zero;
             innerThickness = thickness;
             innerRadius = radius;
+
+            Recalculate();
         }
 
         public RingRenderer SetPosition(Vector2 position)

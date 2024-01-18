@@ -9,16 +9,14 @@ namespace SPYoyoMod.Common.Interfaces
 
     public interface IPreDrawPrimitivesProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> Hook;
-
-        static IPreDrawPrimitivesProjectile()
-        {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPreDrawPrimitivesProjectile).GetMethod(nameof(PreDrawPrimitives))));
-        }
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IPreDrawPrimitivesProjectile).GetMethod(nameof(PreDrawPrimitives)))
+            );
 
         void PreDrawPrimitives(Projectile proj, Matrix transformMatrix);
 
-        public static void Invoke(Matrix transformMatrix)
+        public static void Draw(Matrix transformMatrix)
         {
             foreach (var proj in Main.projectile)
             {
@@ -36,16 +34,14 @@ namespace SPYoyoMod.Common.Interfaces
 
     public interface IPostDrawPrimitivesProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> Hook;
-
-        static IPostDrawPrimitivesProjectile()
-        {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPostDrawPrimitivesProjectile).GetMethod(nameof(PostDrawPrimitives))));
-        }
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IPostDrawPrimitivesProjectile).GetMethod(nameof(PostDrawPrimitives)))
+            );
 
         void PostDrawPrimitives(Projectile proj, Matrix transformMatrix);
 
-        public static void Invoke(Matrix transformMatrix)
+        public static void Draw(Matrix transformMatrix)
         {
             foreach (var proj in Main.projectile)
             {

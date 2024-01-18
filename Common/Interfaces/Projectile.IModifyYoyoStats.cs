@@ -14,12 +14,10 @@ namespace SPYoyoMod.Common.Interfaces
 {
     public interface IModifyYoyoStatsProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> Hook;
-
-        static IModifyYoyoStatsProjectile()
-        {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IModifyYoyoStatsProjectile).GetMethod(nameof(ModifyYoyoStats))));
-        }
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IModifyYoyoStatsProjectile).GetMethod(nameof(ModifyYoyoStats)))
+            );
 
         void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers);
 

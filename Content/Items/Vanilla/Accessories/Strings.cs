@@ -1,4 +1,5 @@
-﻿using MonoMod.Cil;
+﻿using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils.DataStructures;
@@ -19,6 +20,50 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
     {
         public override void Load()
         {
+            IL_Projectile.AI_099_1 += (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // YoyoStatModifiers statModifiers;
+
+                int statModifiersIndex = il.Body.Variables.Count;
+
+                il.Body.Variables.Add(new VariableDefinition(c.Context.Import(typeof(YoyoStatModifiers))));
+
+                c.Emit(Ldarg_0);
+                c.Emit(Ldloca, statModifiersIndex);
+                c.EmitDelegate<GetYoyoStatModifierDelegate>(GetYoyoStatModifier);
+
+                // if (yoyoString)
+                // {
+                //     num5 += (float)((double)num5 * 0.25 + 10.0);
+                // }
+
+                // IL_00ee: ldloc.1      // num5
+                // IL_00ef: ldloc.1      // num5
+                // IL_00f0: ldc.r4       0.25
+                // IL_00f5: mul
+                // IL_00f6: ldc.r4       10
+                // IL_00fb: add
+                // IL_00fc: add
+                // IL_00fd: stloc.1      // num5
+
+                int num5Index = -1;
+
+                if (!c.TryGotoNext(MoveType.After,
+                    i => i.MatchLdloc(out num5Index),
+                    i => i.MatchLdloc(num5Index),
+                    i => i.MatchLdcR4(0.25f),
+                    i => i.MatchMul(),
+                    i => i.MatchLdcR4(10f),
+                    i => i.MatchAdd(),
+                    i => i.MatchAdd(),
+                    i => i.MatchStloc(num5Index))) return;
+
+                c.Emit(Ldloca, num5Index);
+                c.EmitDelegate<RemoveStringBonusDelegate>(RemoveCounterweightStringBonus);
+            };
+
             IL_Projectile.AI_099_2 += (il) =>
             {
                 var c = new ILCursor(il);
@@ -33,7 +78,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 // IL_0644: mul
                 // IL_0645: ldc.r4    30
                 // IL_064A: add
-                // IL_064B: stloc.s num10
+                // IL_064B: stloc.s   num10
 
                 int num10Index = -1;
 
@@ -46,7 +91,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchStloc(num10Index))) return;
 
                 c.Emit(Ldloca, num10Index);
-                c.EmitDelegate<RemoveStringBonusDelegate>(RemoveStringBonus);
+                c.EmitDelegate<RemoveStringBonusDelegate>(RemoveYoyoStringBonus);
             };
         }
 
@@ -59,11 +104,25 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             statModifiers.MaxRange.Flat += 16 * 3;
         }
 
-        public static void RemoveStringBonus(ref float length)
+        public static void GetYoyoStatModifier(Projectile proj, ref YoyoStatModifiers statModifiers)
+        {
+            statModifiers = YoyoStatModifiers.Default;
+
+            IModifyYoyoStatsProjectile.GetYoyoStatModifiers(proj, ref statModifiers);
+        }
+
+        public static void RemoveYoyoStringBonus(ref float length)
         {
             length = (length - 30) / 1.25f;
         }
 
+        public static void RemoveCounterweightStringBonus(ref float length)
+        {
+            length = (length - 10) / 1.25f;
+        }
+
+        private delegate void GetYoyoStatModifierDelegate(Projectile proj, ref YoyoStatModifiers statModifiers);
+        private delegate void ModifyYoyoStatDelegate(Projectile proj, ref YoyoStatModifiers statModifiers, ref float value);
         public delegate void RemoveStringBonusDelegate(ref float value);
     }
 
@@ -96,7 +155,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchStloc(num3Index))) return;
 
                 c.Emit(Ldloca, num3Index);
-                c.EmitDelegate<StringsGlobalProjectile.RemoveStringBonusDelegate>(StringsGlobalProjectile.RemoveStringBonus);
+                c.EmitDelegate<StringsGlobalProjectile.RemoveStringBonusDelegate>(StringsGlobalProjectile.RemoveYoyoStringBonus);
             });
         }
     }

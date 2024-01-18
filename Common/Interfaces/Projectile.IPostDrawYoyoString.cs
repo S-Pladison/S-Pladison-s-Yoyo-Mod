@@ -7,12 +7,10 @@ namespace SPYoyoMod.Common.Interfaces
 {
     public interface IPostDrawYoyoStringProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> Hook;
-
-        static IPostDrawYoyoStringProjectile()
-        {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPostDrawYoyoStringProjectile).GetMethod(nameof(PostDrawYoyoString))));
-        }
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IPostDrawYoyoStringProjectile).GetMethod(nameof(PostDrawYoyoString)))
+            );
 
         void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter);
     }

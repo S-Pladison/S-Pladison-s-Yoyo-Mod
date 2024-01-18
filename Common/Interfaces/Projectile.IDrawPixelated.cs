@@ -8,16 +8,14 @@ namespace SPYoyoMod.Common.Interfaces
 
     public interface IPreDrawPixelatedProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> Hook;
-
-        static IPreDrawPixelatedProjectile()
-        {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPreDrawPixelatedProjectile).GetMethod(nameof(PreDrawPixelated))));
-        }
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IPreDrawPixelatedProjectile).GetMethod(nameof(PreDrawPixelated)))
+            );
 
         void PreDrawPixelated(Projectile proj);
 
-        public static void Invoke()
+        public static void Draw()
         {
             foreach (var proj in Main.projectile)
             {
@@ -35,16 +33,14 @@ namespace SPYoyoMod.Common.Interfaces
 
     public interface IPostDrawPixelatedProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> Hook;
-
-        static IPostDrawPixelatedProjectile()
-        {
-            Hook = ProjectileLoader.AddModHook(new GlobalHookList<GlobalProjectile>(typeof(IPostDrawPixelatedProjectile).GetMethod(nameof(PostDrawPixelated))));
-        }
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IPostDrawPixelatedProjectile).GetMethod(nameof(PostDrawPixelated)))
+            );
 
         void PostDrawPixelated(Projectile proj);
 
-        public static void Invoke()
+        public static void Draw()
         {
             foreach (var proj in Main.projectile)
             {

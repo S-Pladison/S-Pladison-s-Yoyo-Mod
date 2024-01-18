@@ -16,13 +16,7 @@ namespace SPYoyoMod.Common
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
             {
                 orig();
-
-                TransformMatrix = Matrix.CreateLookAt(Vector3.Zero, Vector3.UnitZ, Vector3.Up);
-                TransformMatrix *= Main.GameViewMatrix.EffectMatrix;
-                TransformMatrix *= Matrix.CreateTranslation(Main.screenWidth / 2, Main.screenHeight / -2, 0);
-                TransformMatrix *= Matrix.CreateRotationZ(MathHelper.Pi);
-                TransformMatrix *= Matrix.CreateScale(Main.GameViewMatrix.Zoom.X, Main.GameViewMatrix.Zoom.Y, 1f);
-                TransformMatrix *= Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, 0, 1000);
+                UpdateMatrices();
             };
 
             On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
@@ -30,34 +24,50 @@ namespace SPYoyoMod.Common
                 ref var sb = ref Main.spriteBatch;
 
                 if (projCache == Main.instance.DrawCacheProjsBehindProjectiles)
-                {
-                    if (ModContent.GetInstance<PreDrawPixelizationRenderTargetContent>().TryGetRenderTarget(out RenderTarget2D target))
-                    {
-                        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
-                        sb.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
-                        sb.End();
-                    }
-
-                    IPreDrawPrimitivesProjectile.Invoke(TransformMatrix);
-                }
+                    PreDrawProjectiles(ref sb);
 
                 orig(main, projCache, startSpriteBatch);
 
                 if (projCache == Main.instance.DrawCacheProjsOverPlayers)
-                {
-                    IPostDrawPrimitivesProjectile.Invoke(TransformMatrix);
-
-                    if (ModContent.GetInstance<PostDrawPixelizationRenderTargetContent>().TryGetRenderTarget(out RenderTarget2D target))
-                    {
-                        sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
-                        sb.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
-                        sb.End();
-                    }
-                }
+                    PostDrawProjectiles(ref sb);
             };
         }
 
         void ILoadable.Unload() { }
+
+        private void UpdateMatrices()
+        {
+            TransformMatrix = Matrix.CreateLookAt(Vector3.Zero, Vector3.UnitZ, Vector3.Up);
+            TransformMatrix *= Main.GameViewMatrix.EffectMatrix;
+            TransformMatrix *= Matrix.CreateTranslation(Main.screenWidth / 2, Main.screenHeight / -2, 0);
+            TransformMatrix *= Matrix.CreateRotationZ(MathHelper.Pi);
+            TransformMatrix *= Matrix.CreateScale(Main.GameViewMatrix.Zoom.X, Main.GameViewMatrix.Zoom.Y, 1f);
+            TransformMatrix *= Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, 0, 1000);
+        }
+
+        private void PreDrawProjectiles(ref SpriteBatch sb)
+        {
+            if (ModContent.GetInstance<PreDrawPixelizationRenderTargetContent>().TryGetRenderTarget(out RenderTarget2D target))
+            {
+                sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
+                sb.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
+                sb.End();
+            }
+
+            IPreDrawPrimitivesProjectile.Draw(TransformMatrix);
+        }
+
+        public void PostDrawProjectiles(ref SpriteBatch sb)
+        {
+            IPostDrawPrimitivesProjectile.Draw(TransformMatrix);
+
+            if (ModContent.GetInstance<PostDrawPixelizationRenderTargetContent>().TryGetRenderTarget(out RenderTarget2D target))
+            {
+                sb.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
+                sb.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
+                sb.End();
+            }
+        }
 
         private class PreDrawPixelizationRenderTargetContent : RenderTargetContent
         {
@@ -67,9 +77,7 @@ namespace SPYoyoMod.Common
             public override void DrawToTarget()
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
-
-                IPreDrawPixelatedProjectile.Invoke();
-
+                IPreDrawPixelatedProjectile.Draw();
                 Main.spriteBatch.End();
             }
         }
@@ -82,9 +90,7 @@ namespace SPYoyoMod.Common
             public override void DrawToTarget()
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
-
-                IPostDrawPixelatedProjectile.Invoke();
-
+                IPostDrawPixelatedProjectile.Draw();
                 Main.spriteBatch.End();
             }
         }
