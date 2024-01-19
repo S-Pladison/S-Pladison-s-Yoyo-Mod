@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Utils;
 using System;
-using Terraria;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
 namespace SPYoyoMod.Common.Renderers
@@ -16,7 +15,7 @@ namespace SPYoyoMod.Common.Renderers
             public float Rotation;
         }
 
-        public Texture2D Texture { get; set; }
+        public Asset<Texture2D> Texture { get; set; }
         public Vector2 Origin { get; set; }
         public SpriteEffects SpriteEffects { get; set; }
 
@@ -44,7 +43,7 @@ namespace SPYoyoMod.Common.Renderers
         private ColorDelegate innerColor;
         private ScaleDelegate innerScale;
 
-        public SpriteTrailRenderer(int maxPoints, Texture2D texture, Vector2 origin, SpriteEffects spriteEffects)
+        public SpriteTrailRenderer(int maxPoints, Asset<Texture2D> texture, Vector2 origin, SpriteEffects spriteEffects)
         {
             points = Array.Empty<Point>();
 
@@ -57,9 +56,6 @@ namespace SPYoyoMod.Common.Renderers
         }
 
         public SpriteTrailRenderer SetTexture(Asset<Texture2D> texture)
-            => SetTexture(texture.Value);
-
-        public SpriteTrailRenderer SetTexture(Texture2D texture)
         {
             Texture = texture;
             return this;
@@ -111,7 +107,7 @@ namespace SPYoyoMod.Common.Renderers
 
         public void SetNextPoint(Vector2 pointPosition, float headRotation)
         {
-            for (int i = points.Length - 1; i > 0; --i)
+            for (int i = MaxPoints - 1; i > 0; --i)
                 points[i] = points[i - 1];
 
             points[0].Position = pointPosition;
@@ -128,7 +124,7 @@ namespace SPYoyoMod.Common.Renderers
                 var color = ColorUtils.Multiply(innerColor(factor), colorMultiplier);
                 var scale = innerScale(factor);
 
-                spriteBatch.Draw(Texture, points[i].Position + positionOffset, null, color, points[i].Rotation, Origin, scale, SpriteEffects, 0f);
+                spriteBatch.Draw(Texture.Value, points[i].Position + positionOffset, null, color, points[i].Rotation, Origin, scale, SpriteEffects, 0f);
             }
         }
 

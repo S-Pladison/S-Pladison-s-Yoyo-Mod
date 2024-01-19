@@ -158,11 +158,12 @@ namespace SPYoyoMod.Common.Renderers
 
                 CalculateVertexIndices(oldMaxPointCount, maxPointCount);
                 CalculateVertexColors(oldMaxPointCount, maxPointCount);
+
+                renderer.SetIndices(indices);
             }
 
             CalculateVertexPositionsAndUVs();
 
-            renderer.SetIndices(indices);
             renderer.SetVertices(vertices);
         }
 

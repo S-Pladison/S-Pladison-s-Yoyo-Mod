@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 
 namespace SPYoyoMod.Common.Renderers
 {
@@ -53,8 +54,6 @@ namespace SPYoyoMod.Common.Renderers
             }
         }
 
-        public int PointCount { get; init; }
-
         public bool Loop
         {
             get => innerLoop;
@@ -67,42 +66,30 @@ namespace SPYoyoMod.Common.Renderers
             set => SetWidth(value);
         }
 
-        private readonly PrimitiveRenderer renderer;
-        private readonly VertexPositionColorTexture[] vertices;
-        private readonly short[] indices;
-
+        private PrimitiveRenderer renderer;
+        private VertexPositionColorTexture[] vertices;
+        private short[] indices;
         private IList<Vector2> points;
+
         private bool isDirty;
+        private int maxPointCount;
+
         private bool innerLoop;
         private float innerWidth;
         private float halfWidth;
 
-        public LineRenderer(int pointCount, float width, bool loop)
+        public LineRenderer(float width, bool loop)
         {
-            PointCount = pointCount;
+            vertices = Array.Empty<VertexPositionColorTexture>();
+            indices = Array.Empty<short>();
+            points = new List<Vector2>();
 
-            var truePointCount = pointCount + (loop ? 1 : 0);
-
-            renderer = new PrimitiveRenderer(2 * truePointCount, 6 * truePointCount - 6);
-            vertices = new VertexPositionColorTexture[truePointCount * 2];
-            indices = new short[truePointCount * 6 - 6];
-
-            isDirty = true;
-            innerLoop = loop;
-            innerWidth = width;
-            halfWidth = width / 2f;
-
-            CalculateVertexIndices();
-            CalculateVertexColors();
-
-            renderer.SetIndices(indices);
+            SetWidth(width);
+            SetLoop(loop);
         }
 
         public LineRenderer SetPoints(IList<Vector2> points)
         {
-            if (points.Count != PointCount)
-                throw new ArgumentException($"Points count is not equal to lineRenderer.PointCount...");
-
             this.points = points;
             isDirty = true;
 
@@ -132,15 +119,6 @@ namespace SPYoyoMod.Common.Renderers
             return this;
         }
 
-        private void Recalculate()
-        {
-            CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
-            CalculateVertexPositions();
-            CalculateVertexUVs(factorsFromStartToEnd);
-
-            renderer.SetVertices(vertices);
-        }
-
         public void Draw(Asset<Effect> effect)
         {
             Draw(effect.Value);
@@ -148,8 +126,7 @@ namespace SPYoyoMod.Common.Renderers
 
         public void Draw(Effect effect)
         {
-            if (points is null)
-                throw new NullReferenceException(nameof(points));
+            if (points.Count < 2) return;
 
             if (isDirty)
             {
@@ -158,12 +135,47 @@ namespace SPYoyoMod.Common.Renderers
                 isDirty = false;
             }
 
-            renderer.Draw(effect, vertices.Length, indices.Length / 3);
+            var count = points.Count - (Loop ? 0 : 1);
+            var vertexCount = 2 * (count + 1);
+            var indexCount = 6 * count;
+
+            renderer.Draw(effect, vertexCount, indexCount / 3);
         }
 
         public void Dispose()
         {
             renderer?.Dispose();
+        }
+
+        private void Recalculate()
+        {
+            var truePointCount = points.Count + (Loop ? 0 : -1);
+
+            if (maxPointCount < truePointCount)
+            {
+                var oldMaxPointCount = maxPointCount;
+
+                maxPointCount = truePointCount;
+
+                var maxVertices = 2 * (maxPointCount + 1);
+                var maxIndices = 6 * maxPointCount;
+
+                renderer = new PrimitiveRenderer(maxVertices, maxIndices);
+
+                Array.Resize(ref vertices, maxVertices);
+                Array.Resize(ref indices, maxIndices);
+
+                CalculateVertexIndices(oldMaxPointCount, maxPointCount);
+                CalculateVertexColors(oldMaxPointCount, maxPointCount);
+
+                renderer.SetIndices(indices);
+            }
+
+            CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
+            CalculateVertexPositions();
+            CalculateVertexUVs(factorsFromStartToEnd);
+
+            renderer.SetVertices(vertices);
         }
 
         private void CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd)
@@ -203,7 +215,7 @@ namespace SPYoyoMod.Common.Renderers
 
             for (int i = 0; i < segmentCount; i++)
             {
-                int j = (i + 1) % segmentCount;
+                int j = (i == points.Count - 1) ? 0 : i + 1;
 
                 var direction = Vector2.Normalize(points[j] - points[i]);
 
@@ -265,25 +277,6 @@ namespace SPYoyoMod.Common.Renderers
             vertices[vertexIndex++].Position = new Vector3(position, 0);
         }
 
-        private void CalculateVertexIndices()
-        {
-            var indices = new List<int>();
-            var segmentCount = Loop ? PointCount : (PointCount - 1);
-
-            for (int i = 0; i < segmentCount; i++)
-            {
-                int i2 = i * 2;
-                int j2 = (i + 1) * 2;
-
-                indices.AddRange(new int[] { i2, i2 + 1, j2 + 1, j2 + 1, j2, i2 });
-            }
-
-            for (int i = 0; i < this.indices.Length; i++)
-            {
-                this.indices[i] = (short)indices[i];
-            }
-        }
-
         private void CalculateVertexUVs(float[] factorsFromStartToEnd)
         {
             var vertexIndex = 0;
@@ -303,11 +296,37 @@ namespace SPYoyoMod.Common.Renderers
             vertices[vertexIndex++].TextureCoordinate = uv;
         }
 
-        private void CalculateVertexColors()
+        private void CalculateVertexIndices(int start, int end)
         {
-            for (int i = 0; i < vertices.Length; i++)
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void Add(ref int index, int value)
             {
-                vertices[i].Color = Color.White;
+                indices[index++] = (short)value;
+            }
+
+            for (int i = start; i < end; i++)
+            {
+                int index = i * 6;
+                int i2 = i * 2;
+                int j2 = (i + 1) * 2;
+
+                Add(ref index, i2);
+                Add(ref index, i2 + 1);
+                Add(ref index, j2 + 1);
+                Add(ref index, j2 + 1);
+                Add(ref index, j2);
+                Add(ref index, i2);
+            }
+        }
+
+        private void CalculateVertexColors(int start, int end)
+        {
+            for (int i = start; i <= end; i++)
+            {
+                int index = i * 2;
+
+                vertices[index].Color = Color.White;
+                vertices[index + 1].Color = Color.White;
             }
         }
 
