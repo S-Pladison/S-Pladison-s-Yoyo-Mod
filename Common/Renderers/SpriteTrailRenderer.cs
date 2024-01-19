@@ -1,6 +1,157 @@
-﻿namespace SPYoyoMod.Common.Renderers
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using SPYoyoMod.Utils;
+using System;
+using Terraria;
+using XnaColor = Microsoft.Xna.Framework.Color;
+
+namespace SPYoyoMod.Common.Renderers
 {
     public class SpriteTrailRenderer
     {
+        private struct Point
+        {
+            public Vector2 Position;
+            public float Rotation;
+            public SpriteEffects SpriteEffect;
+        }
+
+        public bool UpdateWithGame { get; set; }
+        public Texture2D Texture { get; set; }
+        public Vector2 Origin { get; set; }
+
+        public int MaxPoints
+        {
+            get => innerMaxPoints;
+            set => SetMaxPoints(value);
+        }
+
+        public ColorDelegate Color
+        {
+            get => innerColor;
+            set => SetColor(value);
+        }
+
+        public ScaleDelegate Scale
+        {
+            get => innerScale;
+            set => SetScale(value);
+        }
+
+        private Point[] points;
+        private uint lastGameUpdateCount;
+
+        private int innerMaxPoints;
+        private int activePoints;
+        private ColorDelegate innerColor;
+        private ScaleDelegate innerScale;
+
+        public SpriteTrailRenderer(bool updateWithGame, Texture2D texture, Vector2 origin, int maxPoints)
+        {
+            points = Array.Empty<Point>();
+
+            SetUpdateWithGame(updateWithGame);
+            SetTexture(texture);
+            SetOrigin(origin);
+            SetMaxPoints(maxPoints);
+            SetFadingColor(XnaColor.White);
+            SetScale(_ => 1f);
+        }
+
+        public SpriteTrailRenderer SetUpdateWithGame(bool updateWithGame)
+        {
+            UpdateWithGame = updateWithGame;
+            return this;
+        }
+
+        public SpriteTrailRenderer SetTexture(Asset<Texture2D> texture)
+            => SetTexture(texture.Value);
+
+        public SpriteTrailRenderer SetTexture(Texture2D texture)
+        {
+            Texture = texture;
+            return this;
+        }
+
+        public SpriteTrailRenderer SetOrigin(Vector2 origin)
+        {
+            Origin = origin;
+            return this;
+        }
+
+        public SpriteTrailRenderer SetFadingColor(XnaColor color)
+            => SetColor(f => XnaColor.Lerp(color, XnaColor.Transparent, f));
+
+        public SpriteTrailRenderer SetColor(ColorDelegate color)
+        {
+            innerColor = color;
+            return this;
+        }
+
+        public SpriteTrailRenderer SetFadingScale(float scale)
+            => SetScale(f => MathHelper.Lerp(scale, 0f, f));
+
+        public SpriteTrailRenderer SetScale(ScaleDelegate scale)
+        {
+            innerScale = scale;
+            return this;
+        }
+
+        public SpriteTrailRenderer SetMaxPoints(int maxPoints)
+        {
+            if (innerMaxPoints.Equals(maxPoints))
+                return this;
+
+            var oldMaxPoints = innerMaxPoints;
+            innerMaxPoints = maxPoints;
+
+            if (oldMaxPoints < maxPoints)
+                Array.Resize(ref points, maxPoints);
+
+            return this;
+        }
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 positionOffset, XnaColor colorMultiplier, Vector2 headPosition)
+            => Draw(spriteBatch, positionOffset, colorMultiplier, headPosition, 0f, SpriteEffects.None);
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 positionOffset, XnaColor colorMultiplier, Vector2 headPosition, float headRotation)
+            => Draw(spriteBatch, positionOffset, colorMultiplier, headPosition, headRotation, SpriteEffects.None);
+
+        public void Draw(SpriteBatch spriteBatch, Vector2 positionOffset, XnaColor colorMultiplier, Vector2 headPosition, float headRotation, SpriteEffects headEffects)
+        {
+            Update(headPosition, headRotation, headEffects);
+
+            for (int i = 0; i < activePoints; i++)
+            {
+                var factor = (float)i / activePoints;
+                var color = ColorUtils.Multiply(innerColor(factor), colorMultiplier);
+                var scale = innerScale(factor);
+
+                spriteBatch.Draw(Texture, points[i].Position + positionOffset, null, color, points[i].Rotation, Origin, scale, points[i].SpriteEffect, 0f);
+            }
+        }
+
+        private void Update(Vector2 headPosition, float headRotation, SpriteEffects headEffects)
+        {
+            if (UpdateWithGame && Main.GameUpdateCount.Equals(lastGameUpdateCount))
+                return;
+
+            lastGameUpdateCount = Main.GameUpdateCount;
+
+            for (int i = points.Length - 1; i > 0; --i)
+                points[i] = points[i - 1];
+
+            points[0].Position = headPosition;
+            points[0].Rotation = headRotation;
+            points[0].SpriteEffect = headEffects;
+
+            activePoints = Math.Min(MaxPoints, activePoints + 1);
+
+            return;
+        }
+
+        public delegate XnaColor ColorDelegate(float factorFromStartToEnd);
+        public delegate float ScaleDelegate(float factorFromStartToEnd);
     }
 }
