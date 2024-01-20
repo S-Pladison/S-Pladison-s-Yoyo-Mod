@@ -1,6 +1,9 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
@@ -46,20 +49,44 @@ namespace SPYoyoMod.Common.Interfaces
 
         private class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
         {
-            public override bool Active { get => Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive(); }
+            private readonly List<Tuple<IDrawDistortionProjectile, Projectile>> instances;
+
+            public DrawDistortionRenderTargetContent()
+            {
+                instances = new List<Tuple<IDrawDistortionProjectile, Projectile>>();
+            }
+
+            public override bool Active
+            {
+                get
+                {
+                    instances.Clear();
+
+                    if (!Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive())
+                        return false;
+
+                    foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
+                    {
+                        if (proj.ModProjectile is IDrawDistortionProjectile m)
+                            instances.Add(new(m, proj));
+
+                        (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
+
+                        foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
+                            instances.Add(new(g, proj));
+                    }
+
+                    return instances.Count > 0;
+                }
+            }
 
             public override void DrawToTarget()
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-                foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
+                foreach (var (instance, proj) in instances)
                 {
-                    (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
-
-                    foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
-                    {
-                        g.DrawDistortion(proj);
-                    }
+                    instance.DrawDistortion(proj);
                 }
 
                 Main.spriteBatch.End();
