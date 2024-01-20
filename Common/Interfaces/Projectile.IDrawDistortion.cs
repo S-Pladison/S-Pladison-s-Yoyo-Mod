@@ -29,41 +29,6 @@ namespace SPYoyoMod.Common.Interfaces
             private List<Tuple<IDrawDistortionProjectile, Projectile>> instances;
             private Texture2D inactiveTexture;
 
-            public override bool Active
-            {
-                get
-                {
-                    instances.Clear();
-
-                    foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
-                    {
-                        if (proj.ModProjectile is IDrawDistortionProjectile m)
-                            instances.Add(new(m, proj));
-
-                        foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
-                            instances.Add(new(g, proj));
-                    }
-
-                    var isFilterActive = Filters.Scene[FilterName].IsActive();
-
-                    if (instances.Count > 0)
-                    {
-                        if (!isFilterActive)
-                            Filters.Scene.Activate(FilterName);
-
-                        return true;
-                    }
-
-                    if (isFilterActive)
-                    {
-                        Filters.Scene[FilterName].GetShader().UseImage(inactiveTexture);
-                        Filters.Scene.Deactivate(FilterName);
-                    }
-
-                    return false;
-                }
-            }
-
             public override void Load()
             {
                 instances = new List<Tuple<IDrawDistortionProjectile, Projectile>>();
@@ -81,14 +46,46 @@ namespace SPYoyoMod.Common.Interfaces
                 Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
             }
 
+            public override bool PreRender()
+            {
+                instances.Clear();
+
+                foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
+                {
+                    if (proj.ModProjectile is IDrawDistortionProjectile m)
+                        instances.Add(new(m, proj));
+
+                    foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
+                        instances.Add(new(g, proj));
+                }
+
+                var isFilterActive = Filters.Scene[FilterName].IsActive();
+
+                if (instances.Count > 0)
+                {
+                    if (!isFilterActive)
+                        Filters.Scene.Activate(FilterName);
+
+                    return true;
+                }
+
+                if (isFilterActive)
+                {
+                    Filters.Scene[FilterName].GetShader().UseImage(inactiveTexture);
+                    Filters.Scene.Deactivate(FilterName);
+                }
+
+                return false;
+            }
+
             public override void DrawToTarget()
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
                 foreach (var (instance, proj) in instances)
-                {
                     instance.DrawDistortion(proj);
-                }
+
+                instances.Clear();
 
                 Main.spriteBatch.End();
 

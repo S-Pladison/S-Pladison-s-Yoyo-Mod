@@ -5,12 +5,12 @@ namespace SPYoyoMod.Utils.DataStructures
     public readonly struct PrimitiveMatrices
     {
         public readonly Matrix Transform;
-        public readonly Matrix TransformWithoutScreenOffset;
+        public readonly Matrix TransformWithScreenOffset;
 
-        public PrimitiveMatrices(Matrix transform, Matrix transformWithoutScreenOffset)
+        public PrimitiveMatrices(Matrix transform, Matrix transformWithScreenOffset)
         {
             Transform = transform;
-            TransformWithoutScreenOffset = transformWithoutScreenOffset;
+            TransformWithScreenOffset = transformWithScreenOffset;
         }
     }
 }

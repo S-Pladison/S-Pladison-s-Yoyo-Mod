@@ -25,12 +25,16 @@ namespace SPYoyoMod.Common.RenderTargets
 
                 foreach (var content in contentThatNeedsRenderTargets)
                 {
-                    if (!content.Active) continue;
+                    content.Reset();
+
+                    if (!content.PreRender()) continue;
 
                     content.Render(device);
                 }
 
                 device.SetRenderTargets(targets);
+
+                Main.pixelShader.CurrentTechnique.Passes[0].Apply();
             };
         }
 

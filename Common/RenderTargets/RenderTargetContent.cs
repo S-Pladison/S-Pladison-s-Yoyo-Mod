@@ -8,7 +8,7 @@ namespace SPYoyoMod.Common.RenderTargets
     [Autoload(Side = ModSide.Client)]
     public abstract class RenderTargetContent : ModType, IDisposable
     {
-        public abstract bool Active { get; }
+        public bool IsRenderedInThisFrame { get; private set; }
         public abstract Point Size { get; }
         public virtual Color ClearColor { get => Color.Transparent; }
 
@@ -17,6 +17,13 @@ namespace SPYoyoMod.Common.RenderTargets
         private bool wasRendered;
 
         public abstract void DrawToTarget();
+
+        public virtual bool PreRender() { return true; }
+
+        public void Reset()
+        {
+            IsRenderedInThisFrame = false;
+        }
 
         public void Render(GraphicsDevice device)
         {
@@ -28,6 +35,8 @@ namespace SPYoyoMod.Common.RenderTargets
             DrawToTarget();
 
             wasRendered = true;
+
+            IsRenderedInThisFrame = true;
         }
 
         public bool TryGetRenderTarget(out RenderTarget2D renderTarget)
