@@ -21,7 +21,7 @@ Configs: {
 Items: {
 	BearingItem: {
 		DisplayName: Bearing
-		Tooltip: ""
+		Tooltip: 50% increased yoyo duration
 	}
 
 	SiriusItem: {
@@ -42,12 +42,26 @@ Items: {
 		Tooltip: ""
 		DisplayName: Myocardial Infarction
 	}
+
+	FlamingFlowerItem: {
+		DisplayName: Flaming Flower Item
+		Tooltip: ""
+	}
+
+	EchoCounterweightItem: {
+		DisplayName: Echo-Counterweight
+		Tooltip:
+			'''
+			Throws a counterweight and its mirrored copy after hitting an enemy with a yoyo
+			25% increased counterweight damage
+			'''
+	}
 }
 
 NPCs.NurseNPC.GiftButton: Gift
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
-	Ah.. it wasn’t necessary, thank you. Take this in exchange. I think, it will be more worth to you than me.
+	Oh, it wasn't necessary, thank you. Take this as a replacement. I believe it will be more valuable to you than to me.
 
 	[Where did she get that yoyo?]
 	'''

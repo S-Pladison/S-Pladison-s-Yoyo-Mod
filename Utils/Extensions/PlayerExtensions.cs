@@ -20,5 +20,8 @@ namespace SPYoyoMod.Utils.Extensions
 
         public static int OwnedProjectileCounts<T>(this Player player) where T : ModProjectile
             => player.ownedProjectileCounts[ModContent.ProjectileType<T>()];
+
+        public static void ProvideRandomCounterweight(this Player player)
+            => player.counterWeight = 556 + Main.rand.Next(6);
     }
 }

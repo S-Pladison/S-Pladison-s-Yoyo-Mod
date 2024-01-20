@@ -16,6 +16,7 @@ namespace SPYoyoMod.Common.Renderers
         }
 
         public Asset<Texture2D> Texture { get; set; }
+        public Rectangle? Frame { get; set; }
         public Vector2 Origin { get; set; }
         public SpriteEffects SpriteEffects { get; set; }
 
@@ -58,6 +59,12 @@ namespace SPYoyoMod.Common.Renderers
         public SpriteTrailRenderer SetTexture(Asset<Texture2D> texture)
         {
             Texture = texture;
+            return this;
+        }
+
+        public SpriteTrailRenderer SetFrame(Rectangle? frame)
+        {
+            Frame = frame;
             return this;
         }
 
@@ -126,7 +133,7 @@ namespace SPYoyoMod.Common.Renderers
                 var color = ColorUtils.Multiply(innerColor(factor), colorMultiplier);
                 var scale = innerScale(factor);
 
-                spriteBatch.Draw(Texture.Value, points[i].Position + positionOffset, null, color, points[i].Rotation, Origin, scale, SpriteEffects, 0f);
+                spriteBatch.Draw(Texture.Value, points[i].Position + positionOffset, Frame, color, points[i].Rotation, Origin, scale, SpriteEffects, 0f);
             }
         }
 

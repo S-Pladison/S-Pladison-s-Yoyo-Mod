@@ -21,7 +21,7 @@ Configs: {
 Items: {
 	BearingItem: {
 		DisplayName: Подшипник
-		Tooltip: ""
+		Tooltip: Увеличивает время полета йо-йо на 50%
 	}
 
 	SiriusItem: {
@@ -39,17 +39,35 @@ Items: {
 	}
 
 	MyocardialInfarctionItem: {
-		// Tooltip: ""
-		// DisplayName: Myocardial Infarction
+		Tooltip: ""
+		DisplayName: Myocardial Infarction
+	}
+
+	FlamingFlowerItem: {
+		DisplayName: Пылающий цветок
+		Tooltip:
+			'''
+			Создает огненные копии противовесов напротив оригинальных
+			Увеличивает шанс критического удара противовесов на 50%
+			'''
+	}
+
+	EchoCounterweightItem: {
+		DisplayName: Эхо-противовес
+		Tooltip:
+			'''
+			При попадании йо-йо по противнику выпускает противовес и его зеркальную копию
+			Увеличивает урон противовесов на 25%
+			'''
 	}
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
-	Ah.. it wasn’t necessary, thank you. Take this in exchange. I think, it will be more worth to you than me.
+	О, это было необязательно, спасибо. Прими это взамен. Я думаю, для тебя это будет более ценным, чем для меня
 
-	[Where did she get that yoyo?]
+	[Откуда у неё взялся этот йо-йо?]
 	'''
 
 Projectiles: {
