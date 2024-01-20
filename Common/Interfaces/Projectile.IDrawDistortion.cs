@@ -21,24 +21,11 @@ namespace SPYoyoMod.Common.Interfaces
 
         void DrawDistortion(Projectile proj);
 
-        [Autoload(Side = ModSide.Client)]
-        private class DrawDistortionFilterSystem : ModSystem
+        private class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
         {
             public const string EffectName = "ScreenDistortion";
             public const string FilterName = $"{nameof(SPYoyoMod)}:{EffectName}";
 
-            public override void Load()
-            {
-                var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + EffectName, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
-                var refEffect = new Ref<Effect>(effect);
-                var screenShaderData = new ScreenShaderData(refEffect, EffectName + "Pass");
-
-                Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
-            }
-        }
-
-        private class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
-        {
             private List<Tuple<IDrawDistortionProjectile, Projectile>> instances;
             private Texture2D inactiveTexture;
 
@@ -53,26 +40,24 @@ namespace SPYoyoMod.Common.Interfaces
                         if (proj.ModProjectile is IDrawDistortionProjectile m)
                             instances.Add(new(m, proj));
 
-                        (proj.ModProjectile as IDrawDistortionProjectile)?.DrawDistortion(proj);
-
                         foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
                             instances.Add(new(g, proj));
                     }
 
-                    var isFilterActive = Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive();
+                    var isFilterActive = Filters.Scene[FilterName].IsActive();
 
                     if (instances.Count > 0)
                     {
                         if (!isFilterActive)
-                            Filters.Scene.Activate(DrawDistortionFilterSystem.FilterName);
+                            Filters.Scene.Activate(FilterName);
 
                         return true;
                     }
 
                     if (isFilterActive)
                     {
-                        Filters.Scene[DrawDistortionFilterSystem.FilterName].GetShader().UseImage(inactiveTexture);
-                        Filters.Scene.Deactivate(DrawDistortionFilterSystem.FilterName);
+                        Filters.Scene[FilterName].GetShader().UseImage(inactiveTexture);
+                        Filters.Scene.Deactivate(FilterName);
                     }
 
                     return false;
@@ -88,6 +73,12 @@ namespace SPYoyoMod.Common.Interfaces
                     inactiveTexture = new Texture2D(Main.graphics.GraphicsDevice, 1, 1);
                     inactiveTexture.SetData(new Color[] { new Color(128, 128, 255) });
                 });
+
+                var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + EffectName, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value;
+                var refEffect = new Ref<Effect>(effect);
+                var screenShaderData = new ScreenShaderData(refEffect, EffectName + "Pass");
+
+                Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
             }
 
             public override void DrawToTarget()
@@ -103,7 +94,7 @@ namespace SPYoyoMod.Common.Interfaces
 
                 Main.graphics.GraphicsDevice.SetRenderTarget(null);
 
-                Filters.Scene[DrawDistortionFilterSystem.FilterName].GetShader().UseImage(renderTarget);
+                Filters.Scene[FilterName].GetShader().UseImage(renderTarget);
             }
         }
     }
