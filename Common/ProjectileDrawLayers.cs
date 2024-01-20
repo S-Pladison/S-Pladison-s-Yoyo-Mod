@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.RenderTargets;
+using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -10,8 +11,10 @@ namespace SPYoyoMod.Common
     [Autoload(Side = ModSide.Client)]
     public class ProjectileDrawLayers : ILoadable
     {
-        public Matrix TransformMatrix { get; private set; }
-        public Matrix PixelatedTransformMatrix { get; private set; }
+        private Matrix transformMatrix;
+        private Matrix transformWithoutScreenOffsetMatrix;
+        private Matrix pixelatedTransformMatrix;
+        private Matrix pixelatedTransformWithoutScreenOffsetMatrix;
 
         void ILoadable.Load(Mod mod)
         {
@@ -34,24 +37,37 @@ namespace SPYoyoMod.Common
 
         private void UpdateMatrices()
         {
-            var matrix = Matrix.CreateLookAt(Vector3.Zero, Vector3.UnitZ, Vector3.Up);
+            var matrix = Matrix.CreateTranslation(new Vector3(-Main.screenPosition, 0));
+
+            transformWithoutScreenOffsetMatrix = matrix;
+            pixelatedTransformWithoutScreenOffsetMatrix = matrix;
+
+            matrix = Matrix.CreateLookAt(Vector3.Zero, Vector3.UnitZ, Vector3.Up);
             matrix *= Main.GameViewMatrix.EffectMatrix;
             matrix *= Matrix.CreateTranslation(Main.screenWidth / 2, Main.screenHeight / -2, 0);
             matrix *= Matrix.CreateRotationZ(MathHelper.Pi);
 
-            PixelatedTransformMatrix = matrix;
-            TransformMatrix = matrix;
-            TransformMatrix *= Matrix.CreateScale(Main.GameViewMatrix.Zoom.X, Main.GameViewMatrix.Zoom.Y, 1f);
+            transformMatrix = matrix;
+            pixelatedTransformMatrix = matrix;
+            transformWithoutScreenOffsetMatrix *= matrix;
+            pixelatedTransformWithoutScreenOffsetMatrix *= matrix;
+
+            matrix = Matrix.CreateScale(Main.GameViewMatrix.Zoom.X, Main.GameViewMatrix.Zoom.Y, 1f);
+
+            transformMatrix *= matrix;
+            transformWithoutScreenOffsetMatrix *= matrix;
 
             matrix = Matrix.CreateOrthographic(Main.screenWidth, Main.screenHeight, 0, 1000);
 
-            PixelatedTransformMatrix *= matrix;
-            TransformMatrix *= matrix;
+            transformMatrix = matrix;
+            pixelatedTransformMatrix = matrix;
+            transformWithoutScreenOffsetMatrix *= matrix;
+            pixelatedTransformWithoutScreenOffsetMatrix *= matrix;
         }
 
         public void PostDrawProjectiles(ref SpriteBatch sb)
         {
-            IDrawPrimitivesProjectile.Draw(TransformMatrix);
+            IDrawPrimitivesProjectile.Draw(new PrimitiveMatrices(transformMatrix, transformWithoutScreenOffsetMatrix));
 
             if (ModContent.GetInstance<DrawPixelizationRenderTargetContent>().TryGetRenderTarget(out RenderTarget2D target))
             {
@@ -68,7 +84,9 @@ namespace SPYoyoMod.Common
 
             public override void DrawToTarget()
             {
-                IDrawPixelatedPrimitivesProjectile.Draw(ModContent.GetInstance<ProjectileDrawLayers>().PixelatedTransformMatrix);
+                var projDrawLayerInstance = ModContent.GetInstance<ProjectileDrawLayers>();
+
+                IDrawPixelatedPrimitivesProjectile.Draw(new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithoutScreenOffsetMatrix));
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
                 IDrawPixelatedProjectile.Draw();
                 Main.spriteBatch.End();

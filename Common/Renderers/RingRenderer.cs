@@ -182,8 +182,8 @@ namespace SPYoyoMod.Common.Renderers
 
                 points[i] = pointPosition;
 
-                AddVertexPosition(ref vertexIndex, pointPosition + offset);
                 AddVertexPosition(ref vertexIndex, pointPosition - offset);
+                AddVertexPosition(ref vertexIndex, pointPosition + offset);
             }
 
             CalculateFactorsFromStartToEnd(points, out float[] factorsFromStartToEnd);

@@ -105,7 +105,7 @@ namespace SPYoyoMod.Common.Renderers
             return this;
         }
 
-        public void SetNextPoint(Vector2 pointPosition, float headRotation)
+        public SpriteTrailRenderer SetNextPoint(Vector2 pointPosition, float headRotation)
         {
             for (int i = MaxPoints - 1; i > 0; --i)
                 points[i] = points[i - 1];
@@ -114,6 +114,8 @@ namespace SPYoyoMod.Common.Renderers
             points[0].Rotation = headRotation;
 
             activePoints = Math.Min(MaxPoints, activePoints + 1);
+
+            return this;
         }
 
         public void Draw(SpriteBatch spriteBatch, Vector2 positionOffset, XnaColor colorMultiplier)

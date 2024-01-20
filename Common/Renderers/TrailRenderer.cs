@@ -1,274 +1,246 @@
-﻿namespace SPYoyoMod.Common.Renderers
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using System;
+using System.Runtime.CompilerServices;
+using Terraria;
+
+namespace SPYoyoMod.Common.Renderers
 {
-    public class TrailRenderer
+    public class TrailRenderer : IDisposable
     {
-
-        /*public class LineRenderer
+        public int MaxPoints
         {
-            private struct Point
-            {
-                public Vector2 Pos;
-                public float Width;
-                public Color Color;
-                public float LengthFromPrevPoint;
-            }
+            get => innerMaxPoints;
+            set => SetMaxPoints(value);
+        }
 
-            private struct Segment
-            {
-                public LineRenderer.Point A;
-                public LineRenderer.Point B;
-            }
+        public WidthDelegate Width
+        {
+            get => innerWidth;
+            set => SetWidth(value);
+        }
 
-            public int PointCount { get; init; }
+        private PrimitiveRenderer renderer;
+        private VertexPositionColorTexture[] vertices;
+        private short[] indices;
+        private Vector2[] points;
 
-            private PrimitiveRenderer renderer;
-            private LineRenderer.Point[] points;
+        private bool isDirty;
+        private int maxSegmentCount;
 
-            public LineRenderer(int pointCount)
-            {
-                PointCount = pointCount;
+        private int innerMaxPoints;
+        private int activePoints;
+        private WidthDelegate innerWidth;
 
-                renderer = new PrimitiveRenderer(2 * PointCount, 6 * PointCount - 6);
-                points = new LineRenderer.Point[PointCount];
-                vertices = new VertexPositionColorTexture[PointCount * 2];
-                indices = new short[PointCount * 6 - 6];
-            }
+        public TrailRenderer(int maxPoints)
+        {
+            vertices = Array.Empty<VertexPositionColorTexture>();
+            indices = Array.Empty<short>();
+            points = Array.Empty<Vector2>();
 
-            public LineRenderer SetPoints(IList<Vector2> points)
-            {
-                for (int i = 0; i < points.Count; i++)
-                {
-                    this.points[i].Pos = points[i];
-                }
+            SetMaxPoints(maxPoints);
+            SetWidth(_ => 16f);
+        }
 
-                RecalculateMesh();
-
+        public TrailRenderer SetMaxPoints(int maxPoints)
+        {
+            if (innerMaxPoints.Equals(maxPoints))
                 return this;
+
+            var oldMaxPoints = innerMaxPoints;
+            innerMaxPoints = maxPoints;
+
+            if (oldMaxPoints < maxPoints)
+                Array.Resize(ref points, maxPoints);
+
+            isDirty = true;
+
+            return this;
+        }
+
+        public TrailRenderer SetWidth(WidthDelegate width)
+        {
+            innerWidth = width;
+            isDirty = true;
+
+            return this;
+        }
+
+        public TrailRenderer SetNextPoint(Vector2 pointPosition)
+        {
+            for (int i = MaxPoints - 1; i > 0; --i)
+                points[i] = points[i - 1];
+
+            points[0] = pointPosition;
+            activePoints = Math.Min(MaxPoints, activePoints + 1);
+            isDirty = true;
+
+            return this;
+        }
+
+        public void Draw(Asset<Effect> effect)
+        {
+            Draw(effect.Value);
+        }
+
+        public void Draw(Effect effect)
+        {
+            if (activePoints < 2) return;
+
+            if (isDirty)
+            {
+                Recalculate();
+
+                isDirty = false;
             }
 
-            /*public LineRenderer SetPoints(Vector2[] points)
+            var count = activePoints - 1;
+            var vertexCount = 2 * (count + 1);
+            var indexCount = 6 * count;
+
+            renderer.Draw(effect, vertexCount, indexCount / 3);
+        }
+
+        public void Dispose()
+        {
+            renderer?.Dispose();
+        }
+
+        private void Recalculate()
+        {
+            var segmentCount = points.Length - 1;
+
+            if (maxSegmentCount < segmentCount)
             {
-                if (points.Length != PointCount) throw new ArgumentException($"Points length is not equal to PointCount...");
+                var oldMaxSegmentCount = maxSegmentCount;
 
-                this.points = points;
+                maxSegmentCount = segmentCount;
 
-                RecreateMesh();
+                var maxVertices = 2 * (maxSegmentCount + 1);
+                var maxIndices = 6 * maxSegmentCount;
 
-                return this;
-            }
+                renderer = new PrimitiveRenderer(maxVertices, maxIndices);
 
-            public void Draw(Asset<Effect> effect)
-            {
-                Draw(effect.Value);
-            }
+                Array.Resize(ref vertices, maxVertices);
+                Array.Resize(ref indices, maxIndices);
 
-            public void Draw(Effect effect)
-            {
-                renderer.Draw(effect);
-            }
+                CalculateVertexIndices(oldMaxSegmentCount, maxSegmentCount);
+                CalculateVertexColors(oldMaxSegmentCount, maxSegmentCount);
 
-            private void RecalculateMesh()
-            {
-                var lineLength = 0f;
-
-                for (int i = 0; i < points.Length - 1; i++)
-                {
-                    ref var firstPoint = ref points[i];
-                    ref var secondPoint = ref points[i + 1];
-
-                    var distance = Vector2.Distance(firstPoint.Pos, secondPoint.Pos);
-                    secondPoint.LengthFromPrevPoint = distance;
-                    lineLength += distance;
-                }
-
-                // special case: single segment
-                if (_points.length == 2)
-                {
-
-                }
-
-                var distanceSoFar = 0f;
-
-                for (int i = 0; i < points.Length - 1; i++)
-                {
-                    ref var firstPoint = ref points[i];
-                    ref var secondPoint = ref points[i + 1];
-
-                    distanceSoFar += secondPoint.LengthFromPrevPoint;
-
-                    firstPoint.Color = Color.White;
-                    secondPoint.Color = Color.White;
-
-                    firstPoint.Width = 16f;
-                    secondPoint.Width = 16f;
-
-                    if (i == 0)
-                    {
-
-                    }
-                    else
-                    {
-
-                    }
-                }
-
-                renderer.SetVertices(vertices);
                 renderer.SetIndices(indices);
             }
 
-            private void AddVertex(int index, Vector2 position, Vector2 texCoord, Color color)
-            {
-                vertices[index].Position = new Vector3(position, 0);
-                vertices[index].Color = color;
-                vertices[index].TextureCoordinate = texCoord;
-            }
-        }*/
+            CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
+            CalculateVertexPositions(factorsFromStartToEnd);
+            CalculateVertexUVs(factorsFromStartToEnd);
 
-        /*public class LineRenderer
+            renderer.SetVertices(vertices);
+        }
+
+        private void CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd)
         {
-            private static readonly WidthDelegate DefaultWidthFunc;
-            private static readonly ColorDelegate DefaultColorFunc;
+            var segmentCount = activePoints - 1;
+            var accumulativeLength = 0f;
+            var lengths = new float[segmentCount];
+            var totalLength = 0f;
 
-            static LineRenderer()
+            factorsFromStartToEnd = new float[segmentCount];
+
+            for (int i = 0; i < activePoints - 1; i++)
             {
-                DefaultWidthFunc = (_) => 16f;
-                DefaultColorFunc = (_) => Color.White;
+                lengths[i] = Vector2.Distance(points[i], points[i + 1]);
+                totalLength += lengths[i];
             }
 
-            public int PointCount { get; init; }
-            public bool Loop { get; init; }
-
-            private PrimitiveRenderer renderer;
-            private Vector2[] points;
-            private VertexPositionColorTexture[] vertices;
-            private short[] indices;
-
-            private WidthDelegate widthFunc;
-            private ColorDelegate colorFunc;
-
-            public LineRenderer(int pointCount, bool loop)
+            for (int i = 0; i < segmentCount; i++)
             {
-                PointCount = pointCount;
-                Loop = loop;
+                accumulativeLength += lengths[i];
+                factorsFromStartToEnd[i] = accumulativeLength / totalLength;
+            }
+        }
 
-                renderer = new PrimitiveRenderer(2 * PointCount, 6 * PointCount - 6);
-                points = new Vector2[PointCount];
-                vertices = new VertexPositionColorTexture[PointCount * 2];
-                indices = new short[PointCount * 6 - 6];
+        private void CalculateVertexPositions(float[] factorsFromStartToEnd)
+        {
+            var vertexIndex = 0;
+            var segmentCount = activePoints - 1;
 
-                widthFunc = DefaultWidthFunc;
-                colorFunc = DefaultColorFunc;
+            var normal = (points[1] - points[0]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+            var halfWidth = innerWidth(0f) / 2f;
+            var offset = normal * halfWidth;
+
+            AddVertexPosition(ref vertexIndex, points[0] + offset);
+            AddVertexPosition(ref vertexIndex, points[0] - offset);
+
+            for (int i = 1; i < activePoints; i++)
+            {
+                normal = (points[i] - points[i - 1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+                halfWidth = innerWidth(factorsFromStartToEnd[i - 1]) / 2f;
+                offset = normal * halfWidth;
+
+                AddVertexPosition(ref vertexIndex, points[i] + offset);
+                AddVertexPosition(ref vertexIndex, points[i] - offset);
+            }
+        }
+
+        private void AddVertexPosition(ref int vertexIndex, Vector2 position)
+        {
+            vertices[vertexIndex++].Position = new Vector3(position, 0);
+        }
+
+        private void CalculateVertexUVs(float[] factorsFromStartToEnd)
+        {
+            var vertexIndex = 0;
+
+            AddVertexUV(ref vertexIndex, Vector2.Zero);
+            AddVertexUV(ref vertexIndex, Vector2.UnitY);
+
+            for (int i = 0; i < factorsFromStartToEnd.Length; i++)
+            {
+                AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 0));
+                AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 1));
+            }
+        }
+
+        private void AddVertexUV(ref int vertexIndex, Vector2 uv)
+        {
+            vertices[vertexIndex++].TextureCoordinate = uv;
+        }
+
+        private void CalculateVertexIndices(int start, int end)
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void Add(ref int index, int value)
+            {
+                indices[index++] = (short)value;
             }
 
-            public LineRenderer SetWidth(WidthDelegate widthFunc)
+            for (int i = start; i < end; i++)
             {
-                this.widthFunc = widthFunc;
-                return this;
-            }
+                int index = i * 6;
+                int i2 = i * 2;
+                int j2 = (i + 1) * 2;
 
-            public LineRenderer SetColor(ColorDelegate colorFunc)
+                Add(ref index, i2);
+                Add(ref index, i2 + 1);
+                Add(ref index, j2 + 1);
+                Add(ref index, j2 + 1);
+                Add(ref index, j2);
+                Add(ref index, i2);
+            }
+        }
+
+        private void CalculateVertexColors(int start, int end)
+        {
+            for (int i = start; i <= end; i++)
             {
-                this.colorFunc = colorFunc;
-                return this;
+                int index = i * 2;
+
+                vertices[index].Color = Color.White;
+                vertices[index + 1].Color = Color.White;
             }
+        }
 
-            public LineRenderer SetPoints(IList<Vector2> points)
-            {
-                return SetPoints(points.ToArray());
-            }
-
-            public LineRenderer SetPoints(Vector2[] points)
-            {
-                if (points.Length != PointCount) throw new ArgumentException($"Points length is not equal to PointCount...");
-
-                this.points = points;
-
-                RecreateMesh();
-
-                return this;
-            }
-
-            public void Draw(Asset<Effect> effect)
-            {
-                Draw(effect.Value);
-            }
-
-            public void Draw(Effect effect)
-            {
-                renderer.Draw(effect);
-            }
-
-            private void RecreateMesh()
-            {
-                var vCount = 0;
-                var iCount = 0;
-
-                void AddVertex(Vector2 position, Color color, Vector2 textureCoords)
-                {
-                    vertices[vCount].Position = new Vector3(position, 0);
-                    vertices[vCount].Color = color;
-                    vertices[vCount].TextureCoordinate = textureCoords;
-                    vCount++;
-                }
-
-                void AddIndex(int value)
-                {
-                    indices[iCount] = (short)value;
-                    iCount++;
-                }
-
-                (Color, Vector2) GetProgressVariables(float progress, int index = 1)
-                {
-                    var width = widthFunc(progress);
-                    var color = colorFunc(progress);
-                    var normal = (points[index] - points[index - 1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
-                    var offset = normal * width / 2f;
-
-                    return (color, offset);
-                }
-
-                var length = 0f;
-                var distances = new float[points.Length - 1];
-
-                for (int i = 1; i < points.Length; i++)
-                {
-                    var j = i - 1;
-                    distances[j] = Vector2.DistanceSquared(points[j], points[i]);
-                    length += distances[j];
-                }
-
-                var progress = 0f;
-                (var color, var offset) = GetProgressVariables(0);
-
-                AddVertex(points[0] - offset, color, new Vector2(progress, 0));
-                AddVertex(points[0] + offset, color, new Vector2(progress, 1));
-
-                var nextIndex = 0;
-
-                for (int i = 1; i < points.Length; i++)
-                {
-                    progress += distances[i - 1] / length;
-                    (color, offset) = GetProgressVariables(progress, i);
-
-                    AddVertex(points[i] - offset, color, new Vector2(progress, 0));
-                    AddVertex(points[i] + offset, color, new Vector2(progress, 1));
-
-                    var i2 = nextIndex + i * 2 - 2;
-
-                    AddIndex(i2);
-                    AddIndex(i2 + 2);
-                    AddIndex(i2 + 1);
-                    AddIndex(i2 + 2);
-                    AddIndex(i2 + 3);
-                    AddIndex(i2 + 1);
-                }
-
-                renderer.SetVertices(vertices);
-                renderer.SetIndices(indices);
-            }
-
-            public delegate float WidthDelegate(float factorFromStartToEnd);
-            public delegate Color ColorDelegate(float factorFromStartToEnd);
-        }*/
+        public delegate float WidthDelegate(float factorFromStartToEnd);
     }
 }

@@ -72,7 +72,7 @@ namespace SPYoyoMod.Common.Renderers
         private IList<Vector2> points;
 
         private bool isDirty;
-        private int maxPointCount;
+        private int maxSegmentCount;
 
         private bool innerLoop;
         private float innerWidth;
@@ -149,24 +149,24 @@ namespace SPYoyoMod.Common.Renderers
 
         private void Recalculate()
         {
-            var truePointCount = points.Count + (Loop ? 0 : -1);
+            var segmentCount = points.Count + (Loop ? 0 : -1);
 
-            if (maxPointCount < truePointCount)
+            if (maxSegmentCount < segmentCount)
             {
-                var oldMaxPointCount = maxPointCount;
+                var oldMaxSegmentCount = maxSegmentCount;
 
-                maxPointCount = truePointCount;
+                maxSegmentCount = segmentCount;
 
-                var maxVertices = 2 * (maxPointCount + 1);
-                var maxIndices = 6 * maxPointCount;
+                var maxVertices = 2 * (maxSegmentCount + 1);
+                var maxIndices = 6 * maxSegmentCount;
 
                 renderer = new PrimitiveRenderer(maxVertices, maxIndices);
 
                 Array.Resize(ref vertices, maxVertices);
                 Array.Resize(ref indices, maxIndices);
 
-                CalculateVertexIndices(oldMaxPointCount, maxPointCount);
-                CalculateVertexColors(oldMaxPointCount, maxPointCount);
+                CalculateVertexIndices(oldMaxSegmentCount, maxSegmentCount);
+                CalculateVertexColors(oldMaxSegmentCount, maxSegmentCount);
 
                 renderer.SetIndices(indices);
             }
