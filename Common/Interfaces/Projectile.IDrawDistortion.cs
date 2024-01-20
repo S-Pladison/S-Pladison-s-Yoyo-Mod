@@ -1,9 +1,9 @@
-﻿using Microsoft.Xna.Framework.Graphics;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Terraria;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
@@ -35,35 +35,18 @@ namespace SPYoyoMod.Common.Interfaces
 
                 Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
             }
-
-            public override void OnWorldLoad()
-            {
-                Filters.Scene.Activate(FilterName);
-            }
-
-            public override void OnWorldUnload()
-            {
-                Filters.Scene.Deactivate(FilterName);
-            }
         }
 
         private class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
         {
-            private readonly List<Tuple<IDrawDistortionProjectile, Projectile>> instances;
-
-            public DrawDistortionRenderTargetContent()
-            {
-                instances = new List<Tuple<IDrawDistortionProjectile, Projectile>>();
-            }
+            private List<Tuple<IDrawDistortionProjectile, Projectile>> instances;
+            private Texture2D inactiveTexture;
 
             public override bool Active
             {
                 get
                 {
                     instances.Clear();
-
-                    if (!Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive())
-                        return false;
 
                     foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
                     {
@@ -76,8 +59,35 @@ namespace SPYoyoMod.Common.Interfaces
                             instances.Add(new(g, proj));
                     }
 
-                    return instances.Count > 0;
+                    var isFilterActive = Filters.Scene[DrawDistortionFilterSystem.FilterName].IsActive();
+
+                    if (instances.Count > 0)
+                    {
+                        if (!isFilterActive)
+                            Filters.Scene.Activate(DrawDistortionFilterSystem.FilterName);
+
+                        return true;
+                    }
+
+                    if (isFilterActive)
+                    {
+                        Filters.Scene[DrawDistortionFilterSystem.FilterName].GetShader().UseImage(inactiveTexture);
+                        Filters.Scene.Deactivate(DrawDistortionFilterSystem.FilterName);
+                    }
+
+                    return false;
                 }
+            }
+
+            public override void Load()
+            {
+                instances = new List<Tuple<IDrawDistortionProjectile, Projectile>>();
+
+                Main.QueueMainThreadAction(() =>
+                {
+                    inactiveTexture = new Texture2D(Main.graphics.GraphicsDevice, 1, 1);
+                    inactiveTexture.SetData(new Color[] { new Color(128, 128, 255) });
+                });
             }
 
             public override void DrawToTarget()
