@@ -38,11 +38,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class BlackholeProjectile : YoyoProjectile, IBlackholeProjectile
+    public class BlackholeProjectile : YoyoProjectile
     {
         public override string Texture { get => ModAssets.ProjectilesPath + "Blackhole"; }
-
-        bool IBlackholeProjectile.IsActive => Projectile?.active ?? false;
 
         public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
@@ -67,7 +65,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private void OnHitParticles()
         {
-            var particleSystem = ModContent.GetInstance<BlackholeParticleSystem>();
+            var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
 
             for (int i = 0; i < 12; i++)
             {
@@ -75,11 +73,11 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(1);
                 var particle = new BlackholeParticle(position, velocity);
 
-                particleSystem.AddParticle(particle);
+                blackholeRTContent.AddParticle(particle);
             }
         }
 
-        void IBlackholeProjectile.DrawSpaceMask()
+        public void DrawSpaceMask()
         {
             //var scale = RadiusProgress * (YoyoGloveActivated ? 1.25f : 1f) * Projectile.scale;
             /*var scale = 1f * (YoyoGloveActivated ? 1.25f : 1f) * Projectile.scale;
@@ -136,62 +134,35 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    [Autoload(Side = ModSide.Client)]
-    public class BlackholeParticleSystem : ModSystem
-    {
-        public bool AnyParticle { get => renderer.Particles.Count > 0; }
-
-        private readonly ParticleRenderer renderer;
-
-        public BlackholeParticleSystem()
-        {
-            renderer = new ParticleRenderer();
-        }
-
-        public override void PostUpdateEverything()
-        {
-            renderer.Update();
-        }
-
-        public override void OnWorldUnload()
-        {
-            renderer.Particles.Clear();
-        }
-
-        public void AddParticle(BlackholeParticle particle)
-        {
-            renderer.Add(particle);
-        }
-
-        public void DrawParticles()
-        {
-            renderer.Settings.AnchorPosition = -Main.screenPosition;
-            renderer.Draw(Main.spriteBatch);
-        }
-    }
-
-    public interface IBlackholeProjectile
-    {
-        bool IsActive { get; }
-        void DrawSpaceMask();
-    }
-
     public class BlackholeRenderTargetContent : RenderTargetContent
     {
         public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-        public BlackholeParticleSystem ParticleSystem { get => ModContent.GetInstance<BlackholeParticleSystem>(); }
 
         private Asset<Effect> effect;
-        private List<IBlackholeProjectile> projectiles;
+        private ParticleRenderer particleRenderer;
+        private List<int> projectiles;
 
-        public void AddProjectile(IBlackholeProjectile proj)
+        public void AddParticle(BlackholeParticle particle)
         {
-            projectiles.Add(proj);
+            if (particle is null) return;
+
+            particleRenderer.Add(particle);
+        }
+
+        public void AddProjectile(BlackholeProjectile modProjectile)
+        {
+            if (modProjectile is null) return;
+
+            projectiles.Add(modProjectile.Projectile.whoAmI);
         }
 
         public override void Load()
         {
             projectiles = new();
+            particleRenderer = new();
+
+            ModEvents.OnPostUpdateEverything += () => particleRenderer.Update();
+            ModEvents.OnWorldUnload += () => particleRenderer.Clear();
 
             On_Main.DoDraw_WallsAndBlacks += (orig, main) =>
             {
@@ -207,24 +178,33 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
 
         public override bool PreRender()
-            => ParticleSystem.AnyParticle || projectiles.Count > 0;
+        {
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                ref var proj = ref Main.projectile[projectiles[i]];
+
+                if (proj is null || !proj.active || proj.ModProjectile is not BlackholeProjectile)
+                {
+                    projectiles.RemoveAt(i);
+                    i--;
+                }
+            }
+
+            return particleRenderer.Particles.Count > 0 || projectiles.Count > 0;
+        }
 
         public override void DrawToTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
 
-            ParticleSystem.DrawParticles();
+            particleRenderer.Settings.AnchorPosition = -Main.screenPosition;
+            particleRenderer.Draw(Main.spriteBatch);
 
             for (int i = 0; i < projectiles.Count; i++)
             {
-                if (!projectiles[i]?.IsActive ?? true)
-                {
-                    projectiles.RemoveAt(i);
-                    i--;
-                    break;
-                }
+                ref var proj = ref Main.projectile[projectiles[i]];
 
-                projectiles[i].DrawSpaceMask();
+                (proj.ModProjectile as BlackholeProjectile).DrawSpaceMask();
             }
 
             Main.spriteBatch.End();
