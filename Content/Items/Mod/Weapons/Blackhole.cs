@@ -43,25 +43,27 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class BlackholeProjectile : YoyoProjectile, IDrawPixelatedProjectile
     {
         public override string Texture { get => ModAssets.ProjectilesPath + "Blackhole"; }
-        public float TimeForVisualEffects { get => (Projectile.whoAmI + (float)Main.timeForVisualEffects) % 216000.0f; }
+        public float TimeForVisualEffects { get => (Projectile.whoAmI * 200f + (float)Main.timeForVisualEffects) % 216000f; }
 
         public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
-        public override void OnSpawn(IEntitySource source)
+        public override void YoyoOnSpawn(Player owner, IEntitySource source)
         {
+            if (!IsMainYoyo) return;
+
             ModContent.GetInstance<BlackholeRenderTargetContent>().AddProjectile(this);
         }
 
         public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (IsReturning) return;
+            if (!IsMainYoyo || IsReturning) return;
 
             OnHitParticles();
         }
 
         public override void YoyoOnHitPlayer(Player owner, Player target, Player.HurtInfo info)
         {
-            if (IsReturning) return;
+            if (!IsMainYoyo || IsReturning) return;
 
             OnHitParticles();
         }
@@ -82,6 +84,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
+            if (!IsMainYoyo) return;
+
             DrawUtils.DrawYoyoString(Projectile, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
             {
                 var pos = position - Main.screenPosition;
@@ -110,6 +114,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         void IDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
         {
+            if (!IsMainYoyo) return;
+
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Blackhole_LensFlare", AssetRequestMode.ImmediateLoad);
             var rotation = MathF.Sin(TimeForVisualEffects * 0.01f);

@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils.Extensions;
 using System.IO;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -11,6 +13,7 @@ namespace SPYoyoMod.Content.Items
     public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
         public bool YoyoGloveActivated { get; private set; }
+        public bool IsMainYoyo { get; private set; }
         public bool IsReturning { get => Projectile.ai[0] == -1; }
         public float ReturnToPlayerProgress { get; private set; }
 
@@ -52,11 +55,18 @@ namespace SPYoyoMod.Content.Items
             YoyoSetDefaults();
         }
 
-        public sealed override bool PreAI()
+        public sealed override void OnSpawn(IEntitySource source)
         {
             var owner = Main.player[Projectile.owner];
 
-            if (!YoyoPreAI(owner)) return false;
+            IsMainYoyo = GetMainYoyoFlag(owner);
+
+            YoyoOnSpawn(owner, source);
+        }
+
+        public sealed override bool PreAI()
+        {
+            var owner = Main.player[Projectile.owner];
 
             if (IsReturning)
             {
@@ -69,7 +79,7 @@ namespace SPYoyoMod.Content.Items
                 ReturnToPlayerProgress = MathHelper.Clamp(progress, 0f, 1f);
             }
 
-            return true;
+            return YoyoPreAI(owner);
         }
 
         public sealed override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -110,6 +120,30 @@ namespace SPYoyoMod.Content.Items
             YoyoReceiveExtraAI(reader);
         }
 
+        private bool GetMainYoyoFlag(Player owner)
+        {
+            if (owner.OwnedProjectileCounts(Type) > 0)
+                return false;
+
+            // Fact that owned proj count was 0 does not guarantee that it is main yoyo
+            // (In case of spawning 2+ yoyos at once)
+            // Therefore, let's check other projs
+
+            for (int i = 0; i < Projectile.whoAmI; i++)
+            {
+                ref var otherProjectile = ref Main.projectile[i];
+
+                if (otherProjectile.active
+                    && otherProjectile.owner == Projectile.owner
+                    && otherProjectile.type == Type
+                    && otherProjectile.ModProjectile is YoyoProjectile otherModProj
+                    && otherModProj.IsMainYoyo)
+                    return false;
+            }
+
+            return true;
+        }
+
         void IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
             ModifyYoyoStats(ref statModifiers);
@@ -125,6 +159,7 @@ namespace SPYoyoMod.Content.Items
         public virtual bool YoyoPreAI(Player owner) => true;
         public virtual void YoyoSetStaticDefaults() { }
         public virtual void YoyoSetDefaults() { }
+        public virtual void YoyoOnSpawn(Player owner, IEntitySource source) { }
         public virtual void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone) { }
         public virtual void YoyoOnHitPlayer(Player owner, Player target, Player.HurtInfo info) { }
         public virtual void YoyoSendExtraAI(BinaryWriter writer) { }
