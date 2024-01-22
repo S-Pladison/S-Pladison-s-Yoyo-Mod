@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
@@ -9,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.Graphics.Renderers;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -38,9 +40,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class BlackholeProjectile : YoyoProjectile
+    public class BlackholeProjectile : YoyoProjectile, IDrawPixelatedProjectile
     {
         public override string Texture { get => ModAssets.ProjectilesPath + "Blackhole"; }
+        public float TimeForVisualEffects { get => (Projectile.whoAmI + (float)Main.timeForVisualEffects) % 216000.0f; }
 
         public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
@@ -63,7 +66,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             OnHitParticles();
         }
 
-        private void OnHitParticles()
+        public void OnHitParticles()
         {
             var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
 
@@ -77,19 +80,41 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             }
         }
 
+        public override void PostDrawYoyoString(Vector2 mountedCenter)
+        {
+            DrawUtils.DrawYoyoString(Projectile, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
+            {
+                var pos = position - Main.screenPosition;
+                var rect = new Rectangle(0, 0, TextureAssets.FishingLine.Width(), (int)height);
+                var origin = new Vector2(TextureAssets.FishingLine.Width() * 0.5f, 0f);
+                var colour = Color.Lerp(Color.Transparent, new Color(230, 135, 243), EaseFunctions.InQuart(segmentIndex / (float)segmentCount) * 2f);
+
+                Main.spriteBatch.Draw(TextureAssets.FishingLine.Value, pos, rect, colour, rotation, origin, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0f);
+            });
+        }
+
         public void DrawSpaceMask()
         {
-            //var scale = RadiusProgress * (YoyoGloveActivated ? 1.25f : 1f) * Projectile.scale;
-            /*var scale = 1f * (YoyoGloveActivated ? 1.25f : 1f) * Projectile.scale;
+            var scale = 1f * Projectile.scale;
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModAssets.GetExtraTexture(30);
-            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, 0f, texture.Size() * 0.5f, 0.45f * scale, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, 0f, texture.Size() * 0.5f, 0.40f * scale, SpriteEffects.None, 0f);*/
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, 0f, texture.Size() * 0.5f, 0.9f * scale, SpriteEffects.None, 0f);
 
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Spiral", AssetRequestMode.ImmediateLoad);
-            var scale = 1f * (YoyoGloveActivated ? 1.25f : 1f) * Projectile.scale;
+            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Smoke", AssetRequestMode.ImmediateLoad);
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.85f * scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.01f, texture.Size() * 0.5f, 0.8f * scale, SpriteEffects.FlipHorizontally, 0f);
+
+            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Spiral", AssetRequestMode.ImmediateLoad);
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.6f * scale, SpriteEffects.None, 0f);
+        }
+
+        void IDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
+        {
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, Main.GlobalTimeWrappedHourly * 2.5f, texture.Size() * 0.5f, 0.7f * (1 + MathF.Sin(Main.GlobalTimeWrappedHourly) * 0.1f) * scale, SpriteEffects.None, 0f);
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Blackhole_LensFlare", AssetRequestMode.ImmediateLoad);
+            var rotation = MathF.Sin(TimeForVisualEffects * 0.01f);
+            var scale = Projectile.scale;
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
         }
     }
 
