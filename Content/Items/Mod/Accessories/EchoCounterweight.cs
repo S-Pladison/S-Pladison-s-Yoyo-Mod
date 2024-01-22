@@ -64,6 +64,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public Asset<Texture2D> CounterweightTexture { get => ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/EchoCounterweight_Counterweights"); }
         public override bool InstancePerEntity { get => true; }
+
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation) { return proj.IsCounterweight(); }
 
         public override void OnSpawn(Projectile proj, IEntitySource source)
@@ -119,9 +120,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         void IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            var owner = Main.player[proj.owner];
-
-            if (!owner.GetModPlayer<EchoCounterweightPlayer>().EchoCounterweightEquipped) return;
+            if (!IsAccessoryEquiped(proj, out Player owner)) return;
 
             var vectorFromProjToPlayer = owner.Center - proj.Center;
             var vectorFromProjToClone = (vectorFromProjToPlayer * 2);

@@ -33,7 +33,7 @@ Items: {
 		Tooltip:
 			'''
 			Можно подарить медсестре
-			«Удивительно, но пахнет он восхитительно»
+			«Удивительно, но пахнет восхитительно»
 			'''
 		DisplayName: Странный напиток
 	}
@@ -60,6 +60,16 @@ Items: {
 			Увеличивает урон противовесов на 25%
 			'''
 	}
+
+	CulminationItem: {
+		// Tooltip: ""
+		// DisplayName: Culmination Item
+	}
+
+	BlackholeItem: {
+		// DisplayName: Blackhole Item
+		// Tooltip: ""
+	}
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
@@ -73,4 +83,6 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 Projectiles: {
 	SiriusProjectile.DisplayName: Sirius Projectile
 	// MyocardialInfarctionProjectile.DisplayName: Myocardial Infarction Projectile
+	// CulminationProjectile.DisplayName: Culmination Projectile
+	// BlackholeProjectile.DisplayName: Blackhole Projectile
 }

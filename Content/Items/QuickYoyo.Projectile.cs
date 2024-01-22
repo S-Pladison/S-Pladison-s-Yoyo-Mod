@@ -72,7 +72,7 @@ namespace SPYoyoMod.Content.Items
             return true;
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        public sealed override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             var owner = Main.player[Projectile.owner];
 
@@ -83,6 +83,19 @@ namespace SPYoyoMod.Content.Items
             }
 
             YoyoOnHitNPC(owner, target, hit, damageDone);
+        }
+
+        public sealed override void OnHitPlayer(Player target, Player.HurtInfo info)
+        {
+            var owner = Main.player[Projectile.owner];
+
+            if (owner.yoyoGlove && !YoyoGloveActivated)
+            {
+                YoyoGloveActivated = true;
+                OnActivateYoyoGlove();
+            }
+
+            YoyoOnHitPlayer(owner, target, info);
         }
 
         public sealed override void SendExtraAI(BinaryWriter writer)
@@ -113,6 +126,7 @@ namespace SPYoyoMod.Content.Items
         public virtual void YoyoSetStaticDefaults() { }
         public virtual void YoyoSetDefaults() { }
         public virtual void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone) { }
+        public virtual void YoyoOnHitPlayer(Player owner, Player target, Player.HurtInfo info) { }
         public virtual void YoyoSendExtraAI(BinaryWriter writer) { }
         public virtual void YoyoReceiveExtraAI(BinaryReader reader) { }
 

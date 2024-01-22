@@ -56,6 +56,16 @@ Items: {
 			25% increased counterweight damage
 			'''
 	}
+
+	CulminationItem: {
+		Tooltip: ""
+		DisplayName: Culmination Item
+	}
+
+	BlackholeItem: {
+		DisplayName: Blackhole Item
+		Tooltip: ""
+	}
 }
 
 NPCs.NurseNPC.GiftButton: Gift
@@ -69,4 +79,6 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 Projectiles: {
 	SiriusProjectile.DisplayName: Sirius Projectile
 	MyocardialInfarctionProjectile.DisplayName: Myocardial Infarction Projectile
+	CulminationProjectile.DisplayName: Culmination Projectile
+	BlackholeProjectile.DisplayName: Blackhole Projectile
 }
