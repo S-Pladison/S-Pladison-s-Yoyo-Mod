@@ -1,33 +1,63 @@
-﻿using Microsoft.Xna.Framework;
+﻿using MonoMod.Cil;
+using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
+using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Common
 {
-    public class ItemInventoryDrawHooks : ILoadable
+    [Autoload(Side = ModSide.Client)]
+    public sealed class ItemInventoryDrawHooks : ILoadable
     {
         void ILoadable.Load(Mod mod)
         {
-            On_ItemSlot.DrawItemIcon += (orig, item, context, spriteBatch, screenPositionForItemCenter, scale, sizeLimit, environmentColor) =>
+            IL_ItemSlot.DrawItemIcon += (il) =>
             {
-                // I don't know why, but hook On_ItemSlot.DrawItem_GetColorAndScale doesn't get called without this dummy placeholder
-                return orig(item, context, spriteBatch, screenPositionForItemCenter, scale, sizeLimit, environmentColor);
-            };
+                var c = new ILCursor(il);
 
-            On_ItemSlot.DrawItem_GetColorAndScale += (On_ItemSlot.orig_DrawItem_GetColorAndScale orig, Item item, float s, ref Color cW, float sL, ref Rectangle f, out Color iL, out float finalDrawScale) =>
-            {
-                orig(item, s, ref cW, sL, ref f, out iL, out finalDrawScale);
+                // float finalDrawScale;
+                // ItemSlot.DrawItem_GetColorAndScale(item, scale, ref environmentColor, sizeLimit, ref frame, out itemLight, out finalDrawScale);
 
-                var scaleMult = ModSets.Items.InventoryDrawScaleMultiplier[item.type];
+                // IL_005a: ldarg.0 // item
+                // IL_005b: ldarg.s scale
+                // IL_005d: ldarga.s environmentColor
+                // IL_005f: ldarg.s sizeLimit
+                // IL_0061: ldloca.s frame
+                // IL_0063: ldloca.s itemLight
+                // IL_0065: ldloca.s finalDrawScale
+                // IL_0067: call void ItemSlot::DrawItem_GetColorAndScale(...)
 
-                if (scaleMult.HasValue)
-                {
-                    finalDrawScale *= scaleMult.Value;
-                }
+                int finalDrawScaleIndex = -1;
+
+                if (!c.TryGotoNext(MoveType.After,
+                        i => i.MatchLdarg0(),
+                        i => i.MatchLdarg(out _),
+                        i => i.MatchLdarga(out _),
+                        i => i.MatchLdarg(out _),
+                        i => i.MatchLdloca(out _),
+                        i => i.MatchLdloca(out _),
+                        i => i.MatchLdloca(out finalDrawScaleIndex),
+                        i => i.MatchCall(typeof(ItemSlot).GetMethod(nameof(ItemSlot.DrawItem_GetColorAndScale), BindingFlags.Public | BindingFlags.Static)))) return;
+
+                c.Emit(Ldarg_0);
+                c.Emit(Ldloca, finalDrawScaleIndex);
+                c.EmitDelegate<ModifyFinalDrawScaleDelegate>(ModifyFinalDrawScale);
             };
         }
 
         void ILoadable.Unload() { }
+
+        public static void ModifyFinalDrawScale(Item item, ref float finalDrawScale)
+        {
+            var scaleMult = ModSets.Items.InventoryDrawScaleMultiplier[item.type];
+
+            if (scaleMult.HasValue)
+            {
+                finalDrawScale *= scaleMult.Value;
+            }
+        }
+
+        public delegate void ModifyFinalDrawScaleDelegate(Item item, ref float finalDrawScale);
     }
 }

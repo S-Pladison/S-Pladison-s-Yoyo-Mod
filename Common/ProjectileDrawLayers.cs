@@ -11,7 +11,7 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Common
 {
     [Autoload(Side = ModSide.Client)]
-    public class ProjectileDrawLayers : ILoadable
+    public sealed class ProjectileDrawLayers : ILoadable
     {
         private Matrix transformMatrix;
         private Matrix transformWithScreenOffsetMatrix;
