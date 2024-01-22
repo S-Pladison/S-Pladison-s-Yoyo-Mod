@@ -63,8 +63,8 @@ Items: {
 	}
 
 	BlackholeItem: {
-		DisplayName: Blackhole Item
-		Tooltip: ""
+		DisplayName: Blackhole
+		Tooltip: Pulls enemies to itself
 	}
 }
 
@@ -80,5 +80,5 @@ Projectiles: {
 	SiriusProjectile.DisplayName: Sirius Projectile
 	MyocardialInfarctionProjectile.DisplayName: Myocardial Infarction Projectile
 	CulminationProjectile.DisplayName: Culmination Projectile
-	BlackholeProjectile.DisplayName: Blackhole Projectile
+	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 }
