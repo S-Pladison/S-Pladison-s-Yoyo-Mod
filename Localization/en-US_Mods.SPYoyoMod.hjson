@@ -64,7 +64,11 @@ Items: {
 
 	SoulTormentorItem: {
 		DisplayName: Soul Tormentor
-		Tooltip: ""
+		Tooltip:
+			'''
+			Charms 3 nearest enemies
+			Hitting a charmed enemy also deals damage to others
+			'''
 	}
 }
 

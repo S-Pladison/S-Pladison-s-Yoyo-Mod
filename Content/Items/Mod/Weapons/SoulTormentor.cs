@@ -5,6 +5,9 @@ using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -33,27 +36,63 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class SoulTormentorProjectile : YoyoProjectile, IDrawPixelatedProjectile, IDrawPixelatedPrimitivesProjectile
     {
+        public static readonly float TormentorRadius;
+        public static readonly int TormentorCount;
+
+        static SoulTormentorProjectile()
+        {
+            TormentorRadius = 16 * 15;
+            TormentorCount = 3;
+        }
+
         public override string Texture { get => ModAssets.ProjectilesPath + "SoulTormentor"; }
 
         private TrailRenderer blackTrailRenderer;
         private TrailRenderer redTrailRenderer;
-        private LineRenderer lineRenderer;
 
         public SoulTormentorProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
         public override void AI()
         {
-            if (Main.rand.NextBool(2))
+            foreach (var (npc, _) in GetTargets())
             {
-                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                var position = Projectile.Center + vector * Main.rand.NextFloat(7f, 18f);
-                var velocity = vector * Main.rand.NextFloat(0.5f, 3f);
-
-                Dust.NewDustPerfect(position, ModContent.DustType<SoulTormentorDust>(), velocity);
+                if (Main.rand.NextBool(12))
+                    SpawnDusts(npc.Center);
             }
+
+            if (Main.rand.NextBool(3))
+                SpawnDusts(Projectile.Center);
 
             blackTrailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
             redTrailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity + new Vector2(6f, 0).RotatedBy(MathHelper.Pi + Projectile.rotation));
+        }
+
+        public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            foreach (var (npc, _) in GetTargets())
+            {
+                if (target.whoAmI == npc.whoAmI)
+                    continue;
+
+                hit.HitDirection = Math.Sign((npc.Center - owner.Center).X);
+                hit.Damage /= 2;
+                hit.Knockback /= 2;
+
+                npc.StrikeNPC(hit);
+            }
+        }
+
+        private List<(NPC npc, float distance)> GetTargets()
+            => NPCUtils.NearestNPCs(Projectile.Center, TormentorRadius, (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy)).Take(TormentorCount).ToList();
+
+        private void SpawnDusts(Vector2 position)
+        {
+            var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+            var velocity = vector * Main.rand.NextFloat(0.5f, 3f);
+
+            position += vector * Main.rand.NextFloat(7f, 18f);
+
+            Dust.NewDustPerfect(position, ModContent.DustType<SoulTormentorDust>(), velocity);
         }
 
         void IDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
@@ -66,11 +105,26 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, new(255, 0, 35), 0f, texture.Size() * 0.5f, 0.5f * scale, SpriteEffects.None, 0f);
         }
 
+        void IDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
+        {
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Heart", AssetRequestMode.ImmediateLoad);
+            var origin = texture.Size() * 0.5f;
+
+            foreach (var (npc, distance) in GetTargets())
+            {
+                var npcPos = npc.Center + npc.gfxOffY * Vector2.UnitY;
+                var npcDrawPos = npcPos - Main.screenPosition;
+                var rotation = MathF.Sin((float)Main.timeForVisualEffects * 0.03f + npc.whoAmI);
+                var color = Color.Lerp(Color.Transparent, new Color(255, 0, 35), EaseFunctions.OutExpo(1f - distance / TormentorRadius) * 2f);
+
+                Main.spriteBatch.Draw(texture.Value, npcDrawPos, null, color, rotation, origin, 0.25f, SpriteEffects.None, 0);
+            }
+        }
+
         void IDrawPixelatedPrimitivesProjectile.PreDrawPixelatedPrimitives(Projectile _, PrimitiveMatrices matrices)
         {
             blackTrailRenderer ??= InitTrailRenderer(25, 16);
             redTrailRenderer ??= InitTrailRenderer(20, 8);
-            lineRenderer ??= InitLineRenderer();
 
             var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultPrimitive", AssetRequestMode.ImmediateLoad);
             var effect = effectAsset.Value;
@@ -96,38 +150,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             effectParameters["ColorBR"].SetValue(redColorVec4);
 
             redTrailRenderer.Draw(effect);
-
-            var targets = NPCUtils.NearestNPCs
-            (
-                center: Projectile.Center,
-                radius: 16 * 10,
-                predicate: (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy)
-            );
-
-            var projectilePos = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY;
-
-            /*foreach (var (npc, distance) in targets)
-            {
-                //var progress = 1f - MathF.Pow(target.distance / EFFECT_DRAW_RADIUS, 2.5f);
-                var progress = 1f;
-                var npcPos = npc.Center + npc.gfxOffY * Vector2.UnitY;
-                var npcDrawPos = npcPos - Main.screenPosition;
-                var sin = MathF.Sin(Main.GlobalTimeWrappedHourly * 2f + progress + npc.whoAmI);
-                var normal = Vector2.Normalize(Projectile.Center - npc.Center).RotatedBy(MathHelper.PiOver2) * sin * 16 * 3;
-                var points = new List<Vector2>() { projectilePos, projectilePos + normal, npcPos - normal, npcPos };
-                var bezierPoints = BezierCurve.GetPoints(8, points);
-
-                lineRenderer.SetPoints(bezierPoints).Draw(effect);
-            }*/
         }
 
         private TrailRenderer InitTrailRenderer(int pointCount, float width)
             => new TrailRenderer(pointCount).SetWidth(f => MathHelper.Lerp(width, 0f, f));
-
-        private LineRenderer InitLineRenderer()
-        {
-            return new LineRenderer(8, false);
-        }
     }
 
     public class SoulTormentorDust : ModDust
