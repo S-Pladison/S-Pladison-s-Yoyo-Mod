@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.Graphics.Renderers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -33,25 +34,45 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class SoulTormentorProjectile : YoyoProjectile, IDrawPixelatedPrimitivesProjectile
+    public class SoulTormentorProjectile : YoyoProjectile, IDrawPixelatedProjectile, IDrawPixelatedPrimitivesProjectile
     {
         public override string Texture { get => ModAssets.ProjectilesPath + "SoulTormentor"; }
 
-        private TrailRenderer trailRenderer;
+        private TrailRenderer blackTrailRenderer;
+        private TrailRenderer redTrailRenderer;
         private LineRenderer lineRenderer;
 
         public SoulTormentorProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
         public override void AI()
         {
-            //Dust.NewDustPerfect(Projectile.Center, ModContent.DustType<SoulTormentorDust>(), Vector2.Zero);
+            if (Main.rand.NextBool(2))
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var position = Projectile.Center + vector * Main.rand.NextFloat(7f, 18f);
+                var velocity = vector * Main.rand.NextFloat(0.5f, 3f);
 
-            trailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
+                Dust.NewDustPerfect(position, ModContent.DustType<SoulTormentorDust>(), velocity);
+            }
+
+            blackTrailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
+            redTrailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity + new Vector2(6f, 0).RotatedBy(MathHelper.Pi + Projectile.rotation));
+        }
+
+        void IDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
+        {
+            var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
+            var scale = Projectile.scale;
+
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Black, 0f, texture.Size() * 0.5f, 0.47f * scale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture.Value, drawPosition, null, new(255, 0, 35), 0f, texture.Size() * 0.5f, 0.5f * scale, SpriteEffects.None, 0f);
         }
 
         void IDrawPixelatedPrimitivesProjectile.PreDrawPixelatedPrimitives(Projectile _, PrimitiveMatrices matrices)
         {
-            trailRenderer ??= InitTrailRenderer();
+            blackTrailRenderer ??= InitTrailRenderer(25, 16);
+            redTrailRenderer ??= InitTrailRenderer(20, 8);
             lineRenderer ??= InitLineRenderer();
 
             var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultPrimitive", AssetRequestMode.ImmediateLoad);
@@ -59,14 +80,25 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             var effectParameters = effect.Parameters;
 
             effectParameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
-            effectParameters["ColorTL"].SetValue(Color.White.ToVector4());
-            effectParameters["ColorTR"].SetValue(Color.White.ToVector4());
-            effectParameters["ColorBL"].SetValue(Color.White.ToVector4());
-            effectParameters["ColorBR"].SetValue(Color.White.ToVector4());
             effectParameters["TransformMatrix"].SetValue(matrices.TransformWithScreenOffset);
 
-            trailRenderer ??= InitTrailRenderer();
-            trailRenderer.Draw(effect);
+            var blackColorVec4 = Color.Black.ToVector4();
+
+            effectParameters["ColorTL"].SetValue(blackColorVec4);
+            effectParameters["ColorTR"].SetValue(blackColorVec4);
+            effectParameters["ColorBL"].SetValue(blackColorVec4);
+            effectParameters["ColorBR"].SetValue(blackColorVec4);
+
+            blackTrailRenderer.Draw(effect);
+
+            var redColorVec4 = new Color(255, 0, 35).ToVector4();
+
+            effectParameters["ColorTL"].SetValue(redColorVec4);
+            effectParameters["ColorTR"].SetValue(redColorVec4);
+            effectParameters["ColorBL"].SetValue(redColorVec4);
+            effectParameters["ColorBR"].SetValue(redColorVec4);
+
+            redTrailRenderer.Draw(effect);
 
             var targets = NPCUtils.NearestNPCs
             (
@@ -77,7 +109,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             var projectilePos = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY;
 
-            foreach (var (npc, distance) in targets)
+            /*foreach (var (npc, distance) in targets)
             {
                 //var progress = 1f - MathF.Pow(target.distance / EFFECT_DRAW_RADIUS, 2.5f);
                 var progress = 1f;
@@ -89,13 +121,11 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var bezierPoints = BezierCurve.GetPoints(8, points);
 
                 lineRenderer.SetPoints(bezierPoints).Draw(effect);
-            }
+            }*/
         }
 
-        private TrailRenderer InitTrailRenderer()
-        {
-            return new TrailRenderer(15);
-        }
+        private TrailRenderer InitTrailRenderer(int pointCount, float width)
+            => new TrailRenderer(pointCount).SetWidth(f => MathHelper.Lerp(width, 0f, f));
 
         private LineRenderer InitLineRenderer()
         {
@@ -111,7 +141,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             dust.noGravity = true;
             dust.frame = new Rectangle(0, Main.rand.Next(2) * 18, 18, 18);
-            dust.color = new Color[] { new(255, 0, 35), new(225, 40, 120) }[Main.rand.Next(2)];
+            dust.rotation = Main.rand.NextFloat(-MathHelper.PiOver2, MathHelper.PiOver2);
+            dust.scale *= Main.rand.NextFloat(1f, 1.2f);
+            dust.color = new(255, 0, 35);
         }
 
         public override bool PreDraw(Dust dust)
