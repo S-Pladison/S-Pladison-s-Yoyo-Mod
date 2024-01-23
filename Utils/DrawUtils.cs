@@ -98,7 +98,7 @@ namespace SPYoyoMod.Utils
             var color = Color.White;
             color.A = (byte)(color.A * 0.40000000596046448);
 
-            var stringColor = GetPlayerStringColor(Main.player[proj.owner].stringColor);
+            var stringColor = GetPlayerStringColor(Main.player[proj.owner].stringColor, color);
 
             while (flag1)
             {
@@ -191,8 +191,8 @@ namespace SPYoyoMod.Utils
             }
         }
 
-        private static Color GetPlayerStringColor(int playerStringColor)
-            => (Color)StringColorMethodInfo.Invoke(null, new object[] { playerStringColor, Color.White });
+        private static Color GetPlayerStringColor(int playerStringColor, Color defaultColor)
+            => (Color)StringColorMethodInfo.Invoke(null, new object[] { playerStringColor, defaultColor });
 
         private static readonly MethodInfo StringColorMethodInfo
             = typeof(Main).GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static);
