@@ -88,6 +88,7 @@ namespace SPYoyoMod.Common
 
             if (projIndex >= 0)
             {
+                Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                 IDrawPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, new PrimitiveMatrices(transformMatrix, transformWithScreenOffsetMatrix));
             }
         }
@@ -98,6 +99,7 @@ namespace SPYoyoMod.Common
 
             if (projIndex >= 0)
             {
+                Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                 IDrawPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, new PrimitiveMatrices(transformMatrix, transformWithScreenOffsetMatrix));
             }
 
@@ -166,6 +168,7 @@ namespace SPYoyoMod.Common
 
                 if (projIndex >= 0)
                 {
+                    Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                     var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
                     IDrawPixelatedPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, matrices);
                 }
@@ -218,6 +221,7 @@ namespace SPYoyoMod.Common
 
                 if (projIndex >= 0)
                 {
+                    Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
                     var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
                     IDrawPixelatedPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, matrices);
                 }
