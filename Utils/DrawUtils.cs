@@ -95,6 +95,11 @@ namespace SPYoyoMod.Utils
 
             var segments = new List<Tuple<Vector2, float, float, Color>>();
 
+            var color = Color.White;
+            color.A = (byte)(color.A * 0.40000000596046448);
+
+            var stringColor = GetPlayerStringColor(Main.player[proj.owner].stringColor);
+
             while (flag1)
             {
                 float segmentHeight = 12f;
@@ -170,13 +175,9 @@ namespace SPYoyoMod.Utils
                         }
                     }
 
-                    var color = Color.White;
-                    color.A = (byte)(color.A * 0.40000000596046448);
+                    var segmentColor = Lighting.GetColor((int)startPos.X / 16, (int)(startPos.Y / 16.0), stringColor);
+                    segmentColor = new Color(segmentColor.R * 0.5f, segmentColor.G * 0.5f, segmentColor.B * 0.5f, segmentColor.A * 0.5f);
 
-                    var stringColor = TryApplyingPlayerStringColor(Main.player[proj.owner].stringColor, color);
-                    stringColor = Lighting.GetColor((int)startPos.X / 16, (int)(startPos.Y / 16.0), stringColor);
-
-                    var segmentColor = new Color(stringColor.R * 0.5f, stringColor.G * 0.5f, stringColor.B * 0.5f, stringColor.A * 0.5f);
                     var segmentPosition = new Vector2((float)(startPos.X + TextureAssets.FishingLine.Width() * 0.5), (float)(startPos.Y + TextureAssets.FishingLine.Height() * 0.5)) - new Vector2(6f, 0.0f);
                     var segmentRotation = (float)Math.Atan2((double)y, (double)x) - 1.57f;
 
@@ -190,13 +191,12 @@ namespace SPYoyoMod.Utils
             }
         }
 
+        private static Color GetPlayerStringColor(int playerStringColor)
+            => (Color)StringColorMethodInfo.Invoke(null, new object[] { playerStringColor, Color.White });
+
+        private static readonly MethodInfo StringColorMethodInfo
+            = typeof(Main).GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static);
+
         public delegate void DrawYoyoStringSegmentDelegate(int segmentCount, int segmentIndex, Vector2 position, float rotation, float height, Color color);
-
-        private static Color TryApplyingPlayerStringColor(int playerStringColor, Color stringColor)
-        {
-            return (Color)(StringColorMethodInfo?.Invoke(null, new object[] { playerStringColor, stringColor }) ?? stringColor);
-        }
-
-        private static readonly MethodInfo StringColorMethodInfo = typeof(Main).GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static);
     }
 }

@@ -12,7 +12,6 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
-        public bool YoyoGloveActivated { get; private set; }
         public bool IsMainYoyo { get; private set; }
         public bool IsReturning { get => Projectile.ai[0] == -1; }
         public float ReturnToPlayerProgress { get; private set; }
@@ -86,11 +85,7 @@ namespace SPYoyoMod.Content.Items
         {
             var owner = Main.player[Projectile.owner];
 
-            if (owner.yoyoGlove && !YoyoGloveActivated)
-            {
-                YoyoGloveActivated = true;
-                OnActivateYoyoGlove();
-            }
+            // ...
 
             YoyoOnHitNPC(owner, target, hit, damageDone);
         }
@@ -99,24 +94,22 @@ namespace SPYoyoMod.Content.Items
         {
             var owner = Main.player[Projectile.owner];
 
-            if (owner.yoyoGlove && !YoyoGloveActivated)
-            {
-                YoyoGloveActivated = true;
-                OnActivateYoyoGlove();
-            }
+            // ...
 
             YoyoOnHitPlayer(owner, target, info);
         }
 
         public sealed override void SendExtraAI(BinaryWriter writer)
         {
-            writer.Write(YoyoGloveActivated);
+            // ...
+
             YoyoSendExtraAI(writer);
         }
 
         public sealed override void ReceiveExtraAI(BinaryReader reader)
         {
-            YoyoGloveActivated = reader.ReadBoolean();
+            // ...
+
             YoyoReceiveExtraAI(reader);
         }
 

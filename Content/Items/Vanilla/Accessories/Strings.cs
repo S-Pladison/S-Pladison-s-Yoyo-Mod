@@ -20,18 +20,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             int index = TooltipUtils.GetDescriptionLastIndex(tooltips);
+
             if (index >= 0)
-            {
-                tooltips.RemoveAt(index);
-
-                var text = Language.GetTextValue("Mods.SPYoyoMod.VanillaItems.StringItem.Tooltip").Split("\n");
-                var n = 0;
-
-                foreach (var elem in text)
-                {
-                    tooltips.Insert(index++, new TooltipLine(Mod, "ModTooltip" + n++, elem));
-                }
-            }
+                tooltips[index].Text = Language.GetTextValue("Mods.SPYoyoMod.VanillaItems.StringItem.Tooltip");
         }
     }
 
