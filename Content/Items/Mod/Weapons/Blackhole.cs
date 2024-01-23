@@ -116,7 +116,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
 
-            for (int i = 0; i < 12; i++)
+            for (int i = 0; i < 7; i++)
             {
                 var position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(20);
                 var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(0.75f);
@@ -210,6 +210,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             velocity = Vector2.Lerp(initVelocity, Vector2.Zero, Progress);
             position += velocity;
             timeLeft--;
+
+            var easeResult = EaseFunctions.InOutCirc(Progress);
+            var lightColorMult = 0.4f * MathF.Min(easeResult * (1f - easeResult) * 20f, 1f);
+            Lighting.AddLight(position, new Color(171, 97, 255).ToVector3() * lightColorMult);
         }
 
         public void Draw(ref ParticleRendererSettings settings, SpriteBatch spriteBatch)
