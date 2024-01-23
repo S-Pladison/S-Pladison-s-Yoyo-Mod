@@ -5,11 +5,8 @@ using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
-using System;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
-using Terraria.Graphics.Renderers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -140,10 +137,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public override void OnSpawn(Dust dust)
         {
             dust.noGravity = true;
-            dust.frame = new Rectangle(0, Main.rand.Next(2) * 18, 18, 18);
+            dust.frame = new Rectangle(Main.rand.Next(4) * 18, 0, 18, 18);
             dust.rotation = Main.rand.NextFloat(-MathHelper.PiOver2, MathHelper.PiOver2);
             dust.scale *= Main.rand.NextFloat(1f, 1.2f);
-            dust.color = new(255, 0, 35);
+            dust.color = Color.White;
         }
 
         public override bool PreDraw(Dust dust)
