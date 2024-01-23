@@ -68,6 +68,7 @@ Items: {
 	}
 }
 
+VanillaItems.StringItem.Tooltip: Increases yoyo range by 4 tiles
 NPCs.NurseNPC.GiftButton: Gift
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''

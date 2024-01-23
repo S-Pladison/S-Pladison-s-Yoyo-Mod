@@ -1,10 +1,13 @@
 ﻿using MonoMod.Cil;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.ModCompatibility;
+using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
+using System.Collections.Generic;
 using System.Reflection;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using static Mono.Cecil.Cil.OpCodes;
 
@@ -13,6 +16,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
     public class StringsItem : GlobalItem
     {
         public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
+
+        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+        {
+            int index = TooltipUtils.GetDescriptionLastIndex(tooltips);
+            if (index >= 0)
+            {
+                tooltips.RemoveAt(index);
+
+                var text = Language.GetTextValue("Mods.SPYoyoMod.VanillaItems.StringItem.Tooltip").Split("\n");
+                var n = 0;
+
+                foreach (var elem in text)
+                {
+                    tooltips.Insert(index++, new TooltipLine(Mod, "ModTooltip" + n++, elem));
+                }
+            }
+        }
     }
 
     public class StringsGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
@@ -90,7 +110,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
             if (!owner.yoyoString) return;
 
-            statModifiers.MaxRange.Flat += 16 * 3;
+            statModifiers.MaxRange.Flat += 16 * 4;
         }
 
         public static void GetYoyoStatModifier(Projectile proj, ref YoyoStatModifiers statModifiers)

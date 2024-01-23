@@ -72,6 +72,7 @@ Items: {
 	}
 }
 
+VanillaItems.StringItem.Tooltip: Увеличивает дистанцию действия йо-йо на 4 блока
 NPCs.NurseNPC.GiftButton: Подарок
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
