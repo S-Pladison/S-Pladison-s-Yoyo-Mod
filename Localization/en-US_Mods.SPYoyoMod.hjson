@@ -38,11 +38,6 @@ Items: {
 		DisplayName: Strange Drink
 	}
 
-	MyocardialInfarctionItem: {
-		Tooltip: ""
-		DisplayName: Myocardial Infarction
-	}
-
 	FlamingFlowerItem: {
 		DisplayName: Flaming Flower Item
 		Tooltip: ""
@@ -66,6 +61,11 @@ Items: {
 		DisplayName: Blackhole
 		Tooltip: Pulls enemies to itself
 	}
+
+	SoulTormentorItem: {
+		DisplayName: Soul Tormentor
+		Tooltip: ""
+	}
 }
 
 VanillaItems.StringItem.Tooltip: Increases yoyo range by 4 tiles
@@ -79,7 +79,7 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 
 Projectiles: {
 	SiriusProjectile.DisplayName: Sirius Projectile
-	MyocardialInfarctionProjectile.DisplayName: Myocardial Infarction Projectile
 	CulminationProjectile.DisplayName: Culmination Projectile
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
+	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 }

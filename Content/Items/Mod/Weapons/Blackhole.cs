@@ -84,10 +84,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                     Collision.CanHitLine(Projectile.position, Projectile.width, Projectile.height, npc.position, npc.width, npc.height)
             );
 
-            foreach (var target in targets)
+            foreach (var (npc, distance) in targets)
             {
-                var npc = target.npc;
-                var distance = target.distance;
                 var vector = Projectile.Center - npc.Center;
                 var progress = 1 - distance / currentRadius;
 

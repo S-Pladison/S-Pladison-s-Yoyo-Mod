@@ -54,7 +54,7 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
     public class StrangeDrinkImplemention : ILoadable
     {
         public static int GiftForNurseType { get => ModContent.ItemType<StrangeDrinkItem>(); }
-        public static int GiftForPlayerType { get => ModContent.ItemType<MyocardialInfarctionItem>(); }
+        public static int GiftForPlayerType { get => ModContent.ItemType<SoulTormentorItem>(); }
         public static LocalizedText GiftButtonText { get; private set; }
         public static LocalizedText GiftDialogueText { get; private set; }
 
