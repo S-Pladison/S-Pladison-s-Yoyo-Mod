@@ -2,7 +2,9 @@
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils.Extensions;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items
@@ -16,7 +18,7 @@ namespace SPYoyoMod.Content.Items
             this.yoyoType = yoyoType;
         }
 
-        public sealed override bool AppliesToEntity(Projectile entity, bool lateInstantiation) { return entity.type.Equals(yoyoType); }
+        public sealed override bool AppliesToEntity(Projectile entity, bool lateInstantiation) { return entity.type < ProjectileID.Count && entity.IsYoyo() && entity.type.Equals(yoyoType); }
         public sealed override bool IsLoadingEnabled(Terraria.ModLoader.Mod mod) { return ModContent.GetInstance<ServerSideConfig>().ReworkedVanillaYoyos; }
 
         public virtual void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers) { }
