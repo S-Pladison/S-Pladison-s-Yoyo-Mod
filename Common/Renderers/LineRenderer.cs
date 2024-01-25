@@ -11,12 +11,7 @@ namespace SPYoyoMod.Common.Renderers
     {
         private class Line
         {
-            private static readonly float ParallelThreshold;
-
-            static Line()
-            {
-                ParallelThreshold = 0.01f;
-            }
+            private static readonly float ParallelThreshold = 0.01f;
 
             public Vector2 Offset;
             public Vector2 Direction;

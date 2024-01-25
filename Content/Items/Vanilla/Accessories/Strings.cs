@@ -121,8 +121,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             length = (length - 10) / 1.25f;
         }
 
-        private delegate void GetYoyoStatModifierDelegate(Projectile proj, ref YoyoStatModifiers statModifiers);
-        private delegate void ModifyYoyoStatDelegate(Projectile proj, ref YoyoStatModifiers statModifiers, ref float value);
+        public delegate void GetYoyoStatModifierDelegate(Projectile proj, ref YoyoStatModifiers statModifiers);
+        public delegate void ModifyYoyoStatDelegate(Projectile proj, ref YoyoStatModifiers statModifiers, ref float value);
         public delegate void RemoveStringBonusDelegate(ref float value);
     }
 

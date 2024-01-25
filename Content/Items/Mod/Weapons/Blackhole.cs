@@ -42,12 +42,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BlackholeProjectile : YoyoProjectile, IDrawPixelatedProjectile, IDrawDistortionProjectile
     {
-        public static readonly float GravityRadius;
-
-        static BlackholeProjectile()
-        {
-            GravityRadius = 16 * 10;
-        }
+        public static readonly float GravityRadius = GravityRadius = 16 * 10;
 
         public override string Texture { get => ModAssets.ProjectilesPath + "Blackhole"; }
         public float RadiusProgress { get => Projectile.localAI[1]; set => Projectile.localAI[1] = value; }

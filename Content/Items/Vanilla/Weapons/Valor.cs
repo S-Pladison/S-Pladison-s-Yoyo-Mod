@@ -37,12 +37,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ValorProjectile : VanillaYoyoProjectile, IDrawPixelatedPrimitivesProjectile
     {
-        public static readonly int ChainChanceDenominator;
-
-        static ValorProjectile()
-        {
-            ChainChanceDenominator = 7;
-        }
+        public static readonly int ChainChanceDenominator = 7;
 
         public override bool InstancePerEntity { get => true; }
 
@@ -54,17 +49,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public override void AI(Projectile proj)
         {
             if (proj.velocity.Length() >= 3f)
-            {
-                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                var velocity = vector * Main.rand.NextFloat(0.5f);
-
-                var position = proj.Center;
-                position += vector * Main.rand.NextFloat(8f);
-
-                var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
-                dust.scale += 0.1f;
-                dust.noGravity = true;
-            }
+                SpawnDustTrail(proj);
 
             trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
             spriteTrailRenderer?.SetNextPoint(proj.Center + proj.velocity, proj.rotation);
@@ -84,7 +69,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             globalNPC.SecureWithChain(npc);
         }
 
-        public override bool PreDraw(Projectile projectile, ref Color lightColor)
+        public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
             if (spriteTrailRenderer is null)
             {
@@ -100,6 +85,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             spriteTrailRenderer.Draw(Main.spriteBatch, -Main.screenPosition, lightColor);
             return true;
+        }
+
+        private void SpawnDustTrail(Projectile proj)
+        {
+            var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+            var velocity = vector * Main.rand.NextFloat(0.5f);
+
+            var position = proj.Center;
+            position += vector * Main.rand.NextFloat(8f);
+
+            var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
+            dust.scale += 0.1f;
+            dust.noGravity = true;
         }
 
         void IDrawPixelatedPrimitivesProjectile.PreDrawPixelatedPrimitives(Projectile proj, PrimitiveMatrices matrices)
@@ -120,14 +118,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ValorGlobalNPC : GlobalNPC
     {
-        public static readonly float SecuredWithChainMinLength;
-        public static readonly int SecuredWithChainTime;
-
-        static ValorGlobalNPC()
-        {
-            SecuredWithChainMinLength = 16f * 5f;
-            SecuredWithChainTime = 60 * 7;
-        }
+        public static readonly float SecuredWithChainMinLength = 16f * 5f;
+        public static readonly int SecuredWithChainTime = 60 * 7;
 
         public override bool InstancePerEntity { get => true; }
         public bool IsSecuredWithChain { get => securedWithChainTimer > 0; }

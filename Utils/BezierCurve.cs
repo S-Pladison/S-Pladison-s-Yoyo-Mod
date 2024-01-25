@@ -7,12 +7,7 @@ namespace SPYoyoMod.Utils
 {
     public class BezierCurve
     {
-        private static readonly IList<float> factorialList;
-
-        static BezierCurve()
-        {
-            factorialList = new List<float>() { 1f };
-        }
+        private static readonly IList<float> factorialList = new List<float>() { 1f };
 
         private readonly IList<Vector2> points;
 

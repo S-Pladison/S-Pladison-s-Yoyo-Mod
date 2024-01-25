@@ -7,12 +7,7 @@ namespace SPYoyoMod.Common.RenderTargets
     [Autoload(Side = ModSide.Client)]
     public sealed class RenderTargetContentSystem : ModSystem
     {
-        private static List<RenderTargetContent> contentThatNeedsRenderTargets;
-
-        static RenderTargetContentSystem()
-        {
-            contentThatNeedsRenderTargets = new();
-        }
+        private static List<RenderTargetContent> contentThatNeedsRenderTargets = new();
 
         public override void Load()
         {

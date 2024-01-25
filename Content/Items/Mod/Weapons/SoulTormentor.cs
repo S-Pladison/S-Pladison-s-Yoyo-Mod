@@ -36,14 +36,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class SoulTormentorProjectile : YoyoProjectile, IDrawPixelatedProjectile, IDrawPixelatedPrimitivesProjectile
     {
-        public static readonly float TormentorRadius;
-        public static readonly int TormentorCount;
-
-        static SoulTormentorProjectile()
-        {
-            TormentorRadius = 16 * 15;
-            TormentorCount = 3;
-        }
+        public static readonly float TormentorRadius = 16 * 15;
+        public static readonly int TormentorCount = 3;
 
         public override string Texture { get => ModAssets.ProjectilesPath + "SoulTormentor"; }
 
@@ -74,11 +68,12 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 if (target.whoAmI == npc.whoAmI)
                     continue;
 
-                hit.HitDirection = Math.Sign((npc.Center - owner.Center).X);
-                hit.Damage /= 2;
-                hit.Knockback /= 2;
+                var hitInfo = hit;
+                hitInfo.HitDirection = Math.Sign((npc.Center - owner.Center).X);
+                hitInfo.Damage /= 2;
+                hitInfo.Knockback /= 2;
 
-                npc.StrikeNPC(hit);
+                npc.StrikeNPC(hitInfo);
             }
         }
 

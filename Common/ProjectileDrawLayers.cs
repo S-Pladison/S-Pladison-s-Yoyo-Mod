@@ -88,9 +88,7 @@ namespace SPYoyoMod.Common
 
             if (projIndex >= 0)
             {
-                Main.graphics.GraphicsDevice.RasterizerState = Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipVertically) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
-                Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
+                PrepareToDrawPrimitives(Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipVertically) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise);
                 IDrawPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, new PrimitiveMatrices(transformMatrix, transformWithScreenOffsetMatrix));
             }
         }
@@ -101,9 +99,7 @@ namespace SPYoyoMod.Common
 
             if (projIndex >= 0)
             {
-                Main.graphics.GraphicsDevice.RasterizerState = Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipVertically) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
-                Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
+                PrepareToDrawPrimitives(Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipVertically) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise);
                 IDrawPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, new PrimitiveMatrices(transformMatrix, transformWithScreenOffsetMatrix));
             }
 
@@ -126,16 +122,24 @@ namespace SPYoyoMod.Common
             }
         }
 
-        private class PreDrawPixelatedRenderTargetContent : RenderTargetContent
+        private static void PrepareToDrawPrimitives(RasterizerState rasterizerState)
+        {
+            Main.graphics.GraphicsDevice.RasterizerState = rasterizerState;
+            Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+        }
+
+        private abstract class PixelatedRenderTargetContent : RenderTargetContent
         {
             public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
 
-            private int projIndex;
+            protected int projIndex;
+        }
 
+        private class PreDrawPixelatedRenderTargetContent : PixelatedRenderTargetContent
+        {
             public override bool PreRender()
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
-
                 return (projIndex = IDrawPixelatedProjectile.FirstProjIndex(projectiles, true)) > 0;
             }
 
@@ -143,25 +147,17 @@ namespace SPYoyoMod.Common
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
 
-                if (projIndex >= 0)
-                {
-                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
-                    IDrawPixelatedProjectile.PreDrawProjs(projectiles, projIndex);
-                    Main.spriteBatch.End();
-                }
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
+                IDrawPixelatedProjectile.PreDrawProjs(projectiles, projIndex);
+                Main.spriteBatch.End();
             }
         }
 
-        private class PreDrawPixelatedPrimitivesRenderTargetContent : RenderTargetContent
+        private class PreDrawPixelatedPrimitivesRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-
-            private int projIndex;
-
             public override bool PreRender()
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
-
                 return (projIndex = IDrawPixelatedPrimitivesProjectile.FirstProjIndex(projectiles, true)) > 0;
             }
 
@@ -169,28 +165,18 @@ namespace SPYoyoMod.Common
             {
                 var projDrawLayerInstance = ModContent.GetInstance<ProjectileDrawLayers>();
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
 
-                if (projIndex >= 0)
-                {
-                    Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-                    Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
-                    var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
-                    IDrawPixelatedPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, matrices);
-                }
+                PrepareToDrawPrimitives(RasterizerState.CullCounterClockwise);
+                IDrawPixelatedPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, matrices);
             }
         }
 
-        private class PostDrawPixelatedRenderTargetContent : RenderTargetContent
+        private class PostDrawPixelatedRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-
-            private int projIndex;
-
             public override bool PreRender()
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
-
                 return (projIndex = IDrawPixelatedProjectile.FirstProjIndex(projectiles, false)) > 0;
             }
 
@@ -198,25 +184,17 @@ namespace SPYoyoMod.Common
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
 
-                if (projIndex >= 0)
-                {
-                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
-                    IDrawPixelatedProjectile.PostDrawProjs(projectiles, projIndex);
-                    Main.spriteBatch.End();
-                }
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
+                IDrawPixelatedProjectile.PostDrawProjs(projectiles, projIndex);
+                Main.spriteBatch.End();
             }
         }
 
-        private class PostDrawPixelatedPrimitivesRenderTargetContent : RenderTargetContent
+        private class PostDrawPixelatedPrimitivesRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-
-            private int projIndex;
-
             public override bool PreRender()
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
-
                 return (projIndex = IDrawPixelatedPrimitivesProjectile.FirstProjIndex(projectiles, false)) > 0;
             }
 
@@ -224,15 +202,10 @@ namespace SPYoyoMod.Common
             {
                 var projDrawLayerInstance = ModContent.GetInstance<ProjectileDrawLayers>();
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
 
-                if (projIndex >= 0)
-                {
-                    Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
-                    Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
-
-                    var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
-                    IDrawPixelatedPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, matrices);
-                }
+                PrepareToDrawPrimitives(RasterizerState.CullCounterClockwise);
+                IDrawPixelatedPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, matrices);
             }
         }
     }
