@@ -30,6 +30,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void YoyoSetDefaults()
         {
+            Item.width = 42;
+            Item.height = 26;
+
             Item.damage = 43;
             Item.knockBack = 2.5f;
 

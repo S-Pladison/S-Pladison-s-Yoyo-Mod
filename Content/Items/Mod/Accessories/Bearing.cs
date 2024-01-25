@@ -14,8 +14,8 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         public override void SetDefaults()
         {
             Item.accessory = true;
-            Item.width = 40;
-            Item.height = 36;
+            Item.width = 36;
+            Item.height = 34;
 
             Item.rare = ItemRarityID.Blue;
             Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
