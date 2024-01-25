@@ -94,5 +94,4 @@ Projectiles: {
 	// CulminationProjectile.DisplayName: Culmination Projectile
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
-	// ValorCloneProjectile.DisplayName: Valor Clone Projectile
 }
