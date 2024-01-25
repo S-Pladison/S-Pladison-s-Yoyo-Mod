@@ -23,7 +23,7 @@ namespace SPYoyoMod.Content.Items
 
         public sealed override void SetDefaults()
         {
-            Item.DamageType = DamageClass.Melee;
+            Item.DamageType = DamageClass.MeleeNoSpeed;
             Item.width = 30;
             Item.height = 26;
             Item.shootSpeed = 16f;
