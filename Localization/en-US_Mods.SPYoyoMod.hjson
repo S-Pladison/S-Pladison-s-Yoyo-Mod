@@ -72,7 +72,11 @@ Items: {
 	}
 }
 
-VanillaItems.StringItem.Tooltip: Increases yoyo range by 4 tiles
+VanillaItems: {
+	StringItem.Tooltip: Increases yoyo range by 4 tiles
+	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
+}
+
 NPCs.NurseNPC.GiftButton: Gift
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
@@ -86,4 +90,5 @@ Projectiles: {
 	CulminationProjectile.DisplayName: Culmination Projectile
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
+	ValorCloneProjectile.DisplayName: Valor Clone Projectile
 }

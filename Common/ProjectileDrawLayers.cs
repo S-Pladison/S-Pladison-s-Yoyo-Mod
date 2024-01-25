@@ -88,7 +88,9 @@ namespace SPYoyoMod.Common
 
             if (projIndex >= 0)
             {
-                Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                Main.graphics.GraphicsDevice.RasterizerState = Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipVertically) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
+                Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
                 IDrawPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, new PrimitiveMatrices(transformMatrix, transformWithScreenOffsetMatrix));
             }
         }
@@ -99,7 +101,9 @@ namespace SPYoyoMod.Common
 
             if (projIndex >= 0)
             {
-                Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                Main.graphics.GraphicsDevice.RasterizerState = Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipVertically) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
+                Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
                 IDrawPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, new PrimitiveMatrices(transformMatrix, transformWithScreenOffsetMatrix));
             }
 
@@ -169,6 +173,8 @@ namespace SPYoyoMod.Common
                 if (projIndex >= 0)
                 {
                     Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
                     var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
                     IDrawPixelatedPrimitivesProjectile.PreDrawProjs(projectiles, projIndex, matrices);
                 }
@@ -222,6 +228,8 @@ namespace SPYoyoMod.Common
                 if (projIndex >= 0)
                 {
                     Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullCounterClockwise;
+                    Main.graphics.GraphicsDevice.BlendState = BlendState.AlphaBlend;
+
                     var matrices = new PrimitiveMatrices(projDrawLayerInstance.pixelatedTransformMatrix, projDrawLayerInstance.pixelatedTransformWithScreenOffsetMatrix);
                     IDrawPixelatedPrimitivesProjectile.PostDrawProjs(projectiles, projIndex, matrices);
                 }

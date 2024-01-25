@@ -76,7 +76,11 @@ Items: {
 	}
 }
 
-VanillaItems.StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
+VanillaItems: {
+	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
+	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
+}
+
 NPCs.NurseNPC.GiftButton: Подарок
 Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
@@ -90,4 +94,5 @@ Projectiles: {
 	// CulminationProjectile.DisplayName: Culmination Projectile
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
+	// ValorCloneProjectile.DisplayName: Valor Clone Projectile
 }
