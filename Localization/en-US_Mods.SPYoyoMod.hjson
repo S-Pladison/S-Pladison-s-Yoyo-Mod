@@ -73,9 +73,9 @@ Items: {
 }
 
 VanillaItems: {
+	RallyItem.Tooltip: Damage depends on the player's movement speed
 	StringItem.Tooltip: Increases yoyo range by 4 tiles
 	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
-	RallyItem.Tooltip: Increases damage depending on the player's movement speed
 }
 
 NPCs.NurseNPC.GiftButton: Gift
