@@ -32,9 +32,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 for (int counterweightType = ItemID.BlackCounterweight; counterweightType <= ItemID.YellowCounterweight; counterweightType++)
                 {
                     if (!recipe.TryGetIngredient(counterweightType, out Item _)) continue;
-                }
 
-                recipe.AddIngredient<BearingItem>();
+                    recipe.AddIngredient<BearingItem>();
+                }
             }
         }
     }
