@@ -79,6 +79,7 @@ Items: {
 VanillaItems: {
 	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
 	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
+	RallyItem.Tooltip: Увеличивает урон в зависимости от скорости передвижения игрока
 }
 
 NPCs.NurseNPC.GiftButton: Подарок

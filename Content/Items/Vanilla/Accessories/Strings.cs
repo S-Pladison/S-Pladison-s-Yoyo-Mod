@@ -15,6 +15,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 {
     public class StringsItem : GlobalItem
     {
+        public static LocalizedText Tooltip { get; private set; }
+
+        public override void Load()
+        {
+            Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.StringItem.Tooltip");
+        }
+
         public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
@@ -22,7 +29,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             var line = TooltipUtils.FindDescriptionLast(tooltips);
 
             if (line is not null)
-                line.Text = Language.GetTextValue("Mods.SPYoyoMod.VanillaItems.StringItem.Tooltip");
+                line.Text = Tooltip.Value;
         }
     }
 

@@ -21,7 +21,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class ValorItem : VanillaYoyoItem
     {
+        public static LocalizedText Tooltip { get; private set; }
+
         public ValorItem() : base(ItemID.Valor) { }
+
+        public override void Load()
+        {
+            Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.ValorItem.Tooltip");
+        }
 
         public override void SetDefaults(Item item)
         {
@@ -30,7 +37,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            var descriptionLine = new TooltipLine(Mod, "ModTooltip0", Language.GetTextValue("Mods.SPYoyoMod.VanillaItems.ValorItem.Tooltip"));
+            var descriptionLine = new TooltipLine(Mod, "ModTooltip0", Tooltip.Value);
             TooltipUtils.InsertDescription(tooltips, descriptionLine);
         }
     }
