@@ -1,4 +1,5 @@
-﻿using SPYoyoMod.Common.Interfaces;
+﻿using SPYoyoMod.Common;
+using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using Terraria;
@@ -28,6 +29,11 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             recipe.AddTile(TileID.Anvils);
             recipe.Register();
         }
+
+        public override void UpdateEquip(Player player)
+        {
+            player.GetModPlayer<PlayerEquipmentFlags>().SetFlag<BearingItem>();
+        }
     }
 
     public class BearingGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
@@ -38,7 +44,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var owner = Main.player[proj.owner];
 
-            if (!owner.HasEquipped(ModContent.ItemType<BearingItem>())) return;
+            if (!owner.GetModPlayer<PlayerEquipmentFlags>().GetFlag<BearingItem>()) return;
 
             statModifiers.LifeTime += 0.5f;
         }
