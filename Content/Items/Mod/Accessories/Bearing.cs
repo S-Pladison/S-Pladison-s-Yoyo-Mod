@@ -32,7 +32,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public override void UpdateEquip(Player player)
         {
-            player.GetModPlayer<PlayerEquipmentFlags>().SetFlag<BearingItem>();
+            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
         }
     }
 
@@ -44,7 +44,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var owner = Main.player[proj.owner];
 
-            if (!owner.GetModPlayer<PlayerEquipmentFlags>().GetFlag<BearingItem>()) return;
+            if (!owner.GetModPlayer<PlayerEffectFlags>().GetFlag<BearingItem>()) return;
 
             statModifiers.LifeTime += 0.5f;
         }

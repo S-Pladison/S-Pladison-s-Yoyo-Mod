@@ -3,11 +3,11 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
-    public class PlayerEquipmentFlags : ModPlayer
+    public class PlayerEffectFlags : ModPlayer
     {
         private readonly Dictionary<int, bool> flags;
 
-        public PlayerEquipmentFlags()
+        public PlayerEffectFlags()
         {
             flags = new Dictionary<int, bool>();
         }
@@ -24,7 +24,8 @@ namespace SPYoyoMod.Common
 
         public bool GetFlag<T>() where T : ModItem
         {
-            return flags[ModContent.ItemType<T>()];
+            var type = ModContent.ItemType<T>();
+            return flags.ContainsKey(type) && flags[type];
         }
     }
 }

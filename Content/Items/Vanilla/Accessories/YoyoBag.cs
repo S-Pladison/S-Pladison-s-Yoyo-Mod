@@ -17,7 +17,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
         public override void UpdateEquip(Item item, Player player)
         {
-            player.GetModPlayer<PlayerEquipmentFlags>().SetFlag<BearingItem>();
+            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
         }
 
         private static void InsertBearingToRecipes()
