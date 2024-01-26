@@ -22,6 +22,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.StringItem.Tooltip");
         }
 
+        public override void Unload()
+        {
+            Tooltip = null;
+        }
+
         public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)

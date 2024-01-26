@@ -13,9 +13,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class RallyItem : VanillaYoyoItem
     {
-        public static readonly float MovementSpeedForFullBonus = 8.5f;
-        public static readonly int DamageFullBonus = 8;
-
+        public static float MovementSpeedForFullBonus { get => 8.5f; }
+        public static int DamageFullBonus { get => 8; }
         public static LocalizedText Tooltip { get; private set; }
 
         public RallyItem() : base(ItemID.Rally) { }
@@ -23,6 +22,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public override void Load()
         {
             Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.RallyItem.Tooltip");
+        }
+
+        public override void Unload()
+        {
+            Tooltip = null;
         }
 
         public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)

@@ -30,6 +30,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.ValorItem.Tooltip");
         }
 
+        public override void Unload()
+        {
+            Tooltip = null;
+        }
+
         public override void SetDefaults(Item item)
         {
             item.knockBack = 6.5f;
