@@ -14,7 +14,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     public class RallyItem : VanillaYoyoItem
     {
         public static readonly float MovementSpeedForFullBonus = 8.5f;
-        public static readonly int DamageFullBonus = 7;
+        public static readonly int DamageFullBonus = 8;
 
         public static LocalizedText Tooltip { get; private set; }
 
