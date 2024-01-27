@@ -20,9 +20,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
         }
 
-        private static void InsertBearingToRecipes()
+        private static void InsertBearingToRecipes(Recipe[] recipes)
         {
-            for (int i = 0; i < Recipe.numRecipes; i++)
+            for (int i = 0; i < recipes.Length; i++)
             {
                 ref var recipe = ref Main.recipe[i];
 
@@ -34,6 +34,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     if (!recipe.TryGetIngredient(counterweightType, out Item _)) continue;
 
                     recipe.AddIngredient<BearingItem>();
+                    break;
                 }
             }
         }

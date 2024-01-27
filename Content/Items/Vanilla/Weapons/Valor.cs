@@ -25,7 +25,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public ValorItem() : base(ItemID.Valor) { }
 
-        public override void Load()
+        public override void SetStaticDefaults()
         {
             Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.ValorItem.Tooltip");
         }
@@ -42,8 +42,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            var descriptionLine = new TooltipLine(Mod, "ModTooltip0", Tooltip.Value);
-            TooltipUtils.InsertDescription(tooltips, descriptionLine);
+            var description = new TooltipLine(Mod, "ModTooltip", Tooltip.Value);
+            TooltipUtils.InsertDescriptions(tooltips, TooltipUtils.Split(description, '\n'));
         }
     }
 

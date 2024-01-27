@@ -24,11 +24,6 @@ Items: {
 		Tooltip: 50% increased yoyo duration
 	}
 
-	SiriusItem: {
-		DisplayName: Sirius
-		Tooltip: ""
-	}
-
 	StrangeDrinkItem: {
 		Tooltip:
 			'''
@@ -36,25 +31,6 @@ Items: {
 			'Surprisingly, it smells really good'
 			'''
 		DisplayName: Strange Drink
-	}
-
-	FlamingFlowerItem: {
-		DisplayName: Flaming Flower Item
-		Tooltip: ""
-	}
-
-	EchoCounterweightItem: {
-		DisplayName: Echo-Counterweight
-		Tooltip:
-			'''
-			Throws a counterweight and its mirrored copy after hitting an enemy with a yoyo
-			25% increased counterweight damage
-			'''
-	}
-
-	CulminationItem: {
-		Tooltip: ""
-		DisplayName: Culmination Item
 	}
 
 	BlackholeItem: {
@@ -73,7 +49,13 @@ Items: {
 }
 
 VanillaItems: {
-	RallyItem.Tooltip: Damage depends on the player's movement speed
+	CascadeItem.Tooltip: Periodically explodes, dealing damage in an area
+	Code1Item.Tooltip:
+		'''
+		...
+		...
+		'''
+	RallyItem.Tooltip: The higher player's movement speed, the higher damage
 	StringItem.Tooltip: Increases yoyo range by 4 tiles
 	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
 }
@@ -87,8 +69,6 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
 
 Projectiles: {
-	SiriusProjectile.DisplayName: Sirius Projectile
-	CulminationProjectile.DisplayName: Culmination Projectile
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 }

@@ -24,11 +24,6 @@ Items: {
 		Tooltip: Увеличивает время полета йо-йо на 50%
 	}
 
-	SiriusItem: {
-		DisplayName: Sirius
-		Tooltip: ""
-	}
-
 	StrangeDrinkItem: {
 		Tooltip:
 			'''
@@ -36,29 +31,6 @@ Items: {
 			«Удивительно, но пахнет восхитительно»
 			'''
 		DisplayName: Странный напиток
-	}
-
-	FlamingFlowerItem: {
-		DisplayName: Пылающий цветок
-		Tooltip:
-			'''
-			Создает огненные копии противовесов напротив оригинальных
-			Увеличивает шанс критического удара противовесов на 50%
-			'''
-	}
-
-	EchoCounterweightItem: {
-		DisplayName: Эхо-противовес
-		Tooltip:
-			'''
-			Бросает противовес и его зеркальную копию после попадания йо-йо по врагу
-			Увеличивает урон противовесов на 25%
-			'''
-	}
-
-	CulminationItem: {
-		// Tooltip: ""
-		// DisplayName: Culmination Item
 	}
 
 	BlackholeItem: {
@@ -77,7 +49,13 @@ Items: {
 }
 
 VanillaItems: {
-	RallyItem.Tooltip: Урон зависит от скорости передвижения игрока
+	CascadeItem.Tooltip: Периодически взрывается, нанося урон по области
+	Code1Item.Tooltip:
+		'''
+		...
+		...
+		'''
+	RallyItem.Tooltip: Чем выше скорость передвижения игрока, тем выше урон
 	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
 	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
 }
@@ -91,8 +69,6 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 	'''
 
 Projectiles: {
-	SiriusProjectile.DisplayName: Sirius Projectile
-	// CulminationProjectile.DisplayName: Culmination Projectile
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 }

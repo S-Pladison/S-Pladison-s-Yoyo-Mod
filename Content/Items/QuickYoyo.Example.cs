@@ -34,9 +34,9 @@ namespace SPYoyoMod.Content.Items
     */
 
     [Autoload(false)]
-    public class ExampleYoyo : YoyoItem
+    public class ExampleYoyoItem : YoyoItem
     {
-        public ExampleYoyo() : base(gamepadExtraRange: 15) { }
+        public ExampleYoyoItem() : base(gamepadExtraRange: 15) { }
 
         public override void YoyoSetDefaults()
         {

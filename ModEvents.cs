@@ -8,7 +8,7 @@ namespace SPYoyoMod
 {
     public class ModEvents : ILoadable
     {
-        public static event Action OnPostSetupRecipes;
+        public static event Action<Recipe[]> OnPostSetupRecipes;
         public static event Action OnPostUpdateEverything;
         public static event Action OnWorldLoad;
         public static event Action OnWorldUnload;
@@ -17,7 +17,7 @@ namespace SPYoyoMod
 
         void ILoadable.Load(Mod mod)
         {
-            OnPostSetupRecipes += () => { };
+            OnPostSetupRecipes += (_) => { };
             OnPostUpdateEverything += () => { };
             OnWorldLoad += () => { };
             OnWorldUnload += () => { };
@@ -46,7 +46,7 @@ namespace SPYoyoMod
                 };
             }
 
-            public override void PostSetupRecipes() => ModEvents.OnPostSetupRecipes();
+            public override void PostSetupRecipes() => ModEvents.OnPostSetupRecipes(Main.recipe);
             public override void PostUpdateEverything() => ModEvents.OnPostUpdateEverything();
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();
             public override void OnWorldUnload() => ModEvents.OnWorldUnload();

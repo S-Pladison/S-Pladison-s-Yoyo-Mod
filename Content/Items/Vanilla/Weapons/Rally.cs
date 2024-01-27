@@ -19,7 +19,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public RallyItem() : base(ItemID.Rally) { }
 
-        public override void Load()
+        public override void SetStaticDefaults()
         {
             Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.RallyItem.Tooltip");
         }
@@ -34,15 +34,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             damage.Flat += GetBonusValue(player);
         }
 
-        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-        {
-            var descriptionLine = new TooltipLine(Mod, "ModTooltip0", Tooltip.Value);
-            TooltipUtils.InsertDescription(tooltips, descriptionLine);
-        }
-
         public override void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
         {
             damage -= GetBonusValue(player);
+        }
+
+        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+        {
+            var description = new TooltipLine(Mod, "ModTooltip", Tooltip.Value);
+            TooltipUtils.InsertDescriptions(tooltips, TooltipUtils.Split(description, '\n'));
         }
 
         public static float GetBonusFactor(Player player)
