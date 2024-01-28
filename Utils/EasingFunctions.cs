@@ -3,7 +3,7 @@
 namespace SPYoyoMod.Utils
 {
     // [From https://gist.github.com/Kryzarel/bba64622057f21a1d6d44879f9cd7bd4]
-    public static class EaseFunctions
+    public static class EasingFunctions
     {
         public static float Linear(float t) => t;
 
@@ -114,5 +114,7 @@ namespace SPYoyoMod.Utils
             if (t < 0.5) return InBounce(t * 2) / 2;
             return 1 - InBounce((1 - t) * 2) / 2;
         }
+
+        public delegate float EasingDelegate(float t);
     }
 }

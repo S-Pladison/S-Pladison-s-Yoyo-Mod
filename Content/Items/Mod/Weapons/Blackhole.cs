@@ -71,7 +71,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             RadiusProgress += !IsReturning ? 0.05f : -0.1f;
             RadiusProgress = Math.Clamp(RadiusProgress, 0, 1);
 
-            var currentRadius = GravityRadius * EaseFunctions.InOutSine(RadiusProgress);
+            var currentRadius = GravityRadius * EasingFunctions.InOutSine(RadiusProgress);
             var targets = NPCUtils.NearestNPCs(
                 center: Projectile.Center,
                 radius: currentRadius,
@@ -131,7 +131,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var pos = position - Main.screenPosition;
                 var rect = new Rectangle(0, 0, TextureAssets.FishingLine.Width(), (int)height);
                 var origin = new Vector2(TextureAssets.FishingLine.Width() * 0.5f, 0f);
-                var colour = Color.Lerp(Color.Transparent, new Color(230, 135, 243), EaseFunctions.InQuart(segmentIndex / (float)segmentCount) * 2f);
+                var colour = Color.Lerp(Color.Transparent, new Color(230, 135, 243), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 2f);
 
                 Main.spriteBatch.Draw(TextureAssets.FishingLine.Value, pos, rect, colour, rotation, origin, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0f);
             });
@@ -139,7 +139,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public void DrawSpaceMask()
         {
-            var scale = Projectile.scale * EaseFunctions.InOutSine(RadiusProgress);
+            var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, 0f, texture.Size() * 0.5f, 0.64f * scale, SpriteEffects.None, 0f);
@@ -170,13 +170,19 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/DistortedRing", AssetRequestMode.ImmediateLoad);
             var rotation = TimeForVisualEffects * 0.02f;
-            var scale = Projectile.scale * EaseFunctions.InOutSine(RadiusProgress);
+            var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Gray, rotation, texture.Size() * 0.5f, 0.6f * scale, SpriteEffects.None, 0f);
         }
     }
 
     public class BlackholeParticle : IParticle
     {
+        private static readonly EasingBuilder ProgressEasing = new(
+            (EasingFunctions.InOutCirc, 0.2f, 0f, 1f),
+            (EasingFunctions.Linear, 0.6f, 1f, 1f),
+            (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
+        );
+
         public bool ShouldBeRemovedFromRenderer { get => timeLeft <= 0; }
         public float Progress { get => MathHelper.Lerp(1f, 0f, timeLeft / (float)initTimeLeft); }
 
@@ -207,15 +213,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             position += velocity;
             timeLeft--;
 
-            var easeResult = EaseFunctions.InOutCirc(Progress);
-            var lightColorMult = 0.4f * MathF.Min(easeResult * (1f - easeResult) * 20f, 1f);
+            var lightColorMult = 0.4f * ProgressEasing.Evaluate(Progress);
             Lighting.AddLight(position, new Color(171, 97, 255).ToVector3() * lightColorMult);
         }
 
         public void Draw(ref ParticleRendererSettings settings, SpriteBatch spriteBatch)
         {
-            var easeResult = EaseFunctions.InOutCirc(Progress);
-            var color = Color.White * easeResult * (1f - easeResult) * 20f;
+            var color = Color.White * ProgressEasing.Evaluate(Progress);
             spriteBatch.Draw(texture.Value, settings.AnchorPosition + position, null, color, rotation, origin, 0.35f, SpriteEffects.None, 0f);
         }
     }

@@ -113,7 +113,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var npcPos = npc.Center + npc.gfxOffY * Vector2.UnitY;
                 var npcDrawPos = npcPos - Main.screenPosition;
                 var rotation = MathF.Sin((float)Main.timeForVisualEffects * 0.03f + npc.whoAmI);
-                var color = Color.Lerp(Color.Transparent, new Color(255, 0, 35), EaseFunctions.OutExpo(1f - distance / TormentorRadius) * 2f);
+                var color = Color.Lerp(Color.Transparent, new Color(255, 0, 35), EasingFunctions.OutExpo(1f - distance / TormentorRadius) * 2f);
 
                 Main.spriteBatch.Draw(texture.Value, npcDrawPos, null, color, rotation, origin, 0.25f, SpriteEffects.None, 0);
             }
