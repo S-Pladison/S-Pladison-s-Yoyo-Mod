@@ -43,7 +43,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class BlackholeProjectile : YoyoProjectile, IDrawPixelatedProjectile, IDrawDistortionProjectile
+    public class BlackholeProjectile : YoyoProjectile, IPostDrawPixelatedProjectile, IDrawDistortionProjectile
     {
         public static readonly float GravityRadius = GravityRadius = 16 * 10;
 
@@ -152,7 +152,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.32f * scale, SpriteEffects.None, 0f);
         }
 
-        void IDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
         {
             if (!IsMainYoyo) return;
 

@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using SPYoyoMod.Common;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils.Extensions
@@ -14,6 +15,12 @@ namespace SPYoyoMod.Utils.Extensions
 
             return false;
         }
+
+        public static void SetEffectFlag<T>(this Player player, bool value = true) where T : ModItem
+            => player.GetModPlayer<PlayerEffectFlags>().SetFlag<T>(value);
+
+        public static bool GetEffectFlag<T>(this Player player) where T : ModItem
+            => player.GetModPlayer<PlayerEffectFlags>().GetFlag<T>();
 
         public static int OwnedProjectileCounts(this Player player, int projectileType)
             => player.ownedProjectileCounts[projectileType];

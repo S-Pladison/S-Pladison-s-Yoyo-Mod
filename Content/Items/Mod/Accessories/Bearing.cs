@@ -1,5 +1,4 @@
-﻿using SPYoyoMod.Common;
-using SPYoyoMod.Common.Interfaces;
+﻿using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using Terraria;
@@ -32,7 +31,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public override void UpdateEquip(Player player)
         {
-            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
+            player.SetEffectFlag<BearingItem>();
         }
     }
 
@@ -44,7 +43,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var owner = Main.player[proj.owner];
 
-            if (!owner.GetModPlayer<PlayerEffectFlags>().GetFlag<BearingItem>()) return;
+            if (!owner.GetEffectFlag<BearingItem>()) return;
 
             statModifiers.LifeTime += 0.5f;
         }

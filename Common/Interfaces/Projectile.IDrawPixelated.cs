@@ -5,63 +5,100 @@ using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Common.Interfaces
 {
-    public interface IDrawPixelatedProjectile
+    /// <summary>
+    ///  This interface allows you to draw pixelated things for all projectiles, including vanilla projectiles.
+    /// </summary>
+    public interface IDrawPixelatedProjectile : IPreDrawPixelatedProjectile, IPostDrawPixelatedProjectile { }
+
+    /// <summary>
+    ///  This interface allows you to draw pixelated things behind all projectiles, including vanilla projectiles.
+    /// </summary>
+    public interface IPreDrawPixelatedProjectile
     {
-        public static readonly GlobalHookList<GlobalProjectile> PreHook =
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
             ProjectileLoader.AddModHook(
-                new GlobalHookList<GlobalProjectile>(typeof(IDrawPixelatedProjectile).GetMethod(nameof(PreDrawPixelated)))
+                new GlobalHookList<GlobalProjectile>(typeof(IPreDrawPixelatedProjectile).GetMethod(nameof(PreDrawPixelated)))
             );
 
-        public static readonly GlobalHookList<GlobalProjectile> PostHook =
-            ProjectileLoader.AddModHook(
-                new GlobalHookList<GlobalProjectile>(typeof(IDrawPixelatedProjectile).GetMethod(nameof(PostDrawPixelated)))
-            );
+        /// <summary>
+        /// Allows you to draw pixelated things behind a projectile. Use the <see cref="ProjectileDrawLayers.PixelatedPrimitiveMatrices"/>
+        /// for drawing primitives. Primitives will be drawn before sprites.
+        /// </summary>
+        void PreDrawPixelated(Projectile proj);
 
-        void PreDrawPixelated(Projectile proj) { }
-        void PostDrawPixelated(Projectile proj) { }
-
-        public static int FirstProjIndex(IReadOnlyList<Projectile> projectiles, bool preDraw)
+        public static int FirstProjIndex(IReadOnlyList<Projectile> projectiles)
         {
-            var hook = preDraw ? PreHook : PostHook;
-
             for (int i = 0; i < projectiles.Count; i++)
             {
                 var proj = projectiles[i];
 
-                if (proj.ModProjectile is IDrawPixelatedProjectile)
+                if (proj.ModProjectile is IPreDrawPixelatedProjectile)
                     return i;
 
-                foreach (var _ in hook.Enumerate(proj))
+                foreach (var _ in Hook.Enumerate(proj))
                     return i;
             }
 
             return -1;
         }
 
-        public static void PreDrawProjs(IReadOnlyList<Projectile> projectiles, int startIndex)
+        public static void DrawProjs(IReadOnlyList<Projectile> projectiles, int startIndex)
         {
             for (int i = startIndex; i < projectiles.Count; i++)
             {
                 var proj = projectiles[i];
 
-                if (proj.ModProjectile is IDrawPixelatedProjectile m)
+                if (proj.ModProjectile is IPreDrawPixelatedProjectile m)
                     m.PreDrawPixelated(proj);
 
-                foreach (IDrawPixelatedProjectile g in PreHook.Enumerate(proj))
+                foreach (IPreDrawPixelatedProjectile g in Hook.Enumerate(proj))
                     g.PreDrawPixelated(proj);
             }
         }
+    }
 
-        public static void PostDrawProjs(IReadOnlyList<Projectile> projectiles, int startIndex)
+    /// <summary>
+    ///  This interface allows you to draw pixelated things in front of all projectiles, including vanilla projectiles.
+    /// </summary>
+    public interface IPostDrawPixelatedProjectile
+    {
+        public static readonly GlobalHookList<GlobalProjectile> Hook =
+            ProjectileLoader.AddModHook(
+                new GlobalHookList<GlobalProjectile>(typeof(IPostDrawPixelatedProjectile).GetMethod(nameof(PostDrawPixelated)))
+            );
+
+        /// <summary>
+        /// Allows you to draw pixelated things in front of a projectile. Use the <see cref="ProjectileDrawLayers.PixelatedPrimitiveMatrices"/>
+        /// for drawing primitives. Primitives will be drawn before sprites.
+        /// </summary>
+        void PostDrawPixelated(Projectile proj);
+
+        public static int FirstProjIndex(IReadOnlyList<Projectile> projectiles)
+        {
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                var proj = projectiles[i];
+
+                if (proj.ModProjectile is IPostDrawPixelatedProjectile)
+                    return i;
+
+                foreach (var _ in Hook.Enumerate(proj))
+                    return i;
+            }
+
+            return -1;
+        }
+
+        public static void DrawProjs(IReadOnlyList<Projectile> projectiles, int startIndex)
         {
             for (int i = startIndex; i < projectiles.Count; i++)
             {
                 var proj = projectiles[i];
 
-                if (proj.ModProjectile is IDrawPixelatedProjectile m)
+                if (proj.ModProjectile is IPostDrawPixelatedProjectile m)
                     m.PostDrawPixelated(proj);
 
-                foreach (IDrawPixelatedProjectile g in PostHook.Enumerate(proj))
+                foreach (IPostDrawPixelatedProjectile g in Hook.Enumerate(proj))
                     g.PostDrawPixelated(proj);
             }
         }

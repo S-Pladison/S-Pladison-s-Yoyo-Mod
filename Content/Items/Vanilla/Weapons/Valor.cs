@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -47,7 +47,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class ValorProjectile : VanillaYoyoProjectile, IDrawPixelatedPrimitivesProjectile
+    public class ValorProjectile : VanillaYoyoProjectile, IPreDrawPixelatedProjectile
     {
         public static readonly int ChainChanceDenominator = 7;
 
@@ -112,7 +112,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             dust.noGravity = true;
         }
 
-        void IDrawPixelatedPrimitivesProjectile.PreDrawPixelatedPrimitives(Projectile proj, PrimitiveMatrices matrices)
+        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
         {
             trailRenderer ??= new TrailRenderer(12).SetWidth(f => MathHelper.Lerp(24f, 6f, f));
 
@@ -121,7 +121,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var effectParameters = effect.Parameters;
 
             effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
-            effectParameters["TransformMatrix"].SetValue(matrices.TransformWithScreenOffset);
+            effectParameters["TransformMatrix"].SetValue(ProjectileDrawLayers.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
             effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
 
             trailRenderer.Draw(effect);

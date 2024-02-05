@@ -25,7 +25,7 @@ namespace SPYoyoMod.Common.Interfaces
 
                     (proj.ModProjectile as IPostDrawYoyoStringProjectile)?.PostDrawYoyoString(proj, mountedCenter);
 
-                    foreach (IPostDrawYoyoStringProjectile g in IPostDrawYoyoStringProjectile.Hook.Enumerate(proj))
+                    foreach (IPostDrawYoyoStringProjectile g in Hook.Enumerate(proj))
                     {
                         g.PostDrawYoyoString(proj, mountedCenter);
                     }

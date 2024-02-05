@@ -1,5 +1,5 @@
-﻿using SPYoyoMod.Common;
-using SPYoyoMod.Content.Items.Mod.Accessories;
+﻿using SPYoyoMod.Content.Items.Mod.Accessories;
+using SPYoyoMod.Utils.Extensions;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -17,7 +17,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
         public override void UpdateEquip(Item item, Player player)
         {
-            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
+            player.SetEffectFlag<BearingItem>();
         }
 
         private static void InsertBearingToRecipes(Recipe[] recipes)

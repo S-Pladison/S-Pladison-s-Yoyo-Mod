@@ -175,7 +175,7 @@ namespace SPYoyoMod.Common.Renderers
 
         private void CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd)
         {
-            var segmentCount = Loop ? points.Count : (points.Count - 1);
+            var segmentCount = Loop ? points.Count : points.Count - 1;
             var accumulativeLength = 0f;
             var lengths = new float[segmentCount];
             var totalLength = 0f;
@@ -206,11 +206,11 @@ namespace SPYoyoMod.Common.Renderers
             var vertexIndex = 0;
             var topLines = new List<Line>();
             var bottomLines = new List<Line>();
-            var segmentCount = Loop ? points.Count : (points.Count - 1);
+            var segmentCount = Loop ? points.Count : points.Count - 1;
 
             for (int i = 0; i < segmentCount; i++)
             {
-                int j = (i == points.Count - 1) ? 0 : i + 1;
+                int j = i == points.Count - 1 ? 0 : i + 1;
 
                 var direction = Vector2.Normalize(points[j] - points[i]);
 
@@ -224,14 +224,14 @@ namespace SPYoyoMod.Common.Renderers
 
             for (int i = 0; i < points.Count; i++)
             {
-                int j = (i == 0) ? points.Count - 1 : i - 1;
+                int j = i == 0 ? points.Count - 1 : i - 1;
 
                 if (i == 0 && !Loop)
                 {
                     AddVertexPosition(ref vertexIndex, topLines[i].Offset);
                     AddVertexPosition(ref vertexIndex, bottomLines[i].Offset);
                 }
-                else if ((i == points.Count - 1) && !Loop)
+                else if (i == points.Count - 1 && !Loop)
                 {
                     var direction = topLines[j].Direction;
 
