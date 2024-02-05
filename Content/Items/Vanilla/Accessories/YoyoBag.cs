@@ -12,7 +12,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
         public override void Load()
         {
-            ModEvents.OnPostSetupRecipes += InsertBearingToRecipes;
+            ModEvents.OnPostAddRecipes += InsertBearingToRecipes;
         }
 
         public override void UpdateEquip(Item item, Player player)

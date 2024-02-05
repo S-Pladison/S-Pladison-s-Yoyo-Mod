@@ -100,7 +100,7 @@ namespace SPYoyoMod.Common
             }
         }
 
-        private void PostDrawProjectiles(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
+        private static void PostDrawProjectiles(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
         {
             var rtContent = ModContent.GetInstance<PostDrawPixelatedRenderTargetContent>();
 
@@ -118,7 +118,7 @@ namespace SPYoyoMod.Common
 
             protected int projIndex;
 
-            protected void ResetGraphicsDevice(SpriteBatchSnapshot spriteBatchSnapshot)
+            protected static void ResetGraphicsDevice(SpriteBatchSnapshot spriteBatchSnapshot)
             {
                 var device = Main.graphics.GraphicsDevice;
                 device.BlendState = spriteBatchSnapshot.BlendState;

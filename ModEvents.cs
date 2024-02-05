@@ -8,16 +8,40 @@ namespace SPYoyoMod
 {
     public class ModEvents : ILoadable
     {
-        public static event Action<Recipe[]> OnPostSetupRecipes;
+        /// <summary>
+        /// Called after recipes have been added.
+        /// You can use this to edit recipes added by other mods.
+        /// </summary>
+        public static event Action<Recipe[]> OnPostAddRecipes;
+
+        /// <summary>
+        /// Called after the Network got updated, this is the last hook that happens in an update.
+        /// </summary>
         public static event Action OnPostUpdateEverything;
+
+        /// <summary>
+        /// Called whenever a world is loaded, before <see cref="ModSystem.LoadWorldData(Terraria.ModLoader.IO.TagCompound)"/>.
+        /// </summary>
         public static event Action OnWorldLoad;
+
+        /// <summary>
+        /// Called whenever a world is unloaded.
+        /// </summary>
         public static event Action OnWorldUnload;
+
+        /// <summary>
+        /// Called when Hardmode starts.
+        /// </summary>
         public static event Action OnHardmodeStart;
+
+        /// <summary>
+        /// Called after <see cref="Main.DrawDust"/>.
+        /// </summary>
         public static event Action OnPostDrawDust;
 
         void ILoadable.Load(Mod mod)
         {
-            OnPostSetupRecipes += (_) => { };
+            OnPostAddRecipes += (_) => { };
             OnPostUpdateEverything += () => { };
             OnWorldLoad += () => { };
             OnWorldUnload += () => { };
@@ -27,7 +51,7 @@ namespace SPYoyoMod
 
         void ILoadable.Unload()
         {
-            OnPostSetupRecipes = null;
+            OnPostAddRecipes = null;
             OnPostUpdateEverything = null;
             OnWorldLoad = null;
             OnWorldUnload = null;
@@ -46,7 +70,7 @@ namespace SPYoyoMod
                 };
             }
 
-            public override void PostSetupRecipes() => ModEvents.OnPostSetupRecipes(Main.recipe);
+            public override void PostAddRecipes() => ModEvents.OnPostAddRecipes(Main.recipe);
             public override void PostUpdateEverything() => ModEvents.OnPostUpdateEverything();
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();
             public override void OnWorldUnload() => ModEvents.OnWorldUnload();

@@ -12,6 +12,9 @@ using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Common.Interfaces
 {
+    /// <summary>
+    /// This interface allows you to modify life time or max range for all yoyo projs, including vanilla yoyos.
+    /// </summary>
     public interface IModifyYoyoStatsProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook =
@@ -19,6 +22,11 @@ namespace SPYoyoMod.Common.Interfaces
                 new GlobalHookList<GlobalProjectile>(typeof(IModifyYoyoStatsProjectile).GetMethod(nameof(ModifyYoyoStats)))
             );
 
+        /// <summary>
+        /// Allows you to modify life time or max range of the yoyo.
+        /// Although it is called with every call of Projectile.AI(), it is better not to make dynamic changes, such as 
+        /// increasing max range depending on the time of day.
+        /// </summary>
         void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers);
 
         public static void GetYoyoStatModifiers(Projectile proj, ref YoyoStatModifiers statModifiers)
@@ -26,19 +34,17 @@ namespace SPYoyoMod.Common.Interfaces
             (proj.ModProjectile as IModifyYoyoStatsProjectile)?.ModifyYoyoStats(proj, ref statModifiers);
 
             foreach (IModifyYoyoStatsProjectile g in Hook.Enumerate(proj))
-            {
                 g.ModifyYoyoStats(proj, ref statModifiers);
-            }
         }
 
-        public static void ModifyYoyoLifeTime(Projectile proj, ref YoyoStatModifiers statModifiers, ref float lifeTime)
+        public static void ModifyYoyoLifeTime(Projectile _, ref YoyoStatModifiers statModifiers, ref float lifeTime)
         {
             if (lifeTime <= 0) return;
 
             lifeTime = statModifiers.LifeTime.ApplyTo(lifeTime);
         }
 
-        public static void ModifyYoyoMaxRange(Projectile proj, ref YoyoStatModifiers statModifiers, ref float maxRange)
+        public static void ModifyYoyoMaxRange(Projectile _, ref YoyoStatModifiers statModifiers, ref float maxRange)
         {
             maxRange = statModifiers.MaxRange.ApplyTo(maxRange);
         }

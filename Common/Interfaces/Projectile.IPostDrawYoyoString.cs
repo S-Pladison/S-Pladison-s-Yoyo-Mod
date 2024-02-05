@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Common.Interfaces
 {
+    /// <summary>
+    /// This interface allows you to draw in front of strings for all yoyo projs, including vanilla yoyos.
+    /// </summary>
     public interface IPostDrawYoyoStringProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook =
@@ -12,6 +16,9 @@ namespace SPYoyoMod.Common.Interfaces
                 new GlobalHookList<GlobalProjectile>(typeof(IPostDrawYoyoStringProjectile).GetMethod(nameof(PostDrawYoyoString)))
             );
 
+        /// <summary>
+        /// Allows you to draw in front of yoyo string. Use <see cref="DrawUtils.DrawYoyoString"/> to draw vanilla string.
+        /// </summary>
         void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter);
 
         [Autoload(Side = ModSide.Client)]
