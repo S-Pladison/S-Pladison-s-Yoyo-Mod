@@ -58,6 +58,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public ValorProjectile() : base(ProjectileID.Valor) { }
 
+        public override void OnKill(Projectile proj, int timeLeft)
+        {
+            trailRenderer?.Dispose();
+        }
+
         public override void AI(Projectile proj)
         {
             if (proj.velocity.Length() >= 3f)

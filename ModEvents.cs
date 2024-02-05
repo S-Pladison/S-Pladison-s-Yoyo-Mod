@@ -6,6 +6,9 @@ using Terraria.WorldBuilding;
 
 namespace SPYoyoMod
 {
+    /// <summary>
+    /// Class of events useful for mod.
+    /// </summary>
     public class ModEvents : ILoadable
     {
         /// <summary>

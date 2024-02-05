@@ -49,6 +49,12 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public SoulTormentorProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
+        public override void OnKill(int timeLeft)
+        {
+            blackTrailRenderer?.Dispose();
+            redTrailRenderer?.Dispose();
+        }
+
         public override void AI()
         {
             foreach (var (npc, _) in GetTargets())
