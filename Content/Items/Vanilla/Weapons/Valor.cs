@@ -43,7 +43,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public override void AI(Projectile proj)
         {
             if (proj.velocity.Length() >= 3f)
-                SpawnDustTrail(proj);
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var velocity = vector * Main.rand.NextFloat(0.5f);
+
+                var position = proj.Center;
+                position += vector * Main.rand.NextFloat(8f);
+
+                var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
+                dust.scale += 0.1f;
+                dust.noGravity = true;
+            }
 
             trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
             spriteTrailRenderer?.SetNextPoint(proj.Center + proj.velocity, proj.rotation);
@@ -65,33 +75,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            if (spriteTrailRenderer is null)
-            {
-                Main.instance.LoadProjectile(ProjectileID.Valor);
-
-                var texture = TextureAssets.Projectile[ProjectileID.Valor];
-                var origin = texture.Size() * 0.5f;
-
-                spriteTrailRenderer = new SpriteTrailRenderer(12, texture, origin, SpriteEffects.None)
-                    .SetScale(f => MathHelper.Lerp(1.2f, 0.8f, f))
-                    .SetColor(f => Color.Lerp(Color.White, Color.DarkBlue, f) * 0.1f * (1 - f));
-            }
-
+            spriteTrailRenderer ??= InitSpriteTrail();
             spriteTrailRenderer.Draw(Main.spriteBatch, -Main.screenPosition, lightColor);
             return true;
         }
 
-        private void SpawnDustTrail(Projectile proj)
+        public SpriteTrailRenderer InitSpriteTrail()
         {
-            var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-            var velocity = vector * Main.rand.NextFloat(0.5f);
+            Main.instance.LoadProjectile(ProjectileID.Valor);
 
-            var position = proj.Center;
-            position += vector * Main.rand.NextFloat(8f);
+            var texture = TextureAssets.Projectile[ProjectileID.Valor];
+            var origin = texture.Size() * 0.5f;
 
-            var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
-            dust.scale += 0.1f;
-            dust.noGravity = true;
+            spriteTrailRenderer = new SpriteTrailRenderer(12, texture, origin, SpriteEffects.None)
+                .SetScale(f => MathHelper.Lerp(1.2f, 0.8f, f))
+                .SetColor(f => Color.Lerp(Color.White, Color.DarkBlue, f) * 0.1f * (1 - f));
+
+            return spriteTrailRenderer;
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
@@ -151,7 +151,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             npc.netUpdate = true;
 
-            SpawnDusts(npc.Center);
+            SpawnEffectDusts(npc.Center);
             SoundEngine.PlaySound(SoundID.Unlock);
         }
 
@@ -187,33 +187,49 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (!IsSecuredWithChain)
-                return true;
+            if (!IsSecuredWithChain) return true;
 
-            var npcPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
-            var chainPosition = chainStartPosition - Main.screenPosition;
-            var vectorFromChainToNPC = npcPosition - chainPosition;
-            var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
+            PreDraw_DrawChain(npc, spriteBatch);
+            PreDraw_DrawChain_HeadAndTail(npc, spriteBatch);
+
+            return true;
+        }
+
+        public void PreDraw_DrawChain(NPC npc, SpriteBatch spriteBatch)
+        {
             var texture = TextureAssets.Chain22;
-            var origin = texture.Size() * 0.5f;
-            var rotation = vectorFromChainToNPC.ToRotation() + MathHelper.PiOver2;
+            var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+            var startPosition = chainStartPosition - Main.screenPosition;
+            var vectorFromChainToNPC = endPosition - startPosition;
+            var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
+
+            var segmentRotation = vectorFromChainToNPC.ToRotation() + MathHelper.PiOver2;
+            var segmentOrigin = texture.Size() * 0.5f;
             var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
             var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();
 
             for (int i = 0; i < segmentCount; i++)
             {
-                var position = chainPosition + segmentVector * i;
+                var position = startPosition + segmentVector * i;
                 var color = Lighting.GetColor((position + Main.screenPosition).ToTileCoordinates());
-                spriteBatch.Draw(texture.Value, position, null, color, rotation, origin, 1f, SpriteEffects.None, 0);
+                spriteBatch.Draw(texture.Value, position, null, color, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
             }
+        }
 
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_ChainHead", AssetRequestMode.ImmediateLoad);
-            origin = texture.Size() * 0.5f;
+        public void PreDraw_DrawChain_HeadAndTail(NPC npc, SpriteBatch spriteBatch)
+        {
+            var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+            var startPosition = chainStartPosition - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_ChainHead", AssetRequestMode.ImmediateLoad);
+            var origin = texture.Size() * 0.5f;
 
-            spriteBatch.Draw(texture.Value, chainPosition, null, Lighting.GetColor((chainPosition + Main.screenPosition).ToTileCoordinates()), 0f, origin, 1f, SpriteEffects.None, 0);
-            spriteBatch.Draw(texture.Value, npcPosition, null, Lighting.GetColor((npcPosition + Main.screenPosition).ToTileCoordinates()), 0f, origin, 1f, SpriteEffects.None, 0);
+            var color = Lighting.GetColor((startPosition + Main.screenPosition).ToTileCoordinates());
 
-            return true;
+            spriteBatch.Draw(texture.Value, startPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
+
+            color = Lighting.GetColor((endPosition + Main.screenPosition).ToTileCoordinates());
+
+            spriteBatch.Draw(texture.Value, endPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
         }
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
@@ -221,12 +237,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!IsSecuredWithChain)
                 return;
 
-            var npcPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+            var lockPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
             var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_Lock", AssetRequestMode.ImmediateLoad);
             var origin = texture.Size() * 0.5f;
             var visualSin = MathF.Sin((float)Main.timeForVisualEffects * 0.03f + npc.whoAmI);
 
-            spriteBatch.Draw(texture.Value, npcPosition, null, Color.White, 0f, origin, 0.9f + visualSin * 0.1f, SpriteEffects.None, 0);
+            spriteBatch.Draw(texture.Value, lockPosition, null, Color.White, 0f, origin, 0.9f + visualSin * 0.1f, SpriteEffects.None, 0);
         }
 
         public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -250,7 +266,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             securedWithChainTimer = -1;
             npc.netUpdate = true;
 
-            SpawnDusts(npc.Center);
+            SpawnEffectDusts(npc.Center);
             SoundEngine.PlaySound(SoundID.Unlock);
         }
 
@@ -273,7 +289,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
         }
 
-        private static void SpawnDusts(Vector2 position)
+        private static void SpawnEffectDusts(Vector2 position)
         {
             for (int i = 0; i < 12; i++)
             {
