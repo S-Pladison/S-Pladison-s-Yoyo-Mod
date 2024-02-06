@@ -42,7 +42,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class CascadeProjectile : VanillaYoyoProjectile, IPreDrawPixelatedProjectile, IPostDrawAdditiveProjectile, IDrawDistortionProjectile
     {
-        public override bool InstancePerEntity { get => true; }
         public bool IsMainYoyo { get; private set; }
 
         private RingRenderer ringRenderer;

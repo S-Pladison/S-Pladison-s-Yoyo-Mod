@@ -34,8 +34,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class RallyProjectile : VanillaYoyoProjectile
     {
-        public override bool InstancePerEntity { get => true; }
-
         private SpriteTrailRenderer spriteTrailRenderer;
 
         public RallyProjectile() : base(ProjectileID.Rally) { }

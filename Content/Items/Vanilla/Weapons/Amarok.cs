@@ -20,7 +20,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class AmarokProjectile : VanillaYoyoProjectile, IDrawPixelatedProjectile
     {
-        public override bool InstancePerEntity { get => true; }
         public bool IsMainYoyo { get; private set; }
 
         private RingRenderer ringRenderer;

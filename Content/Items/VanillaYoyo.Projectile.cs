@@ -13,6 +13,8 @@ namespace SPYoyoMod.Content.Items
     {
         private readonly int yoyoType;
 
+        public override bool InstancePerEntity { get => true; }
+
         public VanillaYoyoProjectile(int yoyoType)
         {
             this.yoyoType = yoyoType;

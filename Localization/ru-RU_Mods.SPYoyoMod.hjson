@@ -56,7 +56,11 @@ VanillaItems: {
 	// CodeOneItem.Tooltip: ""
 	// HelFireItem.Tooltip: ""
 	// AmarokItem.Tooltip: ""
-	ChikItem.Tooltip: При попадании по врагу создает самонаводящийся кристальный осколок
+	ChikItem.Tooltip:
+		'''
+		При попадании по врагу создает самонаводящийся кристальный осколок
+		Осколок на некоторое время остается во враге и переодически наносит урон
+		'''
 }
 
 NPCs.NurseNPC.GiftButton: Подарок

@@ -30,8 +30,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public static readonly int ChainChanceDenominator = 7;
 
-        public override bool InstancePerEntity { get => true; }
-
         private TrailRenderer trailRenderer;
         private SpriteTrailRenderer spriteTrailRenderer;
 
