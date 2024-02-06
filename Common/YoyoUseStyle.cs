@@ -50,9 +50,38 @@ namespace SPYoyoMod.Common
         {
             if (!item.useStyle.Equals(ItemUseStyleID.Shoot) || !ModContent.GetInstance<ClientSideConfig>().ReworkedYoyoUseStyle) return;
 
-            float rotation = player.itemRotation * player.gravDir - 1.57079637f * player.direction;
+            /// [Old]
+
+            // Conflict with HighFPSSupport mod...
+            // float rotation = player.itemRotation * player.gravDir - 1.57079637f * player.direction;
+
+            /// [New]
+
+            int projIndex = -1; // Main yoyo proj index
+
+            for (int index = 0; index < Main.projectile.Length; ++index)
+            {
+                ref var proj = ref Main.projectile[index];
+
+                if (proj.type == item.shoot && proj.active && proj.owner == player.whoAmI)
+                {
+                    projIndex = proj.whoAmI;
+                    break;
+                }
+            }
+
+            if (projIndex < 0) return;
+
+            var vectorFromPlayerToYoyo = Main.projectile[projIndex].Center - player.MountedCenter - GetMountedCenterOffset(player);
+            var rotation = vectorFromPlayerToYoyo.ToRotation() * player.gravDir - 1.57079637f;
+
+            /// ...
+
             player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, rotation);
             player.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Quarter, rotation);
+
+            NetMessage.SendData(13, -1, -1, null, player.whoAmI);
+            NetMessage.SendData(41, -1, -1, null, player.whoAmI);
         }
 
         public static void ModifyMountedCenter(Projectile proj, ref Vector2 mountedCenter)
@@ -62,7 +91,7 @@ namespace SPYoyoMod.Common
             mountedCenter += GetMountedCenterOffset(Main.player[proj.owner]);
         }
 
-        private static Vector2 GetMountedCenterOffset(Player player)
+        public static Vector2 GetMountedCenterOffset(Player player)
         {
             return new(player.direction * -4f, player.gravDir >= 0f ? -4 : -10);
         }
