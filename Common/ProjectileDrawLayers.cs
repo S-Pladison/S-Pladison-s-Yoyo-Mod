@@ -90,6 +90,27 @@ namespace SPYoyoMod.Common
 
         private static void PreDrawProjectiles(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
         {
+            var projIndex = IPreDrawAdditiveProjectile.FirstProjIndex(projectiles);
+
+            if (projIndex >= 0)
+            {
+                var spriteBatchSpanshot = new SpriteBatchSnapshot
+                {
+                    SortMode = SpriteSortMode.Deferred,
+                    BlendState = BlendState.Additive,
+                    SamplerState = Main.DefaultSamplerState,
+                    DepthStencilState = DepthStencilState.None,
+                    RasterizerState = Main.Rasterizer,
+                    Effect = null,
+                    Matrix = Main.GameViewMatrix.TransformationMatrix
+                };
+
+                ResetGraphicsDevice(spriteBatchSpanshot);
+                Main.spriteBatch.Begin(spriteBatchSpanshot);
+                IPreDrawAdditiveProjectile.DrawProjs(projectiles, projIndex);
+                Main.spriteBatch.End();
+            }
+
             var rtContent = ModContent.GetInstance<PreDrawPixelatedRenderTargetContent>();
 
             if (rtContent.IsRenderedInThisFrame && rtContent.TryGetRenderTarget(out RenderTarget2D target))
@@ -110,6 +131,36 @@ namespace SPYoyoMod.Common
                 sb.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
                 sb.End();
             }
+
+            var projIndex = IPostDrawAdditiveProjectile.FirstProjIndex(projectiles);
+
+            if (projIndex >= 0)
+            {
+                var spriteBatchSpanshot = new SpriteBatchSnapshot
+                {
+                    SortMode = SpriteSortMode.Deferred,
+                    BlendState = BlendState.Additive,
+                    SamplerState = Main.DefaultSamplerState,
+                    DepthStencilState = DepthStencilState.None,
+                    RasterizerState = Main.Rasterizer,
+                    Effect = null,
+                    Matrix = Main.GameViewMatrix.TransformationMatrix
+                };
+
+                ResetGraphicsDevice(spriteBatchSpanshot);
+                Main.spriteBatch.Begin(spriteBatchSpanshot);
+                IPostDrawAdditiveProjectile.DrawProjs(projectiles, projIndex);
+                Main.spriteBatch.End();
+            }
+        }
+
+        private static void ResetGraphicsDevice(SpriteBatchSnapshot spriteBatchSnapshot)
+        {
+            var device = Main.graphics.GraphicsDevice;
+            device.BlendState = spriteBatchSnapshot.BlendState;
+            device.SamplerStates[0] = spriteBatchSnapshot.SamplerState;
+            device.DepthStencilState = spriteBatchSnapshot.DepthStencilState;
+            device.RasterizerState = spriteBatchSnapshot.RasterizerState;
         }
 
         private abstract class PixelatedRenderTargetContent : RenderTargetContent
@@ -117,15 +168,6 @@ namespace SPYoyoMod.Common
             public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
 
             protected int projIndex;
-
-            protected static void ResetGraphicsDevice(SpriteBatchSnapshot spriteBatchSnapshot)
-            {
-                var device = Main.graphics.GraphicsDevice;
-                device.BlendState = spriteBatchSnapshot.BlendState;
-                device.SamplerStates[0] = spriteBatchSnapshot.SamplerState;
-                device.DepthStencilState = spriteBatchSnapshot.DepthStencilState;
-                device.RasterizerState = spriteBatchSnapshot.RasterizerState;
-            }
         }
 
         private class PreDrawPixelatedRenderTargetContent : PixelatedRenderTargetContent
@@ -151,7 +193,7 @@ namespace SPYoyoMod.Common
                 };
 
                 ResetGraphicsDevice(spriteBatchSpanshot);
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
+                Main.spriteBatch.Begin(spriteBatchSpanshot);
                 IPreDrawPixelatedProjectile.DrawProjs(projectiles, projIndex);
                 Main.spriteBatch.End();
             }
