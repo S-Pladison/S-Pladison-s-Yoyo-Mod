@@ -4,16 +4,13 @@ using ReLogic.Content;
 using SPYoyoMod.Common;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Renderers;
-using SPYoyoMod.Utils;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -21,29 +18,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class ValorItem : VanillaYoyoItem
     {
-        public static LocalizedText Tooltip { get; private set; }
-
         public ValorItem() : base(ItemID.Valor) { }
-
-        public override void SetStaticDefaults()
-        {
-            Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.ValorItem.Tooltip");
-        }
-
-        public override void Unload()
-        {
-            Tooltip = null;
-        }
 
         public override void SetDefaults(Item item)
         {
             item.knockBack = 6.5f;
-        }
-
-        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-        {
-            var description = new TooltipLine(Mod, "ModTooltip", Tooltip.Value);
-            TooltipUtils.InsertDescriptions(tooltips, TooltipUtils.Split(description, '\n'));
         }
     }
 

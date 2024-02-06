@@ -1,12 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.Renderers;
-using SPYoyoMod.Utils;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
-using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
@@ -15,19 +12,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public static float MovementSpeedForFullBonus { get => 8.5f; }
         public static int DamageFullBonus { get => 8; }
-        public static LocalizedText Tooltip { get; private set; }
 
         public RallyItem() : base(ItemID.Rally) { }
-
-        public override void SetStaticDefaults()
-        {
-            Tooltip = Language.GetOrRegister("Mods.SPYoyoMod.VanillaItems.RallyItem.Tooltip");
-        }
-
-        public override void Unload()
-        {
-            Tooltip = null;
-        }
 
         public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)
         {
@@ -39,11 +25,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             damage -= GetBonusValue(player);
         }
 
-        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+        /*public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             var description = new TooltipLine(Mod, "ModTooltip", Tooltip.Value);
             TooltipUtils.InsertDescriptions(tooltips, TooltipUtils.Split(description, '\n'));
-        }
+        }*/
 
         public static float GetBonusFactor(Player player)
             => MathHelper.Clamp(player.velocity.Length() / MovementSpeedForFullBonus, 0f, 1f);

@@ -50,14 +50,13 @@ Items: {
 
 VanillaItems: {
 	CascadeItem.Tooltip: Periodically explodes, dealing damage in an area
-	Code1Item.Tooltip:
-		'''
-		...
-		...
-		'''
 	RallyItem.Tooltip: The higher player's movement speed, the higher damage
 	StringItem.Tooltip: Increases yoyo range by 4 tiles
 	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
+	CodeOneItem.Tooltip: ""
+	HelFireItem.Tooltip: ""
+	AmarokItem.Tooltip: ""
+	ChikItem.Tooltip: Hitting an enemy creates a homing crystal shard
 }
 
 NPCs.NurseNPC.GiftButton: Gift

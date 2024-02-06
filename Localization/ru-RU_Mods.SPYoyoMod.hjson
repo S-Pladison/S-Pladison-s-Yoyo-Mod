@@ -50,14 +50,13 @@ Items: {
 
 VanillaItems: {
 	CascadeItem.Tooltip: Периодически взрывается, нанося урон по области
-	Code1Item.Tooltip:
-		'''
-		...
-		...
-		'''
 	RallyItem.Tooltip: Чем выше скорость передвижения игрока, тем выше урон
 	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
 	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
+	// CodeOneItem.Tooltip: ""
+	// HelFireItem.Tooltip: ""
+	// AmarokItem.Tooltip: ""
+	ChikItem.Tooltip: При попадании по врагу создает самонаводящийся кристальный осколок
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
