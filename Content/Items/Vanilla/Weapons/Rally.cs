@@ -25,12 +25,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             damage -= GetBonusValue(player);
         }
 
-        /*public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-        {
-            var description = new TooltipLine(Mod, "ModTooltip", Tooltip.Value);
-            TooltipUtils.InsertDescriptions(tooltips, TooltipUtils.Split(description, '\n'));
-        }*/
-
         public static float GetBonusFactor(Player player)
             => MathHelper.Clamp(player.velocity.Length() / MovementSpeedForFullBonus, 0f, 1f);
 
