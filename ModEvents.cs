@@ -66,6 +66,7 @@ namespace SPYoyoMod
             OnWorldUnload = null;
             OnHardmodeStart = null;
             OnPostDrawDust = null;
+            OnPostDrawTiles = null;
         }
 
         private class EventSystem : ModSystem
