@@ -104,7 +104,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             blackTrailRenderer ??= InitTrailRenderer(25, 16);
             redTrailRenderer ??= InitTrailRenderer(20, 8);
 
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultPrimitive", AssetRequestMode.ImmediateLoad);
+            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
             var effect = effectAsset.Value;
             var effectParameters = effect.Parameters;
 

@@ -42,6 +42,11 @@ namespace SPYoyoMod
         /// </summary>
         public static event Action OnPostDrawDust;
 
+        /// <summary>
+        /// Called after drawing Tiles. Can be used for drawing a tile overlay akin to wires.
+        /// </summary>
+        public static event Action OnPostDrawTiles;
+
         void ILoadable.Load(Mod mod)
         {
             OnPostAddRecipes += (_) => { };
@@ -50,6 +55,7 @@ namespace SPYoyoMod
             OnWorldUnload += () => { };
             OnHardmodeStart += () => { };
             OnPostDrawDust += () => { };
+            OnPostDrawTiles += () => { };
         }
 
         void ILoadable.Unload()
@@ -78,6 +84,7 @@ namespace SPYoyoMod
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();
             public override void OnWorldUnload() => ModEvents.OnWorldUnload();
             public override void ModifyHardmodeTasks(List<GenPass> list) => ModEvents.OnHardmodeStart();
+            public override void PostDrawTiles() => ModEvents.OnPostDrawTiles();
         }
     }
 }

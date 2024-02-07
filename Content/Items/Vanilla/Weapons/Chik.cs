@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using SPYoyoMod.Common;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
@@ -15,7 +19,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ChikProjectile : VanillaYoyoProjectile, IPreDrawAdditiveProjectile
     {
-
         private TrailRenderer trailRenderer;
 
         public ChikProjectile() : base(ProjectileID.Chik) { }
@@ -23,6 +26,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public override void OnKill(Projectile proj, int timeLeft)
         {
             trailRenderer?.Dispose();
+        }
+
+        public override void AI(Projectile proj)
+        {
+            trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
@@ -40,7 +48,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         void IPreDrawAdditiveProjectile.PreDrawAdditive(Projectile proj)
         {
+            trailRenderer ??= new TrailRenderer(20).SetWidth(f => MathHelper.Lerp(16f, 0f, f));
 
+            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
+            var effect = effectAsset.Value;
+            var effectParameters = effect.Parameters;
+
+            effectParameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+            effectParameters["TransformMatrix"].SetValue(ProjectileDrawLayers.DefaultPrimitiveMatrices.TransformWithScreenOffset);
+
+            var blackColorVec4 = Color.White.ToVector4();
+
+            effectParameters["ColorTL"].SetValue(blackColorVec4);
+            effectParameters["ColorTR"].SetValue(blackColorVec4);
+            effectParameters["ColorBL"].SetValue(blackColorVec4);
+            effectParameters["ColorBR"].SetValue(blackColorVec4);
+
+            trailRenderer.Draw(effect);
         }
     }
 }

@@ -64,7 +64,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!Main.rand.NextBool(ChainChanceDenominator))
                 return;
 
-            if (!npc.CanBeChasedBy(proj, false) || npc.boss || NPCID.Sets.ShouldBeCountedAsBoss[npc.type])
+            if (!npc.CanBeChasedBy(proj, false))
                 return;
 
             if (!npc.TryGetGlobalNPC(out ValorGlobalNPC globalNPC))
@@ -143,7 +143,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public void SecureWithChain(NPC npc)
         {
-            if (IsSecuredWithChain || !TryGetChainStartPoint(npc, out Point point)) return;
+            if (IsSecuredWithChain
+                || npc.boss
+                || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]
+                || !TryGetChainStartPoint(npc, out Point point)) return;
 
             chainStartPosition = point.ToWorldCoordinates();
             securedWithChainTimer = SecuredWithChainTime;
@@ -343,7 +346,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         private static bool IsRightTile(int x, int y)
         {
             if (!WorldGen.InWorld(x, y) || !Main.tile[x, y].HasTile) return false;
-            return WorldGen.SolidTile(x, y) || TileID.Sets.Platforms[Main.tile[x, y].TileType];
+            return WorldGen.SolidOrSlopedTile(x, y) || Main.tile[x, y].IsHalfBlock || TileID.Sets.Platforms[Main.tile[x, y].TileType];
         }
     }
 }

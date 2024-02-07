@@ -53,13 +53,18 @@ VanillaItems: {
 	RallyItem.Tooltip: The higher player's movement speed, the higher damage
 	StringItem.Tooltip: Increases yoyo range by 4 tiles
 	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
-	CodeOneItem.Tooltip: ""
+	CodeOneItem.Tooltip: Strikes nearby enemies with lightning
 	HelFireItem.Tooltip: ""
 	AmarokItem.Tooltip: ""
 	ChikItem.Tooltip:
 		'''
 		Hitting an enemy creates a homing crystal shard
-		The shard remains in enemy for a while, periodically dealing damage
+		The shard gets stuck in the enemy for a while, periodically dealing damage
+		'''
+	AmazonItem.Tooltip:
+		'''
+		Yoyo and string poison enemies
+		Enemies within the aura of natural restoration receive additional poison damage
 		'''
 }
 
