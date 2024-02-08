@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
@@ -47,6 +48,11 @@ namespace SPYoyoMod
         /// </summary>
         public static event Action OnPostDrawTiles;
 
+        /// <summary>
+        /// Called when screen resolution changes.
+        /// </summary>
+        public static event Action<Vector2> OnResolutionChanged;
+
         void ILoadable.Load(Mod mod)
         {
             OnPostAddRecipes += (_) => { };
@@ -56,6 +62,15 @@ namespace SPYoyoMod
             OnHardmodeStart += () => { };
             OnPostDrawDust += () => { };
             OnPostDrawTiles += () => { };
+            OnResolutionChanged += (_) => { };
+
+            On_Main.DrawDust += (orig, main) =>
+            {
+                orig(main);
+                OnPostDrawDust();
+            };
+
+            Main.OnResolutionChanged += Mod_OnResolutionChanged;
         }
 
         void ILoadable.Unload()
@@ -67,19 +82,15 @@ namespace SPYoyoMod
             OnHardmodeStart = null;
             OnPostDrawDust = null;
             OnPostDrawTiles = null;
+            OnResolutionChanged = null;
+
+            Main.OnResolutionChanged -= Mod_OnResolutionChanged;
         }
+
+        private static void Mod_OnResolutionChanged(Vector2 screenSize) => ModEvents.OnResolutionChanged(screenSize);
 
         private class EventSystem : ModSystem
         {
-            public override void Load()
-            {
-                On_Main.DrawDust += (orig, main) =>
-                {
-                    orig(main);
-                    OnPostDrawDust();
-                };
-            }
-
             public override void PostAddRecipes() => ModEvents.OnPostAddRecipes(Main.recipe);
             public override void PostUpdateEverything() => ModEvents.OnPostUpdateEverything();
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();
