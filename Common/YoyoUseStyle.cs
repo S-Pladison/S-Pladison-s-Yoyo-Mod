@@ -86,13 +86,14 @@ namespace SPYoyoMod.Common
 
         public static void ModifyMountedCenter(Projectile proj, ref Vector2 mountedCenter)
         {
-            if (!proj.IsYoyo() || !ModContent.GetInstance<ClientSideConfig>().ReworkedYoyoUseStyle) return;
+            if (!proj.IsYoyo()) return;
 
             mountedCenter += GetMountedCenterOffset(Main.player[proj.owner]);
         }
 
         public static Vector2 GetMountedCenterOffset(Player player)
         {
+            if (!ModContent.GetInstance<ClientSideConfig>().ReworkedYoyoUseStyle) return Vector2.Zero;
             return new(player.direction * -4f, player.gravDir >= 0f ? -4 : -10);
         }
 
