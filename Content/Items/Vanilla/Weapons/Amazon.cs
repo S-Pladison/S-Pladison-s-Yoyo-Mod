@@ -246,15 +246,31 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 ref var proj = ref Main.projectile[projIndex];
                 var projCenter = proj.Center.ToTileCoordinates();
 
-                for (int x = projCenter.X - RadiusFromProjCenter; x <= projCenter.X + RadiusFromProjCenter; x++)
+                var xStart = projCenter.X - RadiusFromProjCenter;
+                var xEnd = projCenter.X + RadiusFromProjCenter;
+
+                for (int x = xStart; x <= xEnd; x++)
                 {
-                    for (int y = projCenter.Y - RadiusFromProjCenter; y <= projCenter.Y + RadiusFromProjCenter; y++)
+                    var yStart = projCenter.Y - RadiusFromProjCenter;
+                    var yEnd = projCenter.Y + RadiusFromProjCenter;
+
+                    for (int y = yStart; y <= yEnd; y++)
                     {
-                        int distance = (int)MathF.Ceiling((float)Math.Sqrt(Math.Pow(x - projCenter.X, 2) + Math.Pow(y - projCenter.Y, 2)));
+                        var distance = (int)MathF.Ceiling((float)Math.Sqrt(Math.Pow(x - projCenter.X, 2) + Math.Pow(y - projCenter.Y, 2)));
 
-                        if (distance > RadiusFromProjCenter || !WorldGen.InWorld(x, y)) continue;
+                        if (distance > RadiusFromProjCenter) continue;
 
-                        tilesInAreasHashSet.Add(new Point(x, y));
+                        var yLocalStart = y; 
+                        var yLocalEnd = yEnd - (y - yStart);
+
+                        for (int i = yLocalStart; i <= yLocalEnd; i++)
+                        {
+                            if (!WorldGen.InWorld(x, i)) continue;
+
+                            tilesInAreasHashSet.Add(new Point(x, i));
+                        }
+
+                        break;
                     }
                 }
             }
