@@ -102,7 +102,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             for (int i = 0; i < segmentCount; i++)
             {
                 var origin = new Vector2(10, 15);
-                var frame = new Rectangle(((i * 255) ^ proj.whoAmI) % 3 * 20, 0, 20, 30);
+                var frame = new Rectangle((((i + 23) * 37) ^ proj.whoAmI) % 3 * 20, 0, 20, 30);
                 var angle = i * MathHelper.TwoPi / segmentCount + (float)Main.timeForVisualEffects * 0.025f;
                 var pos = position + Vector2.UnitX.RotatedBy(angle) * 63f * proj.localAI[1];
                 var color = Lighting.GetColor((pos + Main.screenPosition).ToTileCoordinates(), Color.White);
