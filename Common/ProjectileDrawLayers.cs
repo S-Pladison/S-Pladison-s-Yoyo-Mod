@@ -175,7 +175,7 @@ namespace SPYoyoMod.Common
             public override bool PreRender()
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
-                return (projIndex = IPreDrawPixelatedProjectile.FirstProjIndex(projectiles)) > 0;
+                return (projIndex = IPreDrawPixelatedProjectile.FirstProjIndex(projectiles)) >= 0;
             }
 
             public override void DrawToTarget()
@@ -204,7 +204,7 @@ namespace SPYoyoMod.Common
             public override bool PreRender()
             {
                 var projectiles = DrawUtils.GetActiveForDrawProjectiles();
-                return (projIndex = IPostDrawPixelatedProjectile.FirstProjIndex(projectiles)) > 0;
+                return (projIndex = IPostDrawPixelatedProjectile.FirstProjIndex(projectiles)) >= 0;
             }
 
             public override void DrawToTarget()
