@@ -46,6 +46,15 @@ Items: {
 			Hitting a charmed enemy also deals damage to others
 			'''
 	}
+
+	TitaniumYoyoItem: {
+		DisplayName: Titanium Yoyo
+		Tooltip:
+			'''
+			Hits generates a defensive barrier of titanium shards
+			Shards deals 30% more damage if player is equipped with titanium armor
+			'''
+	}
 }
 
 VanillaItems: {
@@ -66,6 +75,7 @@ VanillaItems: {
 		Yoyo and string poison enemies
 		Enemies within the aura of natural restoration receive additional poison damage
 		'''
+	ArteryItem.Tooltip: ""
 }
 
 NPCs.NurseNPC.GiftButton: Gift
@@ -79,4 +89,5 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
+	TitaniumYoyoProjectile.DisplayName: Titanium Yoyo Projectile
 }

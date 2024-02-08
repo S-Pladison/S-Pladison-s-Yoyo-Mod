@@ -46,6 +46,15 @@ Items: {
 			Попадание по очарованному врагу также наносит урон остальным
 			'''
 	}
+
+	TitaniumYoyoItem: {
+		DisplayName: Титановый йо-йо
+		Tooltip:
+			'''
+			Удары создают защитный барьер из осколков титана
+			Осколки наносят на 30% больше урона, если игрок экипирован в титановую броню
+			'''
+	}
 }
 
 VanillaItems: {
@@ -66,6 +75,7 @@ VanillaItems: {
 		Йо-йо и нить отравляют врагов
 		Внутри ауры природного восстановления враги получают дополнительный урон от отравления
 		'''
+	// ArteryItem.Tooltip: ""
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
@@ -79,4 +89,5 @@ Dialogue.NurseNPC.Dialogue.ReceivedGift:
 Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
+	// TitaniumYoyoProjectile.DisplayName: Titanium Yoyo Projectile
 }
