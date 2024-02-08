@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.RenderTargets;
+using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using System;
@@ -12,8 +13,6 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
-using static Humanizer.In;
-using static tModPorter.ProgressUpdate;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
@@ -37,7 +36,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void AI(Projectile proj)
         {
+            var owner = Main.player[proj.owner];
             var isReturning = proj.ai[0] == -1;
+
+            // Update proj.localAI[1] (proj scale mult)
 
             if (isReturning)
             {
@@ -45,8 +47,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 {
                     startToReturnPosition = proj.Center;
                 }
-
-                var owner = Main.player[proj.owner];
 
                 proj.localAI[1] = Vector2.DistanceSquared(owner.Center, proj.Center) / Vector2.DistanceSquared(owner.Center, startToReturnPosition.Value);
             }
@@ -56,18 +56,31 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
 
             proj.localAI[1] = MathHelper.Clamp(proj.localAI[1], 0f, 1f);
+
+            // Poisoning from string
+
+            float _ = float.NaN;
+
+            foreach (var target in Main.npc.Where(x => x.active && (x.CanBeChasedBy(proj) || x.type.Equals(NPCID.TargetDummy))))
+            {
+                if (Collision.CheckAABBvLineCollision(target.Hitbox.TopLeft(), target.Hitbox.Size(), proj.Center, owner.MountedCenter, 4, ref _))
+                {
+                    target.AddBuff(BuffID.Poisoned, 60 * 5);
+                }
+            }
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.Poisoned, 60 * 5);
 
+            // Reducing knockback from npc
+            // Vanilla: 16f
+            // New: 10f
+
             var vector = Vector2.Normalize(proj.Center - target.Center);
             var scaleFactor = -6f;
             proj.velocity += vector * scaleFactor;
-
-            // Vanilla: 16f
-            // New: 10f
 
             proj.netUpdate = true;
         }
@@ -90,9 +103,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
         }
 
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        {
+            DrawUtils.DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
+            {
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var pos = position - Main.screenPosition;
+                var rect = new Rectangle(0, 0, texture.Width(), (int)height);
+                var origin = new Vector2(texture.Width() * 0.5f, 0f);
+                var colour = Color.Lerp(Color.Transparent, Lighting.GetColor(position.ToTileCoordinates(), new Color(90, 155, 60)), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
+
+                Main.spriteBatch.Draw(texture.Value, pos, rect, colour, rotation, origin, 1f, SpriteEffects.None, 0f);
+            });
+        }
+
         public static void DrawMask(Projectile proj)
         {
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_Mask", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_GrassMask", AssetRequestMode.ImmediateLoad);
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
             Main.spriteBatch.Draw(texture.Value, position, null, Color.White, 0f, texture.Size() * 0.5f, proj.localAI[1], SpriteEffects.None, 0f);
@@ -189,13 +216,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             return tilesInAreasHashSet.ToList();
         }
 
-        public void DrawEffect_DrawTargets<T>() where T : ScreenRenderTargetContent
+        public void DrawEffect_DrawGrassTargets<T>() where T : ScreenRenderTargetContent
         {
             var grassRTContent = ModContent.GetInstance<T>();
 
             if (!grassRTContent.IsRenderedInThisFrame || !grassRTContent.TryGetRenderTarget(out RenderTarget2D grassTarget)) return;
 
-            var maskRTContent = ModContent.GetInstance<AmazonEffectMaskRenderTargetContent>();
+            var maskRTContent = ModContent.GetInstance<AmazonEffectGrassMaskRenderTargetContent>();
 
             if (!maskRTContent.IsRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out RenderTarget2D maskTarget)) return;
 
@@ -215,13 +242,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public void DrawEffect_BehindTiles()
         {
             Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
-            DrawEffect_DrawTargets<AmazonEffectGrassWallsRenderTargetContent>();
+            DrawEffect_DrawGrassTargets<AmazonEffectGrassWallsRenderTargetContent>();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
 
         public void DrawEffect_OverTiles()
         {
-            DrawEffect_DrawTargets<AmazonEffectGrassTilesRenderTargetContent>();
+            DrawEffect_DrawGrassTargets<AmazonEffectGrassTilesRenderTargetContent>();
         }
     }
 
@@ -277,15 +304,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_Grass", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_GrassTile", AssetRequestMode.ImmediateLoad);
 
             foreach (var tilePos in ModContent.GetInstance<AmazonEffectHandler>().GetTilePoints())
             {
                 var tile = Main.tile[tilePos.X, tilePos.Y];
 
-                if (!tile.HasTile) continue;
-                if (!WorldGen.SolidOrSlopedTile(tilePos.X, tilePos.Y) && !TileID.Sets.Platforms[tile.TileType]) continue;
-                if (WorldGen.SolidOrSlopedTile(tilePos.X, tilePos.Y - 1)) continue;
+                if (!tile.HasTile
+                    || !WorldGen.SolidOrSlopedTile(tilePos.X, tilePos.Y) && !TileID.Sets.Platforms[tile.TileType]
+                    || WorldGen.SolidOrSlopedTile(tilePos.X, tilePos.Y - 1)) continue;
 
                 var position = tilePos.ToWorldCoordinates(0, 0) - Main.screenPosition;
                 var frame = new Rectangle(0, 0, 16, 16);
@@ -301,7 +328,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class AmazonEffectMaskRenderTargetContent : ScreenRenderTargetContent
+    public class AmazonEffectGrassMaskRenderTargetContent : ScreenRenderTargetContent
     {
         public override bool PreRender() { return (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0; }
 
