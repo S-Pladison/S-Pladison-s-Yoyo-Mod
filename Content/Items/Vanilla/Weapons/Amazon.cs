@@ -68,6 +68,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                     target.AddBuff(BuffID.Poisoned, 60 * 5);
                 }
             }
+
+            // Spawn dusts
+
+            if (Main.rand.NextBool(9))
+            {
+                var dustPosition = proj.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * 63f * proj.localAI[1];
+                Dust.NewDustPerfect(dustPosition, ModContent.DustType<AmazonDust>());
+            }
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
@@ -123,6 +131,44 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
             Main.spriteBatch.Draw(texture.Value, position, null, Color.White, 0f, texture.Size() * 0.5f, proj.localAI[1], SpriteEffects.None, 0f);
+        }
+    }
+
+    public class AmazonDust : ModDust
+    {
+        private static readonly EasingBuilder ProgressEasing = new(
+            (EasingFunctions.InOutCirc, 0.2f, 0f, 1f),
+            (EasingFunctions.Linear, 0.6f, 1f, 1f),
+            (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
+        );
+
+        public override string Texture { get => ModAssets.DustsPath + "Amazon"; }
+
+        public override void OnSpawn(Dust dust)
+        {
+            dust.noGravity = true;
+            dust.frame = new Rectangle(18 * Main.rand.Next(3), 0, 18, 18);
+            dust.color = Color.White;
+            dust.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+            dust.customData = (Main.rand.NextBool() ? SpriteEffects.FlipVertically : SpriteEffects.None) | (Main.rand.NextBool() ? SpriteEffects.FlipHorizontally : SpriteEffects.None);
+        }
+
+        public override bool Update(Dust dust)
+        {
+            dust.velocity.Y += 0.055f;
+            dust.scale += 0.025f;
+            return true;
+        }
+
+        public override bool PreDraw(Dust dust)
+        {
+            var position = dust.position - Main.screenPosition;
+            var color = Lighting.GetColor(dust.position.ToTileCoordinates(), dust.color);
+            var scale = ProgressEasing.Evaluate(dust.scale) * 0.9f;
+            var effect = dust.customData is SpriteEffects spriteEffects ? spriteEffects : SpriteEffects.None;
+
+            Main.spriteBatch.Draw(Texture2D.Value, position, dust.frame, color, dust.velocity.ToRotation(), new Vector2(8), scale, effect, 0);
+            return false;
         }
     }
 
