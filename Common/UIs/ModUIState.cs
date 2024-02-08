@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Terraria;
 using Terraria.ModLoader;
 using Terraria.UI;
 
@@ -16,11 +15,8 @@ namespace SPYoyoMod.Common.UIs
             get => innerVisible;
             set
             {
-                Main.NewText("He!");
-
                 if (innerVisible != value)
                 {
-                    Main.NewText("He2!");
                     innerVisible = value;
 
                     if (value) Activate();
