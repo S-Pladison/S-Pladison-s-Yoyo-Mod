@@ -244,23 +244,24 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             foreach (var projIndex in projectiles)
             {
                 ref var proj = ref Main.projectile[projIndex];
-                var projCenter = proj.Center.ToTileCoordinates();
 
-                var xStart = projCenter.X - RadiusFromProjCenter;
-                var xEnd = projCenter.X + RadiusFromProjCenter;
+                var projCenter = proj.Center.ToTileCoordinates();
+                var trueRadius = (int)MathF.Ceiling(proj.localAI[1] * RadiusFromProjCenter);
+                var xStart = projCenter.X - trueRadius;
+                var xEnd = projCenter.X + trueRadius;
 
                 for (int x = xStart; x <= xEnd; x++)
                 {
-                    var yStart = projCenter.Y - RadiusFromProjCenter;
-                    var yEnd = projCenter.Y + RadiusFromProjCenter;
+                    var yStart = projCenter.Y - trueRadius;
+                    var yEnd = projCenter.Y + trueRadius;
 
                     for (int y = yStart; y <= yEnd; y++)
                     {
                         var distance = (int)MathF.Ceiling((float)Math.Sqrt(Math.Pow(x - projCenter.X, 2) + Math.Pow(y - projCenter.Y, 2)));
 
-                        if (distance > RadiusFromProjCenter) continue;
+                        if (distance > trueRadius) continue;
 
-                        var yLocalStart = y; 
+                        var yLocalStart = y;
                         var yLocalEnd = yEnd - (y - yStart);
 
                         for (int i = yLocalStart; i <= yLocalEnd; i++)
@@ -278,7 +279,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             return tilesInAreasHashSet.ToList();
         }
 
-        public void DrawEffect_DrawGrassTargets<T>() where T : ScreenRenderTargetContent
+        public void DrawEffect_DrawGrassTarget<T>() where T : ScreenRenderTargetContent
         {
             var grassRTContent = ModContent.GetInstance<T>();
 
@@ -304,13 +305,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public void DrawEffect_BehindTiles()
         {
             Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
-            DrawEffect_DrawGrassTargets<AmazonEffectGrassWallsRenderTargetContent>();
+            DrawEffect_DrawGrassTarget<AmazonEffectGrassWallsRenderTargetContent>();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
 
         public void DrawEffect_OverTiles()
         {
-            DrawEffect_DrawGrassTargets<AmazonEffectGrassTilesRenderTargetContent>();
+            DrawEffect_DrawGrassTarget<AmazonEffectGrassTilesRenderTargetContent>();
         }
     }
 
