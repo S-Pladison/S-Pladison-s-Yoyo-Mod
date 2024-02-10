@@ -83,6 +83,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 hitInfo.Knockback /= 2;
 
                 npc.StrikeNPC(hitInfo);
+
+                if (Main.netMode != NetmodeID.SinglePlayer)
+                    NetMessage.SendStrikeNPC(npc, in hitInfo);
             }
         }
 
