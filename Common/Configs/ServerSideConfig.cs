@@ -10,5 +10,9 @@ namespace SPYoyoMod.Common.Configs
         [DefaultValue(true)]
         [ReloadRequired]
         public bool ReworkedVanillaYoyos { get; set; }
+
+        [DefaultValue(true)]
+        [ReloadRequired]
+        public bool ReworkedYoyoUseStyle { get; set; }
     }
 }

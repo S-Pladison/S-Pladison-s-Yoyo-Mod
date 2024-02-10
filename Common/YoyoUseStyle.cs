@@ -76,7 +76,7 @@ namespace SPYoyoMod.Common
 
         public override void UseStyle(Item item, Player player, Rectangle heldItemFrame)
         {
-            if (!item.useStyle.Equals(ItemUseStyleID.Shoot) || !ModContent.GetInstance<ClientSideConfig>().ReworkedYoyoUseStyle) return;
+            if (!item.useStyle.Equals(ItemUseStyleID.Shoot) || !ModContent.GetInstance<ServerSideConfig>().ReworkedYoyoUseStyle) return;
 
             /// [Old]
 
@@ -107,9 +107,6 @@ namespace SPYoyoMod.Common
 
             player.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, rotation);
             player.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Quarter, rotation);
-
-            NetMessage.SendData(13, -1, -1, null, player.whoAmI);
-            NetMessage.SendData(41, -1, -1, null, player.whoAmI);
         }
 
         public static void ModifyMountedCenter(Projectile proj, ref Vector2 mountedCenter)
@@ -121,7 +118,7 @@ namespace SPYoyoMod.Common
 
         public static Vector2 GetMountedCenterOffset(Player player)
         {
-            if (!ModContent.GetInstance<ClientSideConfig>().ReworkedYoyoUseStyle) return Vector2.Zero;
+            if (!ModContent.GetInstance<ServerSideConfig>().ReworkedYoyoUseStyle) return Vector2.Zero;
             return new(player.direction * -4f, player.gravDir >= 0f ? -4 : -10);
         }
 
