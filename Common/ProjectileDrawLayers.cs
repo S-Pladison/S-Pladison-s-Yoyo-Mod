@@ -45,7 +45,7 @@ namespace SPYoyoMod.Common
 
             On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
 
                 if (projCache == Main.instance.DrawCacheProjsBehindProjectiles)
                     PreDrawProjectiles(ref Main.spriteBatch, projectiles);
@@ -212,13 +212,13 @@ namespace SPYoyoMod.Common
         {
             public override bool PreRender()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 return (projIndex = IPreDrawPixelatedProjectile.FirstProjIndex(projectiles)) >= 0;
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -241,13 +241,13 @@ namespace SPYoyoMod.Common
         {
             public override bool PreRender()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 return (projIndex = IPostDrawPixelatedProjectile.FirstProjIndex(projectiles)) >= 0;
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -270,13 +270,13 @@ namespace SPYoyoMod.Common
         {
             public override bool PreRender()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 return (projIndex = IPreDrawPixelatedAdditiveProjectile.FirstProjIndex(projectiles)) >= 0;
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -299,13 +299,13 @@ namespace SPYoyoMod.Common
         {
             public override bool PreRender()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 return (projIndex = IPostDrawPixelatedAdditiveProjectile.FirstProjIndex(projectiles)) >= 0;
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawProjectiles();
+                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,

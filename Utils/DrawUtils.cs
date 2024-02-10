@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using Terraria;
 using Terraria.GameContent;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
@@ -11,27 +12,43 @@ namespace SPYoyoMod.Utils
     public static class DrawUtils
     {
         /// <summary>
-        /// More or less safe only for drawing.<br/>
+        /// More or less safe only for drawing.
         /// Don't use when update game logic.
         /// </summary>
         [Autoload(Side = ModSide.Client)]
         private class ActiveEntities : ILoadable
         {
             public static readonly List<Projectile> Projectiles;
+            public static readonly List<NPC> NPCs;
 
-            private static uint lastUpdateTick;
+            public static int[] ProjectileCount;
+            public static uint LastUpdateTick;
 
             static ActiveEntities()
             {
                 Projectiles = new List<Projectile>();
-                lastUpdateTick = 0;
+                NPCs = new List<NPC>();
+                ProjectileCount = new int[ProjectileID.Count];
+
+                LastUpdateTick = 0;
             }
 
-            private void UpdateActiveEntityLists(GameTime time)
+            private static void ResizeArrays()
             {
-                if (lastUpdateTick.Equals(Main.GameUpdateCount)) return;
+                Array.Resize(ref ProjectileCount, ProjectileLoader.ProjectileCount);
+            }
+
+            private static void UpdateActiveEntityLists()
+            {
+                if (LastUpdateTick.Equals(Main.GameUpdateCount)) return;
 
                 Projectiles.Clear();
+                NPCs.Clear();
+
+                for (int i = 0; i < ProjectileCount.Length; i++)
+                {
+                    ProjectileCount[i] = 0;
+                }
 
                 foreach (var proj in Main.projectile)
                 {
@@ -40,28 +57,80 @@ namespace SPYoyoMod.Utils
                     Projectiles.Add(proj);
                 }
 
-                lastUpdateTick = Main.GameUpdateCount;
+                foreach (var npc in Main.npc)
+                {
+                    if (!npc.active) continue;
+
+                    NPCs.Add(npc);
+                }
+
+                foreach (var proj in Projectiles)
+                {
+                    ProjectileCount[proj.type] += 1;
+                }
+
+                LastUpdateTick = Main.GameUpdateCount;
             }
 
             void ILoadable.Load(Mod mod)
             {
-                Main.OnPreDraw += UpdateActiveEntityLists;
+                ModEvents.OnPostSetupContent += ResizeArrays;
+                ModEvents.OnPostUpdateEverything += UpdateActiveEntityLists;
             }
 
             void ILoadable.Unload()
             {
-                Main.OnPreDraw -= UpdateActiveEntityLists;
-
                 Projectiles.Clear();
+                NPCs.Clear();
+
+                ProjectileCount = null;
             }
         }
 
         /// <summary>
-        /// More or less safe only for drawing.<br/>
+        /// Returns all active entities.
+        /// More or less safe only for drawing.
         /// Don't use when update game logic.
         /// </summary>
-        public static IReadOnlyList<Projectile> GetActiveForDrawProjectiles()
-            => ActiveEntities.Projectiles;
+        public static IReadOnlyList<T> GetActiveForDrawEntities<T>() where T : Entity
+        {
+            if (typeof(T).Equals(typeof(Projectile)))
+                return ActiveEntities.Projectiles as IReadOnlyList<T>;
+
+            if (typeof(T).Equals(typeof(NPC)))
+                return ActiveEntities.NPCs as IReadOnlyList<T>;
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Returns the number of active entities of this type.
+        /// More or less safe only for drawing.
+        /// Don't use when update game logic.
+        /// </summary>
+        public static int GetActiveEntityCount<T>(int entityType)
+        {
+            if (typeof(T).Equals(typeof(Projectile)))
+                return ActiveEntities.ProjectileCount[entityType];
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Checks whether there are any active entity of this type.
+        /// More or less safe only for drawing.
+        /// Don't use when update game logic.
+        /// </summary>
+        public static bool AnyActiveEntity<T>(int entityType)
+            => GetActiveEntityCount<T>(entityType) > 0;
+
+        /// <summary>
+        /// Draw NPCs. And nothing more.
+        /// </summary>
+        public static void DrawNPC(NPC npc, bool behindTiles)
+        {
+            Main.instance.DrawNPC(npc.whoAmI, behindTiles);
+        }
 
         /// <summary>
         /// Copy from <see cref="Main"/>.DrawProj_DrawYoyoString(...).

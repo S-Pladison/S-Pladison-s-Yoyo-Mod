@@ -1,9 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.RenderTargets;
-using SPYoyoMod.Utils;
-using System;
-using System.Collections.Generic;
 using Terraria;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Shaders;
@@ -21,18 +18,15 @@ namespace SPYoyoMod.Common.Interfaces
 
         void DrawDistortion(Projectile proj);
 
-        private class DrawDistortionRenderTargetContent : ScreenRenderTargetContent
+        private class DistortionRenderTargetContent : EntityRenderTargetContent<Projectile>
         {
             public const string EffectName = "ScreenDistortion";
             public const string FilterName = $"{nameof(SPYoyoMod)}:{EffectName}";
 
-            private List<Tuple<IDrawDistortionProjectile, Projectile>> instances;
             private Texture2D inactiveTexture;
 
             public override void Load()
             {
-                instances = new List<Tuple<IDrawDistortionProjectile, Projectile>>();
-
                 Main.QueueMainThreadAction(() =>
                 {
                     inactiveTexture = new Texture2D(Main.graphics.GraphicsDevice, 1, 1);
@@ -46,50 +40,56 @@ namespace SPYoyoMod.Common.Interfaces
                 Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
             }
 
-            public override bool PreRender()
+            public override bool CanRender()
             {
-                instances.Clear();
+                UpdateFilter(null);
+                return true;
+            }
 
-                foreach (var proj in DrawUtils.GetActiveForDrawProjectiles())
-                {
-                    if (proj.ModProjectile is IDrawDistortionProjectile m)
-                        instances.Add(new(m, proj));
-
-                    foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
-                        instances.Add(new(g, proj));
-                }
-
-                var isFilterActive = Filters.Scene[FilterName].IsActive();
-
-                if (instances.Count > 0)
-                {
-                    if (!isFilterActive)
-                        Filters.Scene.Activate(FilterName);
-
+            public override bool CanDrawEntity(Projectile proj)
+            {
+                if (proj.ModProjectile is IDrawDistortionProjectile m)
                     return true;
-                }
 
-                if (isFilterActive)
-                {
-                    Filters.Scene[FilterName].GetShader().UseImage(inactiveTexture);
-                    Filters.Scene.Deactivate(FilterName);
-                }
+                foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
+                    return true;
 
                 return false;
+            }
+
+            public override void DrawEntity(Projectile proj)
+            {
+                if (proj.ModProjectile is IDrawDistortionProjectile m)
+                    m.DrawDistortion(proj);
+
+                foreach (IDrawDistortionProjectile g in Hook.Enumerate(proj))
+                    g.DrawDistortion(proj);
             }
 
             public override void DrawToTarget()
             {
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-
-                foreach (var (instance, proj) in instances)
-                    instance.DrawDistortion(proj);
-
-                instances.Clear();
-
+                DrawEntities();
                 Main.spriteBatch.End();
 
                 Main.graphics.GraphicsDevice.SetRenderTarget(null);
+                UpdateFilter(renderTarget);
+            }
+
+            public void UpdateFilter(RenderTarget2D target)
+            {
+                if (target is null)
+                {
+                    if (Filters.Scene[FilterName].IsActive())
+                    {
+                        Filters.Scene[FilterName].GetShader().UseImage(inactiveTexture);
+                        Filters.Scene.Deactivate(FilterName);
+                    }
+                    return;
+                }
+
+                if (!Filters.Scene[FilterName].IsActive())
+                    Filters.Scene.Activate(FilterName);
 
                 Filters.Scene[FilterName].GetShader().UseImage(renderTarget);
             }

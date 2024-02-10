@@ -29,8 +29,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void OnSpawn(Projectile proj, IEntitySource source)
         {
-            ModContent.GetInstance<AmazonEffectHandler>().AddProjectile(proj);
-
             proj.localAI[1] = 0f;
         }
 
@@ -195,45 +193,38 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public const int RadiusFromProjCenter = 7;
 
-        public int ProjCount { get => projectiles.Count; }
-        public IReadOnlyList<int> Projectiles { get => projectiles; }
+        public int ProjCount { get => innerProjectiles.Count; }
+        public IReadOnlyList<int> Projectiles { get => innerProjectiles; }
 
-        private List<int> projectiles;
-
-        public void AddProjectile(Projectile proj)
-        {
-            if (proj.type != ProjectileID.JungleYoyo) return;
-
-            projectiles.Add(proj.whoAmI);
-        }
+        private List<int> innerProjectiles;
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
-            projectiles = new();
+            innerProjectiles = new();
 
             On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
             {
                 orig(main);
-                DrawEffect_BehindTiles();
+                DrawBehindTiles();
             };
 
-            ModEvents.OnPostUpdateEverything += ClearProjs;
-            ModEvents.OnPostDrawTiles += DrawEffect_OverTiles;
+            ModEvents.OnPreDraw += FindProjs;
+            ModEvents.OnPostDrawTiles += DrawOverTiles;
         }
 
         void ILoadable.Unload() { }
 
-        public void ClearProjs()
+        public void FindProjs()
         {
-            for (int i = 0; i < projectiles.Count; i++)
-            {
-                ref var proj = ref Main.projectile[projectiles[i]];
+            innerProjectiles.Clear();
 
-                if (proj is null || !proj.active || proj.type != ProjectileID.JungleYoyo)
-                {
-                    projectiles.RemoveAt(i);
-                    i--;
-                }
+            if (!DrawUtils.AnyActiveEntity<Projectile>(ProjectileID.JungleYoyo)) return;
+
+            foreach (var proj in DrawUtils.GetActiveForDrawEntities<Projectile>())
+            {
+                if (proj.type != ProjectileID.JungleYoyo) continue;
+
+                innerProjectiles.Add(proj.whoAmI);
             }
         }
 
@@ -241,7 +232,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             var tilesInAreasHashSet = new HashSet<Point>();
 
-            foreach (var projIndex in projectiles)
+            foreach (var projIndex in innerProjectiles)
             {
                 ref var proj = ref Main.projectile[projIndex];
 
@@ -279,7 +270,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             return tilesInAreasHashSet.ToList();
         }
 
-        public void DrawEffect_DrawGrassTarget<T>() where T : ScreenRenderTargetContent
+        public void DrawBehindTiles()
+        {
+            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
+            DrawGrassTarget<AmazonEffectGrassWallsRenderTargetContent>();
+            Main.spriteBatch.Begin(spriteBatchSnapshot);
+        }
+
+        public void DrawOverTiles()
+        {
+            DrawGrassTarget<AmazonEffectGrassTilesRenderTargetContent>();
+        }
+
+        public void DrawGrassTarget<T>() where T : RenderTargetContent
         {
             var grassRTContent = ModContent.GetInstance<T>();
 
@@ -301,23 +304,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Main.spriteBatch.Draw(grassTarget, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
         }
-
-        public void DrawEffect_BehindTiles()
-        {
-            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
-            DrawEffect_DrawGrassTarget<AmazonEffectGrassWallsRenderTargetContent>();
-            Main.spriteBatch.Begin(spriteBatchSnapshot);
-        }
-
-        public void DrawEffect_OverTiles()
-        {
-            DrawEffect_DrawGrassTarget<AmazonEffectGrassTilesRenderTargetContent>();
-        }
     }
 
-    public class AmazonEffectGrassWallsRenderTargetContent : ScreenRenderTargetContent
+    public class AmazonEffectGrassWallsRenderTargetContent : RenderTargetContent
     {
-        public override bool PreRender() { return (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0; }
+        public override Point Size
+            => new(Main.screenWidth, Main.screenHeight);
+
+        public override bool PreRender()
+            => (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0;
 
         public override void DrawToTarget()
         {
@@ -359,9 +354,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class AmazonEffectGrassTilesRenderTargetContent : ScreenRenderTargetContent
+    public class AmazonEffectGrassTilesRenderTargetContent : RenderTargetContent
     {
-        public override bool PreRender() { return (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0; }
+        public override Point Size
+            => new(Main.screenWidth, Main.screenHeight);
+
+        public override bool PreRender()
+            => (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0;
 
         public override void DrawToTarget()
         {
@@ -391,9 +390,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class AmazonEffectGrassMaskRenderTargetContent : ScreenRenderTargetContent
+    public class AmazonEffectGrassMaskRenderTargetContent : RenderTargetContent
     {
-        public override bool PreRender() { return (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0; }
+        public override Point Size
+            => new(Main.screenWidth, Main.screenHeight);
+
+        public override bool PreRender()
+            => (ModContent.GetInstance<AmazonEffectHandler>()?.ProjCount ?? 0) > 0;
 
         public override void DrawToTarget()
         {

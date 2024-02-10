@@ -9,7 +9,7 @@ namespace SPYoyoMod.Common.RenderTargets
     {
         private static List<RenderTargetContent> contentThatNeedsRenderTargets = new();
 
-        public override void Load()
+        public override void PostSetupContent()
         {
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
             {

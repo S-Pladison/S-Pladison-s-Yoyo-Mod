@@ -19,6 +19,11 @@ namespace SPYoyoMod
         public static event Action<Recipe[]> OnPostAddRecipes;
 
         /// <summary>
+        /// ...
+        /// </summary>
+        public static event Action OnPostSetupContent;
+
+        /// <summary>
         /// Called after the Network got updated, this is the last hook that happens in an update.
         /// </summary>
         public static event Action OnPostUpdateEverything;
@@ -39,6 +44,11 @@ namespace SPYoyoMod
         public static event Action OnHardmodeStart;
 
         /// <summary>
+        /// Called before start draw game.
+        /// </summary>
+        public static event Action OnPreDraw;
+
+        /// <summary>
         /// Called after <see cref="Main.DrawDust"/>.
         /// </summary>
         public static event Action OnPostDrawDust;
@@ -56,6 +66,7 @@ namespace SPYoyoMod
         void ILoadable.Load(Mod mod)
         {
             OnPostAddRecipes += (_) => { };
+            OnPostSetupContent += () => { };
             OnPostUpdateEverything += () => { };
             OnWorldLoad += () => { };
             OnWorldUnload += () => { };
@@ -63,6 +74,7 @@ namespace SPYoyoMod
             OnPostDrawDust += () => { };
             OnPostDrawTiles += () => { };
             OnResolutionChanged += (_) => { };
+            OnPreDraw += () => { };
 
             On_Main.DrawDust += (orig, main) =>
             {
@@ -71,11 +83,13 @@ namespace SPYoyoMod
             };
 
             Main.OnResolutionChanged += Mod_OnResolutionChanged;
+            Main.OnPreDraw += Mod_OnPreDraw;
         }
 
         void ILoadable.Unload()
         {
             OnPostAddRecipes = null;
+            OnPostSetupContent = null;
             OnPostUpdateEverything = null;
             OnWorldLoad = null;
             OnWorldUnload = null;
@@ -83,15 +97,19 @@ namespace SPYoyoMod
             OnPostDrawDust = null;
             OnPostDrawTiles = null;
             OnResolutionChanged = null;
+            OnPreDraw = null;
 
             Main.OnResolutionChanged -= Mod_OnResolutionChanged;
+            Main.OnPreDraw -= Mod_OnPreDraw;
         }
 
         private static void Mod_OnResolutionChanged(Vector2 screenSize) => ModEvents.OnResolutionChanged(screenSize);
+        private static void Mod_OnPreDraw(GameTime _) => ModEvents.OnPreDraw();
 
         private class EventSystem : ModSystem
         {
             public override void PostAddRecipes() => ModEvents.OnPostAddRecipes(Main.recipe);
+            public override void PostSetupContent() => ModEvents.OnPostSetupContent();
             public override void PostUpdateEverything() => ModEvents.OnPostUpdateEverything();
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();
             public override void OnWorldUnload() => ModEvents.OnWorldUnload();
