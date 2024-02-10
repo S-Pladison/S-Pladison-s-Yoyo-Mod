@@ -9,7 +9,6 @@ using SPYoyoMod.Utils.Extensions;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -48,31 +47,36 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public CodeOneProjectile() : base(ProjectileID.Code1) { }
 
-        public override void OnSpawn(Projectile proj, IEntitySource source)
-        {
-            proj.localAI[1] = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>().IsBuffActive ? 1f : 0f;
-        }
-
         public override void AI(Projectile proj)
         {
-            buffActive = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>().IsBuffActive;
+            if (Main.myPlayer == proj.owner)
+            {
+                var oldBuffActiveValue = buffActive;
+                buffActive = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>().IsBuffActive;
 
-            proj.localAI[1] = MathHelper.Clamp(proj.localAI[1] + (buffActive ? 0.02f : -0.02f), 0f, 1f);
+                if (oldBuffActiveValue != buffActive)
+                    proj.netUpdate = true;
+            }
+
+            proj.localAI[1] = MathHelper.Clamp(proj.localAI[1] + (buffActive ? 0.05f : -0.02f), 0f, 1f);
         }
 
         public override void ModifyHitNPC(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
         {
             if (!buffActive) return;
 
-            modifiers.SourceDamage += 0.33f;
+            modifiers.FinalDamage += 0.33f;
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            var codeOnePlayer = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>();
-            codeOnePlayer.AddTimerToDict(target);
+            if (Main.myPlayer == proj.owner)
+            {
+                var codeOnePlayer = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>();
+                codeOnePlayer.AddTimerToDict(target);
+            }
 
-            if (!(buffActive = codeOnePlayer.IsBuffActive)) return;
+            if (!buffActive) return;
 
             Projectile.NewProjectile(proj.GetSource_FromThis(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CodeOneHitProjectile>(), 0, 0, proj.owner);
         }
@@ -119,8 +123,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
+    // Warning: Client-Side only
     public class CodeOnePlayer : ModPlayer
     {
+        public const int TimeToForgetNPC = 60 * 5;
+
         private class TimerData
         {
             public int NpcType;
@@ -129,7 +136,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             public TimerData(int npcType)
             {
                 NpcType = npcType;
-                Counter = 60 * 7;
+                Counter = TimeToForgetNPC;
             }
         }
 
