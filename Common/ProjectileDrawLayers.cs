@@ -32,9 +32,9 @@ namespace SPYoyoMod.Common
         void ILoadable.Load(Mod mod)
         {
             projectionMatrix = new Matrix(0f, 0f, 0f, 0f,
-                                           0f, 0f, 0f, 0f,
-                                           0f, 0f, 1f, 0f,
-                                          -1f, 1f, 0f, 1f);
+                                          0f, 0f, 0f, 0f,
+                                          0f, 0f, 1f, 0f,
+                                         -1f, 1f, 0f, 1f);
 
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
             {
@@ -90,16 +90,16 @@ namespace SPYoyoMod.Common
 
         private static void PreDrawProjectiles(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
         {
-            PreDrawProjectiles_Additive(ref sb, projectiles);
             PreDrawProjectiles_PixelatedAdditive(ref sb);
+            PreDrawProjectiles_Additive(ref sb, projectiles);
             PreDrawProjectiles_Pixelated(ref sb);
         }
 
         private static void PostDrawProjectiles(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
         {
             PostDrawProjectiles_Pixelated(ref sb);
-            PostDrawProjectiles_PixelatedAdditive(ref sb);
             PostDrawProjectiles_Additive(ref sb, projectiles);
+            PostDrawProjectiles_PixelatedAdditive(ref sb);
         }
 
         private static void PreDrawProjectiles_Additive(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)

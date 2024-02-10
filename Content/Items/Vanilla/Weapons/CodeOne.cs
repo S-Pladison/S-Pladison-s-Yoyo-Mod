@@ -191,7 +191,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var scale = EasingFunctions.OutCubic(1f - factor) * 0.35f;
 
             Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-
             return true;
         }
 
@@ -208,6 +207,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Rainbow", AssetRequestMode.ImmediateLoad);
 
             var rotation = (Projectile.timeLeft / InitTimeLeft + ((int)Projectile.position.X ^ (int)Projectile.position.Y)) * 0.3f;
+
             Main.spriteBatch.Draw(texture.Value, position, null, Color.White * (EasingFunctions.OutCubic(Projectile.timeLeft / InitTimeLeft) - 0.25f), rotation, texture.Size() * 0.5f, EasingFunctions.OutCubic(1f - Projectile.timeLeft / InitTimeLeft) * 0.2f, SpriteEffects.None, 0f);
         }
 

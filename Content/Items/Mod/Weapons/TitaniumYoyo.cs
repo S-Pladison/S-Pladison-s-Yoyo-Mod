@@ -1,13 +1,13 @@
-﻿using Terraria.ID;
-using Terraria.ModLoader;
-using Terraria;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Terraria.GameContent;
-using Microsoft.Xna.Framework;
 using SPYoyoMod.Common.Renderers;
-using Terraria.DataStructures;
-using Terraria.ModLoader.IO;
 using System.IO;
+using Terraria;
+using Terraria.DataStructures;
+using Terraria.GameContent;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
