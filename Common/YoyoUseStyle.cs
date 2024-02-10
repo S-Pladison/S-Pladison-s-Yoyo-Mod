@@ -3,7 +3,6 @@ using MonoMod.Cil;
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils.Extensions;
-using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -44,6 +43,35 @@ namespace SPYoyoMod.Common
                 c.Emit(Ldloca, mountedCenterIndex);
                 c.EmitDelegate<ModifyMountedCenterDelegate>(ModifyMountedCenter);
             };
+
+            ModContent.GetInstance<ThoriumCompatibility>().AddILHook("Projectiles.ProjectileExtras", "DrawString", (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // Vector2 vector2_1 = Main.player[projectile.owner].MountedCenter;
+
+                // IL_0008: ldsfld       class [tModLoader]Terraria.Player[] [tModLoader]Terraria.Main::player
+                // IL_000d: ldloc.0      // projectile
+                // IL_000e: ldfld int32[tModLoader]Terraria.Projectile::owner
+                // IL_0013: ldelem.ref
+                // IL_0014: callvirt instance valuetype[FNA]Microsoft.Xna.Framework.Vector2[tModLoader]Terraria.Player::get_MountedCenter()
+                // IL_0019: stloc.1      // vector2_1
+
+                int mountedCenterIndex = -1;
+                int projIndex = -1;
+
+                if (!c.TryGotoNext(MoveType.After,
+                        i => i.MatchLdsfld(typeof(Main).GetField("player")),
+                        i => i.MatchLdloc(out projIndex),
+                        i => i.MatchLdfld<Projectile>("owner"),
+                        i => i.MatchLdelemRef(),
+                        i => i.MatchCallvirt<Player>("get_MountedCenter"),
+                        i => i.MatchStloc(out mountedCenterIndex))) return;
+
+                c.Emit(Ldloc, projIndex);
+                c.Emit(Ldloca, mountedCenterIndex);
+                c.EmitDelegate<ModifyMountedCenterDelegate>(ModifyMountedCenter);
+            });
         }
 
         public override void UseStyle(Item item, Player player, Rectangle heldItemFrame)
@@ -98,45 +126,5 @@ namespace SPYoyoMod.Common
         }
 
         public delegate void ModifyMountedCenterDelegate(Projectile proj, ref Vector2 mountedCenter);
-    }
-
-    public class YoyoUseStyleThoriumCompatibility : ThoriumCompatibility
-    {
-        public override void Load()
-        {
-            var projectileExtrasTypeInfo = Assembly.GetType("ThoriumMod.Projectiles.ProjectileExtras");
-            var drawStringMethodInfo = projectileExtrasTypeInfo?.GetMethod("DrawString", BindingFlags.Public | BindingFlags.Static);
-
-            if (drawStringMethodInfo is null) return;
-
-            MonoModHooks.Modify(drawStringMethodInfo, (il) =>
-            {
-                var c = new ILCursor(il);
-
-                // Vector2 vector2_1 = Main.player[projectile.owner].MountedCenter;
-
-                // IL_0008: ldsfld       class [tModLoader]Terraria.Player[] [tModLoader]Terraria.Main::player
-                // IL_000d: ldloc.0      // projectile
-                // IL_000e: ldfld int32[tModLoader]Terraria.Projectile::owner
-                // IL_0013: ldelem.ref
-                // IL_0014: callvirt instance valuetype[FNA]Microsoft.Xna.Framework.Vector2[tModLoader]Terraria.Player::get_MountedCenter()
-                // IL_0019: stloc.1      // vector2_1
-
-                int mountedCenterIndex = -1;
-                int projIndex = -1;
-
-                if (!c.TryGotoNext(MoveType.After,
-                        i => i.MatchLdsfld(typeof(Main).GetField("player")),
-                        i => i.MatchLdloc(out projIndex),
-                        i => i.MatchLdfld<Projectile>("owner"),
-                        i => i.MatchLdelemRef(),
-                        i => i.MatchCallvirt<Player>("get_MountedCenter"),
-                        i => i.MatchStloc(out mountedCenterIndex))) return;
-
-                c.Emit(Ldloc, projIndex);
-                c.Emit(Ldloca, mountedCenterIndex);
-                c.EmitDelegate<YoyoUseStyleGlobalItem.ModifyMountedCenterDelegate>(YoyoUseStyleGlobalItem.ModifyMountedCenter);
-            });
-        }
     }
 }

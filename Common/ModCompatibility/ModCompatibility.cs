@@ -1,4 +1,6 @@
-﻿using System.Reflection;
+﻿using MonoMod.Cil;
+using System;
+using System.Reflection;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.ModCompatibility
@@ -38,6 +40,46 @@ namespace SPYoyoMod.Common.ModCompatibility
             IsModLoaded = true;
 
             Load();
+        }
+
+        public void AddHook(string typePath, string methodName, Delegate hookDelegate)
+            => AddHook(typePath, methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, hookDelegate);
+
+        public void AddHook(string typePath, string methodName, BindingFlags bindingFlags, Delegate hookDelegate)
+        {
+            if (!IsModLoaded) return;
+
+            var typeInfo = Assembly.GetType($"{ModName}.{typePath}");
+
+            if (typeInfo is null)
+                ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Failed to add hook] Mod:[{ModName}] Type:[{typePath}]:[null]");
+
+            var methodInfo = typeInfo.GetMethod(methodName, bindingFlags);
+
+            if (methodInfo is null)
+                ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Failed to add hook] Mod:[{ModName}] Type:[{typePath}] Method:[{methodName}]:[null]");
+
+            MonoModHooks.Add(methodInfo, hookDelegate);
+        }
+
+        public void AddILHook(string typePath, string methodName, ILContext.Manipulator callback)
+            => AddILHook(typePath, methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, callback);
+
+        public void AddILHook(string typePath, string methodName, BindingFlags bindingFlags, ILContext.Manipulator callback)
+        {
+            if (!IsModLoaded) return;
+
+            var typeInfo = Assembly.GetType($"{ModName}.{typePath}");
+
+            if (typeInfo is null)
+                ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Modification failed] Mod:[{ModName}] Type:[{typePath}]:[null]");
+
+            var methodInfo = typeInfo.GetMethod(methodName, bindingFlags);
+
+            if (methodInfo is null)
+                ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Modification failed] Mod:[{ModName}] Type:[{typePath}] Method:[{methodName}]:[null]");
+
+            MonoModHooks.Modify(methodInfo, callback);
         }
     }
 }

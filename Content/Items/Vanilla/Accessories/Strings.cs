@@ -4,7 +4,6 @@ using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using System.Collections.Generic;
-using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
@@ -105,49 +104,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 c.Emit(Ldloca, num10Index);
                 c.EmitDelegate<RemoveStringBonusDelegate>(RemoveYoyoStringBonus);
             };
-        }
 
-        public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
-        {
-            var owner = Main.player[proj.owner];
-
-            if (!owner.yoyoString) return;
-
-            statModifiers.MaxRange.Flat += 16 * 4;
-        }
-
-        public static void GetYoyoStatModifier(Projectile proj, ref YoyoStatModifiers statModifiers)
-        {
-            statModifiers = YoyoStatModifiers.Default;
-
-            IModifyYoyoStatsProjectile.GetYoyoStatModifiers(proj, ref statModifiers);
-        }
-
-        public static void RemoveYoyoStringBonus(ref float length)
-        {
-            length = (length - 30) / 1.25f;
-        }
-
-        public static void RemoveCounterweightStringBonus(ref float length)
-        {
-            length = (length - 10) / 1.25f;
-        }
-
-        public delegate void GetYoyoStatModifierDelegate(Projectile proj, ref YoyoStatModifiers statModifiers);
-        public delegate void ModifyYoyoStatDelegate(Projectile proj, ref YoyoStatModifiers statModifiers, ref float value);
-        public delegate void RemoveStringBonusDelegate(ref float value);
-    }
-
-    public class StringsThoriumCompatibility : ThoriumCompatibility
-    {
-        public override void Load()
-        {
-            var projectileExtrasTypeInfo = Assembly.GetType("ThoriumMod.Projectiles.ProjectileExtras");
-            var yoyoAIMethodInfo = projectileExtrasTypeInfo?.GetMethod("YoyoAI", BindingFlags.Public | BindingFlags.Static);
-
-            if (yoyoAIMethodInfo is null) return;
-
-            MonoModHooks.Modify(yoyoAIMethodInfo, (il) =>
+            ModContent.GetInstance<ThoriumCompatibility>().AddILHook("Projectiles.ProjectileExtras", "YoyoAI", (il) =>
             {
                 var c = new ILCursor(il);
 
@@ -167,8 +125,29 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchStloc(num3Index))) return;
 
                 c.Emit(Ldloca, num3Index);
-                c.EmitDelegate<StringsGlobalProjectile.RemoveStringBonusDelegate>(StringsGlobalProjectile.RemoveYoyoStringBonus);
+                c.EmitDelegate<RemoveStringBonusDelegate>(RemoveYoyoStringBonus);
             });
         }
+
+        public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
+        {
+            var owner = Main.player[proj.owner];
+
+            if (!owner.yoyoString) return;
+
+            statModifiers.MaxRange.Flat += 16 * 4;
+        }
+
+        public static void RemoveYoyoStringBonus(ref float length)
+        {
+            length = (length - 30) / 1.25f;
+        }
+
+        public static void RemoveCounterweightStringBonus(ref float length)
+        {
+            length = (length - 10) / 1.25f;
+        }
+
+        public delegate void RemoveStringBonusDelegate(ref float value);
     }
 }

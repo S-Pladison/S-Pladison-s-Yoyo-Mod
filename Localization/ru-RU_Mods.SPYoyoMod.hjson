@@ -55,6 +55,16 @@ Items: {
 			Осколки наносят на 30% больше урона, если игрок экипирован в титановую броню
 			'''
 	}
+
+	FreezingPointItem: {
+		DisplayName: Точка замерзания
+		Tooltip: ""
+	}
+
+	BellowingThunderItem: {
+		DisplayName: Раскаты грома
+		Tooltip: ""
+	}
 }
 
 VanillaItems: {
@@ -62,7 +72,7 @@ VanillaItems: {
 	RallyItem.Tooltip: Чем выше скорость передвижения игрока, тем выше урон
 	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
 	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
-	CodeOneItem.Tooltip: Поражает ближайших врагов молнией [Не финальный вариант]
+	CodeOneItem.Tooltip: Если вы сражаетесь максимум с 2 врагами, наносимый им урон будет повышен на 33%
 	// HelFireItem.Tooltip: ""
 	// AmarokItem.Tooltip: ""
 	ChikItem.Tooltip:
@@ -90,4 +100,7 @@ Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 	// TitaniumYoyoProjectile.DisplayName: Titanium Yoyo Projectile
+	// CodeOneHitProjectile.DisplayName: Code One Hit Projectile
+	// FreezingPointProjectile.DisplayName: Freezing Point Projectile
+	// BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
 }

@@ -55,6 +55,16 @@ Items: {
 			Shards deals 30% more damage if player is equipped with titanium armor
 			'''
 	}
+
+	FreezingPointItem: {
+		DisplayName: Freezing Point
+		Tooltip: ""
+	}
+
+	BellowingThunderItem: {
+		DisplayName: Bellowing Thunder
+		Tooltip: ""
+	}
 }
 
 VanillaItems: {
@@ -62,7 +72,7 @@ VanillaItems: {
 	RallyItem.Tooltip: The higher player's movement speed, the higher damage
 	StringItem.Tooltip: Increases yoyo range by 4 tiles
 	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
-	CodeOneItem.Tooltip: Strikes nearby enemies with lightning
+	CodeOneItem.Tooltip: If you are fighting with a maximum of 2 enemies, the damage dealt to them will be increased by 33%
 	HelFireItem.Tooltip: ""
 	AmarokItem.Tooltip: ""
 	ChikItem.Tooltip:
@@ -90,4 +100,7 @@ Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 	TitaniumYoyoProjectile.DisplayName: Titanium Yoyo Projectile
+	CodeOneHitProjectile.DisplayName: Code One Hit Projectile
+	FreezingPointProjectile.DisplayName: Freezing Point Projectile
+	BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
 }

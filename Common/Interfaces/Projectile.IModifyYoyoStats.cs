@@ -3,7 +3,6 @@ using MonoMod.Cil;
 using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils.DataStructures;
 using System;
-using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -29,126 +28,110 @@ namespace SPYoyoMod.Common.Interfaces
         /// </summary>
         void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers);
 
-        public static void GetYoyoStatModifiers(Projectile proj, ref YoyoStatModifiers statModifiers)
+        private class ModifyYoyoStatsImplementation : ILoadable
         {
-            (proj.ModProjectile as IModifyYoyoStatsProjectile)?.ModifyYoyoStats(proj, ref statModifiers);
-
-            foreach (IModifyYoyoStatsProjectile g in Hook.Enumerate(proj))
-                g.ModifyYoyoStats(proj, ref statModifiers);
-        }
-
-        public static void ModifyYoyoLifeTime(Projectile _, ref YoyoStatModifiers statModifiers, ref float lifeTime)
-        {
-            if (lifeTime <= 0) return;
-
-            lifeTime = statModifiers.LifeTime.ApplyTo(lifeTime);
-        }
-
-        public static void ModifyYoyoMaxRange(Projectile _, ref YoyoStatModifiers statModifiers, ref float maxRange)
-        {
-            maxRange = statModifiers.MaxRange.ApplyTo(maxRange);
-        }
-    }
-
-    public class ModifyYoyoStatsImplementation : ILoadable
-    {
-        public void Load(Mod mod)
-        {
-            IL_Projectile.AI_099_2 += (il) =>
+            public void Load(Mod mod)
             {
-                var c = new ILCursor(il);
+                IL_Projectile.AI_099_2 += (il) =>
+                {
+                    var c = new ILCursor(il);
 
-                // YoyoStatModifiers statModifiers;
+                    // YoyoStatModifiers statModifiers;
 
-                int statModifiersIndex = il.Body.Variables.Count;
+                    int statModifiersIndex = il.Body.Variables.Count;
 
-                il.Body.Variables.Add(new VariableDefinition(c.Context.Import(typeof(YoyoStatModifiers))));
+                    il.Body.Variables.Add(new VariableDefinition(c.Context.Import(typeof(YoyoStatModifiers))));
 
-                c.Emit(Ldarg_0);
-                c.Emit(Ldloca, statModifiersIndex);
-                c.EmitDelegate<GetYoyoStatModifierDelegate>(GetYoyoStatModifier);
+                    c.Emit(Ldarg_0);
+                    c.Emit(Ldloca, statModifiersIndex);
+                    c.EmitDelegate<GetYoyoStatModifiersDelegate>(GetYoyoStatModifiers);
 
-                // float num2 = ProjectileID.Sets.YoyosLifeTimeMultiplier[this.type];
+                    // float num2 = ProjectileID.Sets.YoyosLifeTimeMultiplier[this.type];
 
-                // IL_00EE: ldsfld    float32[] Terraria.ID.ProjectileID/Sets::YoyosLifeTimeMultiplier
-                // IL_00F3: ldarg.0
-                // IL_00F4: ldfld int32 Terraria.Projectile::'type'
-                // IL_00F9: ldelem.r4
-                // IL_00FA: stloc.s num2
+                    // IL_00EE: ldsfld    float32[] Terraria.ID.ProjectileID/Sets::YoyosLifeTimeMultiplier
+                    // IL_00F3: ldarg.0
+                    // IL_00F4: ldfld int32 Terraria.Projectile::'type'
+                    // IL_00F9: ldelem.r4
+                    // IL_00FA: stloc.s num2
 
-                int num2Index = -1;
+                    int num2Index = -1;
 
-                if (!c.TryGotoNext(MoveType.After,
-                    i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosLifeTimeMultiplier")),
-                    i => i.MatchLdarg(0),
-                    i => i.MatchLdfld<Projectile>("type"),
-                    i => i.MatchLdelemR4(),
-                    i => i.MatchStloc(out num2Index))) return;
+                    if (!c.TryGotoNext(MoveType.After,
+                        i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosLifeTimeMultiplier")),
+                        i => i.MatchLdarg(0),
+                        i => i.MatchLdfld<Projectile>("type"),
+                        i => i.MatchLdelemR4(),
+                        i => i.MatchStloc(out num2Index))) return;
 
-                c.Emit(Ldarg_0);
-                c.Emit(Ldloca, statModifiersIndex);
-                c.Emit(Ldloca, num2Index);
-                c.EmitDelegate<ModifyYoyoStatDelegate>(IModifyYoyoStatsProjectile.ModifyYoyoLifeTime);
+                    c.Emit(Ldarg_0);
+                    c.Emit(Ldloca, statModifiersIndex);
+                    c.Emit(Ldloca, num2Index);
+                    c.EmitDelegate<ModifyYoyoStatDelegate>(ModifyYoyoLifeTime);
 
-                // float num7 = ProjectileID.Sets.YoyosMaximumRange[this.type];
+                    // float num7 = ProjectileID.Sets.YoyosMaximumRange[this.type];
 
-                // IL_0522: ldsfld float32[] Terraria.ID.ProjectileID / Sets::YoyosMaximumRange
-                // IL_0527: ldarg.0
-                // IL_0528: ldfld int32 Terraria.Projectile::'type'
-                // IL_052D: ldelem.r4
-                // IL_052E: stloc.s num10
+                    // IL_0522: ldsfld float32[] Terraria.ID.ProjectileID / Sets::YoyosMaximumRange
+                    // IL_0527: ldarg.0
+                    // IL_0528: ldfld int32 Terraria.Projectile::'type'
+                    // IL_052D: ldelem.r4
+                    // IL_052E: stloc.s num10
 
-                int num10Index = -1;
-                if (!c.TryGotoNext(MoveType.After,
-                    i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosMaximumRange")),
-                    i => i.MatchLdarg(0),
-                    i => i.MatchLdfld<Projectile>("type"),
-                    i => i.MatchLdelemR4(),
-                    i => i.MatchStloc(out num10Index))) return;
+                    int num10Index = -1;
+                    if (!c.TryGotoNext(MoveType.After,
+                        i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosMaximumRange")),
+                        i => i.MatchLdarg(0),
+                        i => i.MatchLdfld<Projectile>("type"),
+                        i => i.MatchLdelemR4(),
+                        i => i.MatchStloc(out num10Index))) return;
 
-                c.Emit(Ldarg_0);
-                c.Emit(Ldloca, statModifiersIndex);
-                c.Emit(Ldloca, num10Index);
-                c.EmitDelegate<ModifyYoyoStatDelegate>(IModifyYoyoStatsProjectile.ModifyYoyoMaxRange);
-            };
-        }
+                    c.Emit(Ldarg_0);
+                    c.Emit(Ldloca, statModifiersIndex);
+                    c.Emit(Ldloca, num10Index);
+                    c.EmitDelegate<ModifyYoyoStatDelegate>(ModifyYoyoMaxRange);
+                };
 
-        public void GetYoyoStatModifier(Projectile proj, ref YoyoStatModifiers statModifiers)
-        {
-            statModifiers = YoyoStatModifiers.Default;
+                ModContent.GetInstance<ThoriumCompatibility>().AddHook("Projectiles.ProjectileExtras", "YoyoAI", (orig_ThoriumYoyoAIMethod orig, int projIndex, float lifeTimeSec, float maxRange, float topSpeed, float rotSpeed, Delegate _uAct, Delegate _uAct2) =>
+                {
+                    var statModifiers = YoyoStatModifiers.Default;
+                    var lifeTime = lifeTimeSec * 60;
+                    ref var proj = ref Main.projectile[projIndex];
 
-            IModifyYoyoStatsProjectile.GetYoyoStatModifiers(proj, ref statModifiers);
-        }
+                    GetYoyoStatModifiers(proj, ref statModifiers);
+                    ModifyYoyoLifeTime(proj, ref statModifiers, ref lifeTime);
+                    ModifyYoyoMaxRange(proj, ref statModifiers, ref maxRange);
 
-        public void Unload() { }
+                    orig(projIndex, lifeTime / 60, maxRange, topSpeed, rotSpeed, _uAct, _uAct2);
+                });
+            }
 
-        private delegate void GetYoyoStatModifierDelegate(Projectile proj, ref YoyoStatModifiers statModifiers);
-        private delegate void ModifyYoyoStatDelegate(Projectile proj, ref YoyoStatModifiers statModifiers, ref float value);
-    }
+            public void Unload() { }
 
-    public class ModifyYoyoStatsThoriumCompatibility : ThoriumCompatibility
-    {
-        public override void Load()
-        {
-            var projectileExtrasTypeInfo = Assembly.GetType("ThoriumMod.Projectiles.ProjectileExtras");
-            var yoyoAIMethodInfo = projectileExtrasTypeInfo?.GetMethod("YoyoAI", BindingFlags.Public | BindingFlags.Static);
-
-            if (yoyoAIMethodInfo is null) return;
-
-            MonoModHooks.Add(yoyoAIMethodInfo, (orig_YoyoAIMethod orig, int projIndex, float lifeTimeSeconds, float maxRange, float topSpeed, float rotateSpeed, Delegate _unknownAction, Delegate _unknownAction2) =>
+            public static void GetYoyoStatModifiers(Projectile proj, ref YoyoStatModifiers statModifiers)
             {
-                var statModifiers = YoyoStatModifiers.Default;
-                var lifeTime = lifeTimeSeconds * 60;
-                ref var proj = ref Main.projectile[projIndex];
+                statModifiers = YoyoStatModifiers.Default;
 
-                IModifyYoyoStatsProjectile.GetYoyoStatModifiers(proj, ref statModifiers);
-                IModifyYoyoStatsProjectile.ModifyYoyoLifeTime(proj, ref statModifiers, ref lifeTime);
-                IModifyYoyoStatsProjectile.ModifyYoyoMaxRange(proj, ref statModifiers, ref maxRange);
+                (proj.ModProjectile as IModifyYoyoStatsProjectile)?.ModifyYoyoStats(proj, ref statModifiers);
 
-                orig(projIndex, lifeTime / 60, maxRange, topSpeed, rotateSpeed, _unknownAction, _unknownAction2);
-            });
+                foreach (IModifyYoyoStatsProjectile g in Hook.Enumerate(proj))
+                    g.ModifyYoyoStats(proj, ref statModifiers);
+            }
+
+            public static void ModifyYoyoLifeTime(Projectile _, ref YoyoStatModifiers statModifiers, ref float lifeTime)
+            {
+                if (lifeTime <= 0) return;
+
+                lifeTime = statModifiers.LifeTime.ApplyTo(lifeTime);
+            }
+
+            public static void ModifyYoyoMaxRange(Projectile _, ref YoyoStatModifiers statModifiers, ref float maxRange)
+            {
+                maxRange = statModifiers.MaxRange.ApplyTo(maxRange);
+            }
+
+            public delegate void GetYoyoStatModifiersDelegate(Projectile proj, ref YoyoStatModifiers statModifiers);
+            public delegate void ModifyYoyoStatDelegate(Projectile proj, ref YoyoStatModifiers statModifiers, ref float value);
+
+            public delegate void orig_ThoriumYoyoAIMethod(int projIndex, float lifeTimeSeconds, float maxRange, float topSpeed, float rotateSpeed, Delegate _unknownAction, Delegate _unknownAction2);
         }
-
-        private delegate void orig_YoyoAIMethod(int projIndex, float lifeTimeSeconds, float maxRange, float topSpeed, float rotateSpeed, Delegate _unknownAction, Delegate _unknownAction2);
     }
 }
