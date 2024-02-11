@@ -77,6 +77,7 @@ namespace SPYoyoMod.Common.Interfaces
                     // IL_052E: stloc.s num10
 
                     int num10Index = -1;
+
                     if (!c.TryGotoNext(MoveType.After,
                         i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosMaximumRange")),
                         i => i.MatchLdarg(0),
