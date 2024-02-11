@@ -101,14 +101,14 @@ namespace SPYoyoMod.Content.Items
 
         public sealed override void SendExtraAI(BinaryWriter writer)
         {
-            // ...
+            writer.Write(IsMainYoyo);
 
             YoyoSendExtraAI(writer);
         }
 
         public sealed override void ReceiveExtraAI(BinaryReader reader)
         {
-            // ...
+            IsMainYoyo = reader.ReadBoolean();
 
             YoyoReceiveExtraAI(reader);
         }

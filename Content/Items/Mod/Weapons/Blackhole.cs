@@ -2,14 +2,14 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Interfaces;
+using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using System;
-using System.Collections.Generic;
+using System.Linq;
 using Terraria;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.Graphics.Renderers;
 using Terraria.ID;
@@ -53,13 +53,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
-        public override void YoyoOnSpawn(Player owner, IEntitySource source)
-        {
-            if (!IsMainYoyo) return;
-
-            ModContent.GetInstance<BlackholeRenderTargetContent>().AddProjectile(this);
-        }
-
         public override void AI()
         {
             if (!IsMainYoyo) return;
@@ -98,28 +91,22 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             if (!IsMainYoyo || IsReturning) return;
 
-            OnHitParticles();
-        }
-
-        public override void YoyoOnHitPlayer(Player owner, Player target, Player.HurtInfo info)
-        {
-            if (!IsMainYoyo || IsReturning) return;
-
-            OnHitParticles();
-        }
-
-        public void OnHitParticles()
-        {
-            var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
-
-            for (int i = 0; i < 7; i++)
+            if (!Main.dedServ)
             {
-                var position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(20);
-                var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(0.75f);
-                var particle = new BlackholeParticle(position, velocity);
+                var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
 
-                blackholeRTContent.AddParticle(particle);
+                for (int i = 0; i < 7; i++)
+                {
+                    var position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(20);
+                    var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(0.75f);
+                    var particle = new BlackholeParticle(position, velocity);
+
+                    blackholeRTContent.AddParticle(particle);
+                }
             }
+
+            if (Projectile.whoAmI == Main.myPlayer)
+                NetHandler.Send(new ProjectileOnHitNPCPacket(Projectile, target));
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
@@ -226,29 +213,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BlackholeRenderTargetContent : RenderTargetContent
     {
-        public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
+        public override Point Size
+            => new(Main.screenWidth / 2, Main.screenHeight / 2);
 
         private Asset<Effect> effect;
         private ParticleRenderer particleRenderer;
-        private List<int> projectiles;
-
-        public void AddParticle(BlackholeParticle particle)
-        {
-            if (particle is null) return;
-
-            particleRenderer.Add(particle);
-        }
-
-        public void AddProjectile(BlackholeProjectile modProjectile)
-        {
-            if (modProjectile is null) return;
-
-            projectiles.Add(modProjectile.Projectile.whoAmI);
-        }
 
         public override void Load()
         {
-            projectiles = new();
             particleRenderer = new();
 
             ModEvents.OnPostUpdateEverything += () => particleRenderer.Update();
@@ -267,21 +239,15 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             };
         }
 
-        public override bool PreRender()
+        public void AddParticle(BlackholeParticle particle)
         {
-            for (int i = 0; i < projectiles.Count; i++)
-            {
-                ref var proj = ref Main.projectile[projectiles[i]];
+            if (particle is null) return;
 
-                if (proj is null || !proj.active || proj.ModProjectile is not BlackholeProjectile)
-                {
-                    projectiles.RemoveAt(i);
-                    i--;
-                }
-            }
-
-            return particleRenderer.Particles.Count > 0 || projectiles.Count > 0;
+            particleRenderer.Add(particle);
         }
+
+        public override bool PreRender()
+            => particleRenderer.Particles.Count > 0 || DrawUtils.AnyActiveEntity<Projectile>(ModContent.ProjectileType<BlackholeProjectile>());
 
         public override void DrawToTarget()
         {
@@ -290,11 +256,12 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             particleRenderer.Settings.AnchorPosition = -Main.screenPosition;
             particleRenderer.Draw(Main.spriteBatch);
 
-            for (int i = 0; i < projectiles.Count; i++)
+            if (DrawUtils.AnyActiveEntity<Projectile>(ModContent.ProjectileType<BlackholeProjectile>()))
             {
-                ref var proj = ref Main.projectile[projectiles[i]];
-
-                (proj.ModProjectile as BlackholeProjectile).DrawSpaceMask();
+                foreach (var proj in DrawUtils.GetActiveForDrawEntities<Projectile>().Where(x => x.ModProjectile is BlackholeProjectile))
+                {
+                    (proj.ModProjectile as BlackholeProjectile).DrawSpaceMask();
+                }
             }
 
             Main.spriteBatch.End();

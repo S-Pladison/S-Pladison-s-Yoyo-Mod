@@ -1,7 +1,9 @@
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.ModCompatibility;
+using SPYoyoMod.Common.Networking;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using Terraria.ModLoader;
@@ -45,6 +47,11 @@ namespace SPYoyoMod
 
             foreach (var instance in modCompatibilityInstances) AddContent(instance);
             foreach (var instance in otherInstances) AddContent(instance);
+        }
+
+        public override void HandlePacket(BinaryReader reader, int whoAmI)
+        {
+            ModContent.GetInstance<NetHandler>().HandlePackets(reader, whoAmI);
         }
     }
 }
