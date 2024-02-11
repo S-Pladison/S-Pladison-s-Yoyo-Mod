@@ -125,7 +125,7 @@ namespace SPYoyoMod.Utils
             => GetActiveEntityCount<T>(entityType) > 0;
 
         /// <summary>
-        /// Draw NPCs. And nothing more.
+        /// Draw npc. And nothing more.
         /// </summary>
         public static void DrawNPC(NPC npc, bool behindTiles)
         {
@@ -133,7 +133,7 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Copy from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
+        /// Draw yoyo string. Why is this description even here... Copy from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
         /// </summary>
         public static void DrawYoyoString(Projectile proj, Vector2 mountedCenter, DrawYoyoStringSegmentDelegate drawSegment)
         {
