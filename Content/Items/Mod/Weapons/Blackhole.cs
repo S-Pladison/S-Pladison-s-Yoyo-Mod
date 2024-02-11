@@ -8,7 +8,6 @@ using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using System;
-using System.Linq;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.Graphics.Renderers;
@@ -51,11 +50,17 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public float RadiusProgress { get => Projectile.localAI[1]; set => Projectile.localAI[1] = value; }
         public float TimeForVisualEffects { get => (Projectile.whoAmI * 200f + (float)Main.timeForVisualEffects) % 216000f; }
 
+        private bool initialized;
+
         public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
         public override void AI()
         {
-            if (!IsMainYoyo) return;
+            if (!initialized)
+            {
+                ModContent.GetInstance<BlackholeRenderTargetContent>()?.AddProjectile(Projectile);
+                initialized = true;
+            }
 
             Lighting.AddLight(Projectile.Center, new Color(171, 97, 255).ToVector3() * 0.6f);
 
@@ -89,7 +94,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!IsMainYoyo || IsReturning) return;
+            if (IsReturning) return;
 
             if (!Main.dedServ)
             {
@@ -106,13 +111,11 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             }
 
             if (Projectile.owner == Main.myPlayer)
-                new ModProjectileOnHitNPCPacket(Projectile, target).Send();
+                new ModProjectileOnHitNPCPacket(Projectile.identity, Projectile.type, target.whoAmI, target.type).Send();
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            if (!IsMainYoyo) return;
-
             DrawUtils.DrawYoyoString(Projectile, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
             {
                 var pos = position - Main.screenPosition;
@@ -141,23 +144,22 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
         {
-            if (!IsMainYoyo) return;
 
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Blackhole_LensFlare", AssetRequestMode.ImmediateLoad);
             var rotation = MathF.Sin(TimeForVisualEffects * 0.01f);
             var scale = Projectile.scale;
+
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, rotation, texture.Size() * 0.5f, 0.85f * scale, SpriteEffects.None, 0f);
         }
 
         void IDrawDistortionProjectile.DrawDistortion(Projectile proj)
         {
-            if (!IsMainYoyo) return;
-
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/DistortedRing", AssetRequestMode.ImmediateLoad);
             var rotation = TimeForVisualEffects * 0.02f;
             var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
+
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Gray, rotation, texture.Size() * 0.5f, 0.6f * scale, SpriteEffects.None, 0f);
         }
     }
@@ -213,41 +215,35 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BlackholeRenderTargetContent : RenderTargetContent
     {
-        public override Point Size
-            => new(Main.screenWidth / 2, Main.screenHeight / 2);
+        public override Point Size => new(Main.screenWidth / 2, Main.screenHeight / 2);
 
         private Asset<Effect> effect;
+        private ProjectileObserver projectileObserver;
         private ParticleRenderer particleRenderer;
 
         public override void Load()
         {
+            projectileObserver = new(p => p.ModProjectile is not BlackholeProjectile);
             particleRenderer = new();
 
-            ModEvents.OnPostUpdateEverything += () => particleRenderer.Update();
-            ModEvents.OnWorldUnload += () => particleRenderer.Clear();
+            ModEvents.OnPostUpdateEverything += projectileObserver.Update;
+            ModEvents.OnWorldUnload += projectileObserver.Clear;
+
+            ModEvents.OnPostUpdateEverything += particleRenderer.Update;
+            ModEvents.OnWorldUnload += particleRenderer.Clear;
 
             On_Main.DoDraw_WallsAndBlacks += (orig, main) =>
             {
                 orig(main);
-
-                if (IsRenderedInThisFrame && TryGetRenderTarget(out _))
-                {
-                    Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
-                    DrawToScreen();
-                    Main.spriteBatch.Begin(spriteBatchSnapshot);
-                }
+                DrawToScreen();
             };
         }
 
-        public void AddParticle(BlackholeParticle particle)
-        {
-            if (particle is null) return;
+        public void AddProjectile(Projectile proj) => projectileObserver.Add(proj);
 
-            particleRenderer.Add(particle);
-        }
+        public void AddParticle(BlackholeParticle particle) => particleRenderer.Add(particle);
 
-        public override bool PreRender()
-            => particleRenderer.Particles.Count > 0 || DrawUtils.AnyActiveEntity<Projectile>(ModContent.ProjectileType<BlackholeProjectile>());
+        public override bool PreRender() => projectileObserver.AnyEntity || particleRenderer.Particles.Count > 0;
 
         public override void DrawToTarget()
         {
@@ -256,19 +252,18 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             particleRenderer.Settings.AnchorPosition = -Main.screenPosition;
             particleRenderer.Draw(Main.spriteBatch);
 
-            if (DrawUtils.AnyActiveEntity<Projectile>(ModContent.ProjectileType<BlackholeProjectile>()))
+            foreach (var proj in projectileObserver.GetEntityInstances())
             {
-                foreach (var proj in DrawUtils.GetActiveForDrawEntities<Projectile>().Where(x => x.ModProjectile is BlackholeProjectile))
-                {
-                    (proj.ModProjectile as BlackholeProjectile).DrawSpaceMask();
-                }
+                (proj.ModProjectile as BlackholeProjectile).DrawSpaceMask();
             }
 
             Main.spriteBatch.End();
         }
 
-        private void DrawToScreen()
+        public void DrawToScreen()
         {
+            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out RenderTarget2D target)) return;
+
             effect ??= LoadEffect();
 
             var parameters = effect.Value.Parameters;
@@ -277,12 +272,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             parameters["ScreenPosition"].SetValue(Main.screenPosition + Main.ScreenSize.ToVector2() * 0.5f);
             parameters["Time"].SetValue((float)Main.timeForVisualEffects * 0.1f);
 
+            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
-            Main.spriteBatch.Draw(renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
+            Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
+            Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
 
-        private Asset<Effect> LoadEffect()
+        public static Asset<Effect> LoadEffect()
         {
             var spaceTexture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Space", AssetRequestMode.ImmediateLoad);
             var cloudsTexture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Clouds", AssetRequestMode.ImmediateLoad);

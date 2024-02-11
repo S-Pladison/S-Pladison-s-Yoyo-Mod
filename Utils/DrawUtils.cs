@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.GameContent;
-using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
@@ -22,21 +21,14 @@ namespace SPYoyoMod.Utils
             public static readonly List<Projectile> Projectiles;
             public static readonly List<NPC> NPCs;
 
-            public static int[] ProjectileCount;
             public static uint LastUpdateTick;
 
             static ActiveEntities()
             {
                 Projectiles = new List<Projectile>();
                 NPCs = new List<NPC>();
-                ProjectileCount = new int[ProjectileID.Count];
 
                 LastUpdateTick = 0;
-            }
-
-            private static void ResizeArrays()
-            {
-                Array.Resize(ref ProjectileCount, ProjectileLoader.ProjectileCount);
             }
 
             private static void UpdateActiveEntityLists()
@@ -45,11 +37,6 @@ namespace SPYoyoMod.Utils
 
                 Projectiles.Clear();
                 NPCs.Clear();
-
-                for (int i = 0; i < ProjectileCount.Length; i++)
-                {
-                    ProjectileCount[i] = 0;
-                }
 
                 foreach (var proj in Main.projectile)
                 {
@@ -65,17 +52,11 @@ namespace SPYoyoMod.Utils
                     NPCs.Add(npc);
                 }
 
-                foreach (var proj in Projectiles)
-                {
-                    ProjectileCount[proj.type] += 1;
-                }
-
                 LastUpdateTick = Main.GameUpdateCount;
             }
 
             void ILoadable.Load(Mod mod)
             {
-                ModEvents.OnPostSetupContent += ResizeArrays;
                 ModEvents.OnPostUpdateEverything += UpdateActiveEntityLists;
             }
 
@@ -83,8 +64,6 @@ namespace SPYoyoMod.Utils
             {
                 Projectiles.Clear();
                 NPCs.Clear();
-
-                ProjectileCount = null;
             }
         }
 
@@ -104,29 +83,6 @@ namespace SPYoyoMod.Utils
 
             throw new NotImplementedException();
         }
-
-        /// <summary>
-        /// Returns the number of active entities of this type.
-        /// More or less safe only for drawing.
-        /// Don't use when update game logic.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static int GetActiveEntityCount<T>(int entityType)
-        {
-            if (typeof(T).Equals(typeof(Projectile)))
-                return ActiveEntities.ProjectileCount[entityType];
-
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Checks whether there are any active entity of this type.
-        /// More or less safe only for drawing.
-        /// Don't use when update game logic.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static bool AnyActiveEntity<T>(int entityType)
-            => GetActiveEntityCount<T>(entityType) > 0;
 
         /// <summary>
         /// Draw npc. And nothing more.

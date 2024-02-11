@@ -17,7 +17,6 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
@@ -231,6 +230,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             BreakChain(npc);
         }
 
+        public override void OnKill(NPC npc)
+        {
+            if (!IsSecuredWithChain)
+                return;
+
+            BreakChain(npc);
+        }
+
         public void SecureWithChain(NPC npc, Point chainStartPos)
         {
             if (IsSecuredWithChain
@@ -244,7 +251,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             npc.netUpdate = true;
 
             ModContent.GetInstance<ValorRenderTargetContent>()?.AddNPC(npc);
-            SpawnEffectDusts(npc.Center);
             SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
         }
 
@@ -256,23 +262,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             securedWithChainTimer = -1;
             npc.netUpdate = true;
 
-            SpawnEffectDusts(npc.Center);
             SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
-        }
-
-        public void SpawnEffectDusts(Vector2 position)
-        {
-            for (int i = 0; i < 12; i++)
-            {
-                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                var velocity = vector * Main.rand.NextFloat(1f);
-
-                position += vector * Main.rand.NextFloat(8f);
-
-                var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
-                dust.scale += 0.1f;
-                dust.noGravity = true;
-            }
         }
 
         public void UpdateCollision(NPC npc)
@@ -399,7 +389,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void Load()
         {
-            npcObserver = new(n => !n.active || !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.IsSecuredWithChain);
+            npcObserver = new(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.IsSecuredWithChain);
 
             ModEvents.OnPostUpdateEverything += npcObserver.Update;
             ModEvents.OnWorldUnload += npcObserver.Clear;
@@ -412,13 +402,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
 
         public void AddNPC(NPC npc) => npcObserver.Add(npc);
+
         public override bool PreRender() => npcObserver.AnyEntity;
 
         public override void DrawToTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            foreach (var npc in npcObserver.GetNPCInstances())
+            foreach (var npc in npcObserver.GetEntityInstances())
             {
                 DrawUtils.DrawNPC(npc, false);
             }

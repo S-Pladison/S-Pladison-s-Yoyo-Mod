@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 
@@ -25,36 +24,6 @@ namespace SPYoyoMod.Common.Interfaces
         /// for drawing primitives. Primitives will be drawn before sprites.
         /// </summary>
         void PreDrawPixelated(Projectile proj);
-
-        public static int FirstProjIndex(IReadOnlyList<Projectile> projectiles)
-        {
-            for (int i = 0; i < projectiles.Count; i++)
-            {
-                var proj = projectiles[i];
-
-                if (proj.ModProjectile is IPreDrawPixelatedProjectile)
-                    return i;
-
-                foreach (var _ in Hook.Enumerate(proj))
-                    return i;
-            }
-
-            return -1;
-        }
-
-        public static void DrawProjs(IReadOnlyList<Projectile> projectiles, int startIndex)
-        {
-            for (int i = startIndex; i < projectiles.Count; i++)
-            {
-                var proj = projectiles[i];
-
-                if (proj.ModProjectile is IPreDrawPixelatedProjectile m)
-                    m.PreDrawPixelated(proj);
-
-                foreach (IPreDrawPixelatedProjectile g in Hook.Enumerate(proj))
-                    g.PreDrawPixelated(proj);
-            }
-        }
     }
 
     /// <summary>
@@ -72,35 +41,5 @@ namespace SPYoyoMod.Common.Interfaces
         /// for drawing primitives. Primitives will be drawn before sprites.
         /// </summary>
         void PostDrawPixelated(Projectile proj);
-
-        public static int FirstProjIndex(IReadOnlyList<Projectile> projectiles)
-        {
-            for (int i = 0; i < projectiles.Count; i++)
-            {
-                var proj = projectiles[i];
-
-                if (proj.ModProjectile is IPostDrawPixelatedProjectile)
-                    return i;
-
-                foreach (var _ in Hook.Enumerate(proj))
-                    return i;
-            }
-
-            return -1;
-        }
-
-        public static void DrawProjs(IReadOnlyList<Projectile> projectiles, int startIndex)
-        {
-            for (int i = startIndex; i < projectiles.Count; i++)
-            {
-                var proj = projectiles[i];
-
-                if (proj.ModProjectile is IPostDrawPixelatedProjectile m)
-                    m.PostDrawPixelated(proj);
-
-                foreach (IPostDrawPixelatedProjectile g in Hook.Enumerate(proj))
-                    g.PostDrawPixelated(proj);
-            }
-        }
     }
 }

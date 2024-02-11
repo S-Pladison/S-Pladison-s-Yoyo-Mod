@@ -104,7 +104,24 @@ namespace SPYoyoMod.Common
 
         private static void PreDrawProjectiles_Additive(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
         {
-            var projIndex = IPreDrawAdditiveProjectile.FirstProjIndex(projectiles);
+            var projIndex = -1;
+
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                var proj = projectiles[i];
+
+                if (proj.ModProjectile is IPreDrawAdditiveProjectile)
+                {
+                    projIndex = i;
+                    break;
+                }
+
+                foreach (var _ in IPreDrawAdditiveProjectile.Hook.Enumerate(proj))
+                {
+                    projIndex = i;
+                    break;
+                }
+            }
 
             if (projIndex < 0) return;
 
@@ -121,7 +138,18 @@ namespace SPYoyoMod.Common
 
             ResetGraphicsDevice(spriteBatchSpanshot);
             sb.Begin(spriteBatchSpanshot);
-            IPreDrawAdditiveProjectile.DrawProjs(projectiles, projIndex);
+
+            for (int i = projIndex; i < projectiles.Count; i++)
+            {
+                var proj = projectiles[i];
+
+                if (proj.ModProjectile is IPreDrawAdditiveProjectile m)
+                    m.PreDrawAdditive(proj);
+
+                foreach (IPreDrawAdditiveProjectile g in IPreDrawAdditiveProjectile.Hook.Enumerate(proj))
+                    g.PreDrawAdditive(proj);
+            }
+
             sb.End();
         }
 
@@ -171,7 +199,24 @@ namespace SPYoyoMod.Common
 
         private static void PostDrawProjectiles_Additive(ref SpriteBatch sb, IReadOnlyList<Projectile> projectiles)
         {
-            var projIndex = IPostDrawAdditiveProjectile.FirstProjIndex(projectiles);
+            var projIndex = -1;
+
+            for (int i = 0; i < projectiles.Count; i++)
+            {
+                var proj = projectiles[i];
+
+                if (proj.ModProjectile is IPostDrawAdditiveProjectile)
+                {
+                    projIndex = i;
+                    break;
+                }
+
+                foreach (var _ in IPostDrawAdditiveProjectile.Hook.Enumerate(proj))
+                {
+                    projIndex = i;
+                    break;
+                }
+            }
 
             if (projIndex < 0) return;
 
@@ -188,7 +233,18 @@ namespace SPYoyoMod.Common
 
             ResetGraphicsDevice(spriteBatchSpanshot);
             sb.Begin(spriteBatchSpanshot);
-            IPostDrawAdditiveProjectile.DrawProjs(projectiles, projIndex);
+
+            for (int i = projIndex; i < projectiles.Count; i++)
+            {
+                var proj = projectiles[i];
+
+                if (proj.ModProjectile is IPostDrawAdditiveProjectile m)
+                    m.PostDrawAdditive(proj);
+
+                foreach (IPostDrawAdditiveProjectile g in IPostDrawAdditiveProjectile.Hook.Enumerate(proj))
+                    g.PostDrawAdditive(proj);
+            }
+
             sb.End();
         }
 
@@ -201,24 +257,35 @@ namespace SPYoyoMod.Common
             device.RasterizerState = spriteBatchSnapshot.RasterizerState;
         }
 
-        private abstract class PixelatedRenderTargetContent : RenderTargetContent
+        private abstract class PixelatedRenderTargetContent : EntityRenderTargetContent<Projectile>
         {
-            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
-
-            protected int projIndex;
+            public sealed override Point Size => new(Main.screenWidth / 2, Main.screenHeight / 2);
         }
 
         private class PreDrawPixelatedRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override bool PreRender()
+            public override bool CanDrawEntity(Projectile proj)
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
-                return (projIndex = IPreDrawPixelatedProjectile.FirstProjIndex(projectiles)) >= 0;
+                if (proj.ModProjectile is IPreDrawPixelatedProjectile)
+                    return true;
+
+                foreach (IPreDrawPixelatedProjectile _ in IPreDrawPixelatedProjectile.Hook.Enumerate(proj))
+                    return true;
+
+                return false;
+            }
+
+            public override void DrawEntity(Projectile proj)
+            {
+                if (proj.ModProjectile is IPreDrawPixelatedProjectile m)
+                    m.PreDrawPixelated(proj);
+
+                foreach (IPreDrawPixelatedProjectile g in IPreDrawPixelatedProjectile.Hook.Enumerate(proj))
+                    g.PreDrawPixelated(proj);
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -232,22 +299,35 @@ namespace SPYoyoMod.Common
 
                 ResetGraphicsDevice(spriteBatchSpanshot);
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
-                IPreDrawPixelatedProjectile.DrawProjs(projectiles, projIndex);
+                DrawEntities();
                 Main.spriteBatch.End();
             }
         }
 
         private class PostDrawPixelatedRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override bool PreRender()
+            public override bool CanDrawEntity(Projectile proj)
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
-                return (projIndex = IPostDrawPixelatedProjectile.FirstProjIndex(projectiles)) >= 0;
+                if (proj.ModProjectile is IPostDrawPixelatedProjectile)
+                    return true;
+
+                foreach (IPostDrawPixelatedProjectile _ in IPostDrawPixelatedProjectile.Hook.Enumerate(proj))
+                    return true;
+
+                return false;
+            }
+
+            public override void DrawEntity(Projectile proj)
+            {
+                if (proj.ModProjectile is IPostDrawPixelatedProjectile m)
+                    m.PostDrawPixelated(proj);
+
+                foreach (IPostDrawPixelatedProjectile g in IPostDrawPixelatedProjectile.Hook.Enumerate(proj))
+                    g.PostDrawPixelated(proj);
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -261,22 +341,35 @@ namespace SPYoyoMod.Common
 
                 ResetGraphicsDevice(spriteBatchSpanshot);
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
-                IPostDrawPixelatedProjectile.DrawProjs(projectiles, projIndex);
+                DrawEntities();
                 Main.spriteBatch.End();
             }
         }
 
         private class PreDrawPixelatedAdditiveRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override bool PreRender()
+            public override bool CanDrawEntity(Projectile proj)
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
-                return (projIndex = IPreDrawPixelatedAdditiveProjectile.FirstProjIndex(projectiles)) >= 0;
+                if (proj.ModProjectile is IPreDrawPixelatedAdditiveProjectile)
+                    return true;
+
+                foreach (IPreDrawPixelatedAdditiveProjectile _ in IPreDrawPixelatedAdditiveProjectile.Hook.Enumerate(proj))
+                    return true;
+
+                return false;
+            }
+
+            public override void DrawEntity(Projectile proj)
+            {
+                if (proj.ModProjectile is IPreDrawPixelatedAdditiveProjectile m)
+                    m.PreDrawPixelatedAdditive(proj);
+
+                foreach (IPreDrawPixelatedAdditiveProjectile g in IPreDrawPixelatedAdditiveProjectile.Hook.Enumerate(proj))
+                    g.PreDrawPixelatedAdditive(proj);
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -290,22 +383,35 @@ namespace SPYoyoMod.Common
 
                 ResetGraphicsDevice(spriteBatchSpanshot);
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
-                IPreDrawPixelatedAdditiveProjectile.DrawProjs(projectiles, projIndex);
+                DrawEntities();
                 Main.spriteBatch.End();
             }
         }
 
         private class PostDrawPixelatedAdditiveRenderTargetContent : PixelatedRenderTargetContent
         {
-            public override bool PreRender()
+            public override bool CanDrawEntity(Projectile proj)
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
-                return (projIndex = IPostDrawPixelatedAdditiveProjectile.FirstProjIndex(projectiles)) >= 0;
+                if (proj.ModProjectile is IPostDrawPixelatedAdditiveProjectile)
+                    return true;
+
+                foreach (IPostDrawPixelatedAdditiveProjectile _ in IPostDrawPixelatedAdditiveProjectile.Hook.Enumerate(proj))
+                    return true;
+
+                return false;
+            }
+
+            public override void DrawEntity(Projectile proj)
+            {
+                if (proj.ModProjectile is IPostDrawPixelatedAdditiveProjectile m)
+                    m.PostDrawPixelatedAdditive(proj);
+
+                foreach (IPostDrawPixelatedAdditiveProjectile g in IPostDrawPixelatedAdditiveProjectile.Hook.Enumerate(proj))
+                    g.PostDrawPixelatedAdditive(proj);
             }
 
             public override void DrawToTarget()
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -319,7 +425,7 @@ namespace SPYoyoMod.Common
 
                 ResetGraphicsDevice(spriteBatchSpanshot);
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
-                IPostDrawPixelatedAdditiveProjectile.DrawProjs(projectiles, projIndex);
+                DrawEntities();
                 Main.spriteBatch.End();
             }
         }
