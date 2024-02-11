@@ -6,6 +6,11 @@ Configs: {
 			Label: Reworked Vanilla Yoyos
 			Tooltip: ""
 		}
+
+		ReworkedYoyoUseStyle: {
+			Label: Reworked Yoyo Use Style
+			Tooltip: ""
+		}
 	}
 
 	ClientSideConfig: {
@@ -89,12 +94,7 @@ VanillaItems: {
 }
 
 NPCs.NurseNPC.GiftButton: Gift
-Dialogue.NurseNPC.Dialogue.ReceivedGift:
-	'''
-	Oh, it wasn't necessary, thank you. Take this as a replacement. I believe it will be more valuable to you than to me.
-
-	[Where did she get that yoyo?]
-	'''
+Dialogue.NurseNPC.Dialogue.ReceivedGift: Oh, it wasn't necessary, thank you. Take this as a replacement. I believe it will be more valuable to you than to me.
 
 Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"

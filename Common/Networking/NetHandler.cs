@@ -58,7 +58,7 @@ namespace SPYoyoMod.Common.Networking
                 // ...
             }
         }
-        
+
         /// <summary>
         /// Sends a packet of this given type.
         /// </summary>

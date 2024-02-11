@@ -6,6 +6,11 @@ Configs: {
 			Label: Reworked Vanilla Yoyos
 			Tooltip: ""
 		}
+
+		ReworkedYoyoUseStyle: {
+			// Label: Reworked Yoyo Use Style
+			// Tooltip: ""
+		}
 	}
 
 	ClientSideConfig: {
@@ -89,12 +94,7 @@ VanillaItems: {
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
-Dialogue.NurseNPC.Dialogue.ReceivedGift:
-	'''
-	О, это было необязательно, спасибо. Прими это взамен. Я думаю, для тебя это будет более ценным, чем для меня
-
-	[Откуда у неё взялся этот йо-йо?]
-	'''
+Dialogue.NurseNPC.Dialogue.ReceivedGift: О, это было необязательно, спасибо. Прими это взамен. Я думаю, для тебя это будет более ценным, чем для меня.
 
 Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"

@@ -2,11 +2,10 @@
 using System.Linq;
 using Terraria;
 using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.Networking
 {
-    public class ProjectileOnHitNPCPacket : NetPacket
+    public class ModProjectileOnHitNPCPacket : NetPacket
     {
         public readonly short ProjIdentity;
         public readonly short ProjType;
@@ -14,11 +13,11 @@ namespace SPYoyoMod.Common.Networking
         public readonly byte NPCWhoAmI;
         public readonly short NPCType;
 
-        public ProjectileOnHitNPCPacket() { }
+        public ModProjectileOnHitNPCPacket() { }
 
-        public ProjectileOnHitNPCPacket(Projectile proj, NPC npc) : this(proj.identity, proj.type, npc.whoAmI, npc.type) { }
+        public ModProjectileOnHitNPCPacket(Projectile proj, NPC npc) : this(proj.identity, proj.type, npc.whoAmI, npc.type) { }
 
-        public ProjectileOnHitNPCPacket(int projIdentity, int projType, int npcWhoAmI, int npcType)
+        public ModProjectileOnHitNPCPacket(int projIdentity, int projType, int npcWhoAmI, int npcType)
         {
             ProjIdentity = (short)projIdentity;
             ProjType = (short)projType;
@@ -49,11 +48,11 @@ namespace SPYoyoMod.Common.Networking
 
             if (proj is null) return;
 
-            ProjectileLoader.OnHitNPC(proj, npc, default, 0);
+            proj.ModProjectile?.OnHitNPC(npc, default, 0);
 
             if (Main.netMode == NetmodeID.Server)
             {
-                NetHandler.Send(new ProjectileOnHitNPCPacket(projIdentity, projType, npcWhoAmI, npcType), -1, sender);
+                new ModProjectileOnHitNPCPacket(projIdentity, projType, npcWhoAmI, npcType).Send(-1, sender);
             }
         }
     }

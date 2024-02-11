@@ -105,8 +105,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 }
             }
 
-            if (Projectile.whoAmI == Main.myPlayer)
-                NetHandler.Send(new ProjectileOnHitNPCPacket(Projectile, target));
+            if (Projectile.owner == Main.myPlayer)
+                new ModProjectileOnHitNPCPacket(Projectile, target).Send();
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
