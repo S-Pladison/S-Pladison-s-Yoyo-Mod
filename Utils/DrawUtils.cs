@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -92,6 +93,7 @@ namespace SPYoyoMod.Utils
         /// More or less safe only for drawing.
         /// Don't use when update game logic.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static IReadOnlyList<T> GetActiveForDrawEntities<T>() where T : Entity
         {
             if (typeof(T).Equals(typeof(Projectile)))
@@ -108,6 +110,7 @@ namespace SPYoyoMod.Utils
         /// More or less safe only for drawing.
         /// Don't use when update game logic.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static int GetActiveEntityCount<T>(int entityType)
         {
             if (typeof(T).Equals(typeof(Projectile)))
@@ -121,6 +124,7 @@ namespace SPYoyoMod.Utils
         /// More or less safe only for drawing.
         /// Don't use when update game logic.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static bool AnyActiveEntity<T>(int entityType)
             => GetActiveEntityCount<T>(entityType) > 0;
 
