@@ -58,12 +58,12 @@ namespace SPYoyoMod.Common.Networking
                 // ...
             }
         }
-
+        
         /// <summary>
-		/// Sends a packet of this given type.
-		/// </summary>
-		/// <param name="to">The client whoAmI, -1 if everyone.</param>
-		/// <param name="from">The client the packet originated from.</param>
+        /// Sends a packet of this given type.
+        /// </summary>
+        /// <param name="to">The client whoAmI, -1 if everyone.</param>
+        /// <param name="from">The client the packet originated from.</param>
 		public static void Send<T>(T packet, int to = -1, int from = -1) where T : NetPacket
         {
             if (Main.netMode == NetmodeID.SinglePlayer) return;
