@@ -17,6 +17,7 @@ using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
@@ -230,6 +231,69 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             BreakChain(npc);
         }
 
+        public void SecureWithChain(NPC npc, Point chainStartPos)
+        {
+            if (IsSecuredWithChain
+                || npc.noTileCollide
+                || npc.boss
+                || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]) return;
+
+            chainStartPosition = chainStartPos.ToWorldCoordinates();
+            securedWithChainTimer = SecuredWithChainTime;
+
+            npc.netUpdate = true;
+
+            ModContent.GetInstance<ValorRenderTargetContent>()?.AddNPC(npc);
+            SpawnEffectDusts(npc.Center);
+            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+        }
+
+        public void SendSecureWithChainPacket(NPC npc, Point chainStartPos)
+            => new SecureWithChainPacket(npc, chainStartPos).Send();
+
+        public void BreakChain(NPC npc)
+        {
+            securedWithChainTimer = -1;
+            npc.netUpdate = true;
+
+            SpawnEffectDusts(npc.Center);
+            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+        }
+
+        public void SpawnEffectDusts(Vector2 position)
+        {
+            for (int i = 0; i < 12; i++)
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var velocity = vector * Main.rand.NextFloat(1f);
+
+                position += vector * Main.rand.NextFloat(8f);
+
+                var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
+                dust.scale += 0.1f;
+                dust.noGravity = true;
+            }
+        }
+
+        public void UpdateCollision(NPC npc)
+        {
+            if (!IsSecuredWithChain)
+                return;
+
+            var nextPosition = npc.Center + npc.velocity;
+            var vectorFromChainToNPC = nextPosition - chainStartPosition;
+            var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
+
+            if (vectorFromChainToNPCLength > SecuredWithChainLengthLimit)
+            {
+                var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
+                var newPosition = chainStartPosition + normalizedVectorFromChainToNPC * SecuredWithChainLengthLimit;
+                var velocityCorrection = newPosition - nextPosition;
+
+                npc.velocity += velocityCorrection;
+            }
+        }
+
         public override void DrawEffects(NPC npc, ref Color drawColor)
         {
             if (!IsSecuredWithChain) return;
@@ -273,68 +337,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             color = Lighting.GetColor((endPosition + Main.screenPosition).ToTileCoordinates());
 
             spriteBatch.Draw(texture.Value, endPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
-        }
-
-        public void SecureWithChain(NPC npc, Point chainStartPos)
-        {
-            if (IsSecuredWithChain
-                || npc.noTileCollide
-                || npc.boss
-                || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]) return;
-
-            chainStartPosition = chainStartPos.ToWorldCoordinates();
-            securedWithChainTimer = SecuredWithChainTime;
-
-            npc.netUpdate = true;
-
-            SpawnEffectDusts(npc.Center);
-            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
-        }
-
-        public void SendSecureWithChainPacket(NPC npc, Point chainStartPos)
-            => new SecureWithChainPacket(npc, chainStartPos).Send();
-
-        public void BreakChain(NPC npc)
-        {
-            securedWithChainTimer = -1;
-            npc.netUpdate = true;
-
-            SpawnEffectDusts(npc.Center);
-            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
-        }
-
-        public void UpdateCollision(NPC npc)
-        {
-            if (!IsSecuredWithChain)
-                return;
-
-            var nextPosition = npc.Center + npc.velocity;
-            var vectorFromChainToNPC = nextPosition - chainStartPosition;
-            var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
-
-            if (vectorFromChainToNPCLength > SecuredWithChainLengthLimit)
-            {
-                var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
-                var newPosition = chainStartPosition + normalizedVectorFromChainToNPC * SecuredWithChainLengthLimit;
-                var velocityCorrection = newPosition - nextPosition;
-
-                npc.velocity += velocityCorrection;
-            }
-        }
-
-        public void SpawnEffectDusts(Vector2 position)
-        {
-            for (int i = 0; i < 12; i++)
-            {
-                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                var velocity = vector * Main.rand.NextFloat(1f);
-
-                position += vector * Main.rand.NextFloat(8f);
-
-                var dust = Dust.NewDustPerfect(position, DustID.DungeonWater, velocity);
-                dust.scale += 0.1f;
-                dust.noGravity = true;
-            }
         }
 
         public bool TryGetChainStartPoint(NPC npc, out Point point)
@@ -389,43 +391,58 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class ValorRenderTargetContent : EntityRenderTargetContent<NPC>
+    public class ValorRenderTargetContent : RenderTargetContent
     {
+        private NPCObserver npcObserver;
+
+        public override Point Size => new(Main.screenWidth, Main.screenHeight);
+
         public override void Load()
         {
+            npcObserver = new(n => !n.active || !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.IsSecuredWithChain);
+
+            ModEvents.OnPostUpdateEverything += npcObserver.Update;
+            ModEvents.OnWorldUnload += npcObserver.Clear;
+
             On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
             {
                 orig(main);
-
-                if (!IsRenderedInThisFrame || !TryGetRenderTarget(out RenderTarget2D target)) return;
-
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorEffect", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
-                var effectParameters = effect.Parameters;
-
-                effectParameters["ScreenSize"].SetValue(target.Size());
-                effectParameters["OutlineColor"].SetValue(new Color(44, 66, 255, 170).ToVector4());
-                effectParameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
-
-                Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
-                Main.spriteBatch.Draw(target, Vector2.Zero, Color.White);
-                Main.spriteBatch.End();
-                Main.spriteBatch.Begin(spriteBatchSnapshot);
+                DrawToScreen();
             };
         }
 
-        public override bool CanDrawEntity(NPC npc)
-            => npc.GetGlobalNPC<ValorGlobalNPC>().IsSecuredWithChain;
-
-        public override void DrawEntity(NPC npc)
-            => DrawUtils.DrawNPC(npc, false);
+        public void AddNPC(NPC npc) => npcObserver.Add(npc);
+        public override bool PreRender() => npcObserver.AnyEntity;
 
         public override void DrawToTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
-            DrawEntities();
+
+            foreach (var npc in npcObserver.GetNPCInstances())
+            {
+                DrawUtils.DrawNPC(npc, false);
+            }
+
             Main.spriteBatch.End();
+        }
+
+        public void DrawToScreen()
+        {
+            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out RenderTarget2D target)) return;
+
+            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorEffect", AssetRequestMode.ImmediateLoad);
+            var effect = effectAsset.Value;
+            var effectParameters = effect.Parameters;
+
+            effectParameters["ScreenSize"].SetValue(target.Size());
+            effectParameters["OutlineColor"].SetValue(new Color(44, 66, 255, 170).ToVector4());
+            effectParameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
+
+            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
+            Main.spriteBatch.Draw(target, Vector2.Zero, Color.White);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
     }
 }
