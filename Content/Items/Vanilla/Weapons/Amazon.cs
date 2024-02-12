@@ -263,13 +263,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public void DrawBehindTiles()
         {
             Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
-            DrawGrassTarget<AmazonEffectGrassWallsRenderTargetContent>();
+            DrawGrassTarget<AmazonWallsRenderTargetContent>();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
 
         public void DrawOverTiles()
         {
-            DrawGrassTarget<AmazonEffectGrassTilesRenderTargetContent>();
+            DrawGrassTarget<AmazonTilesRenderTargetContent>();
         }
 
         public void DrawGrassTarget<T>() where T : RenderTargetContent
@@ -278,7 +278,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             if (!grassRTContent.IsRenderedInThisFrame || !grassRTContent.TryGetRenderTarget(out RenderTarget2D grassTarget)) return;
 
-            var maskRTContent = ModContent.GetInstance<AmazonEffectGrassMaskRenderTargetContent>();
+            var maskRTContent = ModContent.GetInstance<AmazonMaskRenderTargetContent>();
 
             if (!maskRTContent.IsRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out RenderTarget2D maskTarget)) return;
 
@@ -296,7 +296,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class AmazonEffectGrassWallsRenderTargetContent : RenderTargetContent
+    public class AmazonWallsRenderTargetContent : RenderTargetContent
     {
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
 
@@ -342,7 +342,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class AmazonEffectGrassTilesRenderTargetContent : RenderTargetContent
+    public class AmazonTilesRenderTargetContent : RenderTargetContent
     {
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
 
@@ -376,7 +376,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class AmazonEffectGrassMaskRenderTargetContent : RenderTargetContent
+    public class AmazonMaskRenderTargetContent : RenderTargetContent
     {
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
 

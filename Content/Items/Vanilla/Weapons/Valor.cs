@@ -1,9 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common;
-using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Networking;
+using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
@@ -30,7 +29,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class ValorProjectile : VanillaYoyoProjectile, IPreDrawPixelatedProjectile
+    public class ValorProjectile : VanillaYoyoProjectile
     {
         public static readonly int ChainChanceDenominator = 7;
 
@@ -85,8 +84,24 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
+            trailRenderer ??= new TrailRenderer(12).SetWidth(f => MathHelper.Lerp(24f, 6f, f));
+
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
+            {
+                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorTrail", AssetRequestMode.ImmediateLoad);
+                var effect = effectAsset.Value;
+                var effectParameters = effect.Parameters;
+
+                effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
+                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
+
+                trailRenderer?.Draw(effect);
+            });
+
             spriteTrailRenderer ??= InitSpriteTrail();
             spriteTrailRenderer.Draw(Main.spriteBatch, -Main.screenPosition, lightColor);
+
             return true;
         }
 
@@ -102,21 +117,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 .SetColor(f => Color.Lerp(Color.White, Color.DarkBlue, f) * 0.1f * (1 - f));
 
             return spriteTrailRenderer;
-        }
-
-        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
-        {
-            trailRenderer ??= new TrailRenderer(12).SetWidth(f => MathHelper.Lerp(24f, 6f, f));
-
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorTrail", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
-
-            effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
-            effectParameters["TransformMatrix"].SetValue(ProjectileDrawLayers.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
-            effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
-
-            trailRenderer.Draw(effect);
         }
     }
 

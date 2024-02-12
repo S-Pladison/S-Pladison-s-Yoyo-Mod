@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common;
-using SPYoyoMod.Common.Interfaces;
+using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -37,7 +37,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class SoulTormentorProjectile : YoyoProjectile, IDrawPixelatedProjectile
+    public class SoulTormentorProjectile : YoyoProjectile
     {
         public static readonly float TormentorRadius = 16 * 15;
         public static readonly int TormentorCount = 3;
@@ -89,6 +89,65 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             }
         }
 
+        public override bool PreDraw(ref Color lightColor)
+        {
+            blackTrailRenderer ??= InitTrailRenderer(25, 16);
+            redTrailRenderer ??= InitTrailRenderer(20, 8);
+
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
+            {
+                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
+                var effect = effectAsset.Value;
+                var effectParameters = effect.Parameters;
+
+                effectParameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+
+                var blackColorVec4 = Color.Black.ToVector4();
+
+                effectParameters["ColorTL"].SetValue(blackColorVec4);
+                effectParameters["ColorTR"].SetValue(blackColorVec4);
+                effectParameters["ColorBL"].SetValue(blackColorVec4);
+                effectParameters["ColorBR"].SetValue(blackColorVec4);
+
+                blackTrailRenderer?.Draw(effect);
+
+                var redColorVec4 = new Color(255, 0, 35).ToVector4();
+
+                effectParameters["ColorTL"].SetValue(redColorVec4);
+                effectParameters["ColorTR"].SetValue(redColorVec4);
+                effectParameters["ColorBL"].SetValue(redColorVec4);
+                effectParameters["ColorBR"].SetValue(redColorVec4);
+
+                redTrailRenderer?.Draw(effect);
+
+                var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
+                var scale = Projectile.scale;
+
+                Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Black, 0f, texture.Size() * 0.5f, 0.47f * scale, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture.Value, drawPosition, null, new(255, 0, 35), 0f, texture.Size() * 0.5f, 0.5f * scale, SpriteEffects.None, 0f);
+            });
+
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.OverProjectiles, () =>
+            {
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Heart", AssetRequestMode.ImmediateLoad);
+                var origin = texture.Size() * 0.5f;
+
+                foreach (var (npc, distance) in GetTargets())
+                {
+                    var npcPos = npc.Center + npc.gfxOffY * Vector2.UnitY;
+                    var npcDrawPos = npcPos - Main.screenPosition;
+                    var rotation = MathF.Sin((float)Main.timeForVisualEffects * 0.03f + npc.whoAmI);
+                    var color = Color.Lerp(Color.Transparent, new Color(255, 0, 35), EasingFunctions.OutExpo(1f - distance / TormentorRadius) * 2f);
+
+                    Main.spriteBatch.Draw(texture.Value, npcDrawPos, null, color, rotation, origin, 0.25f, SpriteEffects.None, 0);
+                }
+            });
+
+            return true;
+        }
+
         private List<(NPC npc, float distance)> GetTargets()
             => NPCUtils.NearestNPCs(Projectile.Center, TormentorRadius, (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy)).Take(TormentorCount).ToList();
 
@@ -100,60 +159,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             position += vector * Main.rand.NextFloat(7f, 18f);
 
             Dust.NewDustPerfect(position, ModContent.DustType<SoulTormentorDust>(), velocity);
-        }
-
-        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
-        {
-            blackTrailRenderer ??= InitTrailRenderer(25, 16);
-            redTrailRenderer ??= InitTrailRenderer(20, 8);
-
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
-
-            effectParameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
-            effectParameters["TransformMatrix"].SetValue(ProjectileDrawLayers.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
-
-            var blackColorVec4 = Color.Black.ToVector4();
-
-            effectParameters["ColorTL"].SetValue(blackColorVec4);
-            effectParameters["ColorTR"].SetValue(blackColorVec4);
-            effectParameters["ColorBL"].SetValue(blackColorVec4);
-            effectParameters["ColorBR"].SetValue(blackColorVec4);
-
-            blackTrailRenderer.Draw(effect);
-
-            var redColorVec4 = new Color(255, 0, 35).ToVector4();
-
-            effectParameters["ColorTL"].SetValue(redColorVec4);
-            effectParameters["ColorTR"].SetValue(redColorVec4);
-            effectParameters["ColorBL"].SetValue(redColorVec4);
-            effectParameters["ColorBR"].SetValue(redColorVec4);
-
-            redTrailRenderer.Draw(effect);
-
-            var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
-            var scale = Projectile.scale;
-
-            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Black, 0f, texture.Size() * 0.5f, 0.47f * scale, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(texture.Value, drawPosition, null, new(255, 0, 35), 0f, texture.Size() * 0.5f, 0.5f * scale, SpriteEffects.None, 0f);
-        }
-
-        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
-        {
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Heart", AssetRequestMode.ImmediateLoad);
-            var origin = texture.Size() * 0.5f;
-
-            foreach (var (npc, distance) in GetTargets())
-            {
-                var npcPos = npc.Center + npc.gfxOffY * Vector2.UnitY;
-                var npcDrawPos = npcPos - Main.screenPosition;
-                var rotation = MathF.Sin((float)Main.timeForVisualEffects * 0.03f + npc.whoAmI);
-                var color = Color.Lerp(Color.Transparent, new Color(255, 0, 35), EasingFunctions.OutExpo(1f - distance / TormentorRadius) * 2f);
-
-                Main.spriteBatch.Draw(texture.Value, npcDrawPos, null, color, rotation, origin, 0.25f, SpriteEffects.None, 0);
-            }
         }
 
         private TrailRenderer InitTrailRenderer(int pointCount, float width)

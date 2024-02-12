@@ -10,6 +10,8 @@ namespace SPYoyoMod.Common.Renderers
         private readonly DynamicVertexBuffer vertexBuffer;
         private readonly DynamicIndexBuffer indexBuffer;
 
+        private bool isDisposed;
+
         public PrimitiveRenderer(int maxVertices, int maxIndices)
         {
             var device = Main.graphics.GraphicsDevice;
@@ -20,11 +22,15 @@ namespace SPYoyoMod.Common.Renderers
 
         public void SetVertices(params VertexPositionColorTexture[] vertices)
         {
+            if (isDisposed) return;
+
             vertexBuffer.SetData(0, vertices, 0, vertices.Length, VertexPositionColorTexture.VertexDeclaration.VertexStride, SetDataOptions.Discard);
         }
 
         public void SetIndices(params short[] indices)
         {
+            if (isDisposed) return;
+
             indexBuffer.SetData(0, indices, 0, indices.Length, SetDataOptions.Discard);
         }
 
@@ -35,6 +41,8 @@ namespace SPYoyoMod.Common.Renderers
 
         public void Draw(Effect effect, int vertexCount, int primitiveCount)
         {
+            if (isDisposed) return;
+
             var device = Main.graphics.GraphicsDevice;
 
             device.SetVertexBuffer(vertexBuffer);
@@ -49,8 +57,13 @@ namespace SPYoyoMod.Common.Renderers
 
         public void Dispose()
         {
-            vertexBuffer?.Dispose();
-            indexBuffer?.Dispose();
+            if (!isDisposed)
+            {
+                vertexBuffer?.Dispose();
+                indexBuffer?.Dispose();
+
+                isDisposed = true;
+            }
         }
     }
 }

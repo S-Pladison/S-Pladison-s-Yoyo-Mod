@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common;
-using SPYoyoMod.Common.Interfaces;
+using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using System.Collections.Generic;
 using System.IO;
@@ -169,7 +169,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public bool IsBuffActive => timers.Count <= 2;
     }
 
-    public class CodeOneHitProjectile : ModProjectile, IPostDrawAdditiveProjectile, IPostDrawPixelatedAdditiveProjectile
+    public class CodeOneHitProjectile : ModProjectile
     {
         public const float InitTimeLeft = 15f;
 
@@ -191,59 +191,62 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(ref Color lightColor)
         {
-            var factor = Projectile.timeLeft / InitTimeLeft;
-            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
-            var color = Color.Black * EasingFunctions.OutSine(factor) * 0.7f;
-            var scale = EasingFunctions.OutCubic(1f - factor) * 0.35f;
-
-            Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-            return true;
-        }
-
-        void IPostDrawAdditiveProjectile.PostDrawAdditive(Projectile proj)
-        {
-            var factor = Projectile.timeLeft / InitTimeLeft;
-            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
-            var color = Color.Lerp(new Color(55, 0, 255, 0), new Color(140, 210, 255, 255), EasingFunctions.OutSine(factor)) * 0.65f;
-            var scale = EasingFunctions.OutCubic(1f - factor) * 0.25f;
-
-            Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
-
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Rainbow", AssetRequestMode.ImmediateLoad);
-
-            var rotation = (Projectile.timeLeft / InitTimeLeft + ((int)Projectile.position.X ^ (int)Projectile.position.Y)) * 0.3f;
-
-            Main.spriteBatch.Draw(texture.Value, position, null, Color.White * (EasingFunctions.OutCubic(Projectile.timeLeft / InitTimeLeft) - 0.25f), rotation, texture.Size() * 0.5f, EasingFunctions.OutCubic(1f - Projectile.timeLeft / InitTimeLeft) * 0.2f, SpriteEffects.None, 0f);
-        }
-
-        void IPostDrawPixelatedAdditiveProjectile.PostDrawPixelatedAdditive(Projectile _)
-        {
-            var factor = Projectile.timeLeft / InitTimeLeft;
-            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Ring", AssetRequestMode.ImmediateLoad);
-
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
-
-            effectParameters["Texture0"].SetValue(texture.Value);
-            effectParameters["TransformMatrix"].SetValue(ProjectileDrawLayers.PixelatedPrimitiveMatrices.Transform);
-
-            var colorVec4 = Color.Lerp(new Color(55, 0, 255, 0), new Color(65, 185, 255, 255), EasingFunctions.OutQuint(factor)).ToVector4();
-
-            effectParameters["ColorTL"].SetValue(colorVec4);
-            effectParameters["ColorTR"].SetValue(colorVec4);
-            effectParameters["ColorBL"].SetValue(colorVec4);
-            effectParameters["ColorBR"].SetValue(colorVec4);
-
             ringRenderer ??= new RingRenderer(26, 16f, 16f);
 
-            ringRenderer
-                .SetRadius(16f * 1.275f * EasingFunctions.OutCubic(1f - factor))
-                .SetPosition(position)
-                .Draw(effect);
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
+            {
+                var factor = Projectile.timeLeft / InitTimeLeft;
+                var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Ring", AssetRequestMode.ImmediateLoad);
+
+                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
+                var effect = effectAsset.Value;
+                var effectParameters = effect.Parameters;
+
+                effectParameters["Texture0"].SetValue(texture.Value);
+                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.Transform);
+
+                var colorProgress = EasingFunctions.OutQuint(factor);
+                var color = (Color.Lerp(new Color(55, 0, 255), new Color(65, 185, 255), colorProgress) * colorProgress) with { A = 0 };
+                var colorVec4 = color.ToVector4();
+
+                effectParameters["ColorTL"].SetValue(colorVec4);
+                effectParameters["ColorTR"].SetValue(colorVec4);
+                effectParameters["ColorBL"].SetValue(colorVec4);
+                effectParameters["ColorBR"].SetValue(colorVec4);
+
+                ringRenderer?
+                    .SetRadius(16f * 1.275f * EasingFunctions.OutCubic(1f - factor))
+                    .SetPosition(position)
+                    .Draw(effect);
+            });
+
+            var factor = Projectile.timeLeft / InitTimeLeft;
+            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var colorProgress = EasingFunctions.OutSine(factor);
+
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+            var color = Color.Black * colorProgress * 0.7f;
+            var rotation = 0f;
+            var scale = EasingFunctions.OutCubic(1f - factor) * 0.35f;
+
+            Main.spriteBatch.Draw(texture.Value, position, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+
+            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
+            color = (Color.Lerp(new Color(55, 0, 255, 0), new Color(140, 210, 255, 255), colorProgress) * colorProgress * 0.65f) with { A = 0 };
+            rotation = 0f;
+            scale = EasingFunctions.OutCubic(1f - factor) * 0.25f;
+
+            Main.spriteBatch.Draw(texture.Value, position, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+
+            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Rainbow", AssetRequestMode.ImmediateLoad);
+            color = (Color.White * (colorProgress - 0.25f)) with { A = 0 };
+            rotation = (factor + ((int)Projectile.position.X ^ (int)Projectile.position.Y)) * 0.3f;
+            scale = EasingFunctions.OutCubic(1f - factor) * 0.2f;
+
+            Main.spriteBatch.Draw(texture.Value, position, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
+
+            return true;
         }
     }
 }

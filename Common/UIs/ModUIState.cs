@@ -1,59 +1,56 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework.Graphics;
+using System.Collections.Generic;
 using Terraria.ModLoader;
 using Terraria.UI;
 
 namespace SPYoyoMod.Common.UIs
 {
     [Autoload(Side = ModSide.Client)]
-    public abstract class ModUIState : UIState, ILoadable
+    public abstract class ModUIState : UIState
     {
-        public Mod Mod { get; private set; }
         public string Name { get; private set; }
+        public Mod Mod { get; internal set; }
+        public UserInterface UserInterface { get; internal set; }
 
-        public bool Visible
+        public bool IsVisible
         {
-            get => innerVisible;
+            get => visible;
             set
             {
-                if (innerVisible != value)
+                if (visible != value)
                 {
-                    innerVisible = value;
+                    visible = value;
 
-                    if (value) Activate();
-                    else Deactivate();
+                    if (value) OnChangeVisibleStateToTrue();
+                    else OnChangeVisibleStateToFalse();
                 }
             }
         }
 
-        public InterfaceScaleType ScaleType
-        {
-            get => innerScaleType;
-            set => innerScaleType = value;
-        }
+        public InterfaceScaleType ScaleType { get; set; }
 
-        private bool innerVisible;
-        private InterfaceScaleType innerScaleType;
+        private bool visible;
 
         public ModUIState()
         {
-            innerVisible = false;
-            innerScaleType = InterfaceScaleType.UI;
+            Name = GetType().Name;
+            ScaleType = InterfaceScaleType.UI;
         }
 
         public abstract int InsertionIndex(List<GameInterfaceLayer> layers);
 
-        public virtual void OnResolutionChanged(int width, int height) { }
-        public virtual void OnUIScaleChanged() { }
+        public virtual void OnChangeVisibleStateToTrue() { }
+        public virtual void OnChangeVisibleStateToFalse() { }
+        public virtual bool PreDraw() { return true; }
+        public virtual void PostDraw() { }
 
-        void ILoadable.Load(Mod mod)
+        public sealed override void Draw(SpriteBatch spriteBatch)
         {
-            Mod = mod;
-            Name = GetType().Name;
-        }
-
-        void ILoadable.Unload()
-        {
-            // ...
+            if (PreDraw())
+            {
+                base.Draw(spriteBatch);
+            }
+            PostDraw();
         }
     }
 }

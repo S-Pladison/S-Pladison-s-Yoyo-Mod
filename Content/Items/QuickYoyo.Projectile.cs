@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;
@@ -12,7 +11,6 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
-        public bool IsMainYoyo { get; private set; }
         public bool IsReturning { get => Projectile.ai[0] == -1; }
         public float ReturnToPlayerProgress { get; private set; }
 
@@ -58,8 +56,6 @@ namespace SPYoyoMod.Content.Items
         {
             var owner = Main.player[Projectile.owner];
 
-            IsMainYoyo = GetMainYoyoFlag(owner);
-
             YoyoOnSpawn(owner, source);
         }
 
@@ -101,40 +97,16 @@ namespace SPYoyoMod.Content.Items
 
         public sealed override void SendExtraAI(BinaryWriter writer)
         {
-            writer.Write(IsMainYoyo);
+            // ...
 
             YoyoSendExtraAI(writer);
         }
 
         public sealed override void ReceiveExtraAI(BinaryReader reader)
         {
-            IsMainYoyo = reader.ReadBoolean();
+            // ...
 
             YoyoReceiveExtraAI(reader);
-        }
-
-        private bool GetMainYoyoFlag(Player owner)
-        {
-            if (owner.OwnedProjectileCounts(Type) > 0)
-                return false;
-
-            // Fact that owned proj count was 0 does not guarantee that it is main yoyo
-            // (In case of spawning 2+ yoyos at once)
-            // Therefore, let's check other projs
-
-            for (int i = 0; i < Projectile.whoAmI; i++)
-            {
-                ref var otherProjectile = ref Main.projectile[i];
-
-                if (otherProjectile.active
-                    && otherProjectile.owner == Projectile.owner
-                    && otherProjectile.type == Type
-                    && otherProjectile.ModProjectile is YoyoProjectile otherModProj
-                    && otherModProj.IsMainYoyo)
-                    return false;
-            }
-
-            return true;
         }
 
         void IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)

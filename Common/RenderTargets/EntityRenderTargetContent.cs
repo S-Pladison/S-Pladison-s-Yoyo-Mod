@@ -4,21 +4,6 @@ using Terraria;
 
 namespace SPYoyoMod.Common.RenderTargets
 {
-    /*public abstract class EntityRenderTargetContent<T> : RenderTargetContent where T : Entity
-    {
-        private readonly Dictionary<int, T> entities;
-
-        public EntityRenderTargetContent()
-        {
-            entities = new Dictionary<int, T>();
-        }
-
-        public void AddEntity(T entity)
-        {
-            entities[entity.whoAmI] = entity;
-        }
-    }*/
-
     public abstract class EntityRenderTargetContent<T> : RenderTargetContent where T : Entity
     {
         public override Point Size { get => new(Main.screenWidth, Main.screenHeight); }

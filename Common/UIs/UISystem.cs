@@ -1,7 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria;
 using Terraria.ModLoader;
+using Terraria.ModLoader.Core;
 using Terraria.UI;
 
 namespace SPYoyoMod.Common.UIs
@@ -18,28 +21,38 @@ namespace SPYoyoMod.Common.UIs
         {
             userInterfaces = new();
             uiStates = new();
+
             uiScale = -1f;
-        }
-
-        public override void SetStaticDefaults()
-        {
-            uiStates.AddRange(ModContent.GetContent<ModUIState>());
-
-            foreach (var uiState in uiStates)
-            {
-                var userInterface = new UserInterface();
-                userInterface.SetState(uiState);
-                userInterfaces.Add(userInterface);
-            }
         }
 
         public override void Load()
         {
+            foreach (var type in AssemblyManager.GetLoadableTypes(Mod.Code).Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(ModUIState))))
+            {
+                var uiState = Activator.CreateInstance(type) as ModUIState;
+                uiStates.Add(uiState);
+
+                ContentInstance.Register(uiState);
+
+                var userInterface = new UserInterface();
+                userInterfaces.Add(userInterface);
+
+                uiState.Mod = Mod;
+                uiState.UserInterface = userInterface;
+                userInterface.SetState(uiState);
+                uiState.IsVisible = false;
+            }
+
             ModEvents.OnResolutionChanged += OnResolutionChanged;
         }
 
         public override void Unload()
         {
+            foreach (var userInterface in userInterfaces)
+            {
+                userInterface.SetState(null);
+            }
+
             userInterfaces.Clear();
             uiStates.Clear();
         }
@@ -50,15 +63,15 @@ namespace SPYoyoMod.Common.UIs
             {
                 var uiState = uiStates[i];
                 var userInterface = userInterfaces[i];
-
                 var index = uiState.InsertionIndex(layers);
+
                 if (index < 0) continue;
 
                 layers.Insert(index, new LegacyGameInterfaceLayer(
                     name: $"{Mod.Name}: {uiState.Name}",
                     drawMethod: () =>
                     {
-                        if (uiState.Visible)
+                        if (userInterface.CurrentState != null && uiState.IsVisible)
                         {
                             userInterface.Draw(Main.spriteBatch, Main._drawInterfaceGameTime);
                         }
@@ -75,25 +88,38 @@ namespace SPYoyoMod.Common.UIs
             {
                 uiScale = Main.UIScale;
 
-                foreach (var uiState in uiStates)
+                for (int i = 0; i < userInterfaces.Count; i++)
                 {
-                    uiState.OnUIScaleChanged();
+                    var uiState = uiStates[i];
+                    var userInterface = userInterfaces[i];
+
+                    if (userInterface.CurrentState == null || !uiState.IsVisible) continue;
+
+                    userInterface.Recalculate();
                 }
             }
 
-            if (Main.mapFullscreen) return;
-
-            foreach (var userInterface in userInterfaces)
+            for (int i = 0; i < userInterfaces.Count; i++)
             {
+                var uiState = uiStates[i];
+                var userInterface = userInterfaces[i];
+
+                if (userInterface.CurrentState == null || !uiState.IsVisible) continue;
+
                 userInterface.Update(gameTime);
             }
         }
 
         public void OnResolutionChanged(Vector2 screenSize)
         {
-            foreach (var uiState in uiStates)
+            for (int i = 0; i < userInterfaces.Count; i++)
             {
-                uiState.OnResolutionChanged((int)screenSize.X, (int)screenSize.Y);
+                var uiState = uiStates[i];
+                var userInterface = userInterfaces[i];
+
+                if (userInterface.CurrentState == null || !uiState.IsVisible) continue;
+
+                userInterface.Recalculate();
             }
         }
     }
