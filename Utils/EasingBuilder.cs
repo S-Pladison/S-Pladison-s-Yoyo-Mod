@@ -24,7 +24,7 @@ namespace SPYoyoMod.Utils
 
         public EasingBuilder(params EasingData[] easings) : this(easings.Length)
         {
-            for (int i = 0; i < easings.Length; i++)
+            for (var i = 0; i < easings.Length; i++)
             {
                 ref var easing = ref easings[i];
 
@@ -67,7 +67,7 @@ namespace SPYoyoMod.Utils
             var progress = t * totalDuration;
             var easingIndex = 0;
 
-            for (int i = 0; i < addedEasingCount; i++)
+            for (var i = 0; i < addedEasingCount; i++)
             {
                 if (progress > shiftedDurations[i])
                     continue;

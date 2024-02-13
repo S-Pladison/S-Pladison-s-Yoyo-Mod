@@ -5,17 +5,12 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class YoyoItem : ModItem
     {
-        private readonly int gamepadExtraRange;
-
-        public YoyoItem(int gamepadExtraRange)
-        {
-            this.gamepadExtraRange = gamepadExtraRange;
-        }
+        public abstract int GamepadExtraRange { get; }
 
         public sealed override void SetStaticDefaults()
         {
             ItemID.Sets.Yoyo[Type] = true;
-            ItemID.Sets.GamepadExtraRange[Type] = gamepadExtraRange;
+            ItemID.Sets.GamepadExtraRange[Type] = GamepadExtraRange;
             ItemID.Sets.GamepadSmartQuickReach[Type] = true;
 
             YoyoSetStaticDefaults();

@@ -13,9 +13,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
     public class TitaniumYoyoItem : YoyoItem
     {
-        public override string Texture { get => ModAssets.ItemsPath + "TitaniumYoyo"; }
-
-        public TitaniumYoyoItem() : base(gamepadExtraRange: 15) { }
+        public override string Texture => ModAssets.ItemsPath + "TitaniumYoyo";
+        public override int GamepadExtraRange => 15;
 
         public override void YoyoSetDefaults()
         {
@@ -39,11 +38,12 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class TitaniumYoyoProjectile : YoyoProjectile
     {
-        public override string Texture { get => ModAssets.ProjectilesPath + "TitaniumYoyo"; }
+        public override string Texture => ModAssets.ProjectilesPath + "TitaniumYoyo";
+        public override float LifeTime => -1f;
+        public override float MaxRange => 300f;
+        public override float TopSpeed => 13f;
 
         private SpriteTrailRenderer spriteTrailRenderer;
-
-        public TitaniumYoyoProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
         public override void AI()
         {
@@ -78,7 +78,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 || Player.HeldItem.type != ModContent.ItemType<TitaniumYoyoItem>()
                 || npc.type == NPCID.TargetDummy) return;
 
-            int shardCount = Player.ownedProjectileCounts[ProjectileID.TitaniumStormShard];
+            var shardCount = Player.ownedProjectileCounts[ProjectileID.TitaniumStormShard];
 
             // Titanium armor is not equipped (just yoyo)
             // Copy from vanilla code
@@ -108,10 +108,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class TitaniumYoyoGlobalProjectile : GlobalProjectile
     {
-        public override bool AppliesToEntity(Projectile entity, bool lateInstantiation) => entity.type == ProjectileID.TitaniumStormShard;
         public override bool InstancePerEntity => true;
 
         private bool hasBonus;
+
+        public override bool AppliesToEntity(Projectile entity, bool lateInstantiation)
+        {
+            return entity.type == ProjectileID.TitaniumStormShard;
+        }
 
         public override void OnSpawn(Projectile proj, IEntitySource source)
         {

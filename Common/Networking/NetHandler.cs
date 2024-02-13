@@ -88,7 +88,7 @@ namespace SPYoyoMod.Common.Networking
                 }
                 else // Server and broadcast
                 {
-                    for (int i = 0; i < Main.maxPlayers; i++)
+                    for (var i = 0; i < Main.maxPlayers; i++)
                     {
                         if (i != from && Netplay.Clients[i].State >= 10)
                         {

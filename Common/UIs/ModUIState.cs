@@ -11,6 +11,7 @@ namespace SPYoyoMod.Common.UIs
         public string Name { get; private set; }
         public Mod Mod { get; internal set; }
         public UserInterface UserInterface { get; internal set; }
+        public InterfaceScaleType ScaleType { get; set; }
 
         public bool IsVisible
         {
@@ -26,8 +27,6 @@ namespace SPYoyoMod.Common.UIs
                 }
             }
         }
-
-        public InterfaceScaleType ScaleType { get; set; }
 
         private bool visible;
 

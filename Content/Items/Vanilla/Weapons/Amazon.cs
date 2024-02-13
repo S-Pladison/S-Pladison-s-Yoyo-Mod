@@ -4,8 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,15 +17,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class AmazonItem : VanillaYoyoItem
     {
-        public AmazonItem() : base(ItemID.JungleYoyo) { }
+        public override int YoyoType => ItemID.JungleYoyo;
     }
 
     public class AmazonProjectile : VanillaYoyoProjectile
     {
+        public override int YoyoType => ProjectileID.JungleYoyo;
+
         private Vector2? startToReturnPosition;
         private bool initialized;
-
-        public AmazonProjectile() : base(ProjectileID.JungleYoyo) { }
 
         public override void OnSpawn(Projectile proj, IEntitySource source)
         {
@@ -64,7 +63,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             // Poisoning from string
 
-            float _ = float.NaN;
+            var _ = float.NaN;
 
             foreach (var target in Main.npc.Where(x => x.active && (x.CanBeChasedBy(proj) || x.type.Equals(NPCID.TargetDummy))))
             {
@@ -100,11 +99,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void PostDraw(Projectile proj, Color lightColor)
         {
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_Ring", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_Ring", AssetRequestMode.ImmediateLoad);
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var segmentCount = (int)MathF.Ceiling(15 * proj.localAI[1]);
 
-            for (int i = 0; i < segmentCount; i++)
+            for (var i = 0; i < segmentCount; i++)
             {
                 var origin = new Vector2(10, 15);
                 var frame = new Rectangle((((i + 23) * 37) ^ proj.whoAmI) % 3 * 20, 0, 20, 30);
@@ -120,7 +119,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             DrawUtils.DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
             {
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
                 var pos = position - Main.screenPosition;
                 var rect = new Rectangle(0, 0, texture.Width(), (int)height);
                 var origin = new Vector2(texture.Width() * 0.5f, 0f);
@@ -132,7 +131,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public static void DrawMask(Projectile proj)
         {
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_GrassMask", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassMask", AssetRequestMode.ImmediateLoad);
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
             Main.spriteBatch.Draw(texture.Value, position, null, Color.White, 0f, texture.Size() * 0.5f, proj.localAI[1], SpriteEffects.None, 0f);
@@ -147,7 +146,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
         );
 
-        public override string Texture { get => ModAssets.DustsPath + "Amazon"; }
+        public override string Texture => ModAssets.DustsPath + "Amazon";
 
         public override void OnSpawn(Dust dust)
         {
@@ -231,12 +230,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 var xStart = projCenter.X - trueRadius;
                 var xEnd = projCenter.X + trueRadius;
 
-                for (int x = xStart; x <= xEnd; x++)
+                for (var x = xStart; x <= xEnd; x++)
                 {
                     var yStart = projCenter.Y - trueRadius;
                     var yEnd = projCenter.Y + trueRadius;
 
-                    for (int y = yStart; y <= yEnd; y++)
+                    for (var y = yStart; y <= yEnd; y++)
                     {
                         var distance = (int)MathF.Ceiling((float)Math.Sqrt(Math.Pow(x - projCenter.X, 2) + Math.Pow(y - projCenter.Y, 2)));
 
@@ -245,7 +244,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                         var yLocalStart = y;
                         var yLocalEnd = yEnd - (y - yStart);
 
-                        for (int i = yLocalStart; i <= yLocalEnd; i++)
+                        for (var i = yLocalStart; i <= yLocalEnd; i++)
                         {
                             if (!WorldGen.InWorld(x, i)) continue;
 
@@ -262,7 +261,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public void DrawBehindTiles()
         {
-            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
+            Main.spriteBatch.End(out var spriteBatchSnapshot);
             DrawGrassTarget<AmazonWallsRenderTargetContent>();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
@@ -276,11 +275,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             var grassRTContent = ModContent.GetInstance<T>();
 
-            if (!grassRTContent.IsRenderedInThisFrame || !grassRTContent.TryGetRenderTarget(out RenderTarget2D grassTarget)) return;
+            if (!grassRTContent.IsRenderedInThisFrame || !grassRTContent.TryGetRenderTarget(out var grassTarget)) return;
 
             var maskRTContent = ModContent.GetInstance<AmazonMaskRenderTargetContent>();
 
-            if (!maskRTContent.IsRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out RenderTarget2D maskTarget)) return;
+            if (!maskRTContent.IsRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out var maskTarget)) return;
 
             var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "AmazonEffect", AssetRequestMode.ImmediateLoad);
             var effect = effectAsset.Value;
@@ -300,13 +299,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
 
-        public override bool PreRender() => ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
+        public override bool PreRender()
+        {
+            return ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
+        }
 
         public override void DrawToTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_GrassWall", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassWall", AssetRequestMode.ImmediateLoad);
 
             foreach (var tilePos in ModContent.GetInstance<AmazonEffectHandler>().GetTilePoints())
             {
@@ -346,13 +348,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
 
-        public override bool PreRender() => ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
+        public override bool PreRender()
+        {
+            return ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
+        }
 
         public override void DrawToTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Amazon_GrassTile", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassTile", AssetRequestMode.ImmediateLoad);
 
             foreach (var tilePos in ModContent.GetInstance<AmazonEffectHandler>().GetTilePoints())
             {
@@ -380,7 +385,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
 
-        public override bool PreRender() => ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
+        public override bool PreRender()
+        {
+            return ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
+        }
 
         public override void DrawToTarget()
         {

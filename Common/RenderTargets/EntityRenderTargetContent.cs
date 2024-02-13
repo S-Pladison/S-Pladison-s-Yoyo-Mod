@@ -1,18 +1,22 @@
 ﻿using Microsoft.Xna.Framework;
-using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Rendering;
 using Terraria;
 
 namespace SPYoyoMod.Common.RenderTargets
 {
     public abstract class EntityRenderTargetContent<T> : RenderTargetContent where T : Entity
     {
-        public override Point Size { get => new(Main.screenWidth, Main.screenHeight); }
+        public override Point Size => new(Main.screenWidth, Main.screenHeight);
 
         private int entityIndex;
 
-        public virtual bool CanRender() { return true; }
         public abstract bool CanDrawEntity(T entity);
         public abstract void DrawEntity(T entity);
+
+        public virtual bool CanRender()
+        {
+            return true;
+        }
 
         public override bool PreRender()
         {
@@ -22,7 +26,7 @@ namespace SPYoyoMod.Common.RenderTargets
 
             var entities = DrawUtils.GetActiveForDrawEntities<T>();
 
-            for (int i = 0; i < entities.Count; i++)
+            for (var i = 0; i < entities.Count; i++)
             {
                 var entity = entities[i];
 
@@ -43,7 +47,7 @@ namespace SPYoyoMod.Common.RenderTargets
 
             entityIndex++;
 
-            for (int i = entityIndex; i < entities.Count; i++)
+            for (var i = entityIndex; i < entities.Count; i++)
             {
                 var entity = entities[i];
 

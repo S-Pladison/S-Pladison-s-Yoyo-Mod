@@ -4,7 +4,7 @@ using ReLogic.Content;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,9 +16,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
     public class SoulTormentorItem : YoyoItem
     {
-        public override string Texture { get => ModAssets.ItemsPath + "SoulTormentor"; }
-
-        public SoulTormentorItem() : base(gamepadExtraRange: 15) { }
+        public override string Texture => ModAssets.ItemsPath + "SoulTormentor";
+        public override int GamepadExtraRange => 15;
 
         public override void YoyoSetDefaults()
         {
@@ -41,12 +40,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public static readonly float TormentorRadius = 16 * 15;
         public static readonly int TormentorCount = 3;
 
-        public override string Texture { get => ModAssets.ProjectilesPath + "SoulTormentor"; }
+        public override string Texture => ModAssets.ProjectilesPath + "SoulTormentor";
+        public override float LifeTime => -1f;
+        public override float MaxRange => 300f;
+        public override float TopSpeed => 13f;
 
         private TrailRenderer blackTrailRenderer;
         private TrailRenderer redTrailRenderer;
-
-        public SoulTormentorProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
         public override void OnKill(int timeLeft)
         {
@@ -56,7 +56,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void AI()
         {
-            foreach (var (npc, _) in GetTargets())
+            foreach ((var npc, var _) in GetTargets())
             {
                 if (Main.rand.NextBool(12))
                     SpawnDusts(npc.Center);
@@ -71,7 +71,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            foreach (var (npc, _) in GetTargets())
+            foreach ((var npc, var _) in GetTargets())
             {
                 if (target.whoAmI == npc.whoAmI)
                     continue;
@@ -99,7 +99,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var effect = effectAsset.Value;
                 var effectParameters = effect.Parameters;
 
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
 
                 effectParameters["Texture0"].SetValue(texture.Value);
                 effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
@@ -122,7 +122,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
                 redTrailRenderer?.Draw(effect);
 
-                texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
+                texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
                 var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
                 var scale = Projectile.scale;
 
@@ -132,10 +132,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.OverProjectiles, () =>
             {
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Heart", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Heart", AssetRequestMode.ImmediateLoad);
                 var origin = texture.Size() * 0.5f;
 
-                foreach (var (npc, distance) in GetTargets())
+                foreach ((var npc, var distance) in GetTargets())
                 {
                     var npcPos = npc.Center + npc.gfxOffY * Vector2.UnitY;
                     var npcDrawPos = npcPos - Main.screenPosition;
@@ -150,7 +150,11 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
 
         private List<(NPC npc, float distance)> GetTargets()
-            => NPCUtils.NearestNPCs(Projectile.Center, TormentorRadius, (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy)).Take(TormentorCount).ToList();
+        {
+            return NPCUtils.NearestNPCs(Projectile.Center, TormentorRadius, (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy))
+                .Take(TormentorCount)
+                .ToList();
+        }
 
         private void SpawnDusts(Vector2 position)
         {
@@ -163,12 +167,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
 
         private TrailRenderer InitTrailRenderer(int pointCount, float width)
-            => new TrailRenderer(pointCount).SetWidth(f => MathHelper.Lerp(width, 0f, f));
+        {
+            return new TrailRenderer(pointCount).SetWidth(f => MathHelper.Lerp(width, 0f, f));
+        }
     }
 
     public class SoulTormentorDust : ModDust
     {
-        public override string Texture { get => ModAssets.DustsPath + "SoulTormentor"; }
+        public override string Texture => ModAssets.DustsPath + "SoulTormentor";
 
         public override void OnSpawn(Dust dust)
         {

@@ -36,7 +36,7 @@ namespace SPYoyoMod.Content.Items
     [Autoload(false)]
     public class ExampleYoyoItem : YoyoItem
     {
-        public ExampleYoyoItem() : base(gamepadExtraRange: 15) { }
+        public override int GamepadExtraRange => 15;
 
         public override void YoyoSetDefaults()
         {
@@ -53,6 +53,8 @@ namespace SPYoyoMod.Content.Items
     [Autoload(false)]
     public class ExampleYoyoProjectile : YoyoProjectile
     {
-        public ExampleYoyoProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
+        public override float LifeTime => -1f;
+        public override float MaxRange => 300f;
+        public override float TopSpeed => 13f;
     }
 }

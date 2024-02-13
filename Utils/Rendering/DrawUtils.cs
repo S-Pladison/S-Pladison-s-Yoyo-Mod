@@ -7,7 +7,7 @@ using Terraria;
 using Terraria.GameContent;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Utils
+namespace SPYoyoMod.Utils.Rendering
 {
     public static class DrawUtils
     {
@@ -97,14 +97,14 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static void DrawYoyoString(Projectile proj, Vector2 mountedCenter, DrawYoyoStringSegmentDelegate drawSegment)
         {
-            Vector2 startPos = mountedCenter;
+            var startPos = mountedCenter;
             startPos.Y += Main.player[proj.owner].gfxOffY;
 
-            float x = proj.Center.X - startPos.X;
-            float y = proj.Center.Y - startPos.Y;
+            var x = proj.Center.X - startPos.X;
+            var y = proj.Center.Y - startPos.Y;
 
-            bool flag1 = true;
-            bool flag2 = true;
+            var flag1 = true;
+            var flag2 = true;
 
             if ((double)x == 0.0 && (double)y == 0.0)
             {
@@ -112,14 +112,14 @@ namespace SPYoyoMod.Utils
             }
             else
             {
-                float num4 = 12f / (float)Math.Sqrt((double)x * (double)x + (double)y * (double)y);
-                float num5 = x * num4;
-                float num6 = y * num4;
+                var num4 = 12f / (float)Math.Sqrt((double)x * (double)x + (double)y * (double)y);
+                var num5 = x * num4;
+                var num6 = y * num4;
 
                 startPos.X -= num5 * 0.1f;
                 startPos.Y -= num6 * 0.1f;
-                x = proj.position.X + (float)proj.width * 0.5f - startPos.X;
-                y = proj.position.Y + (float)proj.height * 0.5f - startPos.Y;
+                x = proj.position.X + proj.width * 0.5f - startPos.X;
+                y = proj.position.Y + proj.height * 0.5f - startPos.Y;
             }
 
             var segments = new List<Tuple<Vector2, float, float, Color>>();
@@ -131,9 +131,9 @@ namespace SPYoyoMod.Utils
 
             while (flag1)
             {
-                float segmentHeight = 12f;
-                float f1 = (float)Math.Sqrt((double)x * (double)x + (double)y * (double)y);
-                float f2 = f1;
+                var segmentHeight = 12f;
+                var f1 = (float)Math.Sqrt((double)x * (double)x + (double)y * (double)y);
+                var f2 = f1;
 
                 if (float.IsNaN(f1) || float.IsNaN(f2))
                 {
@@ -147,9 +147,9 @@ namespace SPYoyoMod.Utils
                         flag1 = false;
                     }
 
-                    float num8 = 12f / f1;
-                    float num9 = x * num8;
-                    float num10 = y * num8;
+                    var num8 = 12f / f1;
+                    var num9 = x * num8;
+                    var num10 = y * num8;
 
                     if (flag2)
                     {
@@ -166,22 +166,22 @@ namespace SPYoyoMod.Utils
 
                     if ((double)f2 > 12.0)
                     {
-                        float num11 = 0.3f;
-                        float num12 = Math.Abs(proj.velocity.X) + Math.Abs(proj.velocity.Y);
+                        var num11 = 0.3f;
+                        var num12 = Math.Abs(proj.velocity.X) + Math.Abs(proj.velocity.Y);
 
                         if ((double)num12 > 16.0) num12 = 16f;
 
-                        float num13 = (float)(1.0 - (double)num12 / 16.0);
-                        float num14 = num11 * num13;
-                        float num15 = f2 / 80f;
+                        var num13 = (float)(1.0 - (double)num12 / 16.0);
+                        var num14 = num11 * num13;
+                        var num15 = f2 / 80f;
 
                         if ((double)num15 > 1.0) num15 = 1f;
 
-                        float num16 = num14 * num15;
+                        var num16 = num14 * num15;
 
                         if ((double)num16 < 0.0) num16 = 0.0f;
 
-                        float num17 = num16 * num15 * 0.5f;
+                        var num17 = num16 * num15 * 0.5f;
 
                         if ((double)y > 0.0)
                         {
@@ -190,12 +190,12 @@ namespace SPYoyoMod.Utils
                         }
                         else
                         {
-                            float num18 = Math.Abs(proj.velocity.X) / 3f;
+                            var num18 = Math.Abs(proj.velocity.X) / 3f;
 
                             if ((double)num18 > 1.0) num18 = 1f;
 
-                            float num19 = num18 - 0.5f;
-                            float num20 = num17 * num19;
+                            var num19 = num18 - 0.5f;
+                            var num20 = num17 * num19;
 
                             if ((double)num20 > 0.0) num20 *= 2f;
 
@@ -214,7 +214,7 @@ namespace SPYoyoMod.Utils
                 }
             }
 
-            for (int i = 0; i < segments.Count; i++)
+            for (var i = 0; i < segments.Count; i++)
             {
                 drawSegment(segments.Count, i, segments[i].Item1, segments[i].Item2, segments[i].Item3, segments[i].Item4);
             }

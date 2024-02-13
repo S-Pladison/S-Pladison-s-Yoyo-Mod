@@ -1,5 +1,6 @@
 matrix TransformMatrix;
 
+float UvRepeat;
 float Time;
 
 float4 Color0;
@@ -44,7 +45,7 @@ VertexShaderOutput MainVertexShader(in VertexShaderInput input)
 
 float4 CascadeTrail(VertexShaderOutput input) : COLOR
 {
-    float4 color = tex2D(textureSampler0, input.coord + float2(Time, 0));
+    float4 color = tex2D(textureSampler0, (input.coord * float2(UvRepeat, 1) + float2(Time, 0)));
     color.a = color.r;
     color.rgb *= lerp(lerp(Color1.rgb, Color3.rgb, input.coord.x), lerp(Color0.rgb, Color2.rgb, input.coord.x), color.r);
     return color * input.color * (1 - input.coord.x * input.coord.x);

@@ -1,7 +1,7 @@
 ﻿using Terraria;
 using Terraria.ID;
 
-namespace SPYoyoMod.Utils.Extensions
+namespace SPYoyoMod.Utils.Entities
 {
     public static class ItemExtensions
     {

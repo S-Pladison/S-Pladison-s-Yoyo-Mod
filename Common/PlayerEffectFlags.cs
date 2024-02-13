@@ -14,7 +14,7 @@ namespace SPYoyoMod.Common
 
         public override void ResetEffects()
         {
-            for (int i = 0; i < flags.Count; i++) flags[i] = false;
+            for (var i = 0; i < flags.Count; i++) flags[i] = false;
         }
 
         public void SetFlag<T>(bool flag = true) where T : ModItem

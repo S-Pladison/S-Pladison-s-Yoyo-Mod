@@ -62,7 +62,7 @@ namespace SPYoyoMod.Utils
         public static float InElastic(float t) => 1 - OutElastic(1 - t);
         public static float OutElastic(float t)
         {
-            float p = 0.3f;
+            var p = 0.3f;
             return (float)Math.Pow(2, -10 * t) * (float)Math.Sin((t - p / 4) * (2 * Math.PI) / p) + 1;
         }
         public static float InOutElastic(float t)
@@ -73,7 +73,7 @@ namespace SPYoyoMod.Utils
 
         public static float InBack(float t)
         {
-            float s = 1.70158f;
+            var s = 1.70158f;
             return t * t * ((s + 1) * t - s);
         }
         public static float OutBack(float t) => 1 - InBack(1 - t);
@@ -86,8 +86,8 @@ namespace SPYoyoMod.Utils
         public static float InBounce(float t) => 1 - OutBounce(1 - t);
         public static float OutBounce(float t)
         {
-            float div = 2.75f;
-            float mult = 7.5625f;
+            var div = 2.75f;
+            var mult = 7.5625f;
 
             if (t < 1 / div)
             {

@@ -4,8 +4,8 @@ using ReLogic.Content;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils.Entities;
+using SPYoyoMod.Utils.Rendering;
 using System.Collections.Generic;
 using System.IO;
 using Terraria;
@@ -17,7 +17,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class CodeOneItem : VanillaYoyoItem
     {
-        public CodeOneItem() : base(ItemID.Code1) { }
+        public override int YoyoType => ItemID.Code1;
 
         public override void Load()
         {
@@ -43,9 +43,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class CodeOneProjectile : VanillaYoyoProjectile
     {
-        private bool buffActive;
+        public override int YoyoType => ProjectileID.Code1;
 
-        public CodeOneProjectile() : base(ProjectileID.Code1) { }
+        private bool buffActive;
 
         public override void AI(Projectile proj)
         {
@@ -99,7 +99,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             DrawUtils.DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
             {
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
                 var pos = position - Main.screenPosition;
                 var rect = new Rectangle(0, 0, texture.Width(), (int)height);
                 var origin = new Vector2(texture.Width() * 0.5f, 0f);
@@ -115,7 +115,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             var progress = EasingFunctions.InOutQuint(proj.localAI[1]);
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
             var color = new Color(65, 185, 255) * progress;
 
             Main.spriteBatch.Draw(texture.Value, position, null, color, proj.rotation, texture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
@@ -127,6 +127,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     public class CodeOnePlayer : ModPlayer
     {
         public const int TimeToForgetNPC = 60 * 5;
+
+        public bool IsBuffActive => timers.Count <= 2;
 
         private class TimerData
         {
@@ -165,15 +167,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                     timers.Remove(npcWhoAmI);
             }
         }
-
-        public bool IsBuffActive => timers.Count <= 2;
     }
 
     public class CodeOneHitProjectile : ModProjectile
     {
         public const float InitTimeLeft = 15f;
 
-        public override string Texture { get => ModAssets.TexturesPath + "Effects/Invisible"; }
+        public override string Texture => ModAssets.MiscPath + "Invisible";
 
         private RingRenderer ringRenderer;
 
@@ -197,7 +197,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             {
                 var factor = Projectile.timeLeft / InitTimeLeft;
                 var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Ring", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "CodeOneHit_Ring", AssetRequestMode.ImmediateLoad);
 
                 var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
                 var effect = effectAsset.Value;
@@ -225,21 +225,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var colorProgress = EasingFunctions.OutSine(factor);
 
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
             var color = Color.Black * colorProgress * 0.7f;
             var rotation = 0f;
             var scale = EasingFunctions.OutCubic(1f - factor) * 0.35f;
 
             Main.spriteBatch.Draw(texture.Value, position, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle", AssetRequestMode.ImmediateLoad);
             color = (Color.Lerp(new Color(55, 0, 255, 0), new Color(140, 210, 255, 255), colorProgress) * colorProgress * 0.65f) with { A = 0 };
             rotation = 0f;
             scale = EasingFunctions.OutCubic(1f - factor) * 0.25f;
 
             Main.spriteBatch.Draw(texture.Value, position, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/CodeOneHit_Rainbow", AssetRequestMode.ImmediateLoad);
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "CodeOneHit_Rainbow", AssetRequestMode.ImmediateLoad);
             color = (Color.White * (colorProgress - 0.25f)) with { A = 0 };
             rotation = (factor + ((int)Projectile.position.X ^ (int)Projectile.position.Y)) * 0.3f;
             scale = EasingFunctions.OutCubic(1f - factor) * 0.2f;

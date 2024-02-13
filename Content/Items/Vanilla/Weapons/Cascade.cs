@@ -6,7 +6,7 @@ using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils.Rendering;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -16,7 +16,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class CascadeItem : VanillaYoyoItem
     {
-        public CascadeItem() : base(ItemID.Cascade) { }
+        public override int YoyoType => ItemID.Cascade;
 
         public override void YoyoSetStaticDefaults()
         {
@@ -66,9 +66,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class CascadeProjectile : VanillaYoyoProjectile
     {
-        private TrailRenderer trailRenderer;
+        private static readonly EasingBuilder TrailWidthEasing = new(
+            (EasingFunctions.OutExpo, 0.05f, 0f, 30f),
+            (EasingFunctions.Linear, 0.95f, 30f, 70f)
+        );
 
-        public CascadeProjectile() : base(ProjectileID.Cascade) { }
+        public override int YoyoType => ProjectileID.Cascade;
+
+        private TrailRenderer trailRenderer;
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
@@ -92,7 +97,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             DrawUtils.DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
             {
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
                 var pos = position - Main.screenPosition;
                 var rect = new Rectangle(0, 0, texture.Width(), (int)height);
                 var origin = new Vector2(texture.Width() * 0.5f, 0f);
@@ -104,29 +109,37 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            trailRenderer ??= new TrailRenderer(20).SetWidth(f => MathHelper.Lerp(30f, 70f, f));
+            trailRenderer ??= new TrailRenderer(20).SetWidth(f => TrailWidthEasing.Evaluate(f));
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
+                if (trailRenderer is null) return;
+
+                var length = trailRenderer.GetTotalLengthBetweenPoints();
+
+                if (length <= 0f) return;
+
                 var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "CascadeTrail", AssetRequestMode.ImmediateLoad);
                 var effect = effectAsset.Value;
                 var effectParameters = effect.Parameters;
 
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Cascade_Trail", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Cascade_Trail", AssetRequestMode.ImmediateLoad);
+                var uvRepeat = length / texture.Width();
 
                 effectParameters["Texture0"].SetValue(texture.Value);
                 effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                effectParameters["UvRepeat"].SetValue(uvRepeat);
                 effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
                 effectParameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
                 effectParameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
                 effectParameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
                 effectParameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
 
-                trailRenderer?.Draw(effect);
+                trailRenderer.Draw(effect);
             });
 
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
             var color = new Color(255, 180, 95);
 
             Main.spriteBatch.Draw(texture.Value, position, null, color, proj.rotation, texture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
@@ -144,7 +157,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var effect = effectAsset.Value;
             var effectParameters = effect.Parameters;
 
-            effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Cascade_Ring", AssetRequestMode.ImmediateLoad).Value);
+            effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "Cascade_Ring", AssetRequestMode.ImmediateLoad).Value);
             effectParameters["TransformMatrix"].SetValue(ProjectileDrawLayers.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
             effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
 
@@ -161,13 +174,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             ref var progress = ref proj.localAI[1];
 
             var drawPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle", AssetRequestMode.ImmediateLoad);
             var color = Color.Orange * (1f - EasingFunctions.InExpo(progress)) * 0.35f;
             var scale = proj.scale * 0.55f;
 
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, color, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/LightBeam", AssetRequestMode.ImmediateLoad);
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "LightBeam", AssetRequestMode.ImmediateLoad);
             color = Color.Orange;
             scale = proj.scale;
 
@@ -184,7 +197,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var effect = effectAsset.Value;
             var effectParameters = effect.Parameters;
 
-            effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Cascade_Ring", AssetRequestMode.ImmediateLoad).Value);
+            effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "Cascade_Ring", AssetRequestMode.ImmediateLoad).Value);
             effectParameters["TransformMatrix"].SetValue(matrices.TransformWithScreenOffset);
             effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
 
@@ -207,7 +220,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 (EasingFunctions.InCirc, 0.35f, 1f, 0f)
             );
 
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/RingNormalMap", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "RingNormalMap", AssetRequestMode.ImmediateLoad);
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var scale = MathHelper.Clamp(progress, 0, 1) * 0.3f;
             var color = Color.White.MultiplyB(builder.Evaluate(progress));

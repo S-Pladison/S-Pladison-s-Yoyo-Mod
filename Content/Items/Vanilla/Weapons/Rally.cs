@@ -13,35 +13,49 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public static float MovementSpeedForFullBonus { get => 8.5f; }
         public static int DamageFullBonus { get => 8; }
 
-        public RallyItem() : base(ItemID.Rally) { }
+        public override int YoyoType => ItemID.Rally;
 
         public override void ModifyWeaponDamage(Item item, Player player, ref StatModifier damage)
-            => damage.Flat += GetBonusValue(player);
+        {
+            damage.Flat += GetBonusValue(player);
+        }
 
         public override void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
-            => damage -= GetBonusValue(player);
+        {
+            damage -= GetBonusValue(player);
+        }
 
         public static float GetBonusFactor(Player player)
-            => MathHelper.Clamp(player.velocity.Length() / MovementSpeedForFullBonus, 0f, 1f);
+        {
+            return MathHelper.Clamp(player.velocity.Length() / MovementSpeedForFullBonus, 0f, 1f);
+        }
 
         public static int GetBonusValue(Player player)
-            => (int)(GetBonusFactor(player) * DamageFullBonus);
+        {
+            return (int)(GetBonusFactor(player) * DamageFullBonus);
+        }
     }
 
     public class RallyProjectile : VanillaYoyoProjectile
     {
+        public override int YoyoType => ProjectileID.Rally;
+
         private SpriteTrailRenderer spriteTrailRenderer;
 
-        public RallyProjectile() : base(ProjectileID.Rally) { }
-
         public override void PostAI(Projectile proj)
-            => spriteTrailRenderer?.SetNextPoint(proj.Center + proj.velocity, proj.rotation);
+        {
+            spriteTrailRenderer?.SetNextPoint(proj.Center + proj.velocity, proj.rotation);
+        }
 
         public override void ModifyHitNPC(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
-            => modifiers.SourceDamage.Flat += RallyItem.GetBonusValue(Main.player[proj.owner]);
+        {
+            modifiers.SourceDamage.Flat += RallyItem.GetBonusValue(Main.player[proj.owner]);
+        }
 
         public override void ModifyHitPlayer(Projectile proj, Player target, ref Player.HurtModifiers modifiers)
-            => modifiers.SourceDamage.Flat += RallyItem.GetBonusValue(Main.player[proj.owner]);
+        {
+            modifiers.SourceDamage.Flat += RallyItem.GetBonusValue(Main.player[proj.owner]);
+        }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {

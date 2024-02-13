@@ -14,7 +14,7 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
 {
     public class StrangeDrinkItem : ModItem
     {
-        public override string Texture { get => ModAssets.ItemsPath + "StrangeDrink"; }
+        public override string Texture => ModAssets.ItemsPath + "StrangeDrink";
 
         public override void SetDefaults()
         {
@@ -173,7 +173,9 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
         }
 
         public static bool IsPlayerTalksWithNurse(Player player)
-            => player.talkNPC >= 0 && Main.npc[player.talkNPC].type.Equals(NPCID.Nurse);
+        {
+            return player.talkNPC >= 0 && Main.npc[player.talkNPC].type.Equals(NPCID.Nurse);
+        }
 
         public delegate void orig_SetChatButtonsMethod(ref string button, ref string button2);
     }

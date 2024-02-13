@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Common.Interfaces;
-using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;
@@ -11,29 +11,20 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
+        public abstract float LifeTime { get; }
+        public abstract float MaxRange { get; }
+        public abstract float TopSpeed { get; }
+
         public bool IsReturning { get => Projectile.ai[0] == -1; }
         public float ReturnToPlayerProgress { get; private set; }
 
-        private readonly float lifeTime;
-        private readonly float maxRange;
-        private readonly float topSpeed;
-
         private Vector2? startToReturnPosition;
-
-        public YoyoProjectile(float lifeTime, float maxRange, float topSpeed)
-        {
-            this.lifeTime = lifeTime;
-            this.maxRange = maxRange;
-            this.topSpeed = topSpeed;
-        }
-
-        // ...
 
         public sealed override void SetStaticDefaults()
         {
-            ProjectileID.Sets.YoyosLifeTimeMultiplier[Type] = lifeTime;
-            ProjectileID.Sets.YoyosMaximumRange[Type] = maxRange;
-            ProjectileID.Sets.YoyosTopSpeed[Type] = topSpeed;
+            ProjectileID.Sets.YoyosLifeTimeMultiplier[Type] = LifeTime;
+            ProjectileID.Sets.YoyosMaximumRange[Type] = MaxRange;
+            ProjectileID.Sets.YoyosTopSpeed[Type] = TopSpeed;
 
             YoyoSetStaticDefaults();
         }
@@ -118,8 +109,6 @@ namespace SPYoyoMod.Content.Items
         {
             PostDrawYoyoString(mountedCenter);
         }
-
-        // ...
 
         public virtual bool YoyoPreAI(Player owner) => true;
         public virtual void YoyoSetStaticDefaults() { }

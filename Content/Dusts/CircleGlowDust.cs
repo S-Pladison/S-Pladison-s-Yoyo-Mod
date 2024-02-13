@@ -41,7 +41,7 @@ namespace SPYoyoMod.Content.Dusts
                 var position = dust.position - Main.screenPosition;
                 var colorProgress = 1f - dust.alpha / 255f;
 
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
                 var origin = texture.Size() * 0.5f;
 
                 Main.spriteBatch.Draw(texture.Value, position, null, Color.Black * 0.5f * colorProgress, dust.rotation, origin, dust.scale * 0.12f, SpriteEffects.None, 0f);

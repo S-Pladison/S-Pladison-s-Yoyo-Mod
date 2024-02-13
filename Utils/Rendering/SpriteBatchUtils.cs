@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework.Graphics;
-using SPYoyoMod.Utils.DataStructures;
 
-namespace SPYoyoMod.Utils.Extensions
+namespace SPYoyoMod.Utils.Rendering
 {
     public static class SpriteBatchExtensions
     {

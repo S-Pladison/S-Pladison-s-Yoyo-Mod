@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 
-namespace SPYoyoMod.Utils
+namespace SPYoyoMod.Utils.Entities
 {
     public static class NPCUtils
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
@@ -81,7 +81,9 @@ namespace SPYoyoMod.Common.Renderers
         }
 
         public SpriteTrailRenderer SetFadingColor(XnaColor color)
-            => SetColor(f => XnaColor.Lerp(color, XnaColor.Transparent, f));
+        {
+            return SetColor(f => XnaColor.Lerp(color, XnaColor.Transparent, f));
+        }
 
         public SpriteTrailRenderer SetColor(ColorDelegate color)
         {
@@ -90,7 +92,9 @@ namespace SPYoyoMod.Common.Renderers
         }
 
         public SpriteTrailRenderer SetFadingScale(float scale)
-            => SetScale(f => MathHelper.Lerp(scale, 0f, f));
+        {
+            return SetScale(f => MathHelper.Lerp(scale, 0f, f));
+        }
 
         public SpriteTrailRenderer SetScale(ScaleDelegate scale)
         {
@@ -114,7 +118,7 @@ namespace SPYoyoMod.Common.Renderers
 
         public SpriteTrailRenderer SetNextPoint(Vector2 pointPosition, float headRotation)
         {
-            for (int i = MaxPoints - 1; i > 0; --i)
+            for (var i = MaxPoints - 1; i > 0; --i)
                 points[i] = points[i - 1];
 
             points[0].Position = pointPosition;
@@ -127,7 +131,7 @@ namespace SPYoyoMod.Common.Renderers
 
         public void Draw(SpriteBatch spriteBatch, Vector2 positionOffset, XnaColor colorMultiplier)
         {
-            for (int i = 0; i < activePoints; i++)
+            for (var i = 0; i < activePoints; i++)
             {
                 var factor = (float)i / activePoints;
                 var color = ColorUtils.Multiply(innerColor(factor), colorMultiplier);

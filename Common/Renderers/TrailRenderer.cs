@@ -69,7 +69,7 @@ namespace SPYoyoMod.Common.Renderers
 
         public TrailRenderer SetNextPoint(Vector2 pointPosition)
         {
-            for (int i = MaxPoints - 1; i > 0; --i)
+            for (var i = MaxPoints - 1; i > 0; --i)
                 points[i] = points[i - 1];
 
             points[0] = pointPosition;
@@ -102,6 +102,20 @@ namespace SPYoyoMod.Common.Renderers
             renderer.Draw(effect, vertexCount, indexCount / 3);
         }
 
+        public float GetTotalLengthBetweenPoints()
+        {
+            if (activePoints <= 1) return 0;
+
+            var result = 0f;
+
+            for (var i = 1; i < activePoints; i++)
+            {
+                result += Vector2.Distance(points[i], points[i - 1]);
+            }
+
+            return result;
+        }
+
         public void Dispose()
         {
             renderer?.Dispose();
@@ -131,7 +145,7 @@ namespace SPYoyoMod.Common.Renderers
                 renderer.SetIndices(indices);
             }
 
-            CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
+            CalculateFactorsFromStartToEnd(out var factorsFromStartToEnd);
             CalculateVertexPositions(factorsFromStartToEnd);
             CalculateVertexUVs(factorsFromStartToEnd);
 
@@ -147,13 +161,13 @@ namespace SPYoyoMod.Common.Renderers
 
             factorsFromStartToEnd = new float[segmentCount];
 
-            for (int i = 0; i < activePoints - 1; i++)
+            for (var i = 0; i < activePoints - 1; i++)
             {
                 lengths[i] = Vector2.Distance(points[i], points[i + 1]);
                 totalLength += lengths[i];
             }
 
-            for (int i = 0; i < segmentCount; i++)
+            for (var i = 0; i < segmentCount; i++)
             {
                 accumulativeLength += lengths[i];
                 factorsFromStartToEnd[i] = accumulativeLength / totalLength;
@@ -172,7 +186,7 @@ namespace SPYoyoMod.Common.Renderers
             AddVertexPosition(ref vertexIndex, points[0] + offset);
             AddVertexPosition(ref vertexIndex, points[0] - offset);
 
-            for (int i = 1; i < activePoints; i++)
+            for (var i = 1; i < activePoints; i++)
             {
                 normal = (points[i] - points[i - 1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
                 halfWidth = innerWidth(factorsFromStartToEnd[i - 1]) / 2f;
@@ -195,7 +209,7 @@ namespace SPYoyoMod.Common.Renderers
             AddVertexUV(ref vertexIndex, Vector2.Zero);
             AddVertexUV(ref vertexIndex, Vector2.UnitY);
 
-            for (int i = 0; i < factorsFromStartToEnd.Length; i++)
+            for (var i = 0; i < factorsFromStartToEnd.Length; i++)
             {
                 AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 0));
                 AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 1));
@@ -215,11 +229,11 @@ namespace SPYoyoMod.Common.Renderers
                 indices[index++] = (short)value;
             }
 
-            for (int i = start; i < end; i++)
+            for (var i = start; i < end; i++)
             {
-                int index = i * 6;
-                int i2 = i * 2;
-                int j2 = (i + 1) * 2;
+                var index = i * 6;
+                var i2 = i * 2;
+                var j2 = (i + 1) * 2;
 
                 Add(ref index, i2);
                 Add(ref index, i2 + 1);
@@ -232,9 +246,9 @@ namespace SPYoyoMod.Common.Renderers
 
         private void CalculateVertexColors(int start, int end)
         {
-            for (int i = start; i <= end; i++)
+            for (var i = start; i <= end; i++)
             {
-                int index = i * 2;
+                var index = i * 2;
 
                 vertices[index].Color = Color.White;
                 vertices[index + 1].Color = Color.White;

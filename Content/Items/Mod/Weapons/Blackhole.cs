@@ -6,8 +6,8 @@ using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils.Entities;
+using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
 using Terraria.GameContent;
@@ -19,9 +19,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
     public class BlackholeItem : YoyoItem
     {
-        public override string Texture { get => ModAssets.ItemsPath + "Blackhole"; }
-
-        public BlackholeItem() : base(gamepadExtraRange: 15) { }
+        public override string Texture => ModAssets.ItemsPath + "Blackhole";
+        public override int GamepadExtraRange => 15;
 
         public override void YoyoSetStaticDefaults()
         {
@@ -47,13 +46,19 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     {
         public static readonly float GravityRadius = GravityRadius = 16 * 10;
 
-        public override string Texture { get => ModAssets.ProjectilesPath + "Blackhole"; }
-        public float RadiusProgress { get => Projectile.localAI[1]; set => Projectile.localAI[1] = value; }
-        public float TimeForVisualEffects { get => (Projectile.whoAmI * 200f + (float)Main.timeForVisualEffects) % 216000f; }
+        public override string Texture => ModAssets.ProjectilesPath + "Blackhole";
+        public override float LifeTime => -1f;
+        public override float MaxRange => 300f;
+        public override float TopSpeed => 13f;
+        public float TimeForVisualEffects => (Projectile.whoAmI * 200f + (float)Main.timeForVisualEffects) % 216000f;
+
+        public float RadiusProgress
+        {
+            get => Projectile.localAI[1];
+            set => Projectile.localAI[1] = value;
+        }
 
         private bool initialized;
-
-        public BlackholeProjectile() : base(lifeTime: -1f, maxRange: 300f, topSpeed: 13f) { }
 
         public override void AI()
         {
@@ -81,7 +86,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                     Collision.CanHitLine(Projectile.position, Projectile.width, Projectile.height, npc.position, npc.width, npc.height)
             );
 
-            foreach (var (npc, distance) in targets)
+            foreach ((var npc, var distance) in targets)
             {
                 var vector = Projectile.Center - npc.Center;
                 var progress = 1 - distance / currentRadius;
@@ -101,7 +106,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             {
                 var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
 
-                for (int i = 0; i < 7; i++)
+                for (var i = 0; i < 7; i++)
                 {
                     var position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(20);
                     var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(0.75f);
@@ -120,7 +125,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.OverProjectiles, () =>
             {
                 var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Blackhole_LensFlare", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Blackhole_LensFlare", AssetRequestMode.ImmediateLoad);
                 var rotation = MathF.Sin(TimeForVisualEffects * 0.01f);
                 var scale = Projectile.scale;
 
@@ -147,21 +152,21 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Circle", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle", AssetRequestMode.ImmediateLoad);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, 0f, texture.Size() * 0.5f, 0.64f * scale, SpriteEffects.None, 0f);
 
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Smoke", AssetRequestMode.ImmediateLoad);
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Smoke", AssetRequestMode.ImmediateLoad);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.52f * scale, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.01f, texture.Size() * 0.5f, 0.47f * scale, SpriteEffects.FlipHorizontally, 0f);
 
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Spiral", AssetRequestMode.ImmediateLoad);
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Spiral", AssetRequestMode.ImmediateLoad);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.32f * scale, SpriteEffects.None, 0f);
         }
 
         void IDrawDistortionProjectile.DrawDistortion(Projectile proj)
         {
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/DistortedRing", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "DistortedRing", AssetRequestMode.ImmediateLoad);
             var rotation = TimeForVisualEffects * 0.02f;
             var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
 
@@ -177,8 +182,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
         );
 
-        public bool ShouldBeRemovedFromRenderer { get => timeLeft <= 0; }
-        public float Progress { get => MathHelper.Lerp(1f, 0f, timeLeft / (float)initTimeLeft); }
+        public bool ShouldBeRemovedFromRenderer => timeLeft <= 0;
+        public float Progress => MathHelper.Lerp(1f, 0f, timeLeft / (float)initTimeLeft);
 
         private readonly Asset<Texture2D> texture;
         private readonly Vector2 origin;
@@ -192,7 +197,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public BlackholeParticle(Vector2 position, Vector2 velocity)
         {
-            texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Smoke", AssetRequestMode.ImmediateLoad);
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Smoke", AssetRequestMode.ImmediateLoad);
             origin = texture.Size() * 0.5f;
             timeLeft = initTimeLeft = Main.rand.Next(60 * 1, 60 * 2);
             rotation = Main.rand.NextFloat(MathHelper.TwoPi);
@@ -244,11 +249,20 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             };
         }
 
-        public void AddProjectile(Projectile proj) => projectileObserver.Add(proj);
+        public void AddProjectile(Projectile proj)
+        {
+            projectileObserver.Add(proj);
+        }
 
-        public void AddParticle(BlackholeParticle particle) => particleRenderer.Add(particle);
+        public void AddParticle(BlackholeParticle particle)
+        {
+            particleRenderer.Add(particle);
+        }
 
-        public override bool PreRender() => projectileObserver.AnyEntity || particleRenderer.Particles.Count > 0;
+        public override bool PreRender()
+        {
+            return projectileObserver.AnyEntity || particleRenderer.Particles.Count > 0;
+        }
 
         public override void DrawToTarget()
         {
@@ -267,7 +281,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public void DrawToScreen()
         {
-            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out RenderTarget2D target)) return;
+            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
             effect ??= LoadEffect();
 
@@ -277,7 +291,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             parameters["ScreenPosition"].SetValue(Main.screenPosition + Main.ScreenSize.ToVector2() * 0.5f);
             parameters["Time"].SetValue((float)Main.timeForVisualEffects * 0.1f);
 
-            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
+            Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
             Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
@@ -286,8 +300,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public static Asset<Effect> LoadEffect()
         {
-            var spaceTexture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Space", AssetRequestMode.ImmediateLoad);
-            var cloudsTexture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Clouds", AssetRequestMode.ImmediateLoad);
+            var spaceTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Space", AssetRequestMode.ImmediateLoad);
+            var cloudsTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Clouds", AssetRequestMode.ImmediateLoad);
             var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + "BlackholeBackground", AssetRequestMode.ImmediateLoad);
 
             var parameters = effect.Value.Parameters;

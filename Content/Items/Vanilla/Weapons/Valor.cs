@@ -6,8 +6,7 @@ using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils.Rendering;
 using System;
 using System.IO;
 using Terraria;
@@ -21,7 +20,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
     public class ValorItem : VanillaYoyoItem
     {
-        public ValorItem() : base(ItemID.Valor) { }
+        public override int YoyoType => ItemID.Valor;
 
         public override void SetDefaults(Item item)
         {
@@ -33,10 +32,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public static readonly int ChainChanceDenominator = 7;
 
+        public override int YoyoType => ProjectileID.Valor;
+
         private TrailRenderer trailRenderer;
         private SpriteTrailRenderer spriteTrailRenderer;
-
-        public ValorProjectile() : base(ProjectileID.Valor) { }
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
@@ -73,7 +72,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!npc.TryGetGlobalNPC(out ValorGlobalNPC globalNPC))
                 return;
 
-            if (!globalNPC.TryGetChainStartPoint(npc, out Point chainStartPoint))
+            if (!globalNPC.TryGetChainStartPoint(npc, out var chainStartPoint))
                 return;
 
             globalNPC.SecureWithChain(npc, chainStartPoint);
@@ -92,7 +91,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 var effect = effectAsset.Value;
                 var effectParameters = effect.Parameters;
 
-                effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
+                effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
                 effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
                 effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
 
@@ -175,8 +174,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public static readonly float SecuredWithChainLengthLimit = 16f * 5f;
         public static readonly int SecuredWithChainTime = 60 * 7;
 
-        public override bool InstancePerEntity { get => true; }
-        public bool IsSecuredWithChain { get => securedWithChainTimer > 0; }
+        public override bool InstancePerEntity => true;
+        public bool IsSecuredWithChain => securedWithChainTimer > 0;
 
         private int securedWithChainTimer;
         private Vector2 chainStartPosition;
@@ -255,7 +254,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
 
         public void SendSecureWithChainPacket(NPC npc, Point chainStartPos)
-            => new SecureWithChainPacket(npc, chainStartPos).Send();
+        {
+            new SecureWithChainPacket(npc, chainStartPos).Send();
+        }
 
         public void BreakChain(NPC npc)
         {
@@ -305,7 +306,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
             var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();
 
-            for (int i = 0; i < segmentCount; i++)
+            for (var i = 0; i < segmentCount; i++)
             {
                 var position = startPosition + segmentVector * i;
                 var color = Lighting.GetColor((position + Main.screenPosition).ToTileCoordinates());
@@ -317,7 +318,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
             var startPosition = chainStartPosition - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Valor_ChainHead", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_ChainHead", AssetRequestMode.ImmediateLoad);
             var origin = texture.Size() * 0.5f;
 
             var color = Lighting.GetColor((startPosition + Main.screenPosition).ToTileCoordinates());
@@ -340,11 +341,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             const int halfTileCountToCheckY = tileCountToCheckY / 2;
 
             int x = 0, y = 0, dx = 0;
-            int dy = -1;
-            int t = Math.Max(tileCountToCheckX, tileCountToCheckY);
-            int maxI = t * t;
+            var dy = -1;
+            var t = Math.Max(tileCountToCheckX, tileCountToCheckY);
+            var maxI = t * t;
 
-            for (int i = 0; i < maxI; i++)
+            for (var i = 0; i < maxI; i++)
             {
                 if (-halfTileCountToCheckX <= x
                     && x <= halfTileCountToCheckX
@@ -383,9 +384,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ValorRenderTargetContent : RenderTargetContent
     {
-        private NPCObserver npcObserver;
-
         public override Point Size => new(Main.screenWidth, Main.screenHeight);
+
+        private NPCObserver npcObserver;
 
         public override void Load()
         {
@@ -401,9 +402,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             };
         }
 
-        public void AddNPC(NPC npc) => npcObserver.Add(npc);
+        public void AddNPC(NPC npc)
+        {
+            npcObserver.Add(npc);
+        }
 
-        public override bool PreRender() => npcObserver.AnyEntity;
+        public override bool PreRender()
+        {
+            return npcObserver.AnyEntity;
+        }
 
         public override void DrawToTarget()
         {
@@ -419,7 +426,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public void DrawToScreen()
         {
-            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out RenderTarget2D target)) return;
+            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
             var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorEffect", AssetRequestMode.ImmediateLoad);
             var effect = effectAsset.Value;
@@ -429,7 +436,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             effectParameters["OutlineColor"].SetValue(new Color(44, 66, 255, 170).ToVector4());
             effectParameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
 
-            Main.spriteBatch.End(out SpriteBatchSnapshot spriteBatchSnapshot);
+            Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
             Main.spriteBatch.Draw(target, Vector2.Zero, Color.White);
             Main.spriteBatch.End();

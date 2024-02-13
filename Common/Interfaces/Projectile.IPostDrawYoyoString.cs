@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Rendering;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;

@@ -2,7 +2,7 @@
 using MonoMod.Cil;
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.ModCompatibility;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils.Entities;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -12,7 +12,10 @@ namespace SPYoyoMod.Common
 {
     public class YoyoUseStyleGlobalItem : GlobalItem
     {
-        public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.IsYoyo(); }
+        public override bool AppliesToEntity(Item item, bool lateInstantiation)
+        {
+            return item.IsYoyo();
+        }
 
         public override void Load()
         {
@@ -29,7 +32,7 @@ namespace SPYoyoMod.Common
                 // IL_0024: callvirt instance valuetype[FNA]Microsoft.Xna.Framework.Vector2 Terraria.Player::get_MountedCenter()
                 // IL_0029: stloc.2      // mountedCenter
 
-                int mountedCenterIndex = -1;
+                var mountedCenterIndex = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
                         i => i.MatchLdsfld(typeof(Main).GetField("player")),
@@ -57,8 +60,8 @@ namespace SPYoyoMod.Common
                 // IL_0014: callvirt instance valuetype[FNA]Microsoft.Xna.Framework.Vector2[tModLoader]Terraria.Player::get_MountedCenter()
                 // IL_0019: stloc.1      // vector2_1
 
-                int mountedCenterIndex = -1;
-                int projIndex = -1;
+                var mountedCenterIndex = -1;
+                var projIndex = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
                         i => i.MatchLdsfld(typeof(Main).GetField("player")),
@@ -85,9 +88,9 @@ namespace SPYoyoMod.Common
 
             /// [New]
 
-            int projIndex = -1; // Main yoyo proj index
+            var projIndex = -1; // Main yoyo proj index
 
-            for (int index = 0; index < Main.projectile.Length; ++index)
+            for (var index = 0; index < Main.projectile.Length; ++index)
             {
                 ref var proj = ref Main.projectile[index];
 

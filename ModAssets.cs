@@ -12,5 +12,6 @@
         public const string ProjectilesPath = TexturesPath + "Projectiles/";
         public const string DustsPath = TexturesPath + "Dusts/";
         public const string TilesPath = TexturesPath + "Tiles/";
+        public const string MiscPath = TexturesPath + "Misc/";
     }
 }

@@ -41,7 +41,7 @@ namespace SPYoyoMod.Utils
 
         public void Update()
         {
-            for (int i = 0; i < entities.Count; i++)
+            for (var i = 0; i < entities.Count; i++)
             {
                 ref var entity = ref sourseArray[entities[i].WhoAmI];
 

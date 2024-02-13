@@ -2,7 +2,7 @@
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils.Rendering;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -26,7 +26,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             Tooltip = null;
         }
 
-        public override bool AppliesToEntity(Item item, bool lateInstantiation) { return item.type >= ItemID.RedString && item.type <= ItemID.BlackString; }
+        public override bool AppliesToEntity(Item item, bool lateInstantiation)
+        {
+            return item.type >= ItemID.RedString && item.type <= ItemID.BlackString;
+        }
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
@@ -59,7 +62,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 // IL_00fc: add
                 // IL_00fd: stloc.1      // num5
 
-                int num5Index = -1;
+                var num5Index = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
                     i => i.MatchLdloc(out num5Index),
@@ -91,7 +94,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 // IL_064A: add
                 // IL_064B: stloc.s   num10
 
-                int num10Index = -1;
+                var num10Index = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
                     i => i.MatchLdloc(out num10Index),
@@ -114,7 +117,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 //     num3 = (float)((double)num3 * 1.25 + 30.0);
                 // }
 
-                int num3Index = -1;
+                var num3Index = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
                     i => i.MatchLdloc(out num3Index),

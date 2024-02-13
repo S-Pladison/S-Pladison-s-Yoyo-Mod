@@ -2,7 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using System;
 
-namespace SPYoyoMod.Utils.DataStructures
+namespace SPYoyoMod.Utils
 {
     public struct SpriteBatchSnapshot
     {

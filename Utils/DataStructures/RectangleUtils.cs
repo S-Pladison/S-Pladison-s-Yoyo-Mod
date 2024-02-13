@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace SPYoyoMod.Utils.Extensions
+namespace SPYoyoMod.Utils.DataStructures
 {
     public static class RectangleExtensions
     {

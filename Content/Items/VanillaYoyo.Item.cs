@@ -1,5 +1,5 @@
 ﻿using SPYoyoMod.Common.Configs;
-using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Rendering;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
@@ -10,15 +10,20 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class VanillaYoyoItem : GlobalItem, ILocalizedModType
     {
-        private readonly int yoyoType;
+        public abstract int YoyoType { get; }
 
-        public VanillaYoyoItem(int yoyoType)
+        public virtual string LocalizationCategory => "VanillaItems";
+        public virtual LocalizedText Tooltip => this.GetLocalization("Tooltip", () => "");
+
+        public sealed override bool AppliesToEntity(Item entity, bool lateInstantiation)
         {
-            this.yoyoType = yoyoType;
+            return entity.type < ItemID.Count && entity.type.Equals(YoyoType);
         }
 
-        public sealed override bool AppliesToEntity(Item entity, bool lateInstantiation) { return entity.type < ItemID.Count && entity.type.Equals(yoyoType); }
-        public sealed override bool IsLoadingEnabled(Terraria.ModLoader.Mod mod) { return ModContent.GetInstance<ServerSideConfig>().ReworkedVanillaYoyos; }
+        public sealed override bool IsLoadingEnabled(Terraria.ModLoader.Mod mod)
+        {
+            return ModContent.GetInstance<ServerSideConfig>().ReworkedVanillaYoyos;
+        }
 
         public sealed override void SetStaticDefaults()
         {
@@ -40,8 +45,6 @@ namespace SPYoyoMod.Content.Items
             YoyoModifyTooltips(item, tooltips);
         }
 
-        public virtual string LocalizationCategory => "VanillaItems";
-        public virtual LocalizedText Tooltip => this.GetLocalization("Tooltip", () => "");
         public virtual void YoyoModifyTooltips(Item item, List<TooltipLine> tooltips) { }
         public virtual void YoyoSetStaticDefaults() { }
     }

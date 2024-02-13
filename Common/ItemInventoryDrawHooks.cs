@@ -28,7 +28,7 @@ namespace SPYoyoMod.Common
                 // IL_0065: ldloca.s finalDrawScale
                 // IL_0067: call void ItemSlot::DrawItem_GetColorAndScale(...)
 
-                int finalDrawScaleIndex = -1;
+                var finalDrawScaleIndex = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
                         i => i.MatchLdarg0(),

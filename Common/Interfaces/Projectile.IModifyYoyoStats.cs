@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Common.ModCompatibility;
-using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils;
 using System;
 using Terraria;
 using Terraria.ID;
@@ -38,7 +38,7 @@ namespace SPYoyoMod.Common.Interfaces
 
                     // YoyoStatModifiers statModifiers;
 
-                    int statModifiersIndex = il.Body.Variables.Count;
+                    var statModifiersIndex = il.Body.Variables.Count;
 
                     il.Body.Variables.Add(new VariableDefinition(c.Context.Import(typeof(YoyoStatModifiers))));
 
@@ -54,7 +54,7 @@ namespace SPYoyoMod.Common.Interfaces
                     // IL_00F9: ldelem.r4
                     // IL_00FA: stloc.s num2
 
-                    int num2Index = -1;
+                    var num2Index = -1;
 
                     if (!c.TryGotoNext(MoveType.After,
                         i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosLifeTimeMultiplier")),
@@ -76,7 +76,7 @@ namespace SPYoyoMod.Common.Interfaces
                     // IL_052D: ldelem.r4
                     // IL_052E: stloc.s num10
 
-                    int num10Index = -1;
+                    var num10Index = -1;
 
                     if (!c.TryGotoNext(MoveType.After,
                         i => i.MatchLdsfld(typeof(ProjectileID.Sets).GetField("YoyosMaximumRange")),

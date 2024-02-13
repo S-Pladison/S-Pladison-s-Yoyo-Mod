@@ -3,23 +3,19 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod
 {
-    public class ModSets : ILoadable
+    public static class ModSets
     {
-        public static class Items
+        public class Items : ILoadable
         {
-            public static ref float?[] InventoryDrawScaleMultiplier { get => ref innerItemInventoryDrawScaleMultiplier; }
-        }
+            public static float?[] InventoryDrawScaleMultiplier { get; private set; }
+                = ItemID.Sets.Factory.CreateCustomSet<float?>(null);
 
-        private static float?[] innerItemInventoryDrawScaleMultiplier = ItemID.Sets.Factory.CreateCustomSet<float?>(null);
+            void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
 
-        void ILoadable.Unload()
-        {
-            innerItemInventoryDrawScaleMultiplier = null;
-        }
-
-        void ILoadable.Load(Mod mod)
-        {
-            // ...
+            void ILoadable.Unload()
+            {
+                InventoryDrawScaleMultiplier = null;
+            }
         }
     }
 }

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.RenderTargets;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Rendering;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -18,6 +18,8 @@ namespace SPYoyoMod.Common.PixelatedLayers
         [Autoload(false)]
         private class PixelatedRenderTargetContent : RenderTargetContent
         {
+            public override string Name { get => $"Pixelated{Layer}RenderTargetContent"; }
+            public override Point Size { get => new(Main.screenWidth / 2, Main.screenHeight / 2); }
             public PixelatedLayer Layer { get; init; }
 
             public event Action OnDrawToTarget;
@@ -26,9 +28,6 @@ namespace SPYoyoMod.Common.PixelatedLayers
             {
                 Layer = layer;
             }
-
-            public override string Name => $"Pixelated{Layer}RenderTargetContent";
-            public override Point Size => new(Main.screenWidth / 2, Main.screenHeight / 2);
 
             public override bool PreRender()
             {
@@ -58,7 +57,7 @@ namespace SPYoyoMod.Common.PixelatedLayers
 
             public void DrawToScreen()
             {
-                if (!IsRenderedInThisFrame || !TryGetRenderTarget(out RenderTarget2D target)) return;
+                if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
                 Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);

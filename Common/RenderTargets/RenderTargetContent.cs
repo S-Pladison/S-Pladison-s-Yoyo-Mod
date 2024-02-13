@@ -8,9 +8,9 @@ namespace SPYoyoMod.Common.RenderTargets
     [Autoload(Side = ModSide.Client)]
     public abstract class RenderTargetContent : ModType, IDisposable
     {
-        public bool IsRenderedInThisFrame { get; private set; }
         public abstract Point Size { get; }
         public virtual Color ClearColor { get => Color.Transparent; }
+        public bool IsRenderedInThisFrame { get; private set; }
 
         protected RenderTarget2D renderTarget;
 

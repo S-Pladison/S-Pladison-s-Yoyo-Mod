@@ -1,6 +1,6 @@
 ﻿using SPYoyoMod.Common.Interfaces;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Entities;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -9,7 +9,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
     public class BearingItem : ModItem
     {
-        public override string Texture { get => ModAssets.ItemsPath + "Bearing"; }
+        public override string Texture => ModAssets.ItemsPath + "Bearing";
 
         public override void SetDefaults()
         {

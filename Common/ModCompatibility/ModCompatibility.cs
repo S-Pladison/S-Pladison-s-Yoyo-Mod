@@ -29,7 +29,7 @@ namespace SPYoyoMod.Common.ModCompatibility
 
         void ILoadable.Load(Mod _)
         {
-            if (!ModLoader.TryGetMod(ModName, out Mod mod))
+            if (!ModLoader.TryGetMod(ModName, out var mod))
             {
                 IsModLoaded = false;
                 Mod = null;
@@ -43,7 +43,9 @@ namespace SPYoyoMod.Common.ModCompatibility
         }
 
         public void AddHook(string typePath, string methodName, Delegate hookDelegate)
-            => AddHook(typePath, methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, hookDelegate);
+        {
+            AddHook(typePath, methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, hookDelegate);
+        }
 
         public void AddHook(string typePath, string methodName, BindingFlags bindingFlags, Delegate hookDelegate)
         {
@@ -63,7 +65,9 @@ namespace SPYoyoMod.Common.ModCompatibility
         }
 
         public void AddILHook(string typePath, string methodName, ILContext.Manipulator callback)
-            => AddILHook(typePath, methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, callback);
+        {
+            AddILHook(typePath, methodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance, callback);
+        }
 
         public void AddILHook(string typePath, string methodName, BindingFlags bindingFlags, ILContext.Manipulator callback)
         {

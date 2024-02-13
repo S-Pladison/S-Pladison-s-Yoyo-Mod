@@ -59,7 +59,7 @@ namespace SPYoyoMod.Common.UIs
 
         public override void ModifyInterfaceLayers(List<GameInterfaceLayer> layers)
         {
-            for (int i = 0; i < userInterfaces.Count; i++)
+            for (var i = 0; i < userInterfaces.Count; i++)
             {
                 var uiState = uiStates[i];
                 var userInterface = userInterfaces[i];
@@ -88,7 +88,7 @@ namespace SPYoyoMod.Common.UIs
             {
                 uiScale = Main.UIScale;
 
-                for (int i = 0; i < userInterfaces.Count; i++)
+                for (var i = 0; i < userInterfaces.Count; i++)
                 {
                     var uiState = uiStates[i];
                     var userInterface = userInterfaces[i];
@@ -99,7 +99,7 @@ namespace SPYoyoMod.Common.UIs
                 }
             }
 
-            for (int i = 0; i < userInterfaces.Count; i++)
+            for (var i = 0; i < userInterfaces.Count; i++)
             {
                 var uiState = uiStates[i];
                 var userInterface = userInterfaces[i];
@@ -112,7 +112,7 @@ namespace SPYoyoMod.Common.UIs
 
         public void OnResolutionChanged(Vector2 screenSize)
         {
-            for (int i = 0; i < userInterfaces.Count; i++)
+            for (var i = 0; i < userInterfaces.Count; i++)
             {
                 var uiState = uiStates[i];
                 var userInterface = userInterfaces[i];

@@ -38,7 +38,7 @@ namespace SPYoyoMod.Utils
 
             var point = Vector2.Zero;
 
-            for (int i = 0; i < points.Count; i++)
+            for (var i = 0; i < points.Count; i++)
             {
                 point += Bernstein(count, i, t) * points[i];
             }
@@ -55,11 +55,11 @@ namespace SPYoyoMod.Utils
             var result = new List<Vector2>();
             var perStep = 1f / (amount - 1);
 
-            for (int i = 0; i < amount; i++)
+            for (var i = 0; i < amount; i++)
             {
                 var point = Vector2.Zero;
 
-                for (int j = 0; j < points.Count; j++)
+                for (var j = 0; j < points.Count; j++)
                 {
                     point += Bernstein(count, j, perStep * i) * points[j];
                 }
@@ -79,7 +79,7 @@ namespace SPYoyoMod.Utils
 
             if (n < factorialList.Count) return factorialList[n];
 
-            for (int i = factorialList.Count; i <= n; i++)
+            for (var i = factorialList.Count; i <= n; i++)
             {
                 factorialList.Add(factorialList.Last() * i);
             }

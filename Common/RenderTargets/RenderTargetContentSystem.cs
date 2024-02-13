@@ -18,7 +18,7 @@ namespace SPYoyoMod.Common.RenderTargets
                 var device = Main.graphics.GraphicsDevice;
                 var targets = device.GetRenderTargets();
 
-                for (int i = 0; i < contentThatNeedsRenderTargets.Count; i++)
+                for (var i = 0; i < contentThatNeedsRenderTargets.Count; i++)
                 {
                     var content = contentThatNeedsRenderTargets[i];
                     content.Reset();

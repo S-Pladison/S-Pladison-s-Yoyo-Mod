@@ -42,8 +42,8 @@ namespace SPYoyoMod.Common.Renderers
 
             private static Tuple<float, float> SolveLinearEquation(float a0, float b0, float c0, float a1, float b1, float c1)
             {
-                float v = (a1 * c0 - a0 * c1) / (a0 * b1 - a1 * b0);
-                float t = (-c0 - b0 * v) / a0;
+                var v = (a1 * c0 - a0 * c1) / (a0 * b1 - a1 * b0);
+                var t = (-c0 - b0 * v) / a0;
 
                 return new Tuple<float, float>(t, v);
             }
@@ -166,7 +166,7 @@ namespace SPYoyoMod.Common.Renderers
                 renderer.SetIndices(indices);
             }
 
-            CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
+            CalculateFactorsFromStartToEnd(out var factorsFromStartToEnd);
             CalculateVertexPositions();
             CalculateVertexUVs(factorsFromStartToEnd);
 
@@ -182,7 +182,7 @@ namespace SPYoyoMod.Common.Renderers
 
             factorsFromStartToEnd = new float[segmentCount];
 
-            for (int i = 0; i < points.Count - 1; i++)
+            for (var i = 0; i < points.Count - 1; i++)
             {
                 lengths[i] = Vector2.Distance(points[i], points[i + 1]);
                 totalLength += lengths[i];
@@ -194,7 +194,7 @@ namespace SPYoyoMod.Common.Renderers
                 totalLength += lengths[^1];
             }
 
-            for (int i = 0; i < segmentCount; i++)
+            for (var i = 0; i < segmentCount; i++)
             {
                 accumulativeLength += lengths[i];
                 factorsFromStartToEnd[i] = accumulativeLength / totalLength;
@@ -208,9 +208,9 @@ namespace SPYoyoMod.Common.Renderers
             var bottomLines = new List<Line>();
             var segmentCount = Loop ? points.Count : points.Count - 1;
 
-            for (int i = 0; i < segmentCount; i++)
+            for (var i = 0; i < segmentCount; i++)
             {
-                int j = i == points.Count - 1 ? 0 : i + 1;
+                var j = i == points.Count - 1 ? 0 : i + 1;
 
                 var direction = Vector2.Normalize(points[j] - points[i]);
 
@@ -222,9 +222,9 @@ namespace SPYoyoMod.Common.Renderers
                 bottomLines.Add(new Line { Offset = bottom, Direction = direction });
             }
 
-            for (int i = 0; i < points.Count; i++)
+            for (var i = 0; i < points.Count; i++)
             {
-                int j = i == 0 ? points.Count - 1 : i - 1;
+                var j = i == 0 ? points.Count - 1 : i - 1;
 
                 if (i == 0 && !Loop)
                 {
@@ -279,7 +279,7 @@ namespace SPYoyoMod.Common.Renderers
             AddVertexUV(ref vertexIndex, Vector2.Zero);
             AddVertexUV(ref vertexIndex, Vector2.UnitY);
 
-            for (int i = 0; i < factorsFromStartToEnd.Length; i++)
+            for (var i = 0; i < factorsFromStartToEnd.Length; i++)
             {
                 AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 0));
                 AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 1));
@@ -299,11 +299,11 @@ namespace SPYoyoMod.Common.Renderers
                 indices[index++] = (short)value;
             }
 
-            for (int i = start; i < end; i++)
+            for (var i = start; i < end; i++)
             {
-                int index = i * 6;
-                int i2 = i * 2;
-                int j2 = (i + 1) * 2;
+                var index = i * 6;
+                var i2 = i * 2;
+                var j2 = (i + 1) * 2;
 
                 Add(ref index, i2);
                 Add(ref index, i2 + 1);
@@ -316,9 +316,9 @@ namespace SPYoyoMod.Common.Renderers
 
         private void CalculateVertexColors(int start, int end)
         {
-            for (int i = start; i <= end; i++)
+            for (var i = start; i <= end; i++)
             {
-                int index = i * 2;
+                var index = i * 2;
 
                 vertices[index].Color = Color.White;
                 vertices[index + 1].Color = Color.White;
