@@ -11,7 +11,7 @@ namespace SPYoyoMod.Common.Renderers
     {
         private class Line
         {
-            private static readonly float ParallelThreshold = 0.01f;
+            private static readonly float parallelThreshold = 0.01f;
 
             public Vector2 Offset;
             public Vector2 Direction;
@@ -23,7 +23,7 @@ namespace SPYoyoMod.Common.Renderers
 
             public bool IsParallel(Line other)
             {
-                return Vector3.Cross(new Vector3(Vector2.Normalize(Direction), 0), new Vector3(Vector2.Normalize(other.Direction), 0)).Length() < ParallelThreshold;
+                return Vector3.Cross(new Vector3(Vector2.Normalize(Direction), 0), new Vector3(Vector2.Normalize(other.Direction), 0)).Length() < parallelThreshold;
             }
 
             public Vector2 Intersection(Line other)

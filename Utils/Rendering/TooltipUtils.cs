@@ -41,7 +41,7 @@ namespace SPYoyoMod.Utils.Rendering
                     continue;
 
                 if (!tooltipLine.Name.StartsWith("Tooltip")
-                    && !InsertDescriptionWhiteList.Contains(tooltipLine.Name))
+                    && !insertDescriptionWhiteList.Contains(tooltipLine.Name))
                     continue;
 
                 tooltips.Insert(i + 1, line);
@@ -59,7 +59,7 @@ namespace SPYoyoMod.Utils.Rendering
                     continue;
 
                 if (!tooltipLine.Name.StartsWith("Tooltip")
-                    && !InsertDescriptionWhiteList.Contains(tooltipLine.Name))
+                    && !insertDescriptionWhiteList.Contains(tooltipLine.Name))
                     continue;
 
                 for (var j = 0; j < lines.Count; j++)
@@ -69,7 +69,7 @@ namespace SPYoyoMod.Utils.Rendering
             }
         }
 
-        private static readonly HashSet<string> InsertDescriptionWhiteList = new()
+        private static readonly HashSet<string> insertDescriptionWhiteList = new()
         {
             "Material", "Consumable", "Ammo", "Placeable", "UseMana", "HealMana",
             "HealLife", "TileBoost", "HammerPower", "AxePower", "PickPower", "Defense",

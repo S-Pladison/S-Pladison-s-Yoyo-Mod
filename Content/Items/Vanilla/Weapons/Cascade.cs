@@ -66,14 +66,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class CascadeProjectile : VanillaYoyoProjectile
     {
-        private static readonly EasingBuilder TrailWidthEasing = new(
+        private static readonly EasingBuilder trailWidthEasing = new(
             (EasingFunctions.OutExpo, 0.05f, 0f, 30f),
             (EasingFunctions.Linear, 0.95f, 30f, 70f)
         );
 
+        private static Asset<Effect> trailEffect;
+
         public override int YoyoType => ProjectileID.Cascade;
 
         private TrailRenderer trailRenderer;
+
+        public override void Unload()
+        {
+            trailEffect = null;
+        }
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
@@ -109,7 +116,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            trailRenderer ??= new TrailRenderer(20).SetWidth(f => TrailWidthEasing.Evaluate(f));
+            trailRenderer ??= new TrailRenderer(20).SetWidth(f => trailWidthEasing.Evaluate(f));
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
@@ -119,21 +126,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
                 if (length <= 0f) return;
 
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "CascadeTrail", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
+                trailEffect ??= LoadEffect();
+
+                var effect = trailEffect.Value;
                 var effectParameters = effect.Parameters;
 
                 var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Cascade_Trail", AssetRequestMode.ImmediateLoad);
                 var uvRepeat = length / texture.Width();
 
-                effectParameters["Texture0"].SetValue(texture.Value);
                 effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
                 effectParameters["UvRepeat"].SetValue(uvRepeat);
-                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
-                effectParameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
-                effectParameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
-                effectParameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
-                effectParameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
+                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.04f);
 
                 trailRenderer.Draw(effect);
             });
@@ -145,6 +148,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Main.spriteBatch.Draw(texture.Value, position, null, color, proj.rotation, texture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
 
             return true;
+        }
+
+        private static Asset<Effect> LoadEffect()
+        {
+            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "CascadeTrail", AssetRequestMode.ImmediateLoad);
+            var effect = effectAsset.Value;
+            var effectParameters = effect.Parameters;
+
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Cascade_Trail", AssetRequestMode.ImmediateLoad);
+
+            effectParameters["Texture0"].SetValue(texture.Value);
+            effectParameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
+            effectParameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+            effectParameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
+            effectParameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
+
+            return effectAsset;
         }
 
         /*void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)

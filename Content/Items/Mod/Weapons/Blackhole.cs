@@ -176,7 +176,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BlackholeParticle : IParticle
     {
-        private static readonly EasingBuilder ProgressEasing = new(
+        private static readonly EasingBuilder progressEasing = new(
             (EasingFunctions.InOutCirc, 0.2f, 0f, 1f),
             (EasingFunctions.Linear, 0.6f, 1f, 1f),
             (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
@@ -212,13 +212,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             position += velocity;
             timeLeft--;
 
-            var lightColorMult = 0.4f * ProgressEasing.Evaluate(Progress);
+            var lightColorMult = 0.4f * progressEasing.Evaluate(Progress);
             Lighting.AddLight(position, new Color(171, 97, 255).ToVector3() * lightColorMult);
         }
 
         public void Draw(ref ParticleRendererSettings settings, SpriteBatch spriteBatch)
         {
-            var color = Color.White * ProgressEasing.Evaluate(Progress);
+            var color = Color.White * progressEasing.Evaluate(Progress);
             spriteBatch.Draw(texture.Value, settings.AnchorPosition + position, null, color, rotation, origin, 0.35f, SpriteEffects.None, 0f);
         }
     }

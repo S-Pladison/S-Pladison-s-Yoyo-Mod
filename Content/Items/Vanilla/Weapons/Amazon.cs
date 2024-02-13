@@ -140,7 +140,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class AmazonDust : ModDust
     {
-        private static readonly EasingBuilder ProgressEasing = new(
+        private static readonly EasingBuilder progressEasing = new(
             (EasingFunctions.InOutCirc, 0.2f, 0f, 1f),
             (EasingFunctions.Linear, 0.6f, 1f, 1f),
             (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
@@ -168,7 +168,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             var position = dust.position - Main.screenPosition;
             var color = Lighting.GetColor(dust.position.ToTileCoordinates(), dust.color);
-            var scale = ProgressEasing.Evaluate(dust.scale) * 0.9f;
+            var scale = progressEasing.Evaluate(dust.scale) * 0.9f;
             var effect = dust.customData is SpriteEffects spriteEffects ? spriteEffects : SpriteEffects.None;
 
             Main.spriteBatch.Draw(Texture2D.Value, position, dust.frame, color, dust.velocity.ToRotation(), new Vector2(8), scale, effect, 0);
