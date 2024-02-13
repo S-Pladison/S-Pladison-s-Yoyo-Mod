@@ -73,6 +73,7 @@ Items: {
 }
 
 VanillaItems: {
+	AmarokItem.Tooltip: ""
 	AmazonItem.Tooltip:
 		'''
 		Yoyo and string poison enemies
