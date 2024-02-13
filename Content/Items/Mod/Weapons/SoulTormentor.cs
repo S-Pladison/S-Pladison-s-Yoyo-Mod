@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -100,7 +99,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var effect = effectAsset.Value;
                 var effectParameters = effect.Parameters;
 
-                effectParameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+
+                effectParameters["Texture0"].SetValue(texture.Value);
                 effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
 
                 var blackColorVec4 = Color.Black.ToVector4();
@@ -121,8 +122,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
                 redTrailRenderer?.Draw(effect);
 
+                texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
                 var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
                 var scale = Projectile.scale;
 
                 Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Black, 0f, texture.Size() * 0.5f, 0.47f * scale, SpriteEffects.None, 0f);
