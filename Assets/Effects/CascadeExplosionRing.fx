@@ -1,6 +1,10 @@
 matrix TransformMatrix;
 
+float UvRepeat;
 float Time;
+
+float4 Color0;
+float4 Color1;
 
 texture Texture0 : register(s0);
 sampler textureSampler0 = sampler_state
@@ -37,19 +41,19 @@ VertexShaderOutput MainVertexShader(in VertexShaderInput input)
     return output;
 }
 
-float4 CascadeRing(VertexShaderOutput input) : COLOR
+float4 CascadeExplosionRing(VertexShaderOutput input) : COLOR
 {
-    float2 uv = input.coord;
-    uv.x *= 5;
-    float4 color = tex2D(textureSampler0, uv + float2(Time, 0));
+    float4 color = tex2D(textureSampler0, (input.coord * float2(UvRepeat, 1) + float2(Time, 0)));
+    color.a = 0;
+    color.rgb *= lerp(Color1.rgb, Color0.rgb, color.r);
     return color * input.color;
 }
 
 technique Technique1
 {
-    pass CascadeRing
+    pass CascadeExplosionRing
     {
         VertexShader = compile vs_2_0 MainVertexShader();
-        PixelShader = compile ps_2_0 CascadeRing();
+        PixelShader = compile ps_2_0 CascadeExplosionRing();
     }
 }

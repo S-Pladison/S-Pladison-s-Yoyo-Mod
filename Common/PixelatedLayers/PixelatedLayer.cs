@@ -2,6 +2,7 @@
 {
     public enum PixelatedLayer
     {
+        OverSolidTiles,
         UnderProjectiles,
         OverProjectiles,
         OverDusts

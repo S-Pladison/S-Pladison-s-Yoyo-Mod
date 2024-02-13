@@ -73,34 +73,31 @@ Items: {
 }
 
 VanillaItems: {
-	CascadeItem.Tooltip: Periodically explodes, dealing damage in an area
-	RallyItem.Tooltip: The higher player's movement speed, the higher damage
-	StringItem.Tooltip: Increases yoyo range by 4 tiles
-	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
-	CodeOneItem.Tooltip: If you are fighting with a maximum of 2 enemies, the damage dealt to them will be increased by 33%
-	HelFireItem.Tooltip: ""
-	AmarokItem.Tooltip: ""
-	ChikItem.Tooltip:
-		'''
-		Hitting an enemy creates a homing crystal shard
-		The shard gets stuck in the enemy for a while, periodically dealing damage
-		'''
 	AmazonItem.Tooltip:
 		'''
 		Yoyo and string poison enemies
 		Enemies within the aura of natural restoration receive additional poison damage
 		'''
-	ArteryItem.Tooltip: ""
+	CascadeItem.Tooltip:
+		'''
+		Hits have a chance to set enemy on fire
+		Periodically explodes, causing area damage
+		'''
+	CodeOneItem.Tooltip: If you are fighting with a maximum of 2 enemies, the damage dealt to them will be increased by 33%
+	RallyItem.Tooltip: The higher player's movement speed, the higher damage
+	StringItem.Tooltip: Increases yoyo range by 4 tiles
+	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
 }
 
 NPCs.NurseNPC.GiftButton: Gift
 Dialogue.NurseNPC.Dialogue.ReceivedGift: Oh, it wasn't necessary, thank you. Take this as a replacement. I believe it will be more valuable to you than to me.
 
 Projectiles: {
+	BellowingThunderProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BellowingThunderItem.DisplayName}"
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
+	CascadeExplosionProjectile.DisplayName: "{$ProjectileName.Cascade}"
+	CodeOneHitProjectile.DisplayName: "{$ProjectileName.Code1}"
+	FreezingPointProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
-	TitaniumYoyoProjectile.DisplayName: Titanium Yoyo Projectile
-	CodeOneHitProjectile.DisplayName: Code One Hit Projectile
-	FreezingPointProjectile.DisplayName: Freezing Point Projectile
-	BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+	TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 }

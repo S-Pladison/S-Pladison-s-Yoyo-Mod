@@ -41,15 +41,15 @@ namespace SPYoyoMod.Content.Dusts
                 var position = dust.position - Main.screenPosition;
                 var colorProgress = 1f - dust.alpha / 255f;
 
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(Texture + "_Extra", AssetRequestMode.ImmediateLoad);
                 var origin = texture.Size() * 0.5f;
 
-                Main.spriteBatch.Draw(texture.Value, position, null, Color.Black * 0.5f * colorProgress, dust.rotation, origin, dust.scale * 0.12f, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture.Value, position, null, Color.Black * 0.5f * colorProgress, dust.rotation, origin, dust.scale, SpriteEffects.None, 0f);
 
                 texture = ModContent.Request<Texture2D>(Texture, AssetRequestMode.ImmediateLoad);
                 origin = texture.Size() * 0.5f;
 
-                Main.spriteBatch.Draw(texture.Value, position, dust.frame, dust.color with { A = 0 } * colorProgress, dust.rotation, origin, dust.scale * 1f, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture.Value, position, dust.frame, dust.color with { A = 0 } * colorProgress, dust.rotation, origin, dust.scale, SpriteEffects.None, 0f);
                 Main.spriteBatch.Draw(texture.Value, position, dust.frame, Color.White with { A = 0 } * colorProgress, dust.rotation, origin, dust.scale * 0.33f, SpriteEffects.None, 0f);
             });
 

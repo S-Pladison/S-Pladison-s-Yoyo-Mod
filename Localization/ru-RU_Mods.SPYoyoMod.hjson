@@ -8,8 +8,8 @@ Configs: {
 		}
 
 		ReworkedYoyoUseStyle: {
-			// Label: Reworked Yoyo Use Style
-			// Tooltip: ""
+			Label: Reworked Yoyo Use Style
+			Tooltip: ""
 		}
 	}
 
@@ -73,34 +73,31 @@ Items: {
 }
 
 VanillaItems: {
-	CascadeItem.Tooltip: Периодически взрывается, нанося урон по области
-	RallyItem.Tooltip: Чем выше скорость передвижения игрока, тем выше урон
-	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
-	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
-	CodeOneItem.Tooltip: Если вы сражаетесь максимум с 2 врагами, наносимый им урон будет повышен на 33%
-	// HelFireItem.Tooltip: ""
-	// AmarokItem.Tooltip: ""
-	ChikItem.Tooltip:
-		'''
-		При попадании по врагу создает самонаводящийся кристальный осколок
-		Осколок на некоторое время застревает во враге и переодически наносит урон
-		'''
 	AmazonItem.Tooltip:
 		'''
 		Йо-йо и нить отравляют врагов
 		Внутри ауры природного восстановления враги получают дополнительный урон от отравления
 		'''
-	// ArteryItem.Tooltip: ""
+	CascadeItem.Tooltip:
+		'''
+		Удары имеют шанс поджечь врага
+		Периодически взрывается, нанося при этом урон по области
+		'''
+	CodeOneItem.Tooltip: Если вы сражаетесь максимум с 2 врагами, то наносимый им урон будет повышен на 33%
+	RallyItem.Tooltip: Чем выше скорость передвижения игрока, тем выше урон
+	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
+	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
 Dialogue.NurseNPC.Dialogue.ReceivedGift: О, это было необязательно, спасибо. Прими это взамен. Я думаю, для тебя это будет более ценным, чем для меня.
 
 Projectiles: {
-	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
-	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
-	// TitaniumYoyoProjectile.DisplayName: Titanium Yoyo Projectile
-	// CodeOneHitProjectile.DisplayName: Code One Hit Projectile
-	// FreezingPointProjectile.DisplayName: Freezing Point Projectile
-	// BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+	// BellowingThunderProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BellowingThunderItem.DisplayName}"
+	// BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
+	// CascadeExplosionProjectile.DisplayName: "{$ProjectileName.Cascade}"
+	// CodeOneHitProjectile.DisplayName: "{$ProjectileName.Code1}"
+	// FreezingPointProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
+	// SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
+	// TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 }

@@ -95,6 +95,8 @@ namespace SPYoyoMod.Common.PixelatedLayers
                 mod.AddContent(renderer);
             }
 
+            ModEvents.OnPostDrawTiles += rendererByLayerDict[PixelatedLayer.OverSolidTiles].DrawToScreen;
+
             On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
             {
                 if (projCache == Main.instance.DrawCacheProjsBehindProjectiles)
@@ -106,10 +108,7 @@ namespace SPYoyoMod.Common.PixelatedLayers
                     rendererByLayerDict[PixelatedLayer.OverProjectiles].DrawToScreen();
             };
 
-            ModEvents.OnPostDrawDust += () =>
-            {
-                rendererByLayerDict[PixelatedLayer.OverDusts].DrawToScreen();
-            };
+            ModEvents.OnPostDrawDust += rendererByLayerDict[PixelatedLayer.OverDusts].DrawToScreen;
         }
 
         void ILoadable.Unload() { }
