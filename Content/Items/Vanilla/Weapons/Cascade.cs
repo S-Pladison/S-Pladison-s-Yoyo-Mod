@@ -1,16 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoMod.Cil;
 using ReLogic.Content;
-using SPYoyoMod.Common;
-using SPYoyoMod.Common.Interfaces;
+using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Extensions;
+using SPYoyoMod.Utils.DataStructures;
 using Terraria;
-using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
@@ -25,6 +25,30 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             ModEvents.OnHardmodeStart += AddShimmerTransforms;
             ModEvents.OnWorldLoad += () => { if (Main.hardMode) AddShimmerTransforms(); };
             ModEvents.OnWorldUnload += RemoveShimmerTransforms;
+
+            // Remove onhit debuff
+            IL_Projectile.StatusNPC += (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // if (type == 545 && Main.rand.Next(3) == 0)
+
+                // IL_0736: ldarg.0
+                // IL_0737: ldfld int32 Terraria.Projectile::'type'
+                // IL_073c: ldc.i4 545
+                // IL_0741: bne.un.s IL_076a
+
+                ILLabel skipDebuffLabel = null;
+
+                if (!c.TryGotoNext(MoveType.After,
+                        i => i.MatchLdarg(0),
+                        i => i.MatchLdfld<Projectile>("type"),
+                        i => i.MatchLdcI4(ProjectileID.Cascade),
+                        i => i.MatchBneUn(out skipDebuffLabel))) return;
+
+                c.Emit(Ldc_I4_1);
+                c.Emit(Brtrue, skipDebuffLabel);
+            };
         }
 
         private static void AddShimmerTransforms()
@@ -40,51 +64,77 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
-    public class CascadeProjectile : VanillaYoyoProjectile, IPreDrawPixelatedProjectile, IPostDrawAdditiveProjectile, IDrawDistortionProjectile
+    public class CascadeProjectile : VanillaYoyoProjectile
     {
-        public bool IsMainYoyo { get; private set; }
-
-        private RingRenderer ringRenderer;
+        private TrailRenderer trailRenderer;
 
         public CascadeProjectile() : base(ProjectileID.Cascade) { }
 
-        public override void OnSpawn(Projectile proj, IEntitySource source)
-        {
-            IsMainYoyo = GetMainYoyoFlag(proj);
-        }
-
         public override void OnKill(Projectile proj, int timeLeft)
         {
-            ringRenderer?.Dispose();
+            trailRenderer?.Dispose();
         }
 
         public override void AI(Projectile proj)
         {
-            if (!IsMainYoyo) return;
-
-            if (proj.localAI[1] == 0f)
+            if (proj.velocity.Length() >= 3f && Main.rand.NextBool(4))
             {
-                for (int i = 0; i < 12; i++)
-                {
-                    Dust.NewDustPerfect(proj.Center, ModContent.DustType<CascadeDust>(), Vector2.Zero);
-                }
+                var dustIndex = Dust.NewDust(proj.position + Vector2.One * 4, proj.width - 2, proj.height - 2, ModContent.DustType<CircleGlowDust>(), 0f, 0f, 0, new Color(255, 135, 10));
+                var dust = Main.dust[dustIndex];
 
-                DustUtils.SpawnDustCircle(proj.Center, 16f * 2f, 12, _ => ModContent.DustType<CascadeDust>(), (dust, index, angle) =>
-                {
-                    dust.velocity += Vector2.UnitX.RotatedBy(angle) * Main.rand.NextFloat(1f, 2f);
-                });
-
-                SoundEngine.PlaySound(SoundID.DD2_ExplosiveTrapExplode);
+                dust.velocity *= 0.4f;
             }
 
-            if (proj.localAI[1] >= 0f)
-                proj.localAI[1] += 0.05f;
-
-            if (proj.localAI[1] >= 4f)
-                proj.localAI[1] = 0f;
+            trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
         }
 
-        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        {
+            DrawUtils.DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
+            {
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var pos = position - Main.screenPosition;
+                var rect = new Rectangle(0, 0, texture.Width(), (int)height);
+                var origin = new Vector2(texture.Width() * 0.5f, 0f);
+                var colour = Color.Lerp(Color.Transparent, new Color(255, 180, 95), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
+
+                Main.spriteBatch.Draw(texture.Value, pos, rect, colour, rotation, origin, 1f, SpriteEffects.None, 0f);
+            });
+        }
+
+        public override bool PreDraw(Projectile proj, ref Color lightColor)
+        {
+            trailRenderer ??= new TrailRenderer(20).SetWidth(f => MathHelper.Lerp(30f, 70f, f));
+
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
+            {
+                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "CascadeTrail", AssetRequestMode.ImmediateLoad);
+                var effect = effectAsset.Value;
+                var effectParameters = effect.Parameters;
+
+                var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Cascade_Trail", AssetRequestMode.ImmediateLoad);
+
+                effectParameters["Texture0"].SetValue(texture.Value);
+                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
+                effectParameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
+                effectParameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+                effectParameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
+                effectParameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
+
+                trailRenderer?.Draw(effect);
+            });
+
+            var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.TexturesPath + "Effects/Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+            var color = new Color(255, 180, 95);
+
+            Main.spriteBatch.Draw(texture.Value, position, null, color, proj.rotation, texture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
+
+            return true;
+        }
+
+        /*void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
         {
             if (!IsMainYoyo) return;
 
@@ -124,7 +174,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, color, 0f, new Vector2(0f, texture.Height() * 0.5f), scale, SpriteEffects.None, 0f);
         }
 
-        /*void IDrawPrimitivesProjectile.PostDrawPrimitives(Terraria.Projectile proj, PrimitiveMatrices matrices)
+        void IDrawPrimitivesProjectile.PostDrawPrimitives(Terraria.Projectile proj, PrimitiveMatrices matrices)
         {
             if (!IsMainYoyo) return;
 
@@ -144,7 +194,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 .SetRadius(EasingFunctions.OutExpo(progress) * 16f * 3f)
                 .SetPosition(proj.Center + proj.gfxOffY * Vector2.UnitY)
                 .Draw(effect);
-        }*/
+        }
 
         void IDrawDistortionProjectile.DrawDistortion(Projectile proj)
         {
@@ -162,7 +212,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var scale = MathHelper.Clamp(progress, 0, 1) * 0.3f;
             var color = Color.White.MultiplyB(builder.Evaluate(progress));
 
-            Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);*/
+            Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
         }
 
         private static bool GetMainYoyoFlag(Projectile proj)
@@ -189,25 +239,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
 
             return true;
-        }
-    }
-
-    public class CascadeDust : ModDust
-    {
-        public override string Texture { get => ModAssets.DustsPath + "Cascade"; }
-
-        public override void OnSpawn(Dust dust)
-        {
-            dust.noGravity = true;
-            dust.scale *= Main.rand.NextFloat(1f, 1.2f);
-            dust.color = Color.White;
-        }
-
-        public override bool PreDraw(Dust dust)
-        {
-            /*var scale = new Vector2(dust.scale * MathHelper.Max(1f, dust.velocity.Length() * 2f), dust.scale);
-            Main.spriteBatch.Draw(Texture2D.Value, dust.position - Main.screenPosition, null, dust.color, dust.velocity.ToRotation(), new Vector2(16, 16), scale, SpriteEffects.None, 0);*/
-            return false;
-        }
+        }*/
     }
 }
