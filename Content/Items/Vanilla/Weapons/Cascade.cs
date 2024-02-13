@@ -98,7 +98,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 {
                     if (Main.myPlayer == proj.owner)
                     {
-                        Projectile.NewProjectile(proj.GetSource_FromThis(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage * 3, proj.knockBack * 3, proj.owner);
+                        Projectile.NewProjectile(proj.GetSource_FromThis(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
                     }
 
                     SoundEngine.PlaySound(SoundID.Item14, proj.Center);
@@ -289,11 +289,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.HitDirectionOverride = MathF.Sign((target.Center - Projectile.Center).X);
+            modifiers.SourceDamage += 2f;
+            modifiers.Knockback += 2f;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             target.AddBuff(BuffID.OnFire, Main.rand.Next(60, 60 * 4));
+            Main.player[Projectile.owner].Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }
 
         public override bool PreDraw(ref Color lightColor)
