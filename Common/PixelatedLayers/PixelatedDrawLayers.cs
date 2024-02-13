@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.RenderTargets;
-using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Extensions;
 using System;
@@ -99,8 +98,6 @@ namespace SPYoyoMod.Common.PixelatedLayers
 
             On_Main.DrawCachedProjs += (orig, main, projCache, startSpriteBatch) =>
             {
-                var projectiles = DrawUtils.GetActiveForDrawEntities<Projectile>();
-
                 if (projCache == Main.instance.DrawCacheProjsBehindProjectiles)
                     rendererByLayerDict[PixelatedLayer.UnderProjectiles].DrawToScreen();
 
@@ -108,6 +105,11 @@ namespace SPYoyoMod.Common.PixelatedLayers
 
                 if (projCache == Main.instance.DrawCacheProjsOverPlayers)
                     rendererByLayerDict[PixelatedLayer.OverProjectiles].DrawToScreen();
+            };
+
+            ModEvents.OnPostDrawDust += () =>
+            {
+                rendererByLayerDict[PixelatedLayer.OverDusts].DrawToScreen();
             };
         }
 
