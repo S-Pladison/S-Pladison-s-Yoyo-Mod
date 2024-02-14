@@ -47,7 +47,7 @@ namespace SPYoyoMod.Common.PixelatedLayers
                     Matrix = Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix
                 };
 
-                PrepareGraphicsDevice(spriteBatchSpanshot);
+                Main.graphics.GraphicsDevice.PrepRenderState(spriteBatchSpanshot);
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
                 OnDrawToTarget();
                 Main.spriteBatch.End();
@@ -62,15 +62,6 @@ namespace SPYoyoMod.Common.PixelatedLayers
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
                 Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
-            }
-
-            private void PrepareGraphicsDevice(SpriteBatchSnapshot spriteBatchSnapshot)
-            {
-                var device = Main.graphics.GraphicsDevice;
-                device.BlendState = spriteBatchSnapshot.BlendState;
-                device.SamplerStates[0] = spriteBatchSnapshot.SamplerState;
-                device.DepthStencilState = spriteBatchSnapshot.DepthStencilState;
-                device.RasterizerState = spriteBatchSnapshot.RasterizerState;
             }
         }
 
