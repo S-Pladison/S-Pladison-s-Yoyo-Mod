@@ -89,6 +89,9 @@ namespace SPYoyoMod
 
         void ILoadable.Unload()
         {
+            Main.OnResolutionChanged -= Mod_OnResolutionChanged;
+            Main.OnPreDraw -= Mod_OnPreDraw;
+
             OnPostAddRecipes = null;
             OnPostSetupContent = null;
             OnPostUpdateEverything = null;
@@ -99,9 +102,6 @@ namespace SPYoyoMod
             OnPostDrawTiles = null;
             OnResolutionChanged = null;
             OnPreDraw = null;
-
-            Main.OnResolutionChanged -= Mod_OnResolutionChanged;
-            Main.OnPreDraw -= Mod_OnPreDraw;
         }
 
         private static void Mod_OnResolutionChanged(Vector2 screenSize) => ModEvents.OnResolutionChanged(screenSize);
