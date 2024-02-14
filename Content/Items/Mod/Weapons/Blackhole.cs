@@ -44,7 +44,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BlackholeProjectile : YoyoProjectile, IDrawDistortionProjectile
     {
-        public static readonly float GravityRadius = GravityRadius = 16 * 10;
+        public static readonly float GravityRadius = 16 * 10;
 
         public override string Texture => ModAssets.ProjectilesPath + "Blackhole";
         public override float LifeTime => -1f;
@@ -266,7 +266,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void DrawToTarget()
         {
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix);
 
             particleRenderer.Settings.AnchorPosition = -Main.screenPosition;
             particleRenderer.Draw(Main.spriteBatch);
