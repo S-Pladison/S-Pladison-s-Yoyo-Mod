@@ -83,7 +83,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class BellowingThunderProjectile : YoyoProjectile
+    public class BellowingThunderProjectile : YoyoProjectile, IBellowingThunderProjectile
     {
         public const int HitsToActivateEffect = 5;
         public const int StartEffectTime = 15;
@@ -112,7 +112,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 {
                     ModContent.GetInstance<BellowingThunderRenderTargetContent>()?.AddProjectile(Projectile);
 
-                    trailRenderer = new TrailRenderer(15).SetWidth(f => MathHelper.Lerp(8f, 0f, f));
+                    trailRenderer = new TrailRenderer(7).SetWidth(f => MathHelper.Lerp(8f, 0f, f));
                 }
 
                 initCritChance = Projectile.CritChance;
@@ -152,7 +152,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var pos = position - Main.screenPosition;
                 var rect = new Rectangle(0, 0, texture.Width(), (int)height);
                 var origin = new Vector2(texture.Width() * 0.5f, 0f);
-                var colour = Color.Lerp(Color.Transparent, new Color(208, 99, 219), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
+                var colour = Color.Lerp(Color.Transparent, new Color(255, 225, 255), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
 
                 Main.spriteBatch.Draw(texture.Value, pos, rect, colour, rotation, origin, 1f, SpriteEffects.None, 0f);
             });
@@ -169,7 +169,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad).Value);
                 effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
 
-                var colorVec4 = new Color(16, 7, 37).ToVector4();
+                var colorVec4 = (new Color(208, 99, 219) * 0.45f).ToVector4();
 
                 effectParameters["ColorTL"].SetValue(colorVec4);
                 effectParameters["ColorTR"].SetValue(colorVec4);
@@ -180,15 +180,35 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             });
 
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Circle", AssetRequestMode.ImmediateLoad);
+            var color = new Color(208, 99, 219) with { A = 0 } * 0.45f;
+
+            Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, 0.27f, SpriteEffects.None, 0f);
+
+            position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
 
             Main.spriteBatch.Draw(texture.Value, position, null, new Color(208, 99, 219), Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.2f, SpriteEffects.None, 0f);
 
             return true;
         }
+
+        void IBellowingThunderProjectile.DrawLightnings()
+        {
+            var timeForVisualEffects = (float)Main.timeForVisualEffects + Projectile.whoAmI * 111f;
+
+            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Lightning", AssetRequestMode.ImmediateLoad);
+
+            var frameIndex = (int)((timeForVisualEffects * 0.2f) % 16);
+            var frame = new Rectangle(96 * (frameIndex / 4), 96 * (frameIndex % 4), 96, 96);
+            var rotation = ((int)(timeForVisualEffects * 0.2f) / 16) * MathHelper.PiOver2;
+
+            Main.spriteBatch.Draw(texture.Value, position, frame, Color.White, rotation, new Vector2(48, 48), 0.6f, SpriteEffects.None, 0f);
+        }
     }
 
-    public class BellowingThunderRingProjectile : ModProjectile
+    public class BellowingThunderRingProjectile : ModProjectile, IBellowingThunderProjectile
     {
         public const int MaxRadius = 16 * 3 + 8;
         public const int InitTimeLeft = 60 * 3;
@@ -297,7 +317,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public override bool PreDraw(ref Color lightColor)
         {
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Circle", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Circle", AssetRequestMode.ImmediateLoad);
             var color = new Color(145, 60, 195) with { A = 0 } * EasingFunctions.InOutCubic(TimeLeftProgress) * 0.2f;
             var scale = MathHelper.Lerp(2f, 0f, EasingFunctions.InCubic(TimeLeftProgress));
 
@@ -306,7 +326,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             return true;
         }
 
-        public void DrawLightnings()
+        void IBellowingThunderProjectile.DrawLightnings()
         {
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
@@ -346,6 +366,11 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
+    public interface IBellowingThunderProjectile
+    {
+        void DrawLightnings();
+    }
+
     public class BellowingThunderRenderTargetContent : RenderTargetContent
     {
         public override Point Size => new(Main.screenWidth / 2, Main.screenHeight / 2);
@@ -354,7 +379,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void Load()
         {
-            projectileObserver = new(p => p.ModProjectile is not BellowingThunderRingProjectile);
+            projectileObserver = new(p => p.ModProjectile is not IBellowingThunderProjectile);
 
             ModEvents.OnPostUpdateEverything += projectileObserver.Update;
             ModEvents.OnWorldUnload += projectileObserver.Clear;
@@ -394,7 +419,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             foreach (var proj in projectileObserver.GetEntityInstances())
             {
-                (proj.ModProjectile as BellowingThunderRingProjectile).DrawLightnings();
+                (proj.ModProjectile as IBellowingThunderProjectile).DrawLightnings();
             }
 
             Main.spriteBatch.End();
