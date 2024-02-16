@@ -152,7 +152,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var pos = position - Main.screenPosition;
                 var rect = new Rectangle(0, 0, texture.Width(), (int)height);
                 var origin = new Vector2(texture.Width() * 0.5f, 0f);
-                var colour = Color.Lerp(Color.Transparent, new Color(255, 225, 255), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
+                var colour = Color.Lerp(Color.Transparent, new Color(208, 99, 219), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
 
                 Main.spriteBatch.Draw(texture.Value, pos, rect, colour, rotation, origin, 1f, SpriteEffects.None, 0f);
             });
@@ -177,16 +177,17 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 effectParameters["ColorBR"].SetValue(colorVec4);
 
                 trailRenderer.Draw(effect);
+
+                var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Circle", AssetRequestMode.ImmediateLoad);
+                var color = new Color(208, 99, 219) * 0.45f;
+
+                Main.spriteBatch.Draw(texture.Value, position, null, Color.Black * 0.25f, 0f, texture.Size() * 0.5f, 0.27f, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture.Value, position, null, new Color(208, 99, 219), 0f, texture.Size() * 0.5f, 0.27f, SpriteEffects.None, 0f);
             });
 
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Circle", AssetRequestMode.ImmediateLoad);
-            var color = new Color(208, 99, 219) with { A = 0 } * 0.45f;
-
-            Main.spriteBatch.Draw(texture.Value, position, null, color, 0f, texture.Size() * 0.5f, 0.27f, SpriteEffects.None, 0f);
-
-            position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
 
             Main.spriteBatch.Draw(texture.Value, position, null, new Color(208, 99, 219), Projectile.rotation, texture.Size() * 0.5f, Projectile.scale * 1.2f, SpriteEffects.None, 0f);
 
@@ -317,7 +318,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public override bool PreDraw(ref Color lightColor)
         {
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Circle", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Circle", AssetRequestMode.ImmediateLoad);
             var color = new Color(145, 60, 195) with { A = 0 } * EasingFunctions.InOutCubic(TimeLeftProgress) * 0.2f;
             var scale = MathHelper.Lerp(2f, 0f, EasingFunctions.InCubic(TimeLeftProgress));
 
