@@ -68,7 +68,11 @@ Items: {
 
 	BellowingThunderItem: {
 		DisplayName: Bellowing Thunder
-		Tooltip: ""
+		Tooltip:
+			'''
+			A series of strikes against the enemies unleashes the true power of the yoyo
+			During a thunderstorm, critical strike chance is increased by 6%
+			'''
 	}
 }
 
@@ -101,4 +105,5 @@ Projectiles: {
 	FreezingPointProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 	TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
+	BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 }

@@ -68,7 +68,11 @@ Items: {
 
 	BellowingThunderItem: {
 		DisplayName: Раскаты грома
-		Tooltip: ""
+		Tooltip:
+			'''
+			Критические удары раскрывают истинную силу йо-йо
+			Во время грозы шанс критического удара увеличен на 6%
+			'''
 	}
 }
 
@@ -101,4 +105,5 @@ Projectiles: {
 	// FreezingPointProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
 	// SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 	// TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
+	// BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 }
