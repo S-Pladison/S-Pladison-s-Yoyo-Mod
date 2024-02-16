@@ -177,13 +177,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 effectParameters["ColorBR"].SetValue(colorVec4);
 
                 trailRenderer.Draw(effect);
-
-                var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunder_Circle", AssetRequestMode.ImmediateLoad);
-                var color = new Color(208, 99, 219) * 0.45f;
-
-                Main.spriteBatch.Draw(texture.Value, position, null, Color.Black * 0.25f, 0f, texture.Size() * 0.5f, 0.27f, SpriteEffects.None, 0f);
-                Main.spriteBatch.Draw(texture.Value, position, null, new Color(208, 99, 219), 0f, texture.Size() * 0.5f, 0.27f, SpriteEffects.None, 0f);
             });
 
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
@@ -205,7 +198,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             var frame = new Rectangle(96 * (frameIndex / 4), 96 * (frameIndex % 4), 96, 96);
             var rotation = ((int)(timeForVisualEffects * 0.2f) / 16) * MathHelper.PiOver2;
 
-            Main.spriteBatch.Draw(texture.Value, position, frame, Color.White, rotation, new Vector2(48, 48), 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(texture.Value, position, frame, Color.White, rotation, new Vector2(48, 48), 0.4f, SpriteEffects.None, 0f);
         }
     }
 
