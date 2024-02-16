@@ -1,0 +1,20 @@
+﻿[ Implemented ]
+
+Thorium Mod
+| Modded yoyos use a different AI method instead of the call vanilla AI_099_2()
+| Same issue with string drawing
+
+[ Not implemented ]
+
+Calamity Mod
+| Smoking Comet (maybe others) custom string drawing
+
+TRAE Project
+| Similar issue as with Thorium Mod, but worse
+| Some stat changes and special effects for some yoyos
+| New Yoyo Bag recipe without Bearing
+
+[ ... ]
+
+MooMoo's Ultimate Yoyo Revamp
+| No comments...
