@@ -4,6 +4,9 @@ Thorium Mod
 | Modded yoyos use a different AI method instead of the call vanilla AI_099_2()
 | Same issue with string drawing
 
+DialogueTweak
+| It is impossible to give a gift to a nurse
+
 [ Not implemented ]
 
 Calamity Mod

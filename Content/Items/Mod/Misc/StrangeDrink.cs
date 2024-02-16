@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoMod.Cil;
+using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Content.Items.Mod.Weapons;
 using System;
 using System.Reflection;
@@ -68,74 +69,37 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
         {
             RegisterLocalizedText();
 
-            var setChatButtonsMethodInfo = typeof(NPCLoader).GetMethod(nameof(NPCLoader.SetChatButtons));
-
-            MonoModHooks.Add(setChatButtonsMethodInfo, (orig_SetChatButtonsMethod orig, ref string button, ref string button2) =>
-            {
-                orig(ref button, ref button2);
-
-                var player = Main.player[Main.myPlayer];
-
-                if (!IsPlayerTalksWithNurse(player)) return;
-
-                SetNurseFirstButtonText(player, ref button);
-            });
-
             IL_Main.GUIChatDrawInner += (il) =>
             {
                 var c = new ILCursor(il);
 
-                // if (Main.npc[Main.player[Main.myPlayer].talkNPC].type != 18) return;
+                ModifyButtonText(c);
 
-                // IL_2070: ldsfld       class Terraria.NPC[] Terraria.Main::npc
-                // IL_2075: ldsfld       class Terraria.Player[] Terraria.Main::player
-                // IL_207a: ldsfld int32 Terraria.Main::myPlayer
-                // IL_207f: ldelem.ref
-                // IL_2080: callvirt instance int32 Terraria.Player::get_talkNPC()
-                // IL_2085: ldelem.ref
-                // IL_2086: ldfld int32 Terraria.NPC::'type'
-                // IL_208b: ldc.i4.s     18 // 0x12
-                // IL_208d: beq.s IL_2090
+                c.Index = 0;
 
-                // IL_208f: ret
-
-                if (!c.TryGotoNext(MoveType.Before,
-                    i => i.MatchLdsfld(typeof(Main).GetField("npc")),
-                    i => i.MatchLdsfld(typeof(Main).GetField("player")),
-                    i => i.MatchLdsfld(typeof(Main).GetField("myPlayer")),
-                    i => i.MatchLdelemRef(),
-                    i => i.MatchCallvirt(typeof(Player).GetMethod("get_talkNPC")),
-                    i => i.MatchLdelemRef(),
-                    i => i.MatchLdfld(typeof(NPC).GetField("type")),
-                    i => i.MatchLdcI4(18),
-                    i => i.MatchBeq(out _),
-                    i => i.MatchRet())) return;
-
-                if (!c.TryGotoNext(MoveType.After,
-                    i => i.MatchLdcI4(12),
-                    i => i.MatchLdcI4(-1),
-                    i => i.MatchLdcI4(-1),
-                    i => i.MatchLdcI4(1),
-                    i => i.MatchLdcR4(1),
-                    i => i.MatchLdcR4(0),
-                    i => i.MatchCall(typeof(SoundEngine).GetMethod("PlaySound", BindingFlags.Static | BindingFlags.NonPublic, new Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(float), typeof(float) })),
-                    i => i.MatchPop())) return;
-
-                c.EmitDelegate(() =>
-                {
-                    var player = Main.LocalPlayer;
-
-                    if (!IsPlayerTalksWithNurse(player)) return true;
-
-                    return OnClickNurseFirstButton(player);
-                });
-
-                var label = c.DefineLabel();
-
-                c.Emit(Brtrue, label);
-                c.Emit(Ret);
-                c.MarkLabel(label);
+                ModifyOnClickButton(c);
             };
+
+            ModContent.GetInstance<DialogueTweakCompatibility>().AddButton(
+                npcType: NPCID.Nurse,
+                buttonText: () =>
+                {
+                    var button = "";
+                    SetNurseFirstButtonText(ref button);
+                    return button;
+                },
+                iconTexturePath: "Terraria/Images/NPC_Head_" + NPCHeadID.Nurse,
+                hoverCallback: () =>
+                {
+                    if (!Main.mouseLeft || !Main.mouseLeftRelease) return;
+
+                    OnClickNurseFirstButton();
+                },
+                availability: () =>
+                {
+                    return IsPlayerHaveGift(out _);
+                }
+            );
         }
 
         public void Unload()
@@ -150,33 +114,114 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
             GiftDialogueText = Language.GetOrRegister("Mods.SPYoyoMod.Dialogue.NurseNPC.Dialogue.ReceivedGift");
         }
 
-        public static void SetNurseFirstButtonText(Player player, ref string button)
+        public static void ModifyButtonText(ILCursor c)
         {
-            if (!player.HasItem(GiftForNurseType)) return;
+            // NPCLoader.SetChatButtons(ref button, ref button2);
+
+            // IL_14f7: ldloca.s 11
+            // IL_14f9: ldloca.s 12
+            // IL_14fb: call void Terraria.ModLoader.NPCLoader::SetChatButtons(string &, string &)
+
+            int buttonIndex = -1;
+
+            if (!c.TryGotoNext(MoveType.After,
+                i => i.MatchLdloca(out buttonIndex),
+                i => i.MatchLdloca(out _),
+                i => i.MatchCall(typeof(NPCLoader).GetMethod(nameof(NPCLoader.SetChatButtons), BindingFlags.Static | BindingFlags.Public)))) return;
+
+            c.Emit(Ldloca, buttonIndex);
+            c.EmitDelegate((ref string button) =>
+            {
+                var player = Main.LocalPlayer;
+
+                if (!IsPlayerTalksWithNurse()) return;
+
+                SetNurseFirstButtonText(ref button);
+            });
+        }
+
+        public static void ModifyOnClickButton(ILCursor c)
+        {
+            // if (Main.npc[Main.player[Main.myPlayer].talkNPC].type != 18) return;
+
+            // IL_2070: ldsfld       class Terraria.NPC[] Terraria.Main::npc
+            // IL_2075: ldsfld       class Terraria.Player[] Terraria.Main::player
+            // IL_207a: ldsfld int32 Terraria.Main::myPlayer
+            // IL_207f: ldelem.ref
+            // IL_2080: callvirt instance int32 Terraria.Player::get_talkNPC()
+            // IL_2085: ldelem.ref
+            // IL_2086: ldfld int32 Terraria.NPC::'type'
+            // IL_208b: ldc.i4.s     18 // 0x12
+            // IL_208d: beq.s IL_2090
+
+            // IL_208f: ret
+
+            if (!c.TryGotoNext(MoveType.Before,
+                i => i.MatchLdsfld(typeof(Main).GetField("npc")),
+                i => i.MatchLdsfld(typeof(Main).GetField("player")),
+                i => i.MatchLdsfld(typeof(Main).GetField("myPlayer")),
+                i => i.MatchLdelemRef(),
+                i => i.MatchCallvirt(typeof(Player).GetMethod("get_talkNPC")),
+                i => i.MatchLdelemRef(),
+                i => i.MatchLdfld(typeof(NPC).GetField("type")),
+                i => i.MatchLdcI4(18),
+                i => i.MatchBeq(out _),
+                i => i.MatchRet())) return;
+
+            if (!c.TryGotoNext(MoveType.After,
+                i => i.MatchLdcI4(12),
+                i => i.MatchLdcI4(-1),
+                i => i.MatchLdcI4(-1),
+                i => i.MatchLdcI4(1),
+                i => i.MatchLdcR4(1),
+                i => i.MatchLdcR4(0),
+                i => i.MatchCall(typeof(SoundEngine).GetMethod("PlaySound", BindingFlags.Static | BindingFlags.NonPublic, new Type[] { typeof(int), typeof(int), typeof(int), typeof(int), typeof(float), typeof(float) })),
+                i => i.MatchPop())) return;
+
+            c.EmitDelegate(() =>
+            {
+                if (!IsPlayerTalksWithNurse()) return true;
+
+                return OnClickNurseFirstButton();
+            });
+
+            var label = c.DefineLabel();
+
+            c.Emit(Brtrue, label);
+            c.Emit(Ret);
+            c.MarkLabel(label);
+        }
+
+        public static void SetNurseFirstButtonText(ref string button)
+        {
+            if (!IsPlayerHaveGift(out _)) return;
 
             button = $"[c/{Colors.AlphaDarken(Color.HotPink).Hex3()}:{GiftButtonText.Value}]";
         }
 
-        public static bool OnClickNurseFirstButton(Player player)
+        public static bool OnClickNurseFirstButton()
         {
-            var slotIndex = player.FindItem(GiftForNurseType);
-            var hasGiftForNurse = slotIndex >= 0;
-
-            if (!hasGiftForNurse) return true;
+            if (!IsPlayerHaveGift(out int slotIndex)) return true;
 
             Main.npcChatText = GiftDialogueText.Value;
 
-            player.inventory[slotIndex].TurnToAir();
-            player.QuickSpawnItem(Main.LocalPlayer.GetSource_GiftOrReward(), GiftForPlayerType);
+            Main.LocalPlayer.inventory[slotIndex].TurnToAir();
+            Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_GiftOrReward(), GiftForPlayerType);
 
             return false;
         }
 
-        public static bool IsPlayerTalksWithNurse(Player player)
+        public static bool IsPlayerTalksWithNurse()
         {
-            return player.talkNPC >= 0 && Main.npc[player.talkNPC].type.Equals(NPCID.Nurse);
+            return Main.LocalPlayer.talkNPC >= 0 && Main.npc[Main.LocalPlayer.talkNPC].type.Equals(NPCID.Nurse);
         }
 
-        public delegate void orig_SetChatButtonsMethod(ref string button, ref string button2);
+        public static bool IsPlayerHaveGift(out int slotIndex)
+        {
+            var player = Main.LocalPlayer;
+            slotIndex = player.FindItem(GiftForNurseType);
+
+            return slotIndex >= 0;
+        }
     }
 }
