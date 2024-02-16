@@ -74,6 +74,11 @@ Items: {
 			During a thunderstorm, critical strike chance is increased by 6%
 			'''
 	}
+
+	SpaceKey: {
+		DisplayName: Space Key
+		Tooltip: Unlocks a Space Chest in the dungeon
+	}
 }
 
 VanillaItems: {
@@ -107,3 +112,5 @@ Projectiles: {
 	TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 	BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 }
+
+DropConditions.SpaceKeyCondition: Drops in the Hardmode Space

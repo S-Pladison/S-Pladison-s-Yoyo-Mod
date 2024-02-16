@@ -74,6 +74,11 @@ Items: {
 			Во время грозы шанс критического удара увеличен на 6%
 			'''
 	}
+
+	SpaceKey: {
+		DisplayName: Космический ключ
+		Tooltip: Открывает космический сундук в Темнице
+	}
 }
 
 VanillaItems: {
@@ -107,3 +112,5 @@ Projectiles: {
 	// TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 	// BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 }
+
+DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе
