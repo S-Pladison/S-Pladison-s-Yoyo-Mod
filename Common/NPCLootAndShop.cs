@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Content.Items.Mod.Misc;
+﻿using SPYoyoMod.Content.Items.Mod.Miscellaneous;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ModLoader;
 

@@ -11,7 +11,7 @@ using Terraria.Localization;
 using Terraria.ModLoader;
 using static Mono.Cecil.Cil.OpCodes;
 
-namespace SPYoyoMod.Content.Items.Mod.Misc
+namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
 {
     public class StrangeDrinkItem : ModItem
     {

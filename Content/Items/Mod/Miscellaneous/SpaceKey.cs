@@ -5,7 +5,7 @@ using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Content.Items.Mod.Misc
+namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
 {
     public class SpaceKey : ModItem
     {
@@ -17,8 +17,8 @@ namespace SPYoyoMod.Content.Items.Mod.Misc
             Item.height = 26;
 
             Item.rare = ItemRarityID.Yellow;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 2, silver: 0, copper: 0);
-            Item.maxStack = 99;
+            Item.value = Item.sellPrice(platinum: 0, gold: 2, silver: 0, copper: 0);
+            Item.maxStack = Item.CommonMaxStack;
         }
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
