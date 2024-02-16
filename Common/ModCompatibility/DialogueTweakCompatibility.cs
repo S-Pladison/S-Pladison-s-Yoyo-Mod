@@ -1,7 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using Microsoft.Xna.Framework;
 using System;
+using System.Collections.Generic;
 using Terraria.ModLoader;
-using Microsoft.Xna.Framework;
 
 namespace SPYoyoMod.Common.ModCompatibility
 {
