@@ -17,8 +17,8 @@ namespace SPYoyoMod.Content.Items.Mod.Placeables
         {
             Item.DefaultToPlaceableTile(ModContent.TileType<TrappedSpaceChestTile>());
 
-            Item.width = 36;
-            Item.height = 36;
+            Item.width = 32;
+            Item.height = 32;
             Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 0, silver: 1, copper: 0);
         }
 
