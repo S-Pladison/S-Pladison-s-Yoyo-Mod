@@ -79,6 +79,16 @@ Items: {
 		DisplayName: Космический ключ
 		Tooltip: Открывает космический сундук в Темнице
 	}
+
+	SpaceChestItem: {
+		DisplayName: Космический сундук
+		Tooltip: ""
+	}
+
+	TrappedSpaceChestItem: {
+		DisplayName: Фальшивый космический сундук
+		Tooltip: ""
+	}
 }
 
 VanillaItems: {
@@ -114,3 +124,12 @@ Projectiles: {
 }
 
 DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе
+
+Tiles: {
+	SpaceChestTile: {
+		MapEntry0: Космический сундук
+		MapEntry1: Запертый космический сундук
+	}
+
+	// TrappedSpaceChestTile.MapEntry: "{$Mods.SPYoyoMod.Tiles.SpaceChestTile.MapEntry0}"
+}

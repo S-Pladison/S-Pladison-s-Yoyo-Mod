@@ -79,6 +79,16 @@ Items: {
 		DisplayName: Space Key
 		Tooltip: Unlocks a Space Chest in the dungeon
 	}
+
+	SpaceChestItem: {
+		DisplayName: Space Chest
+		Tooltip: ""
+	}
+
+	TrappedSpaceChestItem: {
+		DisplayName: Trapped Space Chest
+		Tooltip: ""
+	}
 }
 
 VanillaItems: {
@@ -114,3 +124,12 @@ Projectiles: {
 }
 
 DropConditions.SpaceKeyCondition: Drops in the Hardmode Space
+
+Tiles: {
+	SpaceChestTile: {
+		MapEntry0: Space Chest
+		MapEntry1: Locked Space Chest
+	}
+
+	TrappedSpaceChestTile.MapEntry: "{$Mods.SPYoyoMod.Tiles.SpaceChestTile.MapEntry0}"
+}
