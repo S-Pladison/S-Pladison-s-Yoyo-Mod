@@ -98,7 +98,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 {
                     if (Main.myPlayer == proj.owner)
                     {
-                        Projectile.NewProjectile(proj.GetSource_FromThis(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
+                        Projectile.NewProjectile(proj.GetSource_FromAI(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
                     }
 
                     SoundEngine.PlaySound(SoundID.Item14, proj.Center);
@@ -221,7 +221,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Projectile.penetrate = -1;
 
             Projectile.usesLocalNPCImmunity = true;
-            Projectile.localNPCHitCooldown = InitTimeLeft;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void OnKill(int timeLeft)
