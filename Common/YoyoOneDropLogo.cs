@@ -14,10 +14,7 @@ namespace SPYoyoMod.Common
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
-            var oneDropLogoTooltip = tooltips.Find(i => i.Name == "OneDropLogo");
-
-            if (oneDropLogoTooltip is not null)
-                tooltips.Remove(oneDropLogoTooltip);
+            tooltips.Find(i => i.Mod == "Terraria" && i.Name == "OneDropLogo")?.Hide();
         }
     }
 }
