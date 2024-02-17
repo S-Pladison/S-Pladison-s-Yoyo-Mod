@@ -110,8 +110,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             {
                 if (!Main.dedServ)
                 {
-                    ModContent.GetInstance<BellowingThunderRenderTargetContent>()?.AddProjectile(Projectile);
-
                     trailRenderer = new TrailRenderer(7).SetWidth(f => MathHelper.Lerp(8f, 0f, f));
                 }
 
