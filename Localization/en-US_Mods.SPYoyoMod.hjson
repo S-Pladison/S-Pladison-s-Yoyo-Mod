@@ -133,3 +133,10 @@ Tiles: {
 
 	TrappedSpaceChestTile.MapEntry: "{$Mods.SPYoyoMod.Tiles.SpaceChestTile.MapEntry0}"
 }
+
+WorldGen: {
+	SpaceChest: {
+		Name: S-Pladison's Yoyo Mod: Space Chest
+		ProgressMessage: Adding a piece of space to the dungeon...
+	}
+}
