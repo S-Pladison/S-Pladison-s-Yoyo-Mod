@@ -63,7 +63,7 @@ Items: {
 
 	FreezingPointItem: {
 		DisplayName: Freezing Point
-		Tooltip: ""
+		Tooltip: Periodically summons chunks of ice
 	}
 
 	BellowingThunderItem: {
@@ -117,10 +117,13 @@ Projectiles: {
 	BlackholeProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.BlackholeItem.DisplayName}"
 	CascadeExplosionProjectile.DisplayName: "{$ProjectileName.Cascade}"
 	CodeOneHitProjectile.DisplayName: "{$ProjectileName.Code1}"
+	FreezingPointIceProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
 	FreezingPointProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
+	FreezingPointShakingTileProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.FreezingPointItem.DisplayName}"
 	SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 	TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 	BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
+	AmarokCrystalProjectile.DisplayName: Amarok Crystal Projectile
 }
 
 DropConditions.SpaceKeyCondition: Drops in the Hardmode Space
