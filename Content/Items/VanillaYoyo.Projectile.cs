@@ -16,7 +16,7 @@ namespace SPYoyoMod.Content.Items
 
         public sealed override bool AppliesToEntity(Projectile entity, bool lateInstantiation)
         {
-            return entity.type < ProjectileID.Count && entity.IsYoyo() && entity.type.Equals(YoyoType);
+            return entity.type < ProjectileID.Count && entity.type.Equals(YoyoType);
         }
 
         public sealed override bool IsLoadingEnabled(Terraria.ModLoader.Mod mod)

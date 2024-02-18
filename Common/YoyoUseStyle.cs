@@ -14,7 +14,7 @@ namespace SPYoyoMod.Common
     {
         public override bool AppliesToEntity(Item item, bool lateInstantiation)
         {
-            return item.IsYoyo();
+            return lateInstantiation && item.IsYoyo();
         }
 
         public override void Load()

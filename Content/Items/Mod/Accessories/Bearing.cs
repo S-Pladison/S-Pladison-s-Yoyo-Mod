@@ -37,7 +37,10 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
     public class BearingGlobalProjectile : GlobalProjectile, IModifyYoyoStatsProjectile
     {
-        public override bool AppliesToEntity(Projectile proj, bool lateInstantiation) { return proj.IsYoyo(); }
+        public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
+        {
+            return lateInstantiation && proj.IsYoyo();
+        }
 
         public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
