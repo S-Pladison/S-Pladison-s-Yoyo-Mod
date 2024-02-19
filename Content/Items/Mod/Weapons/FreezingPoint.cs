@@ -1,4 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
@@ -85,10 +87,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
                 var position = isSliding ? slidingPos : Projectile.Center;
                 var type = ModContent.ProjectileType<FreezingPointIceProjectile>();
-                var ai0 = isSliding ? slidingFlip : 0f;
 
-                Projectile.NewProjectile(Projectile.GetSource_FromAI(), position, Vector2.UnitX * 8f, type, Projectile.damage, Projectile.knockBack, Projectile.owner, ai0);
-                Projectile.NewProjectile(Projectile.GetSource_FromAI(), position, Vector2.UnitX * -8f, type, Projectile.damage, Projectile.knockBack, Projectile.owner, ai0);
+                Projectile.NewProjectile(Projectile.GetSource_FromAI(), position, Vector2.UnitX * 10f, type, Projectile.damage, Projectile.knockBack, Projectile.owner, slidingFlip);
+                Projectile.NewProjectile(Projectile.GetSource_FromAI(), position, Vector2.UnitX * -10f, type, Projectile.damage, Projectile.knockBack, Projectile.owner, slidingFlip);
 
                 timer = 0;
             }
@@ -97,11 +98,18 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class FreezingPointIceProjectile : ModProjectile
     {
-        public const int HitboxHeight = 16 * 6;
+        public const int HitboxHeight = 16 * 5;
+        public const int InitTimeLeft = 65;
 
-        public override string Texture => ModAssets.ProjectilesPath + "FreezingPoint";
+        private static readonly EasingBuilder colorEasing = new(
+            (EasingFunctions.InOutCubic, 0.2f, 0f, 1f),
+            (EasingFunctions.Linear, 0.8f, 1f, 1f)
+        );
+
+        public override string Texture => ModAssets.ProjectilesPath + "FreezingPointIce";
         public bool IsSliding => SlidingFlip != 0f;
         public int SlidingFlip => (int)Projectile.ai[0];
+        public float TimeLeftProgress => 1f - Projectile.timeLeft / (float)InitTimeLeft;
 
         private Point lastShakingTilePos;
 
@@ -112,10 +120,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Projectile.width = 12;
             Projectile.height = HitboxHeight;
 
-            Projectile.timeLeft = 60;
+            Projectile.timeLeft = InitTimeLeft;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
+            Projectile.hide = true;
+
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
         }
 
         public override void AI()
@@ -124,15 +136,48 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             if (!IsSliding) return;
 
+            Projectile.direction = MathF.Sign(Projectile.velocity.X);
+
             var tilePos = ((SlidingFlip > 0 ? Projectile.Bottom : Projectile.Top) + SlidingFlip * Vector2.UnitY * 8f).ToTileCoordinates();
 
             if (tilePos == lastShakingTilePos || !WorldGen.InWorld(tilePos.X, tilePos.Y) || !WorldGen.SolidTile(Main.tile[tilePos.X, tilePos.Y])) return;
 
-            var power = -SlidingFlip * Projectile.velocity.Length() * 2f;
+            var power = -SlidingFlip * 8f;
 
             Projectile.NewProjectile(Projectile.GetSource_FromAI(), tilePos.ToWorldCoordinates(), Vector2.Zero, ModContent.ProjectileType<FreezingPointShakingTileProjectile>(), 0, 0, Projectile.owner, power);
 
             lastShakingTilePos = tilePos;
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.Knockback += 1f;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Main.player[Projectile.owner].Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
+        public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+        {
+            behindNPCsAndTiles.Add(index);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            var texture = TextureAssets.Projectile[Type];
+
+            var position = (SlidingFlip >= 0 ? Projectile.Bottom : Projectile.Top) + new Vector2(Projectile.direction * -20, 0) - Main.screenPosition;
+            var origin = SlidingFlip >= 0 ? new Vector2(texture.Width() * 0.5f, texture.Height()) : new Vector2(texture.Width() * 0.5f, 0);
+
+            var effect = SpriteEffects.None;
+            effect |= Projectile.direction >= 0 ? SpriteEffects.None : SpriteEffects.FlipHorizontally;
+            effect |= SlidingFlip >= 0 ? SpriteEffects.None : SpriteEffects.FlipVertically;
+
+            Main.spriteBatch.Draw(texture.Value, position, null, lightColor * colorEasing.Evaluate(TimeLeftProgress), 0f, origin, 1f, effect, 0f);
+
+            return false;
         }
     }
 
@@ -141,7 +186,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public const int InitTimeLeft = 25;
 
         public override string Texture => ModAssets.MiscPath + "Invisible";
-        public ref float SlidingFlipPower => ref Projectile.ai[0];
+        public ref float Power => ref Projectile.ai[0];
 
         public override void SetDefaults()
         {
@@ -168,7 +213,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             if (tile == null || !tile.HasTile || !WorldGen.SolidTile(tile)) return false;
 
             var texture = TextureAssets.Tile[tile.TileType].Value;
-            var position = coord.ToWorldCoordinates(0, 0) + new Vector2(0, (float)Math.Sin((1 - Projectile.timeLeft / (float)InitTimeLeft) * MathHelper.Pi)) * SlidingFlipPower - Main.screenPosition;
+            var position = coord.ToWorldCoordinates(0, 0) + new Vector2(0, (float)Math.Sin((1 - Projectile.timeLeft / (float)InitTimeLeft) * MathHelper.Pi)) * Power - Main.screenPosition;
             var frame = new Rectangle(tile.TileFrameX, tile.TileFrameY, 16, 16);
             var color = ColorUtils.Multiply((lightColor * 0.7f) with { A = lightColor.A }, WorldGen.paintColor(tile.TileColor));
 
