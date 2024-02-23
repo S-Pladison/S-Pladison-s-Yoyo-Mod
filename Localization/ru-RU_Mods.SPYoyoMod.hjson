@@ -116,7 +116,6 @@ Projectiles: {
 	// TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 	// BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 	// AmarokCrystalProjectile.DisplayName: Amarok Crystal Projectile
-	// TrueBellowingThunderProjectile.DisplayName: True Bellowing Thunder Projectile
 }
 
 DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе
