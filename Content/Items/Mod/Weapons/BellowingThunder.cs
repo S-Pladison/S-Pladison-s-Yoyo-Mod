@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
+using Terraria.Graphics.CameraModifiers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -283,8 +284,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 return;
             }
 
-            if (Projectile.timeLeft == InitTimeLeft || Projectile.timeLeft == (InitTimeLeft - 65))
+            if (Projectile.timeLeft == InitTimeLeft || Projectile.timeLeft == (InitTimeLeft - 55))
             {
+                Main.instance.CameraModifiers.Add(new PunchCameraModifier(Projectile.Center, Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)), 7f, 6f, 15, 16f * 25f));
                 SoundEngine.PlaySound(new SoundStyle(ModAssets.SoundsPath + "Thunder", SoundType.Sound) { PitchVariance = 0.2f }, Projectile.Center);
             }
 
