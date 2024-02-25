@@ -11,11 +11,14 @@ namespace SPYoyoMod.Common
             globalLoot.Add(
                 new ItemDropWithConditionRule(ModContent.ItemType<SpaceKey>(), 1250, 1, 1, new SpaceKeyCondition(), 1)
             );
-        }
 
-        public override void ModifyShop(NPCShop shop)
-        {
-            // ...
+            foreach (var rule in globalLoot.Get())
+            {
+                if (rule is Conditions.YoyoCascade)
+                {
+                    globalLoot.Remove(rule);
+                }
+            }
         }
     }
 }
