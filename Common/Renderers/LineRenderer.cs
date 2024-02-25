@@ -4,6 +4,7 @@ using ReLogic.Content;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Terraria;
 
 namespace SPYoyoMod.Common.Renderers
 {
@@ -49,6 +50,12 @@ namespace SPYoyoMod.Common.Renderers
             }
         }
 
+        public LineRendererType Type
+        {
+            get => innerType;
+            set => SetType(value);
+        }
+
         public bool Loop
         {
             get => innerLoop;
@@ -69,6 +76,7 @@ namespace SPYoyoMod.Common.Renderers
         private bool isDirty;
         private int maxSegmentCount;
 
+        private LineRendererType innerType;
         private bool innerLoop;
         private float innerWidth;
         private float halfWidth;
@@ -86,6 +94,17 @@ namespace SPYoyoMod.Common.Renderers
         public LineRenderer SetPoints(IList<Vector2> points)
         {
             this.points = points;
+            isDirty = true;
+
+            return this;
+        }
+
+        public LineRenderer SetType(LineRendererType type)
+        {
+            if (innerType == type)
+                return this;
+
+            innerType = type;
             isDirty = true;
 
             return this;
@@ -203,7 +222,51 @@ namespace SPYoyoMod.Common.Renderers
 
         private void CalculateVertexPositions()
         {
+            switch (Type)
+            {
+                case LineRendererType.Primitive:
+                    CalculatePrimitiveVertexPositions();
+                    return;
+                case LineRendererType.Advanced:
+                    CalculateAdvancedVertexPositions();
+                    return;
+                default:
+                    throw new NotImplementedException();
+            }
+        }
+
+        private void CalculatePrimitiveVertexPositions()
+        {
             var vertexIndex = 0;
+
+            var normal = (Loop ? (points[0] - points[^1]) : (points[1] - points[0])).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+            var offset = normal * halfWidth;
+
+            AddVertexPosition(ref vertexIndex, points[0] + offset);
+            AddVertexPosition(ref vertexIndex, points[0] - offset);
+
+            for (var i = 1; i < points.Count; i++)
+            {
+                normal = (points[i] - points[i - 1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+                offset = normal * halfWidth;
+
+                AddVertexPosition(ref vertexIndex, points[i] + offset);
+                AddVertexPosition(ref vertexIndex, points[i] - offset);
+            }
+
+            if (!Loop) return;
+
+            normal = (points[0] - points[^1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+            offset = normal * halfWidth;
+
+            AddVertexPosition(ref vertexIndex, points[0] + offset);
+            AddVertexPosition(ref vertexIndex, points[0] - offset);
+        }
+
+        private void CalculateAdvancedVertexPositions()
+        {
+            var vertexIndex = 0;
+
             var topLines = new List<Line>();
             var bottomLines = new List<Line>();
             var segmentCount = Loop ? points.Count : points.Count - 1;

@@ -177,8 +177,6 @@ namespace SPYoyoMod.Common.Renderers
         private void CalculateVertexPositions(float[] factorsFromStartToEnd)
         {
             var vertexIndex = 0;
-            var segmentCount = activePoints - 1;
-
             var normal = (points[1] - points[0]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
             var halfWidth = innerWidth(0f) / 2f;
             var offset = normal * halfWidth;
