@@ -32,13 +32,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 if (!recipe.TryGetResult(ItemID.YoyoBag, out var _)) continue;
                 if (!recipe.TryGetIngredient(ItemID.WhiteString, out var _)) continue;
 
-                for (int counterweightType = ItemID.BlackCounterweight; counterweightType <= ItemID.YellowCounterweight; counterweightType++)
-                {
-                    if (!recipe.TryGetIngredient(counterweightType, out var _)) continue;
-
-                    recipe.AddIngredient<BearingItem>();
-                    break;
-                }
+                recipe.AddIngredient<BearingItem>();
             }
         }
     }
