@@ -9,6 +9,9 @@ using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Common.Interfaces
 {
+    /// <summary>
+    /// This interface allows you to draw world distortions near projectiles.
+    /// </summary>
     public interface IDrawDistortionProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook =
@@ -16,6 +19,10 @@ namespace SPYoyoMod.Common.Interfaces
                 new GlobalHookList<GlobalProjectile>(typeof(IDrawDistortionProjectile).GetMethod(nameof(DrawDistortion)))
             );
 
+        /// <summary>
+        /// Allows you to draw world distortions near projectiles.
+        /// Distortion direction depends on the color.R and color.G, strength of distortion - color.B.
+        /// </summary>
         void DrawDistortion(Projectile proj);
 
         private class DistortionRenderTargetContent : EntityRenderTargetContent<Projectile>
