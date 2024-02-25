@@ -239,7 +239,7 @@ namespace SPYoyoMod.Common.Renderers
         {
             var vertexIndex = 0;
 
-            var normal = (Loop ? (points[0] - points[^1]) : (points[1] - points[0])).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+            var normal = RotateClockwiseNinety((Loop ? (points[0] - points[^1]) : (points[1] - points[0])).SafeNormalize(Vector2.Zero));
             var offset = normal * halfWidth;
 
             AddVertexPosition(ref vertexIndex, points[0] + offset);
@@ -247,7 +247,7 @@ namespace SPYoyoMod.Common.Renderers
 
             for (var i = 1; i < points.Count; i++)
             {
-                normal = (points[i] - points[i - 1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+                normal = RotateClockwiseNinety((points[i] - points[i - 1]).SafeNormalize(Vector2.Zero));
                 offset = normal * halfWidth;
 
                 AddVertexPosition(ref vertexIndex, points[i] + offset);
@@ -256,7 +256,7 @@ namespace SPYoyoMod.Common.Renderers
 
             if (!Loop) return;
 
-            normal = (points[0] - points[^1]).SafeNormalize(Vector2.Zero).RotatedBy(MathHelper.PiOver2);
+            normal = RotateClockwiseNinety((points[0] - points[^1]).SafeNormalize(Vector2.Zero));
             offset = normal * halfWidth;
 
             AddVertexPosition(ref vertexIndex, points[0] + offset);
