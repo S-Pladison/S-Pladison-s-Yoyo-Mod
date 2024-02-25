@@ -2,7 +2,6 @@
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
