@@ -66,9 +66,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!Main.rand.NextBool(ChainChanceDenominator))
                 return;
 
-            if (!npc.CanBeChasedBy(proj, false))
-                return;
-
             if (!npc.TryGetGlobalNPC(out ValorGlobalNPC globalNPC))
                 return;
 
@@ -79,6 +76,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             if (proj.owner == Main.myPlayer)
                 globalNPC.SendSecureWithChainPacket(npc, chainStartPoint);
+        }
+
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        {
+            DrawUtils.DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
+            {
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var pos = position - Main.screenPosition;
+                var rect = new Rectangle(0, 0, texture.Width(), (int)height);
+                var origin = new Vector2(texture.Width() * 0.5f, 0f);
+                var colour = Color.Lerp(Color.Transparent, new Color(35, 90, 255), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
+
+                Main.spriteBatch.Draw(texture.Value, pos, rect, colour, rotation, origin, 1f, SpriteEffects.None, 0f);
+            });
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
@@ -100,6 +111,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             spriteTrailRenderer ??= InitSpriteTrail();
             spriteTrailRenderer.Draw(Main.spriteBatch, -Main.screenPosition, lightColor);
+
+            var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+
+            Main.spriteBatch.Draw(texture.Value, position, null, new Color(35, 90, 255), proj.rotation, texture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
 
             return true;
         }
@@ -171,8 +187,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
         }
 
-        public static readonly float SecuredWithChainLengthLimit = 16f * 5f;
-        public static readonly int SecuredWithChainTime = 60 * 7;
+        public const float SecuredWithChainLengthLimit = 16f * 5f;
+        public const int SecuredWithChainTime = 60 * 7;
 
         public override bool InstancePerEntity => true;
         public bool IsSecuredWithChain => securedWithChainTimer > 0;
@@ -221,6 +237,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!IsSecuredWithChain)
                 return;
 
+            if (Main.rand.NextBool(5))
+            {
+                var dust = Main.dust[Dust.NewDust(npc.position, npc.width, npc.height, DustID.DungeonWater, 0f, 0f)];
+                dust.velocity *= 0.1f;
+                dust.scale += 0.1f;
+                dust.noGravity = true;
+            }
+
             securedWithChainTimer--;
 
             if (IsSecuredWithChain || (npc.Center - chainStartPosition).Length() > 16f * 25f)
@@ -240,6 +264,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public void SecureWithChain(NPC npc, Point chainStartPos)
         {
             if (IsSecuredWithChain
+                || !npc.CanBeChasedBy()
                 || npc.noTileCollide
                 || npc.boss
                 || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]) return;
@@ -433,11 +458,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var effectParameters = effect.Parameters;
 
             effectParameters["ScreenSize"].SetValue(target.Size());
-            effectParameters["OutlineColor"].SetValue(new Color(44, 66, 255, 170).ToVector4());
+            effectParameters["OutlineColor"].SetValue(new Color(35, 90, 255).ToVector4());
             effectParameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
 
             Main.spriteBatch.End(out var spriteBatchSnapshot);
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
             Main.spriteBatch.Draw(target, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
