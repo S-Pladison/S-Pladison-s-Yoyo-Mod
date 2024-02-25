@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils.Entities
@@ -19,6 +20,15 @@ namespace SPYoyoMod.Utils.Entities
             proj.tileCollide = false;
 
             proj.DamageType = DamageClass.Generic;
+        }
+
+        public static void MoveTo(this Projectile proj, Vector2 position, float maxVelocity, float velocityWeight)
+        {
+            var direction = position - proj.Center;
+            direction *= maxVelocity / direction.Length();
+
+            proj.velocity *= 1f - velocityWeight;
+            proj.velocity += direction * velocityWeight;
         }
     }
 }
