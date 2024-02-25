@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
@@ -26,6 +27,25 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         private Vector2? startToReturnPosition;
         private bool initialized;
+
+        public override void Load()
+        {
+            NPCEvents.OnUpdateLifeRegen += (NPC npc, ref int damage) =>
+            {
+                if (!npc.poisoned) return;
+
+                foreach (var proj in Main.projectile.Where(p => p.active && p.type == ProjectileID.JungleYoyo))
+                {
+                    if (Vector2.Distance(proj.Center, npc.Center) > (16f * 4f * proj.localAI[1])) continue;
+
+                    // Default: -12;
+                    // New: -36;
+                    npc.lifeRegen -= 24;
+
+                    break;
+                }
+            };
+        }
 
         public override void OnSpawn(Projectile proj, IEntitySource source)
         {
@@ -173,25 +193,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             Main.spriteBatch.Draw(Texture2D.Value, position, dust.frame, color, dust.velocity.ToRotation(), new Vector2(8), scale, effect, 0);
             return false;
-        }
-    }
-
-    public class AmazonGlobalNPC : GlobalNPC
-    {
-        public override void UpdateLifeRegen(NPC npc, ref int damage)
-        {
-            if (!npc.poisoned) return;
-
-            foreach (var proj in Main.projectile.Where(p => p.active && p.type == ProjectileID.JungleYoyo))
-            {
-                if (Vector2.Distance(proj.Center, npc.Center) > (16f * 4f * proj.localAI[1])) continue;
-
-                // Default: -12;
-                // New: -36;
-
-                npc.lifeRegen -= 24;
-                break;
-            }
         }
     }
 
