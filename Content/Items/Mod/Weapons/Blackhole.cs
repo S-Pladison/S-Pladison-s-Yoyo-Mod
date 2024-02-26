@@ -153,13 +153,16 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
             var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Circle", AssetRequestMode.ImmediateLoad);
+
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, 0f, texture.Size() * 0.5f, 0.64f * scale, SpriteEffects.None, 0f);
 
             texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Smoke", AssetRequestMode.ImmediateLoad);
+
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.52f * scale, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.01f, texture.Size() * 0.5f, 0.47f * scale, SpriteEffects.FlipHorizontally, 0f);
 
             texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Spiral", AssetRequestMode.ImmediateLoad);
+
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.32f * scale, SpriteEffects.None, 0f);
         }
 
@@ -213,12 +216,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             timeLeft--;
 
             var lightColorMult = 0.4f * progressEasing.Evaluate(Progress);
+
             Lighting.AddLight(position, new Color(171, 97, 255).ToVector3() * lightColorMult);
         }
 
         public void Draw(ref ParticleRendererSettings settings, SpriteBatch spriteBatch)
         {
             var color = Color.White * progressEasing.Evaluate(Progress);
+
             spriteBatch.Draw(texture.Value, settings.AnchorPosition + position, null, color, rotation, origin, 0.35f, SpriteEffects.None, 0f);
         }
     }
@@ -227,9 +232,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     {
         public override Point Size => new(Main.screenWidth / 2, Main.screenHeight / 2);
 
-        private Asset<Effect> effect;
         private ProjectileObserver projectileObserver;
         private ParticleRenderer particleRenderer;
+        private Asset<Effect> effect;
 
         public override void Load()
         {
@@ -283,36 +288,32 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
-            effect ??= LoadEffect();
+            effect ??= ModAssets.RequestEffect("BlackholeBackground").Prepare(parameters =>
+            {
+                var spaceTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Space", AssetRequestMode.ImmediateLoad);
+                var cloudsTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Clouds", AssetRequestMode.ImmediateLoad);
 
-            var parameters = effect.Value.Parameters;
-            parameters["Texture0Size"].SetValue(renderTarget.Size());
-            parameters["EffectMatrix"].SetValue(Main.GameViewMatrix.EffectMatrix);
-            parameters["ScreenPosition"].SetValue(Main.screenPosition + Main.ScreenSize.ToVector2() * 0.5f);
-            parameters["Time"].SetValue((float)Main.timeForVisualEffects * 0.1f);
+                parameters["Texture1"].SetValue(spaceTexture.Value);
+                parameters["Texture1Size"].SetValue(spaceTexture.Size());
+                parameters["Texture2"].SetValue(cloudsTexture.Value);
+                parameters["Texture2Size"].SetValue(cloudsTexture.Size());
+                parameters["Cloud1Color"].SetValue(new Color(198, 50, 189).ToVector4());
+                parameters["Cloud2Color"].SetValue(new Color(25, 25, 76).ToVector4());
+            });
+
+            effect.Prepare(parameters =>
+            {
+                parameters["Texture0Size"].SetValue(renderTarget.Size());
+                parameters["EffectMatrix"].SetValue(Main.GameViewMatrix.EffectMatrix);
+                parameters["ScreenPosition"].SetValue(Main.screenPosition + Main.ScreenSize.ToVector2() * 0.5f);
+                parameters["Time"].SetValue((float)Main.timeForVisualEffects * 0.1f);
+            });
 
             Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointWrap, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
             Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
-        }
-
-        public static Asset<Effect> LoadEffect()
-        {
-            var spaceTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Space", AssetRequestMode.ImmediateLoad);
-            var cloudsTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Clouds", AssetRequestMode.ImmediateLoad);
-            var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + "BlackholeBackground", AssetRequestMode.ImmediateLoad);
-
-            var parameters = effect.Value.Parameters;
-            parameters["Texture1"].SetValue(spaceTexture.Value);
-            parameters["Texture1Size"].SetValue(spaceTexture.Size());
-            parameters["Texture2"].SetValue(cloudsTexture.Value);
-            parameters["Texture2Size"].SetValue(cloudsTexture.Size());
-            parameters["Cloud1Color"].SetValue(new Color(198, 50, 189).ToVector4());
-            parameters["Cloud2Color"].SetValue(new Color(25, 25, 76).ToVector4());
-
-            return effect;
         }
     }
 }

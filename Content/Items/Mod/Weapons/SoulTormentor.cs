@@ -95,34 +95,36 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
-                var effectParameters = effect.Parameters;
+                var effect = ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
+                {
+                    var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
 
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad);
+                    parameters["Texture0"].SetValue(texture.Value);
+                    parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
 
-                effectParameters["Texture0"].SetValue(texture.Value);
-                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                    var blackColorVec4 = Color.Black.ToVector4();
 
-                var blackColorVec4 = Color.Black.ToVector4();
-
-                effectParameters["ColorTL"].SetValue(blackColorVec4);
-                effectParameters["ColorTR"].SetValue(blackColorVec4);
-                effectParameters["ColorBL"].SetValue(blackColorVec4);
-                effectParameters["ColorBR"].SetValue(blackColorVec4);
+                    parameters["ColorTL"].SetValue(blackColorVec4);
+                    parameters["ColorTR"].SetValue(blackColorVec4);
+                    parameters["ColorBL"].SetValue(blackColorVec4);
+                    parameters["ColorBR"].SetValue(blackColorVec4);
+                });
 
                 blackTrailRenderer?.Draw(effect);
 
-                var redColorVec4 = new Color(255, 0, 35).ToVector4();
+                effect.Prepare(parameters =>
+                {
+                    var redColorVec4 = new Color(255, 0, 35).ToVector4();
 
-                effectParameters["ColorTL"].SetValue(redColorVec4);
-                effectParameters["ColorTR"].SetValue(redColorVec4);
-                effectParameters["ColorBL"].SetValue(redColorVec4);
-                effectParameters["ColorBR"].SetValue(redColorVec4);
+                    parameters["ColorTL"].SetValue(redColorVec4);
+                    parameters["ColorTR"].SetValue(redColorVec4);
+                    parameters["ColorBL"].SetValue(redColorVec4);
+                    parameters["ColorBR"].SetValue(redColorVec4);
+                });
 
                 redTrailRenderer?.Draw(effect);
 
-                texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "SoulTormentor_Ring", AssetRequestMode.ImmediateLoad);
                 var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
                 var scale = Projectile.scale;
 

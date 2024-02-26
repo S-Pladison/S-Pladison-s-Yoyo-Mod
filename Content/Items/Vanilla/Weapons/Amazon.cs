@@ -282,15 +282,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             if (!maskRTContent.IsRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out var maskTarget)) return;
 
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "AmazonEffect", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
+            var effect = ModAssets.RequestEffect("AmazonEffect").Prepare(parameters =>
+            {
+                parameters["Texture1"].SetValue(maskTarget);
+                parameters["ScreenSize"].SetValue(maskTarget.Size());
+                parameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
+            });
 
-            effectParameters["Texture1"].SetValue(maskTarget);
-            effectParameters["ScreenSize"].SetValue(maskTarget.Size());
-            effectParameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
-
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Matrix.Identity);
             Main.spriteBatch.Draw(grassTarget, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
         }

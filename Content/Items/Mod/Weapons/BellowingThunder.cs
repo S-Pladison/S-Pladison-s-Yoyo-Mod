@@ -159,21 +159,18 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
-                var effectParameters = effect.Parameters;
+                trailRenderer.Draw(ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad).Value);
+                    parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
 
-                effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad).Value);
-                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                    var colorVec4 = (new Color(208, 99, 219) * 0.45f).ToVector4();
 
-                var colorVec4 = (new Color(208, 99, 219) * 0.45f).ToVector4();
-
-                effectParameters["ColorTL"].SetValue(colorVec4);
-                effectParameters["ColorTR"].SetValue(colorVec4);
-                effectParameters["ColorBL"].SetValue(colorVec4);
-                effectParameters["ColorBR"].SetValue(colorVec4);
-
-                trailRenderer.Draw(effect);
+                    parameters["ColorTL"].SetValue(colorVec4);
+                    parameters["ColorTR"].SetValue(colorVec4);
+                    parameters["ColorBL"].SetValue(colorVec4);
+                    parameters["ColorBR"].SetValue(colorVec4);
+                }));
             });
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.OverProjectiles, () =>
@@ -321,18 +318,17 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public void DrawLightnings()
         {
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var effect = ModAssets.RequestEffect("BellowingThunderRingStrip").Prepare(parameters =>
+            {
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Lightning", AssetRequestMode.ImmediateLoad);
 
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "BellowingThunderRingStrip", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Lightning", AssetRequestMode.ImmediateLoad);
+                parameters["Texture0"].SetValue(texture.Value);
+                parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.Transform);
+                parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
 
-            effectParameters["Texture0"].SetValue(texture.Value);
-            effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.Transform);
-            effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
-
-            effectParameters["UvRepeat"].SetValue(3f);
-            effectParameters["Fade"].SetValue(false);
+                parameters["UvRepeat"].SetValue(3f);
+                parameters["Fade"].SetValue(false);
+            });
 
             ringRenderer
                 .SetPosition(position)
@@ -342,15 +338,18 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             var lineStartPosition = position - Vector2.UnitY * Main.screenHeight;
             var lineEndPosition = position;
 
-            effectParameters["UvRepeat"].SetValue(2f);
-            effectParameters["Fade"].SetValue(true);
+            effect.Prepare(parameters =>
+            {
+                parameters["UvRepeat"].SetValue(2f);
+                parameters["Fade"].SetValue(true);
+            });
 
             lineRenderer
                 .SetWidth(16f * 16f * lineWidthEasing.Evaluate(TimeLeftProgress))
                 .SetPoints(new[] { lineStartPosition, lineEndPosition })
                 .Draw(effect);
 
-            texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Star", AssetRequestMode.ImmediateLoad);
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Star", AssetRequestMode.ImmediateLoad);
             var rotation = EasingFunctions.InOutSine(TimeLeftProgress) * MathHelper.PiOver2;
             var scale = starEasing.Evaluate(TimeLeftProgress);
 
@@ -416,14 +415,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "BellowingThunderEffect", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
+            var effect = ModAssets.RequestEffect("BellowingThunderEffect").Prepare(parameters =>
+            {
+                parameters["ScreenSize"].SetValue(target.Size());
+                parameters["Color"].SetValue(new Color(145, 60, 195).ToVector4());
+            });
 
-            effectParameters["ScreenSize"].SetValue(target.Size());
-            effectParameters["Color"].SetValue(new Color(145, 60, 195).ToVector4());
-
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Main.GameViewMatrix.ZoomMatrix);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
             Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
         }

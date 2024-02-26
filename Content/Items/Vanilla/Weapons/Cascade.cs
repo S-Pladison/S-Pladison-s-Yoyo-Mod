@@ -54,38 +54,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             (EasingFunctions.Linear, 0.95f, 30f, 25f)
         );
 
-        private static Lazy<Effect> trailEffect;
-
         public override int YoyoType => ProjectileID.Cascade;
 
         private TrailRenderer trailRenderer;
         private int timer;
-
-        public override void Load()
-        {
-            if (Main.dedServ) return;
-
-            trailEffect = new Lazy<Effect>(() =>
-            {
-                var asset = ModContent.Request<Effect>(ModAssets.EffectsPath + "CascadeTrail", AssetRequestMode.ImmediateLoad);
-                var effect = asset.Value;
-                var parameters = effect.Parameters;
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FireStrip", AssetRequestMode.ImmediateLoad);
-
-                parameters["Texture0"].SetValue(texture.Value);
-                parameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
-                parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
-                parameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
-                parameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
-
-                return effect;
-            });
-        }
-
-        public override void Unload()
-        {
-            trailEffect = null;
-        }
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
@@ -161,17 +133,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
                 if (length <= 0f) return;
 
-                var effect = trailEffect.Value;
-                var effectParameters = effect.Parameters;
+                trailRenderer.Draw(ModAssets.RequestEffect("CascadeTrail").Prepare(parameters =>
+                {
+                    var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FireStrip", AssetRequestMode.ImmediateLoad);
 
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FireStrip", AssetRequestMode.ImmediateLoad);
-                var uvRepeat = length / texture.Width();
-
-                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
-                effectParameters["UvRepeat"].SetValue(uvRepeat);
-                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
-
-                trailRenderer.Draw(effect);
+                    parameters["Texture0"].SetValue(texture.Value);
+                    parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                    parameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
+                    parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+                    parameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
+                    parameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
+                    parameters["UvRepeat"].SetValue(length / texture.Width());
+                    parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
+                }));
             });
 
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
@@ -311,17 +285,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.OverProjectiles, () =>
             {
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "CascadeExplosionRing", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
-                var effectParameters = effect.Parameters;
-
-                effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "FireStrip", AssetRequestMode.ImmediateLoad).Value);
-                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
-                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
-                effectParameters["UvRepeat"].SetValue(3f);
-                effectParameters["Color0"].SetValue(new Color(255, 180, 100).ToVector4());
-                effectParameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
-
                 var thickness = MathHelper.Clamp(1f - TimeLeftProgress, 0f, 1f) * 16f * 5f;
                 var radius = MaxRadius * EasingFunctions.OutExpo(TimeLeftProgress) - thickness * TimeLeftProgress * 0.5f;
 
@@ -329,7 +292,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                     .SetThickness(thickness)
                     .SetRadius(radius)
                     .SetPosition(Projectile.Center + Projectile.gfxOffY * Vector2.UnitY)
-                    .Draw(effect);
+                    .Draw(ModAssets.RequestEffect("CascadeExplosionRing").Prepare(parameters =>
+                    {
+                        parameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "FireStrip", AssetRequestMode.ImmediateLoad).Value);
+                        parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                        parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
+                        parameters["UvRepeat"].SetValue(3f);
+                        parameters["Color0"].SetValue(new Color(255, 180, 100).ToVector4());
+                        parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+                    }));
             });
 
             return false;

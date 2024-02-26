@@ -98,15 +98,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorTrail", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
-                var effectParameters = effect.Parameters;
-
-                effectParameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
-                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
-                effectParameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
-
-                trailRenderer?.Draw(effect);
+                trailRenderer?.Draw(ModAssets.RequestEffect("ValorTrail").Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_Trail", AssetRequestMode.ImmediateLoad).Value);
+                    parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                    parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.025f);
+                }));
             });
 
             spriteTrailRenderer ??= InitSpriteTrail();
@@ -453,16 +450,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
-            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "ValorEffect", AssetRequestMode.ImmediateLoad);
-            var effect = effectAsset.Value;
-            var effectParameters = effect.Parameters;
-
-            effectParameters["ScreenSize"].SetValue(target.Size());
-            effectParameters["OutlineColor"].SetValue(new Color(35, 90, 255).ToVector4());
-            effectParameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
+            var effect = ModAssets.RequestEffect("ValorEffect").Prepare(parameters =>
+            {
+                parameters["ScreenSize"].SetValue(target.Size());
+                parameters["OutlineColor"].SetValue(new Color(35, 90, 255).ToVector4());
+                parameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
+            });
 
             Main.spriteBatch.End(out var spriteBatchSnapshot);
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect, Matrix.Identity);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Matrix.Identity);
             Main.spriteBatch.Draw(target, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
