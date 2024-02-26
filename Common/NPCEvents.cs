@@ -1,5 +1,4 @@
-﻿using System;
-using Terraria;
+﻿using Terraria;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
@@ -10,11 +9,6 @@ namespace SPYoyoMod.Common
     public class NPCEvents : ILoadable
     {
         /// <summary>
-        /// Allows you to add and modify global loot rules that are conditional, i.e.vanilla's biome keys and souls.
-        /// </summary>
-        public static event Action<GlobalLoot> OnModifyGlobalLoot;
-
-        /// <summary>
         /// Allows you to make the NPC either regenerate health or take damage over time
         /// by setting npc.lifeRegen. Regeneration or damage will occur at a rate of half
         /// of npc.lifeRegen per second. The damage parameter is the number that appears
@@ -24,19 +18,16 @@ namespace SPYoyoMod.Common
 
         void ILoadable.Load(Mod mod)
         {
-            OnModifyGlobalLoot += (_) => { };
             OnUpdateLifeRegen += (NPC _, ref int _) => { };
         }
 
         void ILoadable.Unload()
         {
-            OnModifyGlobalLoot = null;
             OnUpdateLifeRegen = null;
         }
 
         private class EventGlobalNPC : GlobalNPC
         {
-            public override void ModifyGlobalLoot(GlobalLoot globalLoot) => OnModifyGlobalLoot(globalLoot);
             public override void UpdateLifeRegen(NPC npc, ref int damage) => OnUpdateLifeRegen(npc, ref damage);
         }
 

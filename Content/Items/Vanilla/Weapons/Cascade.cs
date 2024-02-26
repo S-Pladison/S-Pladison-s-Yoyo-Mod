@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Content.Dusts;
@@ -10,7 +9,6 @@ using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -19,21 +17,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     public class CascadeItem : VanillaYoyoItem
     {
         public override int YoyoType => ItemID.Cascade;
-
-        public override void Load()
-        {
-            NPCEvents.OnModifyGlobalLoot += (globalLoot) =>
-            {
-                foreach (var rule in globalLoot.Get())
-                {
-                    if (rule is Conditions.YoyoCascade)
-                    {
-                        globalLoot.Remove(rule);
-                        return;
-                    }
-                }
-            };
-        }
 
         public override void AddRecipes()
         {

@@ -1,5 +1,4 @@
-﻿using SPYoyoMod.Common;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
@@ -11,16 +10,6 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
     public class SpaceKey : ModItem
     {
         public override string Texture => ModAssets.ItemsPath + "SpaceKey";
-
-        public override void Load()
-        {
-            NPCEvents.OnModifyGlobalLoot += (globalLoot) =>
-            {
-                globalLoot.Add(
-                    new ItemDropWithConditionRule(ModContent.ItemType<SpaceKey>(), 1250, 1, 1, new SpaceKeyCondition(), 1)
-                );
-            };
-        }
 
         public override void SetDefaults()
         {

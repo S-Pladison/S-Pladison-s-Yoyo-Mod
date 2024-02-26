@@ -12,15 +12,6 @@ Configs: {
 			Tooltip: ""
 		}
 	}
-
-	ClientSideConfig: {
-		DisplayName: Client Side Config
-
-		ReworkedYoyoUseStyle: {
-			Label: Reworked Yoyo Use Style
-			Tooltip: ""
-		}
-	}
 }
 
 Items: {
@@ -84,6 +75,11 @@ Items: {
 		DisplayName: Фальшивый космический сундук
 		Tooltip: ""
 	}
+
+	TheStellarThrowItem: {
+		DisplayName: Звездный бросок
+		Tooltip: ""
+	}
 }
 
 VanillaItems: {
@@ -102,6 +98,12 @@ VanillaItems: {
 	RallyItem.Tooltip: Чем выше скорость передвижения игрока, тем выше урон
 	StringItem.Tooltip: Увеличивает дальность действия йо-йо на 4 блока
 	ValorItem.Tooltip: При попадании по врагу есть шанс зафиксировать его цепью
+	HelFireItem.Tooltip:
+		'''
+		Удары поджигают врага
+		Пламенное кольцо преследует ближайшего врага
+		'''
+	KrakenItem.Tooltip: Критические удары высвобождают щупальца Кракена
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
@@ -116,6 +118,9 @@ Projectiles: {
 	// TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 	// BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 	// AmarokCrystalProjectile.DisplayName: Amarok Crystal Projectile
+	// HelFireDiscProjectile.DisplayName: Hel Fire Disc Projectile
+	// KrakenTentacleProjectile.DisplayName: Kraken Tentacle Projectile
+	// TheStellarThrowProjectile.DisplayName: The Stellar Throw Projectile
 }
 
 DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе

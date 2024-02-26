@@ -12,15 +12,6 @@ Configs: {
 			Tooltip: ""
 		}
 	}
-
-	ClientSideConfig: {
-		DisplayName: Client Side Config
-
-		ReworkedYoyoUseStyle: {
-			Label: Reworked Yoyo Use Style
-			Tooltip: ""
-		}
-	}
 }
 
 Items: {
@@ -65,7 +56,7 @@ Items: {
 		DisplayName: Bellowing Thunder
 		Tooltip:
 			'''
-			A series of strikes against the enemies unleashes the true power of the yoyo
+			Critical hits unleash the true power of the yoyo
 			During a thunderstorm, critical strike chance is increased by 6%
 			'''
 	}
@@ -82,6 +73,11 @@ Items: {
 
 	TrappedSpaceChestItem: {
 		DisplayName: Trapped Space Chest
+		Tooltip: ""
+	}
+
+	TheStellarThrowItem: {
+		DisplayName: The Stellar Throw
 		Tooltip: ""
 	}
 }
@@ -102,6 +98,12 @@ VanillaItems: {
 	RallyItem.Tooltip: The higher player's movement speed, the higher damage
 	StringItem.Tooltip: Increases yoyo range by 4 tiles
 	ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain
+	HelFireItem.Tooltip:
+		'''
+		Hits set enemy on fire
+		Flame ring pursues the nearest enemy
+		'''
+	KrakenItem.Tooltip: Critical hits release the Kraken's tentacles
 }
 
 NPCs.NurseNPC.GiftButton: Gift
@@ -116,6 +118,9 @@ Projectiles: {
 	TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
 	BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 	AmarokCrystalProjectile.DisplayName: Amarok Crystal Projectile
+	HelFireDiscProjectile.DisplayName: Hel Fire Disc Projectile
+	KrakenTentacleProjectile.DisplayName: Kraken Tentacle Projectile
+	TheStellarThrowProjectile.DisplayName: The Stellar Throw Projectile
 }
 
 DropConditions.SpaceKeyCondition: Drops in the Hardmode Space
