@@ -32,11 +32,7 @@ namespace SPYoyoMod.Utils
                                               0f, 0f, 1f, 0f,
                                              -1f, 1f, 0f, 1f);
 
-                On_Main.DoDraw_UpdateCameraPosition += (orig) =>
-                {
-                    orig();
-                    UpdateMatrices();
-                };
+                ModEvents.OnPostUpdateCameraPosition += UpdateMatrices;
             }
 
             void ILoadable.Unload() { }

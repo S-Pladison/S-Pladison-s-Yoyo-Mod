@@ -11,10 +11,8 @@ namespace SPYoyoMod.Common.RenderTargets
 
         public override void PostSetupContent()
         {
-            On_Main.DoDraw_UpdateCameraPosition += (orig) =>
+            ModEvents.OnPostUpdateCameraPosition += () =>
             {
-                orig();
-
                 var device = Main.graphics.GraphicsDevice;
                 var targets = device.GetRenderTargets();
 

@@ -50,6 +50,12 @@ namespace SPYoyoMod
         public static event Action OnPreDraw;
 
         /// <summary>
+        /// Called after the game has updated the camera position.
+        /// Useful for draw on render targets.
+        /// </summary>
+        public static event Action OnPostUpdateCameraPosition;
+
+        /// <summary>
         /// Called after <see cref="Main.DrawDust"/>.
         /// </summary>
         public static event Action OnPostDrawDust;
@@ -67,15 +73,23 @@ namespace SPYoyoMod
         void ILoadable.Load(Mod mod)
         {
             OnPostAddRecipes += (_) => { };
-            OnPostSetupContent += () => { };
-            OnPostUpdateEverything += () => { };
-            OnWorldLoad += () => { };
-            OnWorldUnload += () => { };
-            OnHardmodeStart += () => { };
-            OnPostDrawDust += () => { };
-            OnPostDrawTiles += () => { };
+            OnPostSetupContent += Empty_Action;
+            OnPostUpdateEverything += Empty_Action;
+            OnWorldLoad += Empty_Action;
+            OnWorldUnload += Empty_Action;
+            OnHardmodeStart += Empty_Action;
+            OnPostUpdateCameraPosition += Empty_Action;
+            OnPostDrawDust += Empty_Action;
+            OnPostDrawTiles += Empty_Action;
+
             OnResolutionChanged += (_) => { };
-            OnPreDraw += () => { };
+            OnPreDraw += Empty_Action;
+
+            On_Main.DoDraw_UpdateCameraPosition += (orig) =>
+            {
+                orig();
+                OnPostUpdateCameraPosition();
+            };
 
             On_Main.DrawDust += (orig, main) =>
             {
@@ -98,12 +112,15 @@ namespace SPYoyoMod
             OnWorldLoad = null;
             OnWorldUnload = null;
             OnHardmodeStart = null;
+            OnPostUpdateCameraPosition = null;
             OnPostDrawDust = null;
             OnPostDrawTiles = null;
+
             OnResolutionChanged = null;
             OnPreDraw = null;
         }
 
+        private static void Empty_Action() { }
         private static void Mod_OnResolutionChanged(Vector2 screenSize) => ModEvents.OnResolutionChanged(screenSize);
         private static void Mod_OnPreDraw(GameTime _) => ModEvents.OnPreDraw();
 
