@@ -40,7 +40,7 @@ namespace SPYoyoMod
         public static event Action OnWorldUnload;
 
         /// <summary>
-        /// Called when Hardmode starts.
+        /// Called when hardmode starts.
         /// </summary>
         public static event Action OnHardmodeStart;
 
@@ -51,7 +51,7 @@ namespace SPYoyoMod
 
         /// <summary>
         /// Called after the game has updated the camera position.
-        /// Useful for draw on render targets.
+        /// Useful for drawing on render targets.
         /// </summary>
         public static event Action OnPostUpdateCameraPosition;
 
@@ -61,7 +61,7 @@ namespace SPYoyoMod
         public static event Action OnPostDrawDust;
 
         /// <summary>
-        /// Called after drawing Tiles. Can be used for drawing a tile overlay akin to wires.
+        /// Called after drawing tiles. Can be used for drawing a tile overlay akin to wires.
         /// </summary>
         public static event Action OnPostDrawTiles;
 
@@ -72,19 +72,63 @@ namespace SPYoyoMod
 
         void ILoadable.Load(Mod mod)
         {
-            OnPostAddRecipes += (_) => { };
-            OnPostSetupContent += Empty_Action;
-            OnPostUpdateEverything += Empty_Action;
-            OnWorldLoad += Empty_Action;
-            OnWorldUnload += Empty_Action;
-            OnHardmodeStart += Empty_Action;
-            OnPostUpdateCameraPosition += Empty_Action;
-            OnPostDrawDust += Empty_Action;
-            OnPostDrawTiles += Empty_Action;
+            LoadModEvents();
+            LoadVanillaEvents();
+            LoadModHooks();
+        }
 
-            OnResolutionChanged += (_) => { };
-            OnPreDraw += Empty_Action;
+        void ILoadable.Unload()
+        {
+            UnloadModEvents();
+            UnloadVanillaEvents();
+        }
 
+        private static void LoadModEvents()
+        {
+            OnPostAddRecipes += EmptyAction;
+            OnPostSetupContent += EmptyAction;
+            OnPostUpdateEverything += EmptyAction;
+            OnWorldLoad += EmptyAction;
+            OnWorldUnload += EmptyAction;
+            OnHardmodeStart += EmptyAction;
+            OnPostUpdateCameraPosition += EmptyAction;
+            OnPostDrawDust += EmptyAction;
+            OnPostDrawTiles += EmptyAction;
+        }
+
+        private static void UnloadModEvents()
+        {
+            OnPostAddRecipes = null;
+            OnPostSetupContent = null;
+            OnPostUpdateEverything = null;
+            OnWorldLoad = null;
+            OnWorldUnload = null;
+            OnHardmodeStart = null;
+            OnPostUpdateCameraPosition = null;
+            OnPostDrawDust = null;
+            OnPostDrawTiles = null;
+        }
+
+        private static void LoadVanillaEvents()
+        {
+            OnResolutionChanged += EmptyAction;
+            Main.OnResolutionChanged += ModOnResolutionChanged;
+
+            OnPreDraw += EmptyAction;
+            Main.OnPreDraw += ModOnPreDraw;
+        }
+
+        private static void UnloadVanillaEvents()
+        {
+            Main.OnResolutionChanged -= ModOnResolutionChanged;
+            OnResolutionChanged = null;
+
+            Main.OnPreDraw -= ModOnPreDraw;
+            OnPreDraw = null;
+        }
+
+        private static void LoadModHooks()
+        {
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
             {
                 orig();
@@ -96,33 +140,10 @@ namespace SPYoyoMod
                 orig(main);
                 OnPostDrawDust();
             };
-
-            Main.OnResolutionChanged += Mod_OnResolutionChanged;
-            Main.OnPreDraw += Mod_OnPreDraw;
         }
 
-        void ILoadable.Unload()
-        {
-            Main.OnResolutionChanged -= Mod_OnResolutionChanged;
-            Main.OnPreDraw -= Mod_OnPreDraw;
-
-            OnPostAddRecipes = null;
-            OnPostSetupContent = null;
-            OnPostUpdateEverything = null;
-            OnWorldLoad = null;
-            OnWorldUnload = null;
-            OnHardmodeStart = null;
-            OnPostUpdateCameraPosition = null;
-            OnPostDrawDust = null;
-            OnPostDrawTiles = null;
-
-            OnResolutionChanged = null;
-            OnPreDraw = null;
-        }
-
-        private static void Empty_Action() { }
-        private static void Mod_OnResolutionChanged(Vector2 screenSize) => ModEvents.OnResolutionChanged(screenSize);
-        private static void Mod_OnPreDraw(GameTime _) => ModEvents.OnPreDraw();
+        private static void ModOnResolutionChanged(Vector2 screenSize) => ModEvents.OnResolutionChanged(screenSize);
+        private static void ModOnPreDraw(GameTime _) => ModEvents.OnPreDraw();
 
         private class EventSystem : ModSystem
         {
@@ -134,5 +155,8 @@ namespace SPYoyoMod
             public override void ModifyHardmodeTasks(List<GenPass> list) => ModEvents.OnHardmodeStart();
             public override void PostDrawTiles() => ModEvents.OnPostDrawTiles();
         }
+
+        private static void EmptyAction() { }
+        private static void EmptyAction<T>(T _) { }
     }
 }
