@@ -87,8 +87,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class BellowingThunderProjectile : YoyoProjectile
     {
         public const int HitsToActivateEffect = 5;
-        public const int StartEffectTime = 15;
-        public const int EndEffectTime = StartEffectTime + 60 * 3;
 
         public override string Texture => ModAssets.ProjectilesPath + "BellowingThunder";
         public override float LifeTime => -1f;
