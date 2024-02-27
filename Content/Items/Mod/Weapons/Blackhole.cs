@@ -10,7 +10,6 @@ using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.Graphics.Renderers;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -137,15 +136,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            DrawUtils.DrawYoyoString(Projectile, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
-            {
-                var pos = position - Main.screenPosition;
-                var rect = new Rectangle(0, 0, TextureAssets.FishingLine.Width(), (int)height);
-                var origin = new Vector2(TextureAssets.FishingLine.Width() * 0.5f, 0f);
-                var colour = Color.Lerp(Color.Transparent, new Color(230, 135, 243), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 2f);
-
-                Main.spriteBatch.Draw(TextureAssets.FishingLine.Value, pos, rect, colour, rotation, origin, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0f);
-            });
+            DrawUtils.DrawGradientYoyoStringWithShadow(Projectile, mountedCenter, (Color.Transparent, true), (new Color(230, 135, 243), true));
         }
 
         public void DrawSpaceMask()

@@ -147,16 +147,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            DrawUtils.DrawYoyoString(Projectile, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
-            {
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
-                var pos = position - Main.screenPosition;
-                var rect = new Rectangle(0, 0, texture.Width(), (int)height);
-                var origin = new Vector2(texture.Width() * 0.5f, 0f);
-                var colour = Color.Lerp(Color.Transparent, new Color(208, 99, 219), EasingFunctions.InQuart(segmentIndex / (float)segmentCount) * 5f);
-
-                Main.spriteBatch.Draw(texture.Value, pos, rect, colour, rotation, origin, 1f, SpriteEffects.None, 0f);
-            });
+            DrawUtils.DrawGradientYoyoStringWithShadow(Projectile, mountedCenter, (Color.Transparent, true), (new Color(208, 99, 219), true));
         }
 
         public override bool PreDraw(ref Color lightColor)

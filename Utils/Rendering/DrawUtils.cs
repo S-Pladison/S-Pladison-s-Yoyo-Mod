@@ -1,6 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using Terraria;
@@ -93,7 +97,37 @@ namespace SPYoyoMod.Utils.Rendering
         }
 
         /// <summary>
-        /// Draw yoyo string. Why is this description even here... Copy from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
+        /// Draw gradient yoyo string with shadow. Code copied from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
+        /// </summary>
+        public static void DrawGradientYoyoStringWithShadow(Projectile proj, Vector2 mountedCenter, params (Color color, bool glow)[] colors)
+        {
+            var easing = new EasingFunctions.EasingDelegate(
+                t => t < 0.22f ? 0f : EasingFunctions.InOutCubic((t - 0.22f) / 0.78f)
+            );
+
+            DrawGradientYoyoStringWithShadow(proj, mountedCenter, easing, colors);
+        }
+
+        /// <summary>
+        /// Draw gradient yoyo string with shadow. Code copied from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
+        /// </summary>
+        public static void DrawGradientYoyoStringWithShadow(Projectile proj, Vector2 mountedCenter, EasingFunctions.EasingDelegate colorEasing, params (Color color, bool glow)[] colors)
+        {
+            DrawYoyoString(proj, mountedCenter, (segmentCount, segmentIndex, position, rotation, height, color) =>
+            {
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "FishingLine_WithShadow", AssetRequestMode.ImmediateLoad);
+                var rect = new Rectangle(0, 0, texture.Width(), (int)height);
+                var origin = new Vector2(texture.Width() * 0.5f, 0f);
+
+                color = ColorUtils.MultipleLerp(colorEasing.Invoke(segmentIndex / (float)segmentCount), colors.Select(x => x.glow ? x.color : Lighting.GetColor(position.ToTileCoordinates(), x.color)).ToArray());
+                position -= Main.screenPosition;
+
+                Main.spriteBatch.Draw(texture.Value, position, rect, color, rotation, origin, 1f, SpriteEffects.None, 0f);
+            });
+        }
+
+        /// <summary>
+        /// Draw yoyo string. Code copied from <see cref="Main"/>.DrawProj_DrawYoyoString(...).
         /// </summary>
         public static void DrawYoyoString(Projectile proj, Vector2 mountedCenter, DrawYoyoStringSegmentDelegate drawSegment)
         {
@@ -123,15 +157,12 @@ namespace SPYoyoMod.Utils.Rendering
             }
 
             var segments = new List<Tuple<Vector2, float, float, Color>>();
-
-            var color = Color.White;
-            color.A = (byte)(color.A * 0.40000000596046448);
-
-            var stringColor = GetPlayerStringColor(Main.player[proj.owner].stringColor, color);
+            var stringColor = tryApplyingPlayerStringColorFunc(Main.player[proj.owner].stringColor, Color.White with { A = (byte)(255 * 0.40000000596046448) });
 
             while (flag1)
             {
                 var segmentHeight = 12f;
+
                 var f1 = (float)Math.Sqrt((double)x * (double)x + (double)y * (double)y);
                 var f2 = f1;
 
@@ -220,12 +251,13 @@ namespace SPYoyoMod.Utils.Rendering
             }
         }
 
-        private static Color GetPlayerStringColor(int playerStringColor, Color defaultColor)
-            => (Color)StringColorMethodInfo.Invoke(null, new object[] { playerStringColor, defaultColor });
-
-        private static readonly MethodInfo StringColorMethodInfo
-            = typeof(Main).GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static);
-
         public delegate void DrawYoyoStringSegmentDelegate(int segmentCount, int segmentIndex, Vector2 position, float rotation, float height, Color color);
+
+        private static readonly TryApplyingPlayerStringColorDelegate tryApplyingPlayerStringColorFunc = typeof(Main)
+            ?.GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static)
+            ?.CreateDelegate<TryApplyingPlayerStringColorDelegate>()
+            ?? throw new InvalidOperationException("Unable to acquire TryApplyingPlayerStringColor method delegate...");
+
+        private delegate Color TryApplyingPlayerStringColorDelegate(int playerStringColor, Color defaultColor);
     }
 }
