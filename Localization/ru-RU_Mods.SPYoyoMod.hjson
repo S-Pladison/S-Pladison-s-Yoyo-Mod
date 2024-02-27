@@ -58,6 +58,7 @@ Items: {
 			'''
 			Критические удары раскрывают истинную силу йо-йо
 			Во время грозы шанс критического удара увеличен на 6%
+			«Кто это?»
 			'''
 	}
 
@@ -78,7 +79,7 @@ Items: {
 
 	TheStellarThrowItem: {
 		DisplayName: Звездный бросок
-		Tooltip: ""
+		Tooltip: Звезды периодически падают с небес на ближайших врагов
 	}
 }
 
@@ -104,6 +105,16 @@ VanillaItems: {
 		Пламенное кольцо преследует ближайшего врага
 		'''
 	KrakenItem.Tooltip: Критические удары высвобождают щупальца Кракена
+	ArteryItem.Tooltip:
+		'''
+		Измученная сущность оказывает вам поддержку
+		Удары сущности восстанавливают ваше здоровье
+		'''
+	MalaiseItem.Tooltip:
+		'''
+		Подозрительная сущность оказывает вам поддержку
+		Удары сущности увеличивают пробивную способность ваших ударов по этой же цели
+		'''
 }
 
 NPCs.NurseNPC.GiftButton: Подарок
@@ -121,6 +132,8 @@ Projectiles: {
 	// HelFireDiscProjectile.DisplayName: Hel Fire Disc Projectile
 	// KrakenTentacleProjectile.DisplayName: Kraken Tentacle Projectile
 	// TheStellarThrowProjectile.DisplayName: The Stellar Throw Projectile
+	// ArteryEntityProjectile.DisplayName: Artery Entity Projectile
+	// TheStellarThrowStarProjectile.DisplayName: The Stellar Throw Star Projectile
 }
 
 DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе

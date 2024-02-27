@@ -58,6 +58,7 @@ Items: {
 			'''
 			Critical hits unleash the true power of the yoyo
 			During a thunderstorm, critical strike chance is increased by 6%
+			'Who?'
 			'''
 	}
 
@@ -78,7 +79,7 @@ Items: {
 
 	TheStellarThrowItem: {
 		DisplayName: The Stellar Throw
-		Tooltip: ""
+		Tooltip: Stars periodically fall from the sky onto nearby enemies
 	}
 }
 
@@ -104,6 +105,16 @@ VanillaItems: {
 		Flame ring pursues the nearest enemy
 		'''
 	KrakenItem.Tooltip: Critical hits release the Kraken's tentacles
+	ArteryItem.Tooltip:
+		'''
+		Tormented entity provides support to you
+		Entity hits restore your health
+		'''
+	MalaiseItem.Tooltip:
+		'''
+		Suspicious entity provides support to you
+		Entity hits increase armor penetration ability of your hits against the same target
+		'''
 }
 
 NPCs.NurseNPC.GiftButton: Gift
@@ -121,6 +132,8 @@ Projectiles: {
 	HelFireDiscProjectile.DisplayName: Hel Fire Disc Projectile
 	KrakenTentacleProjectile.DisplayName: Kraken Tentacle Projectile
 	TheStellarThrowProjectile.DisplayName: The Stellar Throw Projectile
+	ArteryEntityProjectile.DisplayName: Artery Entity Projectile
+	TheStellarThrowStarProjectile.DisplayName: The Stellar Throw Star Projectile
 }
 
 DropConditions.SpaceKeyCondition: Drops in the Hardmode Space
