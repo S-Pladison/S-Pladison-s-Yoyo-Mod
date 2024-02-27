@@ -37,7 +37,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             Item.shoot = ModContent.ProjectileType<BlackholeProjectile>();
 
-            Item.rare = ItemRarityID.Lime;
+            Item.rare = ItemRarityID.Yellow;
             Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
         }
     }
