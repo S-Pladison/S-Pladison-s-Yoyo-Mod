@@ -96,11 +96,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         private bool initialized;
         private int initCritChance;
         private TrailRenderer trailRenderer;
+        private TrailRenderer shadowTrailRenderer;
         private int ringProjIndex;
 
         public override void OnKill(int timeLeft)
         {
             trailRenderer?.Dispose();
+            shadowTrailRenderer?.Dispose();
         }
 
         public override void AI()
@@ -109,7 +111,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             {
                 if (!Main.dedServ)
                 {
-                    trailRenderer = new TrailRenderer(7).SetWidth(f => MathHelper.Lerp(8f, 0f, f));
+                    trailRenderer = new TrailRenderer(10).SetWidth(f => MathHelper.Lerp(8f, 0f, f));
+                    shadowTrailRenderer = new TrailRenderer(13).SetWidth(f => MathHelper.Lerp(10f, 0f, f));
                 }
 
                 initCritChance = Projectile.CritChance;
@@ -128,6 +131,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             }
 
             trailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
+            shadowTrailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
 
             Projectile.CritChance = initCritChance + BellowingThunderItem.GetBonusValue();
 
@@ -159,12 +163,27 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
-                trailRenderer.Draw(ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
+                if (trailRenderer is null || shadowTrailRenderer is null) return;
+
+                var effect = ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
                 {
                     parameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "StripGradient_BlackToAlpha_PremultipliedAlpha", AssetRequestMode.ImmediateLoad).Value);
                     parameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.TransformWithScreenOffset);
+                });
 
-                    var colorVec4 = (new Color(208, 99, 219) * 0.45f).ToVector4();
+                shadowTrailRenderer.Draw(effect.Prepare(parameters =>
+                {
+                    var colorVec4 = (Color.Black * 0.15f).ToVector4();
+
+                    parameters["ColorTL"].SetValue(colorVec4);
+                    parameters["ColorTR"].SetValue(colorVec4);
+                    parameters["ColorBL"].SetValue(colorVec4);
+                    parameters["ColorBR"].SetValue(colorVec4);
+                }));
+
+                trailRenderer.Draw(effect.Prepare(parameters =>
+                {
+                    var colorVec4 = new Color(208, 99, 219).ToVector4();
 
                     parameters["ColorTL"].SetValue(colorVec4);
                     parameters["ColorTR"].SetValue(colorVec4);
