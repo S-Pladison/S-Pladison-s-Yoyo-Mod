@@ -95,7 +95,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             trailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
 
-            Lighting.AddLight(Projectile.Center, new Color(160, 30, 120).ToVector3() * 0.15f);
+            Lighting.AddLight(Projectile.Center, new Color(160, 30, 120).ToVector3() * 0.2f);
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)

@@ -135,7 +135,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             Projectile.CritChance = initCritChance + BellowingThunderItem.GetBonusValue();
 
-            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.25f);
+            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.2f);
         }
 
         public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)

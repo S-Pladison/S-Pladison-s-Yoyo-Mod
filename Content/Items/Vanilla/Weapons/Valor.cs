@@ -60,7 +60,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
             spriteTrailRenderer?.SetNextPoint(proj.Center + proj.velocity, proj.rotation);
 
-            Lighting.AddLight(proj.Center, new Color(35, 90, 255).ToVector3() * 0.15f);
+            Lighting.AddLight(proj.Center, new Color(35, 90, 255).ToVector3() * 0.2f);
         }
 
         public override void OnHitNPC(Projectile proj, NPC npc, NPC.HitInfo hit, int damageDone)
