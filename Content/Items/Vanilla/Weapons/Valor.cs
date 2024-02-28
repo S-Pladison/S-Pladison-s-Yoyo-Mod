@@ -30,7 +30,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ValorProjectile : VanillaYoyoProjectile
     {
-        public static readonly int ChainChanceDenominator = 7;
+        public const int ChainChanceDenominator = 8;
 
         public override int YoyoType => ProjectileID.Valor;
 
@@ -72,6 +72,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 return;
 
             if (!globalNPC.TryGetChainStartPoint(npc, out var chainStartPoint))
+                return;
+
+            if (!globalNPC.CanSecureWithChain(npc))
                 return;
 
             globalNPC.SecureWithChain(npc, chainStartPoint);
@@ -177,7 +180,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
         }
 
-        public const float SecuredWithChainLengthLimit = 16f * 5f;
+        public const float SecuredWithChainLengthMax = 16f * 7f;
+        public const float SecuredWithChainLengthMin = 16f * 3f;
         public const int SecuredWithChainTime = 60 * 7;
 
         public override bool InstancePerEntity => true;
@@ -185,6 +189,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         private int securedWithChainTimer;
         private Vector2 chainStartPosition;
+        private float securedWithChainLength;
 
         public override void Load()
         {
@@ -219,7 +224,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             breakFlag |= npc.noTileCollide;
             // Goblin Sorcerer, Tim, Dark Caster and others before teleportation
-            breakFlag |= npc.aiStyle == 8 && npc.ai[2] != 0f && npc.ai[3] != 0f;
+            breakFlag |= npc.aiStyle == NPCAIStyleID.Caster && npc.ai[2] != 0f && npc.ai[3] != 0f;
 
             if (breakFlag)
             {
@@ -244,7 +249,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             securedWithChainTimer--;
 
-            if (IsSecuredWithChain || (npc.Center - chainStartPosition).Length() > 16f * 25f)
+            if (IsSecuredWithChain && (npc.Center - chainStartPosition).Length() <= (securedWithChainLength * 1.1f))
                 return;
 
             BreakChain(npc);
@@ -258,16 +263,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             BreakChain(npc);
         }
 
-        public void SecureWithChain(NPC npc, Point chainStartPos)
+        public bool CanSecureWithChain(NPC npc)
         {
-            if (IsSecuredWithChain
+            return !(IsSecuredWithChain
                 || !npc.CanBeChasedBy()
                 || npc.noTileCollide
+                || npc.aiStyle == NPCAIStyleID.Antlion
                 || npc.boss
-                || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]) return;
+                || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]);
+        }
 
+        public void SecureWithChain(NPC npc, Point chainStartPos)
+        {
             chainStartPosition = chainStartPos.ToWorldCoordinates();
             securedWithChainTimer = SecuredWithChainTime;
+            securedWithChainLength = Math.Clamp((chainStartPosition - npc.Center).Length(), SecuredWithChainLengthMin, SecuredWithChainLengthMax);
 
             npc.netUpdate = true;
 
@@ -283,6 +293,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public void BreakChain(NPC npc)
         {
             securedWithChainTimer = -1;
+            securedWithChainLength = 0;
+
             npc.netUpdate = true;
 
             SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
@@ -297,10 +309,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var vectorFromChainToNPC = nextPosition - chainStartPosition;
             var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
 
-            if (vectorFromChainToNPCLength <= SecuredWithChainLengthLimit) return;
+            if (vectorFromChainToNPCLength <= securedWithChainLength) return;
 
             var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
-            var newPosition = chainStartPosition + normalizedVectorFromChainToNPC * SecuredWithChainLengthLimit;
+            var newPosition = chainStartPosition + normalizedVectorFromChainToNPC * securedWithChainLength;
             var velocityCorrection = newPosition - nextPosition;
 
             npc.velocity += velocityCorrection;
@@ -354,8 +366,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             var npcTilePos = npc.Bottom.ToTileCoordinates();
 
-            const int tileCountToCheckX = 9;
-            const int tileCountToCheckY = 9;
+            const int tileCountToCheckX = (int)(SecuredWithChainLengthMax / 16f) * 2 + 1;
+            const int tileCountToCheckY = tileCountToCheckX;
 
             const int halfTileCountToCheckX = tileCountToCheckX / 2;
             const int halfTileCountToCheckY = tileCountToCheckY / 2;
