@@ -80,8 +80,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 radius: currentRadius,
                 predicate: (npc) =>
                     npc.CanBeChasedBy(Projectile, false) &&
-                    !npc.boss &&
-                    !NPCID.Sets.ShouldBeCountedAsBoss[npc.type] &&
+                    !npc.IsBossOrRelated() &&
                     Collision.CanHitLine(Projectile.position, Projectile.width, Projectile.height, npc.position, npc.width, npc.height)
             );
 
