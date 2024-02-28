@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using Terraria;
 
 namespace SPYoyoMod.Utils
@@ -70,7 +69,6 @@ namespace SPYoyoMod.Utils
             entities.Clear();
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         protected abstract int GetEntityType(T entity);
     }
 
