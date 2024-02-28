@@ -10,6 +10,7 @@ using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -37,7 +38,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class TheStellarThrowProjectile : YoyoProjectile
     {
         public const float SpawnStarRadius = 16f * 15f;
-        public const float SpawnStarTime = 60f * 1.5f;
+        public const float SpawnStarCooldownMin = 60f * 1.5f;
+        public const float SpawnStarCooldownMax = 60f * 2f;
 
         private TrailRenderer trailRenderer;
         private float starScale;
@@ -46,20 +48,25 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public override float LifeTime => -1f;
         public override float MaxRange => 300f;
         public override float TopSpeed => 13f;
-        public ref float Timer => ref Projectile.ai[2];
+        public ref float StarTimer => ref Projectile.ai[2];
 
         public override void OnKill(int timeLeft)
         {
             trailRenderer?.Dispose();
         }
 
+        public override void YoyoOnSpawn(Player owner, IEntitySource source)
+        {
+            StarTimer = Main.rand.NextFloat(SpawnStarCooldownMin, SpawnStarCooldownMax);
+        }
+
         public override void AI()
         {
             if (Projectile.owner == Main.myPlayer)
             {
-                Timer++;
+                StarTimer--;
 
-                if (Timer > SpawnStarTime)
+                if (StarTimer <= 0)
                 {
                     var targets = NPCUtils.NearestNPCs(Projectile.Center, SpawnStarRadius, (npc) => npc.CanBeChasedBy(Projectile, false));
 
@@ -71,7 +78,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
                         Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, starVelosity, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, npc.whoAmI);
 
-                        Timer = 0;
+                        StarTimer = Main.rand.NextFloat(SpawnStarCooldownMin, SpawnStarCooldownMax);
                     }
                 }
             }
@@ -261,7 +268,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override bool? CanHitNPC(NPC target)
         {
-            return target.CanBeChasedBy(Projectile, false);
+            return target.CanBeChasedBy(Projectile, false) || target.type == NPCID.TargetDummy;
         }
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
