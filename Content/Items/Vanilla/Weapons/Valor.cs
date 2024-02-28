@@ -1,20 +1,23 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoMod.Cil;
 using ReLogic.Content;
 using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
-using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
+using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 {
@@ -30,7 +33,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ValorProjectile : VanillaYoyoProjectile
     {
-        public const int ChainChanceDenominator = 8;
+        public const int ChainChanceDenominator = 7;
 
         public override int YoyoType => ProjectileID.Valor;
 
@@ -74,7 +77,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!globalNPC.TryGetChainStartPoint(npc, out var chainStartPoint))
                 return;
 
-            if (!globalNPC.CanSecureWithChain(npc))
+            if (!globalNPC.CanSecureWithChain(npc, chainStartPoint))
                 return;
 
             globalNPC.SecureWithChain(npc, chainStartPoint);
@@ -183,22 +186,43 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         public const float SecuredWithChainLengthMax = 16f * 7f;
         public const float SecuredWithChainLengthMin = 16f * 3f;
         public const int SecuredWithChainTime = 60 * 7;
+        public const int CooldownTime = 60 * 3;
 
         public override bool InstancePerEntity => true;
         public bool IsSecuredWithChain => securedWithChainTimer > 0;
+        public bool IsOnCooldown => securedWithChainTimer < 0;
 
         private int securedWithChainTimer;
-        private Vector2 chainStartPosition;
         private float securedWithChainLength;
+        private Vector2 chainStartPosition;
 
         public override void Load()
         {
-            On_NPC.UpdateCollision += (orig, npc) =>
+            IL_NPC.UpdateNPC_Inner += (il) =>
             {
-                if (npc.TryGetGlobalNPC(out ValorGlobalNPC valorNPC))
-                    valorNPC.UpdateCollision(npc);
+                var c = new ILCursor(il);
 
-                orig(npc);
+                c.Index = c.Instrs.Count - 1;
+
+                // if (!noTileCollide)
+
+                // IL_0775: ldarg.0
+                // IL_0776: ldfld bool Terraria.NPC::noTileCollide
+                // IL_077b: brtrue.s IL_0788
+
+                if (!c.TryGotoPrev(MoveType.Before,
+                        i => i.MatchLdarg(0),
+                        i => i.MatchLdfld<NPC>("noTileCollide"),
+                        i => i.MatchBrtrue(out _))) return;
+
+                c.Index--;
+
+                c.Emit(Ldarg_0);
+                c.EmitDelegate<Action<NPC>>(npc =>
+                {
+                    if (npc.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) && valorNPC.IsSecuredWithChain)
+                        valorNPC.UpdateCollision(npc);
+                });
             };
 
             On_NPC.Teleport += (orig, npc, position, style, extraInfo) =>
@@ -210,51 +234,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             };
         }
 
-        public override void OnSpawn(NPC npc, IEntitySource source)
-        {
-            securedWithChainTimer = -1;
-        }
-
-        public override bool PreAI(NPC npc)
-        {
-            if (!IsSecuredWithChain)
-                return true;
-
-            var breakFlag = false;
-
-            breakFlag |= npc.noTileCollide;
-            // Goblin Sorcerer, Tim, Dark Caster and others before teleportation
-            breakFlag |= npc.aiStyle == NPCAIStyleID.Caster && npc.ai[2] != 0f && npc.ai[3] != 0f;
-
-            if (breakFlag)
-            {
-                BreakChain(npc);
-            }
-
-            return true;
-        }
-
-        public override void PostAI(NPC npc)
-        {
-            if (!IsSecuredWithChain)
-                return;
-
-            if (Main.rand.NextBool(5))
-            {
-                var dust = Main.dust[Dust.NewDust(npc.position, npc.width, npc.height, DustID.DungeonWater, 0f, 0f)];
-                dust.velocity *= 0.1f;
-                dust.scale += 0.1f;
-                dust.noGravity = true;
-            }
-
-            securedWithChainTimer--;
-
-            if (IsSecuredWithChain && (npc.Center - chainStartPosition).Length() <= (securedWithChainLength * 1.1f))
-                return;
-
-            BreakChain(npc);
-        }
-
         public override void OnKill(NPC npc)
         {
             if (!IsSecuredWithChain)
@@ -263,14 +242,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             BreakChain(npc);
         }
 
-        public bool CanSecureWithChain(NPC npc)
+        public bool CanSecureWithChain(NPC npc, Point chainStartPos)
         {
             return !(IsSecuredWithChain
+                || IsOnCooldown
                 || !npc.CanBeChasedBy()
-                || npc.noTileCollide
-                || npc.aiStyle == NPCAIStyleID.Antlion
-                || npc.boss
-                || NPCID.Sets.ShouldBeCountedAsBoss[npc.type]);
+                || Vector2.Distance(chainStartPos.ToWorldCoordinates(), npc.Center) > SecuredWithChainLengthMax
+                || npc.IsBossOrRelated());
         }
 
         public void SecureWithChain(NPC npc, Point chainStartPos)
@@ -292,7 +270,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public void BreakChain(NPC npc)
         {
-            securedWithChainTimer = -1;
+            securedWithChainTimer = -CooldownTime;
             securedWithChainLength = 0;
 
             npc.netUpdate = true;
@@ -302,9 +280,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public void UpdateCollision(NPC npc)
         {
-            if (!IsSecuredWithChain)
-                return;
-
             var nextPosition = npc.Center + npc.velocity;
             var vectorFromChainToNPC = nextPosition - chainStartPosition;
             var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
@@ -318,48 +293,53 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             npc.velocity += velocityCorrection;
         }
 
-        public override void DrawEffects(NPC npc, ref Color drawColor)
+        public override bool PreAI(NPC npc)
         {
-            if (!IsSecuredWithChain) return;
+            if (!IsSecuredWithChain)
+                return true;
 
-            DrawChainSegments(npc, Main.spriteBatch);
-            DrawChainHeadAndTail(npc, Main.spriteBatch);
-        }
+            var breakFlag = false;
 
-        public void DrawChainSegments(NPC npc, SpriteBatch spriteBatch)
-        {
-            var texture = TextureAssets.Chain22;
-            var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
-            var startPosition = chainStartPosition - Main.screenPosition;
-            var vectorFromChainToNPC = endPosition - startPosition;
-            var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
+            // Goblin Sorcerer, Tim, Dark Caster and others before teleportation
+            breakFlag |= npc.aiStyle == NPCAIStyleID.Caster && npc.ai[2] != 0f && npc.ai[3] != 0f;
 
-            var segmentRotation = vectorFromChainToNPC.ToRotation() + MathHelper.PiOver2;
-            var segmentOrigin = texture.Size() * 0.5f;
-            var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
-            var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();
-
-            for (var i = 0; i < segmentCount; i++)
+            if (breakFlag)
             {
-                var position = startPosition + segmentVector * i;
-                var color = Lighting.GetColor((position + Main.screenPosition).ToTileCoordinates());
-                spriteBatch.Draw(texture.Value, position, null, color, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                BreakChain(npc);
             }
+
+            return true;
         }
 
-        public void DrawChainHeadAndTail(NPC npc, SpriteBatch spriteBatch)
+        public override void PostAI(NPC npc)
         {
-            var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
-            var startPosition = chainStartPosition - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_ChainHead", AssetRequestMode.ImmediateLoad);
-            var origin = texture.Size() * 0.5f;
-            var color = Lighting.GetColor((startPosition + Main.screenPosition).ToTileCoordinates());
+            if (securedWithChainTimer == 0)
+                return;
 
-            spriteBatch.Draw(texture.Value, startPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
+            if (IsOnCooldown)
+            {
+                securedWithChainTimer++;
+                return;
+            }
+            // else if (IsSecuredWithChain)
+            // {
 
-            color = Lighting.GetColor((endPosition + Main.screenPosition).ToTileCoordinates());
+            if (Main.rand.NextBool(5))
+            {
+                var dust = Main.dust[Dust.NewDust(npc.position, npc.width, npc.height, DustID.DungeonWater, 0f, 0f)];
+                dust.velocity *= 0.1f;
+                dust.scale += 0.1f;
+                dust.noGravity = true;
+            }
 
-            spriteBatch.Draw(texture.Value, endPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
+            securedWithChainTimer--;
+
+            if (IsSecuredWithChain && (npc.Center - chainStartPosition).Length() <= SecuredWithChainLengthMax * 1.2f)
+                return;
+
+            BreakChain(npc);
+
+            // }
         }
 
         public bool TryGetChainStartPoint(NPC npc, out Point point)
@@ -405,6 +385,72 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             point = default;
             return false;
+        }
+
+        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+        {
+            var timerIsNotZero = securedWithChainTimer != 0;
+
+            bitWriter.WriteBit(timerIsNotZero);
+
+            if (timerIsNotZero)
+            {
+                binaryWriter.Write((short)securedWithChainTimer);
+            }
+        }
+
+        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+        {
+            var timerIsNotZero = bitReader.ReadBit();
+
+            if (timerIsNotZero)
+            {
+                securedWithChainTimer = binaryReader.ReadInt16();
+            }
+        }
+
+        public override void DrawEffects(NPC npc, ref Color drawColor)
+        {
+            if (!IsSecuredWithChain) return;
+
+            DrawChainSegments(npc, Main.spriteBatch);
+            DrawChainHeadAndTail(npc, Main.spriteBatch);
+        }
+
+        public void DrawChainSegments(NPC npc, SpriteBatch spriteBatch)
+        {
+            var texture = TextureAssets.Chain22;
+            var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+            var startPosition = chainStartPosition - Main.screenPosition;
+            var vectorFromChainToNPC = endPosition - startPosition;
+            var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
+
+            var segmentRotation = vectorFromChainToNPC.ToRotation() + MathHelper.PiOver2;
+            var segmentOrigin = texture.Size() * 0.5f;
+            var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
+            var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();
+
+            for (var i = 0; i < segmentCount; i++)
+            {
+                var position = startPosition + segmentVector * i;
+                var color = Lighting.GetColor((position + Main.screenPosition).ToTileCoordinates());
+                spriteBatch.Draw(texture.Value, position, null, color, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+            }
+        }
+
+        public void DrawChainHeadAndTail(NPC npc, SpriteBatch spriteBatch)
+        {
+            var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+            var startPosition = chainStartPosition - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_ChainHead", AssetRequestMode.ImmediateLoad);
+            var origin = texture.Size() * 0.5f;
+            var color = Lighting.GetColor((startPosition + Main.screenPosition).ToTileCoordinates());
+
+            spriteBatch.Draw(texture.Value, startPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
+
+            color = Lighting.GetColor((endPosition + Main.screenPosition).ToTileCoordinates());
+
+            spriteBatch.Draw(texture.Value, endPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
         }
 
         private static bool IsRightTile(int x, int y)
