@@ -59,6 +59,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
 
             proj.localAI[1] = MathHelper.Clamp(proj.localAI[1] + (buffActive ? 0.05f : -0.02f), 0f, 1f);
+
+            Lighting.AddLight(proj.Center, new Color(65, 185, 255).ToVector3() * 0.25f);
         }
 
         public override void ModifyHitNPC(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)

@@ -91,10 +91,14 @@ namespace SPYoyoMod.Utils.Rendering
         /// <summary>
         /// Draw npc. And nothing more.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-        public static void DrawNPC(NPC npc, bool behindTiles)
+        public static void DrawNPC(NPC npc, bool? behindTiles = null)
         {
-            Main.instance.DrawNPC(npc.whoAmI, behindTiles);
+            var oldPosition = npc.position;
+            npc.position += npc.netOffset;
+
+            Main.instance.DrawNPC(npc.whoAmI, behindTiles ?? npc.behindTiles);
+
+            npc.position = oldPosition;
         }
 
         /// <summary>

@@ -59,6 +59,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
             spriteTrailRenderer?.SetNextPoint(proj.Center + proj.velocity, proj.rotation);
+
+            Lighting.AddLight(proj.Center, new Color(35, 90, 255).ToVector3() * 0.25f);
         }
 
         public override void OnHitNPC(Projectile proj, NPC npc, NPC.HitInfo hit, int damageDone)
@@ -213,9 +215,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             if (!IsSecuredWithChain)
                 return true;
 
+            var breakFlag = false;
+
+            breakFlag |= npc.noTileCollide;
             // Goblin Sorcerer, Tim, Dark Caster and others before teleportation
-            if (npc.aiStyle == 8 && npc.ai[2] != 0f && npc.ai[3] != 0f)
+            breakFlag |= npc.aiStyle == 8 && npc.ai[2] != 0f && npc.ai[3] != 0f;
+
+            if (breakFlag)
+            {
                 BreakChain(npc);
+            }
 
             return true;
         }
@@ -288,14 +297,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var vectorFromChainToNPC = nextPosition - chainStartPosition;
             var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
 
-            if (vectorFromChainToNPCLength > SecuredWithChainLengthLimit)
-            {
-                var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
-                var newPosition = chainStartPosition + normalizedVectorFromChainToNPC * SecuredWithChainLengthLimit;
-                var velocityCorrection = newPosition - nextPosition;
+            if (vectorFromChainToNPCLength <= SecuredWithChainLengthLimit) return;
 
-                npc.velocity += velocityCorrection;
-            }
+            var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
+            var newPosition = chainStartPosition + normalizedVectorFromChainToNPC * SecuredWithChainLengthLimit;
+            var velocityCorrection = newPosition - nextPosition;
+
+            npc.velocity += velocityCorrection;
         }
 
         public override void DrawEffects(NPC npc, ref Color drawColor)
@@ -333,7 +341,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             var startPosition = chainStartPosition - Main.screenPosition;
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Valor_ChainHead", AssetRequestMode.ImmediateLoad);
             var origin = texture.Size() * 0.5f;
-
             var color = Lighting.GetColor((startPosition + Main.screenPosition).ToTileCoordinates());
 
             spriteBatch.Draw(texture.Value, startPosition, null, color, 0f, origin, 1f, SpriteEffects.None, 0);
@@ -431,7 +438,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             foreach (var npc in npcObserver.GetEntityInstances())
             {
-                DrawUtils.DrawNPC(npc, false);
+                DrawUtils.DrawNPC(npc);
             }
 
             Main.spriteBatch.End();
@@ -441,7 +448,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
-            var effect = ModAssets.RequestEffect("ValorEffect").Prepare(parameters =>
+            var effect = ModAssets.RequestEffect("ValorNPCOutline").Prepare(parameters =>
             {
                 parameters["ScreenSize"].SetValue(target.Size());
                 parameters["OutlineColor"].SetValue(new Color(35, 90, 255).ToVector4());

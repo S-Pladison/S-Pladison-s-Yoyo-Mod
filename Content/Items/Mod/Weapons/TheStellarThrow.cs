@@ -55,21 +55,24 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void AI()
         {
-            Timer++;
-
-            if (Timer > SpawnStarTime)
+            if (Projectile.owner == Main.myPlayer)
             {
-                var targets = NPCUtils.NearestNPCs(Projectile.Center, SpawnStarRadius, (npc) => npc.CanBeChasedBy(Projectile, false));
+                Timer++;
 
-                if (targets.Count > 0)
+                if (Timer > SpawnStarTime)
                 {
-                    var npc = targets[Main.rand.Next(targets.Count)].npc;
-                    var starPosition = npc.Center - Vector2.UnitY * 16f * 50f + Vector2.UnitX * (Main.rand.NextBool() ? 1 : -1) * 16f * Main.rand.NextFloat(20f, 60f);
-                    var starVelosity = Vector2.Normalize(npc.Center - starPosition) * 24f;
+                    var targets = NPCUtils.NearestNPCs(Projectile.Center, SpawnStarRadius, (npc) => npc.CanBeChasedBy(Projectile, false));
 
-                    Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, starVelosity, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, npc.whoAmI);
+                    if (targets.Count > 0)
+                    {
+                        var npc = targets[Main.rand.Next(targets.Count)].npc;
+                        var starPosition = npc.Center - Vector2.UnitY * 16f * 50f + Vector2.UnitX * (Main.rand.NextBool() ? 1 : -1) * 16f * Main.rand.NextFloat(20f, 60f);
+                        var starVelosity = Vector2.Normalize(npc.Center - starPosition) * 24f;
 
-                    Timer = 0;
+                        Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, starVelosity, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, npc.whoAmI);
+
+                        Timer = 0;
+                    }
                 }
             }
 
@@ -92,7 +95,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             trailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
 
-            Lighting.AddLight(Projectile.Center, new Color(160, 30, 120).ToVector3() * 0.4f);
+            Lighting.AddLight(Projectile.Center, new Color(160, 30, 120).ToVector3() * 0.25f);
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
