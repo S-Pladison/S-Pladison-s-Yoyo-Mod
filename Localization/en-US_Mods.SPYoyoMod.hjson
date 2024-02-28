@@ -115,11 +115,6 @@ VanillaItems: {
 		Suspicious entity provides support to you
 		Entity hits increase armor penetration ability of your hits against the same target
 		'''
-	ChikItem.Tooltip:
-		'''
-		Every 7th hit shatters the yoyo into several fragments
-		Until the fragments return back, the yoyo won't be able to deal damage
-		'''
 }
 
 NPCs.NurseNPC.GiftButton: Gift

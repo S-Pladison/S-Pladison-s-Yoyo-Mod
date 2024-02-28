@@ -12,14 +12,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Remove="Assets\BellowingThunder.png" />
-    <None Remove="Assets\Effects\Compiler\BellowingThunderRingStrip.fx" />
     <None Remove="Assets\Effects\Compiler\BlackholeBackground.fx" />
-    <None Remove="Assets\Effects\Compiler\HelFireTrail.fx" />
-    <None Remove="Assets\Effects\Compiler\TheStellarThrowTrail.fx" />
     <None Remove="Assets\Effects\Compiler\ValorEffect.fx" />
     <None Remove="Assets\Sounds\Links.txt" />
     <None Remove="Assets\Textures\BellowingThunderProjectile.png" />
-    <None Remove="Assets\Textures\Dusts\SpaceChest.png" />
     <None Remove="Assets\Textures\Effects\Extra_28.png" />
     <None Remove="Assets\Textures\Effects\Extra_29.png" />
     <None Remove="Assets\Textures\Effects\HDSmokeParticle.png" />
@@ -28,15 +24,10 @@
     <None Remove="Assets\Textures\Items\FlamingFlower.png" />
     <None Remove="Assets\Textures\Items\MyocardialInfarction.png" />
     <None Remove="Assets\Textures\Items\StrangeDrink.png" />
-    <None Remove="Assets\Textures\Items\TheStellarThrow.png" />
     <None Remove="Assets\Textures\Items\TitaniumYoyo.png" />
     <None Remove="Assets\Textures\Projectiles\Blackhole.png" />
     <None Remove="Assets\Textures\Projectiles\MyocardialInfarction.png" />
-    <None Remove="Assets\Textures\Projectiles\TheStellarThrow.png" />
     <None Remove="Assets\Textures\Projectiles\TitaniumYoyo.png" />
-    <None Remove="Assets\Textures\Tiles\SpaceChest.png" />
-    <None Remove="Assets\Textures\Tiles\SpaceChest_Highlight.png" />
-    <None Remove="Common\ModCompatibility\ModCompatibilityInfo.txt" />
     <None Remove="Localization\ru-RU_Mods.SPYoyoMod.hjson" />
   </ItemGroup>
   <ItemGroup>
