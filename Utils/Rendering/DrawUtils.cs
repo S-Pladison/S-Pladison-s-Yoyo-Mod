@@ -91,6 +91,7 @@ namespace SPYoyoMod.Utils.Rendering
         /// <summary>
         /// Draw npc. And nothing more.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
         public static void DrawNPC(NPC npc, bool behindTiles)
         {
             Main.instance.DrawNPC(npc.whoAmI, behindTiles);
