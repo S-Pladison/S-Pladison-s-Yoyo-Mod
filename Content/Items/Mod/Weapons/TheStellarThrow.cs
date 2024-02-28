@@ -95,7 +95,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             trailRenderer?.SetNextPoint(Projectile.Center + Projectile.velocity);
 
-            Lighting.AddLight(Projectile.Center, new Color(160, 30, 120).ToVector3() * 0.25f);
+            Lighting.AddLight(Projectile.Center, new Color(160, 30, 120).ToVector3() * 0.15f);
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
@@ -256,7 +256,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 SoundEngine.PlaySound(in SoundID.Item9, Projectile.Center);
             }
 
-            Lighting.AddLight(Projectile.Center, StyleColors.Item1.ToVector3() * 0.4f);
+            Lighting.AddLight(Projectile.Center, StyleColors.Item1.ToVector3() * 0.3f);
         }
 
         public override bool? CanHitNPC(NPC target)

@@ -135,7 +135,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             Projectile.CritChance = initCritChance + BellowingThunderItem.GetBonusValue();
 
-            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f);
+            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.25f);
         }
 
         public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)
@@ -298,7 +298,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Projectile.Center = Main.projectile[yoyoProjIndex].Center;
             Projectile.CritChance = initCritChance + BellowingThunderItem.GetBonusValue();
 
-            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.6f * ringRadiusEasing.Evaluate(TimeLeftProgress));
+            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f * ringRadiusEasing.Evaluate(TimeLeftProgress));
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)

@@ -89,7 +89,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
 
-            Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.25f);
+            Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.15f);
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
@@ -209,7 +209,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 initialized = true;
             }
 
-            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - TimeLeftProgress) * 0.5f);
+            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - TimeLeftProgress) * 0.4f);
 
             for (int k = 0; k < 3; k++)
             {
