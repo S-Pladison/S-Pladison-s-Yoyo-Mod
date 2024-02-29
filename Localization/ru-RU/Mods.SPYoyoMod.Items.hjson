@@ -1,0 +1,71 @@
+AdamantiteYoyoItem: {
+	DisplayName: Адамантитовый йо-йо
+	Tooltip: ""
+}
+
+BearingItem: {
+	DisplayName: Подшипник
+	Tooltip: Увеличивает время полета йо-йо на 50%
+}
+
+BellowingThunderItem: {
+	DisplayName: Раскаты грома
+	Tooltip:
+		'''
+		Критические удары раскрывают истинную силу йо-йо
+		Во время грозы шанс критического удара увеличен на 6%
+		«Кто это?»
+		'''
+}
+
+BlackholeItem: {
+	DisplayName: Черная дыра
+	Tooltip: Притягивает к себе врагов
+}
+
+SoulTormentorItem: {
+	DisplayName: Истязатель душ
+	Tooltip:
+		'''
+		Очаровывает 3-х ближайших врагов
+		Попадание по очарованному врагу также наносит урон остальным
+		'''
+}
+
+SpaceChestItem: {
+	DisplayName: Космический сундук
+	Tooltip: ""
+}
+
+SpaceKey: {
+	DisplayName: Космический ключ
+	Tooltip: Открывает космический сундук в Темнице
+}
+
+StrangeDrinkItem: {
+	Tooltip:
+		'''
+		Можно подарить медсестре
+		«Удивительно, но пахнет восхитительно»
+		'''
+	DisplayName: Странный напиток
+}
+
+TheStellarThrowItem: {
+	DisplayName: Звездный бросок
+	Tooltip: Звезды периодически падают с небес на ближайших врагов
+}
+
+TitaniumYoyoItem: {
+	DisplayName: Титановый йо-йо
+	Tooltip:
+		'''
+		Удары создают защитный барьер из осколков титана
+		Осколки наносят на 30% больше урона, если игрок экипирован в титановую броню
+		'''
+}
+
+TrappedSpaceChestItem: {
+	DisplayName: Фальшивый космический сундук
+	Tooltip: ""
+}

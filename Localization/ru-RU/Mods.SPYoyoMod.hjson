@@ -1,0 +1,35 @@
+Configs: {
+	ServerSideConfig: {
+		DisplayName: Server Side Config
+
+		ReworkedVanillaYoyos: {
+			Label: Reworked Vanilla Yoyos
+			Tooltip: ""
+		}
+
+		ReworkedYoyoUseStyle: {
+			Label: Reworked Yoyo Use Style
+			Tooltip: ""
+		}
+	}
+}
+
+NPCs.NurseNPC.GiftButton: Подарок
+Dialogue.NurseNPC.Dialogue.ReceivedGift: О, это было необязательно, спасибо. Прими это взамен. Я думаю, для тебя это будет более ценным, чем для меня.
+DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе
+
+Tiles: {
+	SpaceChestTile: {
+		MapEntry0: Космический сундук
+		MapEntry1: Запертый космический сундук
+	}
+
+	// TrappedSpaceChestTile.MapEntry: "{$Mods.SPYoyoMod.Tiles.SpaceChestTile.MapEntry0}"
+}
+
+WorldGen: {
+	SpaceChest: {
+		Name: S-Pladison's Yoyo Mod: Космический сундук
+		ProgressMessage: Добавление кусочка космоса в подземелье...
+	}
+}

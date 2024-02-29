@@ -1,0 +1,71 @@
+AdamantiteYoyoItem: {
+	DisplayName: Adamantite Yoyo
+	Tooltip: ""
+}
+
+BearingItem: {
+	DisplayName: Bearing
+	Tooltip: 50% increased yoyo duration
+}
+
+BellowingThunderItem: {
+	DisplayName: Bellowing Thunder
+	Tooltip:
+		'''
+		Critical hits unleash the true power of the yoyo
+		During a thunderstorm, critical strike chance is increased by 6%
+		'Who?'
+		'''
+}
+
+BlackholeItem: {
+	DisplayName: Blackhole
+	Tooltip: Pulls enemies to itself
+}
+
+SoulTormentorItem: {
+	DisplayName: Soul Tormentor
+	Tooltip:
+		'''
+		Charms 3 nearest enemies
+		Hitting a charmed enemy also deals damage to others
+		'''
+}
+
+SpaceChestItem: {
+	DisplayName: Space Chest
+	Tooltip: ""
+}
+
+SpaceKey: {
+	DisplayName: Space Key
+	Tooltip: Unlocks a Space Chest in the dungeon
+}
+
+StrangeDrinkItem: {
+	Tooltip:
+		'''
+		Can be gifted to a nurse
+		'Surprisingly, it smells really good'
+		'''
+	DisplayName: Strange Drink
+}
+
+TheStellarThrowItem: {
+	DisplayName: The Stellar Throw
+	Tooltip: Stars periodically fall from the sky onto nearby enemies
+}
+
+TitaniumYoyoItem: {
+	DisplayName: Titanium Yoyo
+	Tooltip:
+		'''
+		Hits generates a defensive barrier of titanium shards
+		Shards deals 30% more damage if player is equipped with titanium armor
+		'''
+}
+
+TrappedSpaceChestItem: {
+	DisplayName: Trapped Space Chest
+	Tooltip: ""
+}

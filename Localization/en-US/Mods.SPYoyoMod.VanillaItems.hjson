@@ -1,0 +1,21 @@
+AmarokItem.Tooltip: ""
+AmazonItem.Tooltip:
+	'''
+	Yoyo and string poison enemies
+	Enemies within the aura of natural restoration receive additional poison damage
+	'''
+CascadeItem.Tooltip:
+	'''
+	Hits have a chance to set enemy on fire
+	Periodically explodes, causing area damage
+	'''
+ChikItem.Tooltip:
+	'''
+	Every 7th hit shatters the yoyo into several fragments
+	Until the fragments return back, the yoyo won't be able to deal damage
+	'''
+CodeOneItem.Tooltip: If you are fighting with a maximum of 2 enemies, the damage dealt to them will be increased by 33%
+RallyItem.Tooltip: The higher player's movement speed, the higher damage
+StringItem.Tooltip: Increases yoyo range by 4 tiles
+TheEyeOfCthulhuItem.Tooltip: ""
+ValorItem.Tooltip: Hitting an enemy has a chance to secured it with a chain

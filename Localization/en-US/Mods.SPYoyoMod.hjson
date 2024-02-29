@@ -1,0 +1,35 @@
+Configs: {
+	ServerSideConfig: {
+		DisplayName: Server Side Config
+
+		ReworkedVanillaYoyos: {
+			Label: Reworked Vanilla Yoyos
+			Tooltip: ""
+		}
+
+		ReworkedYoyoUseStyle: {
+			Label: Reworked Yoyo Use Style
+			Tooltip: ""
+		}
+	}
+}
+
+NPCs.NurseNPC.GiftButton: Gift
+Dialogue.NurseNPC.Dialogue.ReceivedGift: Oh, it wasn't necessary, thank you. Take this as a replacement. I believe it will be more valuable to you than to me.
+DropConditions.SpaceKeyCondition: Drops in the Hardmode Space
+
+Tiles: {
+	SpaceChestTile: {
+		MapEntry0: Space Chest
+		MapEntry1: Locked Space Chest
+	}
+
+	TrappedSpaceChestTile.MapEntry: "{$Mods.SPYoyoMod.Tiles.SpaceChestTile.MapEntry0}"
+}
+
+WorldGen: {
+	SpaceChest: {
+		Name: S-Pladison's Yoyo Mod: Space Chest
+		ProgressMessage: Adding a piece of space to the dungeon...
+	}
+}
