@@ -72,7 +72,7 @@ namespace SPYoyoMod.Common
 
                 flashTime--;
             }
-            else
+            else if (Filters.Scene[filterName].IsActive())
             {
                 Filters.Scene[filterName].GetShader().UseIntensity(0f);
                 Filters.Scene[filterName].Deactivate();
