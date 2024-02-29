@@ -50,20 +50,21 @@ namespace SPYoyoMod.Utils.Entities
 
             switch (type)
             {
+                // Eater of Worlds
                 case NPCID.EaterofWorldsHead:
                 case NPCID.EaterofWorldsBody:
                 case NPCID.EaterofWorldsTail:
-
+                // Misc
                 case NPCID.DungeonGuardian:
                     return true;
+                default:
+                    break;
             }
 
-            if (npc.IsChild(out NPC parent) && parent.whoAmI != npc.whoAmI && parent.IsBoss())
-            {
+            if (npc.boss || NPCID.Sets.ShouldBeCountedAsBoss[type])
                 return true;
-            }
 
-            return npc.boss || NPCID.Sets.ShouldBeCountedAsBoss[type];
+            return npc.IsChild(out NPC parent) && parent.whoAmI != npc.whoAmI && parent.IsBoss();
         }
 
         public static bool IsBossLimb(this NPC npc)
@@ -93,8 +94,8 @@ namespace SPYoyoMod.Utils.Entities
                 case NPCID.MartianSaucerTurret:
                 case NPCID.MartianSaucer:
                 // Moon Lord
-                case NPCID.MoonLordHand:
                 case NPCID.MoonLordHead:
+                case NPCID.MoonLordHand:
                     return true;
                 default:
                     return false;
@@ -130,9 +131,17 @@ namespace SPYoyoMod.Utils.Entities
                 case NPCID.HeadlessHorseman:
                 case NPCID.Nailhead:
                     return true;
+                default:
+                    break;
             }
 
-            if (npc.aiStyle == NPCAIStyleID.BiomeMimic) return true;
+            switch (npc.aiStyle)
+            {
+                case NPCAIStyleID.BiomeMimic:
+                    return true;
+                default:
+                    break;
+            }
 
             return npc.IsChild(out NPC parent) && parent.whoAmI != npc.whoAmI && parent.IsMiniBoss();
         }
