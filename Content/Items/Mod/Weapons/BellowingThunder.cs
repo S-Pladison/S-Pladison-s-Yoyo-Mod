@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
 using SPYoyoMod.Common.RenderTargets;
@@ -10,7 +11,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
-using Terraria.Graphics.CameraModifiers;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -215,15 +215,12 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             (EasingFunctions.InOutCubic, 0.05f, 0f, 1f),
             (EasingFunctions.Linear, 0.05f, 1f, 1f),
             (EasingFunctions.InOutCubic, 0.05f, 1f, 0f),
-            (EasingFunctions.Linear, 0.15f, 0f, 0f),
-            (EasingFunctions.InOutCubic, 0.1f, 0f, 1f),
-            (EasingFunctions.Linear, 0.5f, 1f, 1f),
-            (EasingFunctions.InOutCubic, 0.1f, 1f, 0f)
+            (EasingFunctions.Linear, 0.85f, 0f, 0f)
         );
 
         private static readonly EasingBuilder starEasing = new(
-            (EasingFunctions.InOutCubic, 0.2f, 0f, 1f),
-            (EasingFunctions.Linear, 0.6f, 1f, 1f),
+            (EasingFunctions.InOutCubic, 0.05f, 0f, 1f),
+            (EasingFunctions.Linear, 0.75f, 1f, 1f),
             (EasingFunctions.InOutCubic, 0.2f, 1f, 0f)
         );
 
@@ -272,11 +269,18 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             {
                 if (!Main.dedServ)
                 {
-                    ModContent.GetInstance<BellowingThunderRenderTargetContent>()?.AddProjectile(Projectile);
-
                     lineRenderer = new LineRenderer(0f, false);
                     ringRenderer = new RingRenderer(25, 16f * 5f, 0f);
+
+                    ModContent.GetInstance<BellowingThunderRenderTargetContent>()
+                        .AddProjectile(Projectile);
+
+                    ModContent.GetInstance<ScreenEffects>()
+                        .Shake(Projectile.Center, Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)), 7f, 6f, 15, 16f * 25f)
+                        .Flash(0.1f, 20, Projectile.Center);
                 }
+
+                SoundEngine.PlaySound(new SoundStyle(ModAssets.SoundsPath + "Thunder", SoundType.Sound) { PitchVariance = 0.2f }, Projectile.Center);
 
                 initCritChance = Projectile.CritChance;
                 yoyoProjIndex = Main.projectile.FirstOrDefault(p => p.identity == Projectile.ai[0] && p.type == ModContent.ProjectileType<BellowingThunderProjectile>())?.whoAmI ?? -1;
@@ -287,12 +291,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             {
                 Projectile.Kill();
                 return;
-            }
-
-            if (Projectile.timeLeft == InitTimeLeft || Projectile.timeLeft == (InitTimeLeft - 55))
-            {
-                Main.instance.CameraModifiers.Add(new PunchCameraModifier(Projectile.Center, Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)), 7f, 6f, 15, 16f * 25f));
-                SoundEngine.PlaySound(new SoundStyle(ModAssets.SoundsPath + "Thunder", SoundType.Sound) { PitchVariance = 0.2f }, Projectile.Center);
             }
 
             Projectile.Center = Main.projectile[yoyoProjIndex].Center;
