@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.RenderTargets;
@@ -41,9 +40,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class BlackholeProjectile : YoyoProjectile, IDrawDistortionProjectile
+    public class BlackholeProjectile : YoyoProjectile
     {
-        public static readonly float GravityRadius = 16 * 10;
+        public const float GravityRadius = 16 * 10;
 
         public override string Texture => ModAssets.ProjectilesPath + "Blackhole";
         public override float LifeTime => -1f;
@@ -154,16 +153,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Spiral", AssetRequestMode.ImmediateLoad);
 
             Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.White, TimeForVisualEffects * 0.02f, texture.Size() * 0.5f, 0.32f * scale, SpriteEffects.None, 0f);
-        }
-
-        void IDrawDistortionProjectile.DrawDistortion(Projectile proj)
-        {
-            var drawPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "DistortedRing", AssetRequestMode.ImmediateLoad);
-            var rotation = TimeForVisualEffects * 0.02f;
-            var scale = Projectile.scale * EasingFunctions.InOutSine(RadiusProgress);
-
-            Main.spriteBatch.Draw(texture.Value, drawPosition, null, Color.Gray, rotation, texture.Size() * 0.5f, 0.6f * scale, SpriteEffects.None, 0f);
         }
     }
 
