@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.PixelatedLayers;
 using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
@@ -72,15 +73,25 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (Main.myPlayer == proj.owner)
-            {
-                var codeOnePlayer = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>();
-                codeOnePlayer.AddTimerToDict(target);
-            }
+            if (Main.myPlayer != proj.owner) return;
+
+            var codeOnePlayer = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>();
+            codeOnePlayer.AddTimerToDict(target);
 
             if (!buffActive) return;
 
             Projectile.NewProjectile(proj.GetSource_FromThis(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CodeOneHitProjectile>(), 0, 0, proj.owner);
+
+            for (int i = 0; i < 7; i++)
+            {
+                var dustDirection = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var dustPosition = proj.Center + dustDirection * 16f;
+                var dustVelocity = dustDirection;
+                var dustScale = Main.rand.NextFloat(0.8f, 2f);
+                var dust = Dust.NewDustPerfect(dustPosition, ModContent.DustType<StarGlowDust>(), dustVelocity, 0, new Color(65, 185, 255), dustScale);
+
+                dust.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+            }
         }
 
         public override void SendExtraAI(Projectile projectile, BitWriter bitWriter, BinaryWriter binaryWriter)
