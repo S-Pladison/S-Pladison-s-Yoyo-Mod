@@ -208,7 +208,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BellowingThunderRingProjectile : ModProjectile
     {
-        public const int MaxRadius = 16 * 3 + 8;
+        public const int MaxRadius = 16 * 4;
         public const int InitTimeLeft = 60 * 3;
 
         private static readonly EasingBuilder lineWidthEasing = new(
@@ -226,8 +226,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private static readonly EasingBuilder ringRadiusEasing = new(
             (EasingFunctions.OutBack, 0.05f, 0f, 1f),
-            (EasingFunctions.Linear, 0.90f, 1f, 1f),
-            (EasingFunctions.InOutCubic, 0.05f, 1f, 0f)
+            (EasingFunctions.InExpo, 0.80f, 1f, 0.8f),
+            (EasingFunctions.Linear, 0.15f, 0.8f, 0f)
         );
 
         public override string Texture { get => ModAssets.MiscPath + "Invisible"; }
