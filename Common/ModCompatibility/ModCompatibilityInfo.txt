@@ -17,6 +17,9 @@ TRAE Project
 | Some stat changes and special effects for some yoyos
 | New Yoyo Bag recipe without Bearing
 
+DawnMod
+| Can't load due to an error
+
 [ ... ]
 
 MooMoo's Ultimate Yoyo Revamp
