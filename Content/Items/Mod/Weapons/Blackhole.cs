@@ -69,16 +69,16 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
             Lighting.AddLight(Projectile.Center, new Color(171, 97, 255).ToVector3() * 0.6f);
 
-            if (IsReturning) return;
+            if (IsReturning) RadiusProgress = 1f - ReturnToPlayerProgress;
+            else RadiusProgress = MathHelper.Min(RadiusProgress + 0.05f, 1f);
 
-            RadiusProgress += !IsReturning ? 0.05f : -0.1f;
-            RadiusProgress = Math.Clamp(RadiusProgress, 0, 1);
+            if (IsReturning || Main.myPlayer != Projectile.owner) return;
 
             var currentRadius = GravityRadius * EasingFunctions.InOutSine(RadiusProgress);
             var targets = NPCUtils.NearestNPCs(
                 center: Projectile.Center,
                 radius: currentRadius,
-                predicate: (npc) =>
+                predicate: npc =>
                     npc.CanBeChasedBy(Projectile, false) &&
                     !npc.IsBossOrRelated() &&
                     Collision.CanHitLine(Projectile.position, Projectile.width, Projectile.height, npc.position, npc.width, npc.height)
