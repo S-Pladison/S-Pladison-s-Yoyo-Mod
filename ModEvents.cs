@@ -19,6 +19,12 @@ namespace SPYoyoMod
         public static event Action<Recipe[]> OnPostAddRecipes;
 
         /// <summary>
+        /// Use it to do treatment about recipes once they have been setup.
+        /// You shouldn't edit any recipe.
+        /// </summary>
+        public static event Action<IReadOnlyList<Recipe>> OnPostSetupRecipes;
+
+        /// <summary>
         /// Allows you to load things in your system after the mod's content has been setup
         /// (arrays have been resized to fit the content, etc).
         /// </summary>
@@ -86,6 +92,7 @@ namespace SPYoyoMod
         private static void LoadModEvents()
         {
             OnPostAddRecipes += EmptyAction;
+            OnPostSetupRecipes += EmptyAction;
             OnPostSetupContent += EmptyAction;
             OnPostUpdateEverything += EmptyAction;
             OnWorldLoad += EmptyAction;
@@ -99,6 +106,7 @@ namespace SPYoyoMod
         private static void UnloadModEvents()
         {
             OnPostAddRecipes = null;
+            OnPostSetupRecipes = null;
             OnPostSetupContent = null;
             OnPostUpdateEverything = null;
             OnWorldLoad = null;
@@ -148,6 +156,7 @@ namespace SPYoyoMod
         private class EventSystem : ModSystem
         {
             public override void PostAddRecipes() => ModEvents.OnPostAddRecipes(Main.recipe);
+            public override void PostSetupRecipes() => ModEvents.OnPostSetupRecipes(Main.recipe);
             public override void PostSetupContent() => ModEvents.OnPostSetupContent();
             public override void PostUpdateEverything() => ModEvents.OnPostUpdateEverything();
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();

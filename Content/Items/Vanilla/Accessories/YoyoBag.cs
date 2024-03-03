@@ -1,5 +1,4 @@
 ﻿using SPYoyoMod.Content.Items.Mod.Accessories;
-using SPYoyoMod.Utils.Entities;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -16,11 +15,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
         public override void Load()
         {
             ModEvents.OnPostAddRecipes += InsertBearingToRecipes;
-        }
-
-        public override void UpdateEquip(Item item, Player player)
-        {
-            player.SetEffectFlag<BearingItem>();
         }
 
         private static void InsertBearingToRecipes(Recipe[] recipes)
