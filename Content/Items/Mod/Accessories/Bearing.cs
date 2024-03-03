@@ -58,7 +58,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
                 void FindItems(int itemType)
                 {
-                    for (var i = 0; i < recipes.Count; i++)
+                    for (var i = recipes.Count - 1; i > 0; i--)
                     {
                         var recipe = Main.recipe[i];
 
