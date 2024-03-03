@@ -77,7 +77,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             };
 
             // Set effect flag for the found items
-            // (Creating a separate GlobalItem class with overriding applicestoentity will not work)
+            // (Creating a separate GlobalItem class with overriding AppliesToEntity will not work)
             ItemEvents.OnUpdateEquip += (item, player) =>
             {
                 if (!itemTypesWithBearingEffect.Contains(item.type)) return;
