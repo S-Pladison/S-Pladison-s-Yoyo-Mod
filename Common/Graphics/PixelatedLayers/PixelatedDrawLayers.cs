@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SPYoyoMod.Common.RenderTargets;
+using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
 using System;
@@ -8,7 +8,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.PixelatedLayers
+namespace SPYoyoMod.Common.Graphics.PixelatedLayers
 {
     // Based on https://github.com/ProjectStarlight/StarlightRiver/blob/master/Core/Systems/PixelationSystem/PixelationSystem.cs
 

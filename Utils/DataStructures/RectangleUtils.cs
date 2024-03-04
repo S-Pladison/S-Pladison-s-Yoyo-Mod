@@ -2,7 +2,7 @@
 
 namespace SPYoyoMod.Utils.DataStructures
 {
-    public static class RectangleExtensions
+    public static partial class DataStructureExtensions
     {
         public static bool Intersects(this Rectangle @this, Rectangle other)
         {

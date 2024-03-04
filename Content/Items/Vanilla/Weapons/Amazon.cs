@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common;
-using SPYoyoMod.Common.RenderTargets;
+using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
 using System;

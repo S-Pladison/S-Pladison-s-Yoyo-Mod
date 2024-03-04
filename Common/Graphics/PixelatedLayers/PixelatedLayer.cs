@@ -1,4 +1,4 @@
-﻿namespace SPYoyoMod.Common.PixelatedLayers
+﻿namespace SPYoyoMod.Common.Graphics.PixelatedLayers
 {
     public enum PixelatedLayer
     {

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.PixelatedLayers;
-using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Entities;

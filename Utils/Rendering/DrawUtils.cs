@@ -1,6 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Graphics;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
@@ -22,20 +24,12 @@ namespace SPYoyoMod.Utils.Rendering
         [Autoload(Side = ModSide.Client)]
         private class ActiveEntities : ILoadable
         {
-            public static readonly List<Projectile> Projectiles;
-            public static readonly List<NPC> NPCs;
+            public readonly List<Projectile> Projectiles = new();
+            public readonly List<NPC> NPCs = new();
 
-            public static uint LastUpdateTick;
+            public uint LastUpdateTick = 0;
 
-            static ActiveEntities()
-            {
-                Projectiles = new List<Projectile>();
-                NPCs = new List<NPC>();
-
-                LastUpdateTick = 0;
-            }
-
-            private static void UpdateActiveEntityLists()
+            private void UpdateActiveEntityLists()
             {
                 if (LastUpdateTick.Equals(Main.GameUpdateCount)) return;
 
@@ -80,12 +74,202 @@ namespace SPYoyoMod.Utils.Rendering
         public static IReadOnlyList<T> GetActiveForDrawEntities<T>() where T : Entity
         {
             if (typeof(T).Equals(typeof(Projectile)))
-                return ActiveEntities.Projectiles as IReadOnlyList<T>;
+                return ModContent.GetInstance<ActiveEntities>().Projectiles as IReadOnlyList<T>;
 
             if (typeof(T).Equals(typeof(NPC)))
-                return ActiveEntities.NPCs as IReadOnlyList<T>;
+                return ModContent.GetInstance<ActiveEntities>().NPCs as IReadOnlyList<T>;
 
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Currently used only for drawing primitive strip in <see cref="DrawUtils.DrawPrimitiveStrip(Effect, Vector2[], StripWidthDelegate, bool)"/>.
+        /// </summary>
+        [Autoload(Side = ModSide.Client)]
+        private class PrimitiveDrawing : ILoadable
+        {
+            public const int MaxVertices = 2 * 200;
+            public const int MaxIndices = 6 * (200 - 1);
+
+            public PrimitiveRenderer Renderer;
+            public Vertex2DPositionColorTexture[] Vertices;
+            public short[] Indices;
+
+            public int InitIndicesCount;
+
+            void ILoadable.Load(Mod mod)
+            {
+                Main.QueueMainThreadAction(() =>
+                {
+                    Renderer = new PrimitiveRenderer(MaxVertices, MaxIndices);
+                });
+
+                Vertices = new Vertex2DPositionColorTexture[MaxVertices];
+                Indices = new short[MaxIndices];
+
+                for (int i = 0; i < Vertices.Length; i++)
+                {
+                    Vertices[i].Color = Color.White;
+                }
+            }
+
+            void ILoadable.Unload()
+            {
+                Main.QueueMainThreadAction(() =>
+                {
+                    Renderer?.Dispose();
+                });
+            }
+        }
+
+        /// <summary>
+        /// Draw primitive strip.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+        public static void DrawPrimitiveStrip(Effect effect, IList<Vector2> points, StripWidthDelegate width, bool loop = false)
+        {
+            DrawPrimitiveStrip(effect, points.ToArray(), width, loop);
+        }
+
+        /// <summary>
+        /// Draw primitive strip.
+        /// </summary>
+        public static void DrawPrimitiveStrip(Effect effect, Vector2[] points, StripWidthDelegate width, bool loop = false)
+        {
+            if (points is null || points.Length < 2) return;
+
+            var primitiveDrawing = ModContent.GetInstance<PrimitiveDrawing>();
+
+            if (primitiveDrawing == null || primitiveDrawing.Renderer is null) return;
+
+            var segmentCount = points.Length + (loop ? 0 : -1);
+
+            // Indices
+
+            var maxIndices = 6 * segmentCount;
+
+            if (maxIndices > primitiveDrawing.InitIndicesCount)
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                void AddIndex(ref int index, int value)
+                {
+                    primitiveDrawing.Indices[index++] = (short)value;
+                }
+
+                for (var i = primitiveDrawing.InitIndicesCount / 6; i < maxIndices / 6; i++)
+                {
+                    var index = i * 6;
+                    var i2 = i * 2;
+                    var j2 = (i + 1) * 2;
+
+                    AddIndex(ref index, i2);
+                    AddIndex(ref index, i2 + 1);
+                    AddIndex(ref index, j2 + 1);
+                    AddIndex(ref index, j2 + 1);
+                    AddIndex(ref index, j2);
+                    AddIndex(ref index, i2);
+                }
+
+                primitiveDrawing.InitIndicesCount = maxIndices;
+            }
+
+            // Factors from start to end
+
+            var accumulativeLength = 0f;
+            var lengths = new float[segmentCount];
+            var totalLength = 0f;
+            var factorsFromStartToEnd = new float[segmentCount];
+
+            for (var i = 0; i < points.Length - 1; i++)
+            {
+                lengths[i] = Vector2.Distance(points[i], points[i + 1]);
+                totalLength += lengths[i];
+            }
+
+            if (loop)
+            {
+                lengths[^1] = Vector2.Distance(points[^1], points[0]);
+                totalLength += lengths[^1];
+            }
+
+            for (var i = 0; i < segmentCount; i++)
+            {
+                accumulativeLength += lengths[i];
+                factorsFromStartToEnd[i] = accumulativeLength / totalLength;
+            }
+
+            // Vertex positions
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void AddVertexPosition(ref int vertexIndex, Vector2 position)
+            {
+                primitiveDrawing.Vertices[vertexIndex++].Position = position;
+            }
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            Vector2 RotateClockwiseNinety(Vector2 vector)
+            {
+                return new(-vector.Y, vector.X);
+            }
+
+            var vertexIndex = 0;
+            var normal = RotateClockwiseNinety((loop ? (points[0] - points[^1]) : (points[1] - points[0])).SafeNormalize(Vector2.Zero));
+            var halfWidth = width(0f) / 2f;
+            var offset = normal * halfWidth;
+
+            AddVertexPosition(ref vertexIndex, points[0] + offset);
+            AddVertexPosition(ref vertexIndex, points[0] - offset);
+
+            for (var i = 1; i < points.Length; i++)
+            {
+                normal = RotateClockwiseNinety((points[i] - points[i - 1]).SafeNormalize(Vector2.Zero));
+                halfWidth = width(factorsFromStartToEnd[i - 1]) / 2f;
+                offset = normal * halfWidth;
+
+                AddVertexPosition(ref vertexIndex, points[i] + offset);
+                AddVertexPosition(ref vertexIndex, points[i] - offset);
+            }
+
+            if (loop)
+            {
+                normal = RotateClockwiseNinety((points[0] - points[^1]).SafeNormalize(Vector2.Zero));
+                halfWidth = width(1f) / 2f;
+                offset = normal * halfWidth;
+
+                AddVertexPosition(ref vertexIndex, points[0] + offset);
+                AddVertexPosition(ref vertexIndex, points[0] - offset);
+            }
+
+            // Vertex UVs
+
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            void AddVertexUV(ref int vertexIndex, Vector2 uv)
+            {
+                primitiveDrawing.Vertices[vertexIndex++].TextureCoordinate = uv;
+            }
+
+            vertexIndex = 0;
+
+            AddVertexUV(ref vertexIndex, Vector2.Zero);
+            AddVertexUV(ref vertexIndex, Vector2.UnitY);
+
+            for (var i = 0; i < factorsFromStartToEnd.Length; i++)
+            {
+                AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 0));
+                AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 1));
+            }
+
+            // Prepare
+
+            primitiveDrawing.Renderer.SetVertices(primitiveDrawing.Vertices);
+            primitiveDrawing.Renderer.SetIndices(primitiveDrawing.Indices);
+
+            // Draw
+
+            var vertexCount = 2 * (segmentCount + 1);
+            var indexCount = 6 * segmentCount;
+
+            primitiveDrawing.Renderer.Draw(effect, vertexCount, indexCount / 3);
         }
 
         /// <summary>
@@ -124,7 +308,7 @@ namespace SPYoyoMod.Utils.Rendering
                 var rect = new Rectangle(0, 0, texture.Width(), (int)height);
                 var origin = new Vector2(texture.Width() * 0.5f, 0f);
 
-                color = ColorUtils.MultipleLerp(colorEasing.Invoke(segmentIndex / (float)segmentCount), colors.Select(x => x.glow ? x.color : Lighting.GetColor(position.ToTileCoordinates(), x.color)).ToArray());
+                color = DataStructureUtils.MultipleLerp(colorEasing.Invoke(segmentIndex / (float)segmentCount), colors.Select(x => x.glow ? x.color : Lighting.GetColor(position.ToTileCoordinates(), x.color)).ToArray());
                 position -= Main.screenPosition;
 
                 Main.spriteBatch.Draw(texture.Value, position, rect, color, rotation, origin, 1f, SpriteEffects.None, 0f);
@@ -256,8 +440,6 @@ namespace SPYoyoMod.Utils.Rendering
             }
         }
 
-        public delegate void DrawYoyoStringSegmentDelegate(int segmentCount, int segmentIndex, Vector2 position, float rotation, float height, Color color);
-
         private static readonly TryApplyingPlayerStringColorDelegate tryApplyingPlayerStringColorFunc = typeof(Main)
             ?.GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static)
             ?.CreateDelegate<TryApplyingPlayerStringColorDelegate>()
@@ -265,4 +447,7 @@ namespace SPYoyoMod.Utils.Rendering
 
         private delegate Color TryApplyingPlayerStringColorDelegate(int playerStringColor, Color defaultColor);
     }
+
+    public delegate float StripWidthDelegate(float factorFromStartToEnd);
+    public delegate void DrawYoyoStringSegmentDelegate(int segmentCount, int segmentIndex, Vector2 position, float rotation, float height, Color color);
 }

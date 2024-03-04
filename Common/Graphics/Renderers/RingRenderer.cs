@@ -5,7 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Terraria;
 
-namespace SPYoyoMod.Common.Renderers
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public class RingRenderer : IDisposable
     {
@@ -34,21 +34,20 @@ namespace SPYoyoMod.Common.Renderers
         }
 
         private PrimitiveRenderer renderer;
-        private VertexPositionColorTexture[] vertices;
+        private Vertex2DPositionColorTexture[] vertices;
         private short[] indices;
 
         private bool isDirty;
         private int maxPointCount;
-
         private int innerPointCount;
-        private Vector2 innerPosition;
         private float innerRadius;
         private float innerThickness;
         private float halfThickness;
+        private Vector2 innerPosition;
 
         public RingRenderer(int pointCount, float thickness, float radius)
         {
-            vertices = Array.Empty<VertexPositionColorTexture>();
+            vertices = Array.Empty<Vertex2DPositionColorTexture>();
             indices = Array.Empty<short>();
 
             SetPointCount(pointCount);
@@ -220,11 +219,13 @@ namespace SPYoyoMod.Common.Renderers
             }
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddVertexPosition(ref int vertexIndex, Vector2 position)
         {
-            vertices[vertexIndex++].Position = new Vector3(position, 0);
+            vertices[vertexIndex++].Position = position;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void AddVertexUV(ref int vertexIndex, Vector2 uv)
         {
             vertices[vertexIndex++].TextureCoordinate = uv;

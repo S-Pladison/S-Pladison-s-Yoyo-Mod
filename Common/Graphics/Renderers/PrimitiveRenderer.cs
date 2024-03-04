@@ -3,7 +3,7 @@ using ReLogic.Content;
 using System;
 using Terraria;
 
-namespace SPYoyoMod.Common.Renderers
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public class PrimitiveRenderer : IDisposable
     {
@@ -16,15 +16,15 @@ namespace SPYoyoMod.Common.Renderers
         {
             var device = Main.graphics.GraphicsDevice;
 
-            vertexBuffer = new DynamicVertexBuffer(device, typeof(VertexPositionColorTexture), maxVertices, BufferUsage.None);
+            vertexBuffer = new DynamicVertexBuffer(device, typeof(Vertex2DPositionColorTexture), maxVertices, BufferUsage.None);
             indexBuffer = new DynamicIndexBuffer(device, IndexElementSize.SixteenBits, maxIndices, BufferUsage.None);
         }
 
-        public void SetVertices(params VertexPositionColorTexture[] vertices)
+        public void SetVertices(params Vertex2DPositionColorTexture[] vertices)
         {
             if (isDisposed) return;
 
-            vertexBuffer.SetData(0, vertices, 0, vertices.Length, VertexPositionColorTexture.VertexDeclaration.VertexStride, SetDataOptions.Discard);
+            vertexBuffer.SetData(0, vertices, 0, vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
         }
 
         public void SetIndices(params short[] indices)

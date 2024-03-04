@@ -2,9 +2,9 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common;
-using SPYoyoMod.Common.PixelatedLayers;
-using SPYoyoMod.Common.Renderers;
-using SPYoyoMod.Common.RenderTargets;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.Renderers;
+using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
 using System.Collections.Generic;
@@ -99,20 +99,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         private TrailRenderer shadowTrailRenderer;
         private int ringProjIndex;
 
-        public override void OnKill(int timeLeft)
-        {
-            trailRenderer?.Dispose();
-            shadowTrailRenderer?.Dispose();
-        }
-
         public override void AI()
         {
             if (!initialized)
             {
                 if (!Main.dedServ)
                 {
-                    trailRenderer = new TrailRenderer(10).SetWidth(f => MathHelper.Lerp(8f, 0f, f));
-                    shadowTrailRenderer = new TrailRenderer(13).SetWidth(f => MathHelper.Lerp(10f, 0f, f));
+                    trailRenderer = new TrailRenderer(10, f => MathHelper.Lerp(8f, 0f, f));
+                    shadowTrailRenderer = new TrailRenderer(13, f => MathHelper.Lerp(10f, 0f, f));
                 }
 
                 initCritChance = Projectile.CritChance;
@@ -235,7 +229,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private bool initialized;
         private int initCritChance;
-        private LineRenderer lineRenderer;
         private RingRenderer ringRenderer;
         private int yoyoProjIndex;
 
@@ -259,7 +252,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void OnKill(int timeLeft)
         {
-            lineRenderer?.Dispose();
             ringRenderer?.Dispose();
         }
 
@@ -269,7 +261,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             {
                 if (!Main.dedServ)
                 {
-                    lineRenderer = new LineRenderer(0f, false);
                     ringRenderer = new RingRenderer(25, 16f * 5f, 0f);
 
                     ModContent.GetInstance<BellowingThunderRenderTargetContent>()
@@ -352,10 +343,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 parameters["Fade"].SetValue(true);
             });
 
-            lineRenderer
-                .SetWidth(16f * 16f * lineWidthEasing.Evaluate(TimeLeftProgress))
-                .SetPoints(new[] { lineStartPosition, lineEndPosition })
-                .Draw(effect);
+            DrawUtils.DrawPrimitiveStrip(effect.Value, new[] { lineStartPosition, lineEndPosition }, f => 16f * 16f * lineWidthEasing.Evaluate(TimeLeftProgress));
 
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "BellowingThunderRing_Star", AssetRequestMode.ImmediateLoad);
             var rotation = EasingFunctions.InOutSine(TimeLeftProgress) * MathHelper.PiOver2;

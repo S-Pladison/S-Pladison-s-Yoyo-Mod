@@ -3,7 +3,7 @@ using System;
 
 namespace SPYoyoMod.Utils.DataStructures
 {
-    public static class ColorUtils
+    public static partial class DataStructureUtils
     {
         public static Color Multiply(Color first, Color second)
             => new((byte)(first.R * second.R / 255f), (byte)(first.G * second.G / 255f), (byte)(first.B * second.B / 255f), (byte)(first.A * second.A / 255f));
@@ -20,10 +20,10 @@ namespace SPYoyoMod.Utils.DataStructures
         }
     }
 
-    public static class ColorExtensions
+    public static partial class DataStructureExtensions
     {
         public static Color Multiply(this Color @this, Color other)
-            => ColorUtils.Multiply(@this, other);
+            => DataStructureUtils.Multiply(@this, other);
 
         public static Color MultiplyR(this Color color, float value)
             => color with { R = (byte)(color.R * value) };

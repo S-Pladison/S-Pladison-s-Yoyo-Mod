@@ -2,10 +2,10 @@
 using Microsoft.Xna.Framework.Graphics;
 using MonoMod.Cil;
 using ReLogic.Content;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.Renderers;
+using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Common.Networking;
-using SPYoyoMod.Common.PixelatedLayers;
-using SPYoyoMod.Common.Renderers;
-using SPYoyoMod.Common.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
@@ -39,11 +39,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         private TrailRenderer trailRenderer;
         private SpriteTrailRenderer spriteTrailRenderer;
-
-        public override void OnKill(Projectile proj, int timeLeft)
-        {
-            trailRenderer?.Dispose();
-        }
 
         public override void AI(Projectile proj)
         {
@@ -93,7 +88,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            trailRenderer ??= new TrailRenderer(12).SetWidth(f => MathHelper.Lerp(24f, 6f, f));
+            trailRenderer ??= new TrailRenderer(12, f => MathHelper.Lerp(24f, 6f, f));
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {

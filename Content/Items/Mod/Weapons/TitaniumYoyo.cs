@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Common.Graphics.Renderers;
 using System.IO;
 using Terraria;
 using Terraria.DataStructures;

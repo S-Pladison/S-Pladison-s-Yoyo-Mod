@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.PixelatedLayers;
-using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Entities;
 using System;
@@ -47,12 +47,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private TrailRenderer blackTrailRenderer;
         private TrailRenderer redTrailRenderer;
-
-        public override void OnKill(int timeLeft)
-        {
-            blackTrailRenderer?.Dispose();
-            redTrailRenderer?.Dispose();
-        }
 
         public override void AI()
         {
@@ -170,7 +164,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private TrailRenderer InitTrailRenderer(int pointCount, float width)
         {
-            return new TrailRenderer(pointCount).SetWidth(f => MathHelper.Lerp(width, 0f, f));
+            return new TrailRenderer(pointCount, f => MathHelper.Lerp(width, 0f, f));
         }
     }
 

@@ -2,7 +2,7 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.RenderTargets
+namespace SPYoyoMod.Common.Graphics.RenderTargets
 {
     [Autoload(Side = ModSide.Client)]
     public sealed class RenderTargetContentSystem : ModSystem

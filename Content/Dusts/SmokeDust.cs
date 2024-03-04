@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SPYoyoMod.Common.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using System;
@@ -58,7 +58,7 @@ namespace SPYoyoMod.Content.Dusts
                 var endColor = !customData.ColorEndGlow ? Lighting.GetColor(dust.position.ToTileCoordinates(), customData.ColorEnd) : customData.ColorEnd;
                 var colorProgress = EasingFunctions.InOutQuint(dust.alpha / 255f);
                 var alphaProgress = 1f - EasingFunctions.InQuint(dust.alpha / 255f);
-                var color = ColorUtils.Multiply(Color.Lerp(startColor, endColor, colorProgress), dust.color) * alphaProgress;
+                var color = DataStructureUtils.Multiply(Color.Lerp(startColor, endColor, colorProgress), dust.color) * alphaProgress;
 
                 Main.spriteBatch.Draw(texture, dust.position - Main.screenPosition, dust.frame, color, dust.rotation, texture.Size() / 2f, dust.scale, 0f, 0f);
             });

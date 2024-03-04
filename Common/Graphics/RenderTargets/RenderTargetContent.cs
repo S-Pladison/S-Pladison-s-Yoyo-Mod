@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.RenderTargets
+namespace SPYoyoMod.Common.Graphics.RenderTargets
 {
     [Autoload(Side = ModSide.Client)]
     public abstract class RenderTargetContent : ModType, IDisposable

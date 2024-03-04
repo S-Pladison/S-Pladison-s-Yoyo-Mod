@@ -19,15 +19,22 @@
     <None Remove="Assets\Textures\Effects\Extra_28.png" />
     <None Remove="Assets\Textures\Effects\Extra_29.png" />
     <None Remove="Assets\Textures\Effects\HDSmokeParticle.png" />
+    <None Remove="Assets\Textures\Items\AdamantiteYoyo.png" />
     <None Remove="Assets\Textures\Items\Bearing.png" />
     <None Remove="Assets\Textures\Items\Blackhole.png" />
     <None Remove="Assets\Textures\Items\FlamingFlower.png" />
     <None Remove="Assets\Textures\Items\MyocardialInfarction.png" />
     <None Remove="Assets\Textures\Items\StrangeDrink.png" />
     <None Remove="Assets\Textures\Items\TitaniumYoyo.png" />
+    <None Remove="Assets\Textures\Projectiles\AdamantiteYoyo.png" />
     <None Remove="Assets\Textures\Projectiles\Blackhole.png" />
     <None Remove="Assets\Textures\Projectiles\MyocardialInfarction.png" />
     <None Remove="Assets\Textures\Projectiles\TitaniumYoyo.png" />
+    <None Remove="Localization\en-US\Mods.SPYoyoMod.Items.hjson" />
+    <None Remove="Localization\en-US\Mods.SPYoyoMod.Projectiles.hjson" />
+    <None Remove="Localization\en-US\Mods.SPYoyoMod.VanillaItems.hjson" />
+    <None Remove="Localization\ru-RU\Mods.SPYoyoMod.Items.hjson" />
+    <None Remove="Localization\ru-RU\Mods.SPYoyoMod.VanillaItems.hjson" />
     <None Remove="Localization\ru-RU_Mods.SPYoyoMod.hjson" />
   </ItemGroup>
   <ItemGroup>

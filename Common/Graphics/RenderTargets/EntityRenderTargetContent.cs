@@ -2,7 +2,7 @@
 using SPYoyoMod.Utils.Rendering;
 using Terraria;
 
-namespace SPYoyoMod.Common.RenderTargets
+namespace SPYoyoMod.Common.Graphics.RenderTargets
 {
     public abstract class EntityRenderTargetContent<T> : RenderTargetContent where T : Entity
     {

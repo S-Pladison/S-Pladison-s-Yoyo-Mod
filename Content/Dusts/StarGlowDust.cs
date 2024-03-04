@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using Terraria;
 using Terraria.ModLoader;
 

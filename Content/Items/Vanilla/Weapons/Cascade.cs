@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.PixelatedLayers;
-using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
@@ -41,11 +42,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         private TrailRenderer trailRenderer;
         private int timer;
-
-        public override void OnKill(Projectile proj, int timeLeft)
-        {
-            trailRenderer?.Dispose();
-        }
 
         public override void AI(Projectile proj)
         {
@@ -99,13 +95,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            trailRenderer ??= new TrailRenderer(15).SetWidth(f => trailWidthEasing.Evaluate(f));
+            trailRenderer ??= new TrailRenderer(15, f => trailWidthEasing.Evaluate(f));
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
                 if (trailRenderer is null) return;
 
-                var length = trailRenderer.GetTotalLengthBetweenPoints();
+                var length = trailRenderer.Points.DistanceBetween();
 
                 if (length <= 0f) return;
 

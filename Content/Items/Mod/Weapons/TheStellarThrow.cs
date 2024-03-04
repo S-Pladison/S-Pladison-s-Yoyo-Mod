@@ -1,10 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.PixelatedLayers;
-using SPYoyoMod.Common.Renderers;
+using SPYoyoMod.Common.Graphics.PixelatedLayers;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System;
@@ -49,11 +50,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public override float MaxRange => 300f;
         public override float TopSpeed => 13f;
         public ref float StarTimer => ref Projectile.ai[2];
-
-        public override void OnKill(int timeLeft)
-        {
-            trailRenderer?.Dispose();
-        }
 
         public override void YoyoOnSpawn(Player owner, IEntitySource source)
         {
@@ -112,13 +108,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override bool PreDraw(ref Color lightColor)
         {
-            trailRenderer ??= new TrailRenderer(15).SetWidth(f => MathHelper.Lerp(40f, 20f, f));
+            trailRenderer ??= new TrailRenderer(15, f => MathHelper.Lerp(40f, 20f, f));
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
                 if (trailRenderer is not null)
                 {
-                    var length = trailRenderer.GetTotalLengthBetweenPoints();
+                    var length = trailRenderer.Points.DistanceBetween();
 
                     if (length > 0f)
                     {
@@ -199,8 +195,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void OnKill(int timeLeft)
         {
-            trailRenderer?.Dispose();
-
             for (int i = 0; i < 10; i++)
             {
                 var isStarDust = Main.rand.NextBool();
@@ -290,13 +284,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override bool PreDraw(ref Color lightColor)
         {
-            trailRenderer ??= new TrailRenderer(15).SetWidth(f => MathHelper.Lerp(40f, 20f, f) * Projectile.scale);
+            trailRenderer ??= new TrailRenderer(15, f => MathHelper.Lerp(40f, 20f, f) * Projectile.scale);
 
             ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
             {
                 if (trailRenderer is not null)
                 {
-                    var length = trailRenderer.GetTotalLengthBetweenPoints();
+                    var length = trailRenderer.Points.DistanceBetween();
 
                     if (length > 0f)
                     {

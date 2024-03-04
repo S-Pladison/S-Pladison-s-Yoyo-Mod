@@ -5,7 +5,7 @@ using SPYoyoMod.Utils.DataStructures;
 using System;
 using XnaColor = Microsoft.Xna.Framework.Color;
 
-namespace SPYoyoMod.Common.Renderers
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public class SpriteTrailRenderer
     {
@@ -134,7 +134,7 @@ namespace SPYoyoMod.Common.Renderers
             for (var i = 0; i < activePoints; i++)
             {
                 var factor = (float)i / activePoints;
-                var color = ColorUtils.Multiply(innerColor(factor), colorMultiplier);
+                var color = DataStructureUtils.Multiply(innerColor(factor), colorMultiplier);
                 var scale = innerScale(factor);
 
                 spriteBatch.Draw(Texture.Value, points[i].Position + positionOffset, Frame, color, points[i].Rotation, Origin, scale, SpriteEffects, 0f);
