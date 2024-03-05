@@ -10,6 +10,7 @@ using Terraria.ModLoader.Core;
 namespace SPYoyoMod.Common.Networking
 {
     // Source: https://github.com/SamsonAllen13/ClickerClass/blob/master/Core/Netcode/NetHandler.cs
+
     public sealed class NetHandler : ILoadable
     {
         private readonly List<NetPacket> packetInstances;

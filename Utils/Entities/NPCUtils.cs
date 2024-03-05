@@ -39,6 +39,10 @@ namespace SPYoyoMod.Utils.Entities
 
     public static class NPCExtensions
     {
+        // IsBossOrRelated, IsBoss, IsBossLimb, IsMiniBoss and IsChild taken from:
+        // https://github.com/SamsonAllen13/ClickerClass/blob/master/Utilities/NPCHelper.cs
+        // https://github.com/SamsonAllen13/ClickerClass/blob/master/Utilities/NPCHelper_Bosses.cs
+
         public static bool IsBossOrRelated(this NPC npc)
         {
             return npc.IsBoss() || npc.IsBossLimb() || npc.IsMiniBoss();

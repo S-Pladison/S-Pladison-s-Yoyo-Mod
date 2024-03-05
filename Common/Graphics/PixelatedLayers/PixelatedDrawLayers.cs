@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.Graphics.PixelatedLayers
 {
-    // Based on https://github.com/ProjectStarlight/StarlightRiver/blob/master/Core/Systems/PixelationSystem/PixelationSystem.cs
+    // Based on: https://github.com/ProjectStarlight/StarlightRiver/blob/master/Core/Systems/PixelationSystem/PixelationSystem.cs
 
     [Autoload(Side = ModSide.Client)]
     public class PixelatedDrawLayers : ILoadable
