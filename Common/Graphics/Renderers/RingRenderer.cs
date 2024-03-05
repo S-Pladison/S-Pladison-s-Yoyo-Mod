@@ -208,7 +208,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
             {
                 var j = (i + 1) % PointCount;
 
-                lengths[i] = Vector2.Distance(points[i], points[j]);
+                lengths[i] = Vector2.DistanceSquared(points[i], points[j]);
                 totalLength += lengths[i];
             }
 

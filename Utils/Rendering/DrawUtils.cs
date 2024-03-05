@@ -182,13 +182,13 @@ namespace SPYoyoMod.Utils.Rendering
 
             for (var i = 0; i < points.Length - 1; i++)
             {
-                lengths[i] = Vector2.Distance(points[i], points[i + 1]);
+                lengths[i] = Vector2.DistanceSquared(points[i], points[i + 1]);
                 totalLength += lengths[i];
             }
 
             if (loop)
             {
-                lengths[^1] = Vector2.Distance(points[^1], points[0]);
+                lengths[^1] = Vector2.DistanceSquared(points[^1], points[0]);
                 totalLength += lengths[^1];
             }
 
