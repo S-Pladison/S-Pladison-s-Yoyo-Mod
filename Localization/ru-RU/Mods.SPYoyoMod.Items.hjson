@@ -1,8 +1,3 @@
-AdamantiteYoyoItem: {
-	DisplayName: Адамантитовый йо-йо
-	Tooltip: ""
-}
-
 BearingItem: {
 	DisplayName: Подшипник
 	Tooltip: Увеличивает время полета йо-йо на 50%
@@ -23,12 +18,18 @@ BlackholeItem: {
 	Tooltip: Притягивает к себе врагов
 }
 
+ResidualLightItem: {
+	DisplayName: Остаточный свет
+	Tooltip: Создает 2 световых луча, которые следуют за йо-йо
+}
+
 SoulTormentorItem: {
 	DisplayName: Истязатель душ
 	Tooltip:
 		'''
 		Очаровывает 3-х ближайших врагов
 		Попадание по очарованному врагу также наносит урон остальным
+		«Мне повезло, у меня никого нет...»
 		'''
 }
 

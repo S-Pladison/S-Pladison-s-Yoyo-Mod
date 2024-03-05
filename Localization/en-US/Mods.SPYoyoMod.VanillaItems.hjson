@@ -15,6 +15,7 @@ ChikItem.Tooltip:
 	Until the fragments return back, the yoyo won't be able to deal damage
 	'''
 CodeOneItem.Tooltip: If you are fighting with a maximum of 2 enemies, the damage dealt to them will be increased by 33%
+KrakenItem.Tooltip: Critical hits release the Kraken's tentacles
 RallyItem.Tooltip: The higher player's movement speed, the higher damage
 StringItem.Tooltip: Increases yoyo range by 4 tiles
 TheEyeOfCthulhuItem.Tooltip: ""

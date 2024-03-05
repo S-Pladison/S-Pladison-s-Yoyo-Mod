@@ -1,8 +1,3 @@
-AdamantiteYoyoItem: {
-	DisplayName: Adamantite Yoyo
-	Tooltip: ""
-}
-
 BearingItem: {
 	DisplayName: Bearing
 	Tooltip: 50% increased yoyo duration
@@ -23,12 +18,18 @@ BlackholeItem: {
 	Tooltip: Pulls enemies to itself
 }
 
+ResidualLightItem: {
+	DisplayName: Residual Light
+	Tooltip: Spawns 2 light beams that follow the yoyo
+}
+
 SoulTormentorItem: {
 	DisplayName: Soul Tormentor
 	Tooltip:
 		'''
 		Charms 3 nearest enemies
 		Hitting a charmed enemy also deals damage to others
+		'I'm lucky, I don't have anyone...'
 		'''
 }
 
