@@ -10,6 +10,10 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class VanillaYoyoItem : GlobalItem, ILocalizedModType
     {
+        /// <summary>
+        /// The Item ID of this yoyo. The Item ID is a unique number assigned
+        /// to each Item loaded into the game.
+        /// </summary>
         public abstract int YoyoType { get; }
 
         public virtual string LocalizationCategory => "VanillaItems";
@@ -45,7 +49,10 @@ namespace SPYoyoMod.Content.Items
             YoyoModifyTooltips(item, tooltips);
         }
 
-        public virtual void YoyoModifyTooltips(Item item, List<TooltipLine> tooltips) { }
+        /// <inheritdoc cref="SetStaticDefaults" />
         public virtual void YoyoSetStaticDefaults() { }
+
+        /// <inheritdoc cref="ModifyTooltips(Item, List{TooltipLine})" />
+        public virtual void YoyoModifyTooltips(Item item, List<TooltipLine> tooltips) { }
     }
 }

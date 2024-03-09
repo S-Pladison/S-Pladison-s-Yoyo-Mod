@@ -10,6 +10,10 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class VanillaYoyoProjectile : GlobalProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
+        /// <summary>
+        /// The Projectile ID of this yoyo. The Projectile ID is a unique number assigned
+        /// to each Projectile loaded into the game.
+        /// </summary>
         public abstract int YoyoType { get; }
         public override bool InstancePerEntity { get => true; }
 
@@ -23,7 +27,10 @@ namespace SPYoyoMod.Content.Items
             return ModContent.GetInstance<ServerSideConfig>().ReworkedVanillaYoyos;
         }
 
+        /// <inheritdoc cref="IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile, ref YoyoStatModifiers)" />
         public virtual void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers) { }
+
+        /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
         public virtual void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter) { }
     }
 }

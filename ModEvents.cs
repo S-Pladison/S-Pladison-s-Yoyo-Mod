@@ -25,7 +25,7 @@ namespace SPYoyoMod
         public static event Action<IReadOnlyList<Recipe>> OnPostSetupRecipes;
 
         /// <summary>
-        /// Allows you to load things in your system after the mod's content has been setup
+        /// Allows you to load things after the mod's content has been setup
         /// (arrays have been resized to fit the content, etc).
         /// </summary>
         public static event Action OnPostSetupContent;

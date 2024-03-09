@@ -5,6 +5,10 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class YoyoItem : ModItem
     {
+        /// <summary>
+        /// Determines the extra range (in tile coordinates) that an item of the given item
+        /// type can be used in when using a controller.
+        /// </summary>
         public abstract int GamepadExtraRange { get; }
 
         public sealed override void SetStaticDefaults()
@@ -35,7 +39,10 @@ namespace SPYoyoMod.Content.Items
             YoyoSetDefaults();
         }
 
+        /// <inheritdoc cref="SetStaticDefaults" />
         public virtual void YoyoSetStaticDefaults() { }
+
+        /// <inheritdoc cref="SetDefaults" />
         public virtual void YoyoSetDefaults() { }
     }
 }

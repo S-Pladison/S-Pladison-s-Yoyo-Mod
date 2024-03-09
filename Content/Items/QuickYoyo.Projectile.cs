@@ -11,8 +11,20 @@ namespace SPYoyoMod.Content.Items
 {
     public abstract class YoyoProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
+        /// <summary>
+        /// How long in seconds the yoyo will stay out before automatically returning to the player.
+        /// Leaving as -1 will make the time infinite.
+        /// </summary>
         public abstract float LifeTime { get; }
+
+        /// <summary>
+        /// The maximum distance a yoyo projectile can be from its owner in pixels.
+        /// </summary>
         public abstract float MaxRange { get; }
+
+        /// <summary>
+        /// The maximum speed a yoyo projectile can go in pixels per tick.
+        /// </summary>
         public abstract float TopSpeed { get; }
 
         public bool IsReturning { get => Projectile.ai[0] == -1; }
@@ -46,6 +58,8 @@ namespace SPYoyoMod.Content.Items
         public sealed override void OnSpawn(IEntitySource source)
         {
             var owner = Main.player[Projectile.owner];
+
+            // ...
 
             YoyoOnSpawn(owner, source);
         }
@@ -110,17 +124,34 @@ namespace SPYoyoMod.Content.Items
             PostDrawYoyoString(mountedCenter);
         }
 
+        /// <inheritdoc cref="PreAI" />
         public virtual bool YoyoPreAI(Player owner) => true;
+
+        /// <inheritdoc cref="SetStaticDefaults" />
         public virtual void YoyoSetStaticDefaults() { }
+
+        /// <inheritdoc cref="SetDefaults" />
         public virtual void YoyoSetDefaults() { }
+
+        /// <inheritdoc cref="OnSpawn(IEntitySource)" />
         public virtual void YoyoOnSpawn(Player owner, IEntitySource source) { }
+
+        /// <inheritdoc cref="OnHitNPC(NPC, NPC.HitInfo, int)" />
         public virtual void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone) { }
+
+        /// <inheritdoc cref="OnHitPlayer(Player, Player.HurtInfo)" />
         public virtual void YoyoOnHitPlayer(Player owner, Player target, Player.HurtInfo info) { }
+
+        /// <inheritdoc cref="SendExtraAI(BinaryWriter)" />
         public virtual void YoyoSendExtraAI(BinaryWriter writer) { }
+
+        /// <inheritdoc cref="ReceiveExtraAI(BinaryReader)" />
         public virtual void YoyoReceiveExtraAI(BinaryReader reader) { }
 
-        public virtual void OnActivateYoyoGlove() { }
+        /// <inheritdoc cref="IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile, ref YoyoStatModifiers)" />
         public virtual void ModifyYoyoStats(ref YoyoStatModifiers statModifiers) { }
+
+        /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
         public virtual void PostDrawYoyoString(Vector2 mountedCenter) { }
     }
 }
