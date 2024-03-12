@@ -2,15 +2,19 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common;
+using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
+using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -250,6 +254,30 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Projectile.netImportant = true;
         }
 
+        public void OnInitialize()
+        {
+            SoundEngine.PlaySound(new SoundStyle(ModAssets.SoundsPath + "Thunder", SoundType.Sound) { PitchVariance = 0.2f }, Projectile.Center);
+
+            initCritChance = Projectile.CritChance;
+            yoyoProjIndex = Main.projectile.FirstOrDefault(p => p.identity == Projectile.ai[0] && p.type == ModContent.ProjectileType<BellowingThunderProjectile>())?.whoAmI ?? -1;
+
+            if (Main.dedServ) return;
+
+            ringRenderer = new RingRenderer(25, 16f * 5f, 0f);
+
+            ModContent.GetInstance<BellowingThunderLightningRenderTargetContent>()
+                .AddProjectile(Projectile);
+
+            if (Main.myPlayer != Projectile.owner) return;
+
+            ModContent.GetInstance<ScreenEffects>()
+                .Shake(Projectile.Center, Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)), 7f, 6f, 15, 16f * 25f)
+                .Flash(0.1f, 20, Projectile.Center);
+
+            ModContent.GetInstance<BellowingThunderSilhouetteRenderTargetContent>()
+                .ActivateFilter(10);
+        }
+
         public override void OnKill(int timeLeft)
         {
             ringRenderer?.Dispose();
@@ -259,22 +287,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             if (!initialized)
             {
-                if (!Main.dedServ)
-                {
-                    ringRenderer = new RingRenderer(25, 16f * 5f, 0f);
+                OnInitialize();
 
-                    ModContent.GetInstance<BellowingThunderRenderTargetContent>()
-                        .AddProjectile(Projectile);
-
-                    ModContent.GetInstance<ScreenEffects>()
-                        .Shake(Projectile.Center, Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)), 7f, 6f, 15, 16f * 25f)
-                        .Flash(0.1f, 20, Projectile.Center);
-                }
-
-                SoundEngine.PlaySound(new SoundStyle(ModAssets.SoundsPath + "Thunder", SoundType.Sound) { PitchVariance = 0.2f }, Projectile.Center);
-
-                initCritChance = Projectile.CritChance;
-                yoyoProjIndex = Main.projectile.FirstOrDefault(p => p.identity == Projectile.ai[0] && p.type == ModContent.ProjectileType<BellowingThunderProjectile>())?.whoAmI ?? -1;
                 initialized = true;
             }
 
@@ -353,7 +367,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         }
     }
 
-    public class BellowingThunderRenderTargetContent : RenderTargetContent
+    public class BellowingThunderLightningRenderTargetContent : RenderTargetContent
     {
         public override Point Size => new(Main.screenWidth / 2, Main.screenHeight / 2);
 
@@ -411,7 +425,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
-            var effect = ModAssets.RequestEffect("BellowingThunderEffect").Prepare(parameters =>
+            var effect = ModAssets.RequestEffect("BellowingThunderLightning").Prepare(parameters =>
             {
                 parameters["ScreenSize"].SetValue(target.Size());
                 parameters["Color"].SetValue(new Color(145, 60, 195).ToVector4());
@@ -420,6 +434,111 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
             Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
+        }
+    }
+
+    public class BellowingThunderSilhouetteRenderTargetContent : RenderTargetContent
+    {
+        public const string EffectName = "BellowingThunderSilhouette";
+        public const string FilterName = $"{nameof(SPYoyoMod)}:{EffectName}";
+
+        public override Point Size => new(Main.screenWidth, Main.screenHeight);
+
+        private int filterTime;
+
+        public override void Load()
+        {
+            var effect = ModContent.Request<Effect>(ModAssets.EffectsPath + EffectName, AssetRequestMode.ImmediateLoad).Value;
+            var refEffect = new Ref<Effect>(effect);
+            var screenShaderData = new ScreenShaderData(refEffect, EffectName + "Pass");
+
+            Filters.Scene[FilterName] = new Filter(screenShaderData, EffectPriority.VeryHigh);
+
+            ModEvents.OnPostUpdateEverything += UpdateFilterTimer;
+            ModEvents.OnPostUpdateCameraPosition += UpdateFilter;
+        }
+
+        public override bool PreRender()
+        {
+            return filterTime > 0;
+        }
+
+        public override void DrawToTarget()
+        {
+            if (!ModContent.GetInstance<BellowingThunderLightningRenderTargetContent>().TryGetRenderTarget(out RenderTarget2D lightningTarget)) return;
+
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+            Main.spriteBatch.Draw(lightningTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+
+            var playerRasterizerState = Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipHorizontally) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
+
+            Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, playerRasterizerState, null, Main.GameViewMatrix.ZoomMatrix);
+            DrawPlayer();
+            Main.spriteBatch.End();
+        }
+
+        public void DrawPlayer()
+        {
+            var player = Main.LocalPlayer;
+            var visualPlayer = Main.playerVisualClone[player.whoAmI] ??= new();
+
+            visualPlayer.CopyVisuals(player);
+            visualPlayer.isFirstFractalAfterImage = true;
+            visualPlayer.firstFractalAfterImageOpacity = 1f;
+            visualPlayer.ResetEffects();
+            visualPlayer.ResetVisibleAccessories();
+            visualPlayer.DisplayDollUpdate();
+            visualPlayer.itemRotation = player.itemRotation;
+            visualPlayer.gravDir = player.gravDir;
+            visualPlayer.heldProj = player.heldProj;
+            visualPlayer.Center = player.Center;
+            visualPlayer.wingFrame = player.wingFrame;
+            visualPlayer.velocity.Y = player.velocity.Y;
+            visualPlayer.socialIgnoreLight = true;
+
+            var armRotation = player.itemRotation * player.gravDir - MathHelper.PiOver2 * player.direction;
+
+            visualPlayer.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
+            visualPlayer.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Quarter, armRotation);
+            visualPlayer.PlayerFrame();
+
+            Main.PlayerRenderer.DrawPlayer(Main.Camera, visualPlayer, visualPlayer.position, 0f, visualPlayer.fullRotationOrigin, 0f);
+        }
+
+        public void ActivateFilter(uint frames)
+        {
+            if (!ModContent.GetInstance<ClientSideConfig>().FlashingLights) return;
+
+            filterTime = (int)frames;
+        }
+
+        public void UpdateFilterTimer()
+        {
+            filterTime = Math.Max(filterTime - 1, 0);
+        }
+
+        public void UpdateFilter()
+        {
+            var active = Filters.Scene[FilterName].IsActive();
+
+            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target))
+            {
+                if (!active) return;
+
+                Filters.Scene[FilterName].GetShader().UseIntensity(0f);
+                Filters.Scene[FilterName].Deactivate();
+
+                return;
+            }
+
+            if (!active)
+            {
+                Filters.Scene.Activate(FilterName);
+                Filters.Scene[FilterName].GetShader().UseIntensity(1f);
+            }
+
+            Filters.Scene[FilterName].GetShader().UseImage(target);
         }
     }
 }

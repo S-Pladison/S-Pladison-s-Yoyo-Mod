@@ -8,7 +8,7 @@ sampler TextureSampler0 = sampler_state
 float2 ScreenSize;
 float4 Color;
 
-float4 BellowingThunderEffect(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
+float4 BellowingThunderLightning(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
 	float2 offset = coords / ScreenSize * 2;
 
@@ -27,8 +27,8 @@ float4 BellowingThunderEffect(float2 coords : TEXCOORD0, float4 sampleColor : CO
 
 technique Technique1
 {
-	pass BellowingThunderEffect
-	{
-		PixelShader = compile ps_3_0 BellowingThunderEffect();
-	}
+    pass BellowingThunderLightning
+    {
+        PixelShader = compile ps_3_0 BellowingThunderLightning();
+    }
 }

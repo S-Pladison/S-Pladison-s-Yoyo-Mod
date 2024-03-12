@@ -25,6 +25,7 @@ namespace SPYoyoMod
 
             // Load config
 
+            AddConfig("ClientSideConfig", new ClientSideConfig());
             AddConfig("ServerSideConfig", new ServerSideConfig());
 
             // Load content

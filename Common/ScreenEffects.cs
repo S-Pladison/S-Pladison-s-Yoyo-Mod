@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SPYoyoMod.Common.Configs;
 using System;
 using Terraria;
 using Terraria.Graphics.CameraModifiers;
@@ -28,6 +29,9 @@ namespace SPYoyoMod.Common
 
         public ScreenEffects Flash(float strength, int frames, Vector2? position = null)
         {
+            if (!ModContent.GetInstance<ClientSideConfig>().FlashingLights)
+                return this;
+
             flashStrength = MathHelper.Clamp(strength, 0, 1);
             flashInitTime = (int)MathHelper.Max(frames, 0);
             flashTime = flashInitTime;
