@@ -481,6 +481,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public void DrawPlayer()
         {
             var player = Main.LocalPlayer;
+
+            if (player.heldProj != ModContent.ProjectileType<BellowingThunderProjectile>()) return;
+
             var visualPlayer = Main.playerVisualClone[player.whoAmI] ??= new();
 
             visualPlayer.CopyVisuals(player);
