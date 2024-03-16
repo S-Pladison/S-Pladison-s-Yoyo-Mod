@@ -275,7 +275,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 parameters["Texture1"].SetValue(spaceTexture.Value);
                 parameters["Texture1Size"].SetValue(spaceTexture.Size());
                 parameters["Texture2"].SetValue(cloudsTexture.Value);
-                parameters["Texture2Size"].SetValue(cloudsTexture.Size());
+                parameters["Texture2Size"].SetValue(cloudsTexture.Size() * 4);
                 parameters["Cloud1Color"].SetValue(new Color(198, 50, 189).ToVector4());
                 parameters["Cloud2Color"].SetValue(new Color(25, 25, 76).ToVector4());
             });
