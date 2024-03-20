@@ -313,8 +313,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 parameters["Cloud2Color"].SetValue(new Color(25, 25, 76).ToVector4());
             });
 
-            effect.Wait();
-
             effect.Prepare(parameters =>
             {
                 parameters["Texture0Size"].SetValue(renderTarget.Size());
