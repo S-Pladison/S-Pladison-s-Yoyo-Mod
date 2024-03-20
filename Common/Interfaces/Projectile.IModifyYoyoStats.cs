@@ -91,7 +91,7 @@ namespace SPYoyoMod.Common.Interfaces
                     c.EmitDelegate<ModifyYoyoStatDelegate>(ModifyYoyoMaxRange);
                 };
 
-                ModContent.GetInstance<ThoriumCompatibility>().AddHook("Projectiles.ProjectileExtras", "YoyoAI", (orig_ThoriumYoyoAIMethod orig, int projIndex, float lifeTimeSec, float maxRange, float topSpeed, float rotSpeed, Delegate _uAct, Delegate _uAct2) =>
+                ModContent.GetInstance<ThoriumCompatibility>()?.AddHook("Projectiles.ProjectileExtras", "YoyoAI", (orig_ThoriumYoyoAIMethod orig, int projIndex, float lifeTimeSec, float maxRange, float topSpeed, float rotSpeed, Delegate _uAct, Delegate _uAct2) =>
                 {
                     var statModifiers = YoyoStatModifiers.Default;
                     var lifeTime = lifeTimeSec * 60;

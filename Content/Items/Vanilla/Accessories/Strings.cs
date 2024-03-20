@@ -108,7 +108,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 c.EmitDelegate<RemoveStringBonusDelegate>(RemoveYoyoStringBonus);
             };
 
-            ModContent.GetInstance<ThoriumCompatibility>().AddILHook("Projectiles.ProjectileExtras", "YoyoAI", (il) =>
+            ModContent.GetInstance<ThoriumCompatibility>()?.AddILHook("Projectiles.ProjectileExtras", "YoyoAI", (il) =>
             {
                 var c = new ILCursor(il);
 

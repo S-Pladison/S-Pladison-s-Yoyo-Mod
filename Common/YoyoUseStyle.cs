@@ -47,7 +47,7 @@ namespace SPYoyoMod.Common
                 c.EmitDelegate<ModifyMountedCenterDelegate>(ModifyMountedCenter);
             };
 
-            ModContent.GetInstance<ThoriumCompatibility>().AddILHook("Projectiles.ProjectileExtras", "DrawString", (il) =>
+            ModContent.GetInstance<ThoriumCompatibility>()?.AddILHook("Projectiles.ProjectileExtras", "DrawString", (il) =>
             {
                 var c = new ILCursor(il);
 

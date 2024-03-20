@@ -9,37 +9,25 @@ namespace SPYoyoMod.Common.ModCompatibility
     {
         public abstract string ModName { get; }
         public Mod Mod { get; private set; }
-        public bool IsModLoaded { get; private set; }
         public Assembly Assembly { get => Mod.Code; }
 
         public virtual void Load() { }
+        public virtual bool IsLoadingEnabled() { return true; }
         public virtual void Unload() { }
-
-        public bool TryGetMod(out Mod mod)
-        {
-            if (!IsModLoaded)
-            {
-                mod = null;
-                return false;
-            }
-
-            mod = Mod;
-            return true;
-        }
 
         void ILoadable.Load(Mod _)
         {
             if (!ModLoader.TryGetMod(ModName, out var mod))
-            {
-                IsModLoaded = false;
-                Mod = null;
-                return;
-            }
+                throw new Exception($"How!? It just shouldn't have happened... Why couldn't find {ModName}?");
 
             Mod = mod;
-            IsModLoaded = true;
 
             Load();
+        }
+
+        bool ILoadable.IsLoadingEnabled(Mod _)
+        {
+            return ModLoader.TryGetMod(ModName, out _) && IsLoadingEnabled();
         }
 
         public void AddHook(string typePath, string methodName, Delegate hookDelegate)
@@ -49,8 +37,6 @@ namespace SPYoyoMod.Common.ModCompatibility
 
         public void AddHook(string typePath, string methodName, BindingFlags bindingFlags, Delegate hookDelegate)
         {
-            if (!IsModLoaded) return;
-
             var typeInfo = Assembly.GetType($"{ModName}.{typePath}");
 
             if (typeInfo is null)
@@ -71,8 +57,6 @@ namespace SPYoyoMod.Common.ModCompatibility
 
         public void AddILHook(string typePath, string methodName, BindingFlags bindingFlags, ILContext.Manipulator callback)
         {
-            if (!IsModLoaded) return;
-
             var typeInfo = Assembly.GetType($"{ModName}.{typePath}");
 
             if (typeInfo is null)

@@ -80,7 +80,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
                 ModifyOnClickButton(c);
             };
 
-            ModContent.GetInstance<DialogueTweakCompatibility>().AddButton(
+            ModContent.GetInstance<DialogueTweakCompatibility>()?.AddButton(
                 npcType: NPCID.Nurse,
                 buttonText: () =>
                 {
