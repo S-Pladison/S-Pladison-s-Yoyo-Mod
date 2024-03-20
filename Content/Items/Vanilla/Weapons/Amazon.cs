@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
@@ -28,25 +27,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         private Vector2? startToReturnPosition;
         private bool initialized;
 
-        public override void Load()
-        {
-            NPCEvents.OnUpdateLifeRegen += (NPC npc, ref int damage) =>
-            {
-                if (!npc.poisoned) return;
-
-                foreach (var proj in Main.projectile.Where(p => p.active && p.type == ProjectileID.JungleYoyo))
-                {
-                    if (Vector2.Distance(proj.Center, npc.Center) > (16f * 4f * proj.localAI[1])) continue;
-
-                    // Default: -12;
-                    // New: -36;
-                    npc.lifeRegen -= 24;
-
-                    break;
-                }
-            };
-        }
-
         public override void OnSpawn(Projectile proj, IEntitySource source)
         {
             proj.localAI[1] = 0f;
@@ -56,7 +36,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             if (!initialized)
             {
-                ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.Add(proj);
+                ModContent.GetInstance<AmazonEffectHandler>()?.AddProjectile(proj);
                 initialized = true;
             }
 
@@ -91,6 +71,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 {
                     target.AddBuff(BuffID.Poisoned, 60 * 5);
                 }
+            }
+
+            // Aura
+
+            foreach (var npc in Main.npc.Where(x => x.active))
+            {
+                if (Vector2.Distance(proj.Center, npc.Center) > (16f * 4f * proj.localAI[1])) continue;
+                if (!npc.TryGetGlobalNPC(out AmazonGlobalNPC amazonGlobalNPC)) continue;
+
+                amazonGlobalNPC.NearAmazonYoyo = true;
             }
 
             // Spawn dusts
@@ -149,6 +139,30 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
+    public class AmazonGlobalNPC : GlobalNPC
+    {
+        public bool NearAmazonYoyo { get; set; }
+        public override bool InstancePerEntity { get => true; }
+
+        public override void UpdateLifeRegen(NPC npc, ref int damage)
+        {
+            if (!NearAmazonYoyo) return;
+
+            NearAmazonYoyo = false;
+
+            if (!npc.poisoned) return;
+
+            // Default: -12;
+            // New: -36;
+            npc.lifeRegen -= 24;
+
+            if (damage < 3)
+            {
+                damage = 3;
+            }
+        }
+    }
+
     public class AmazonDust : ModDust
     {
         private static readonly EasingBuilder progressEasing = new(
@@ -187,18 +201,59 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         }
     }
 
+    [Autoload(Side = ModSide.Client)]
     public class AmazonEffectHandler : ILoadable
     {
+        [Autoload(false)]
+        private class AmazonRenderTargetContent : RenderTargetContent
+        {
+            private readonly string name;
+            private readonly Action drawToTargetAction;
+
+            public AmazonRenderTargetContent(string name, Action drawToTargetAction)
+            {
+                this.name = name;
+                this.drawToTargetAction = drawToTargetAction;
+            }
+
+            public override string Name { get => $"Amazon{name}RenderTargetContent"; }
+            public override Point Size => Main.ScreenSize;
+
+            public override bool PreRender()
+            {
+                return ModContent.GetInstance<AmazonEffectHandler>().IsActive;
+            }
+
+            public override void DrawToTarget()
+            {
+                drawToTargetAction();
+            }
+        }
+
         public const int RadiusFromProjCenter = 7;
 
-        public ProjectileObserver ProjectileObserver { get; private set; }
+        private AmazonRenderTargetContent wallRTContent;
+        private AmazonRenderTargetContent tileRTContent;
+        private AmazonRenderTargetContent maskRTContent;
+        private ProjectileObserver projectileObserver;
+
+        public bool IsActive => projectileObserver.AnyEntity;
+
+        public void AddProjectile(Projectile proj)
+        {
+            projectileObserver.Add(proj);
+        }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
-            ProjectileObserver = new(p => p.type != ProjectileID.JungleYoyo);
+            mod.AddContent(wallRTContent = new AmazonRenderTargetContent("Wall", DrawWallTarget));
+            mod.AddContent(tileRTContent = new AmazonRenderTargetContent("Tile", DrawTileTarget));
+            mod.AddContent(maskRTContent = new AmazonRenderTargetContent("Mask", DrawMaskTarget));
 
-            ModEvents.OnPostUpdateEverything += ProjectileObserver.Update;
-            ModEvents.OnWorldUnload += ProjectileObserver.Clear;
+            projectileObserver = new(p => p.type != ProjectileID.JungleYoyo);
+
+            ModEvents.OnPostUpdateEverything += projectileObserver.Update;
+            ModEvents.OnWorldUnload += projectileObserver.Clear;
 
             On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
             {
@@ -211,11 +266,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         void ILoadable.Unload() { }
 
-        public IReadOnlyList<Point> GetTilePoints()
+        private IReadOnlyList<Point> GetTilePoints()
         {
             var tilesInAreasHashSet = new HashSet<Point>();
 
-            foreach (var proj in ProjectileObserver.GetEntityInstances())
+            foreach (var proj in projectileObserver.GetEntityInstances())
             {
                 var projCenter = proj.Center.ToTileCoordinates();
                 var trueRadius = (int)MathF.Ceiling(proj.localAI[1] * RadiusFromProjCenter);
@@ -251,27 +306,22 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             return tilesInAreasHashSet.ToList();
         }
 
-        public void DrawBehindTiles()
+        private void DrawBehindTiles()
         {
             Main.spriteBatch.End(out var spriteBatchSnapshot);
-            DrawGrassTarget<AmazonWallsRenderTargetContent>();
+            DrawGrass(wallRTContent);
             Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
 
-        public void DrawOverTiles()
+        private void DrawOverTiles()
         {
-            DrawGrassTarget<AmazonTilesRenderTargetContent>();
+            DrawGrass(tileRTContent);
         }
 
-        public void DrawGrassTarget<T>() where T : RenderTargetContent
+        private void DrawGrass(AmazonRenderTargetContent grassRTContent)
         {
-            var grassRTContent = ModContent.GetInstance<T>();
-
-            if (!grassRTContent.IsRenderedInThisFrame || !grassRTContent.TryGetRenderTarget(out var grassTarget)) return;
-
-            var maskRTContent = ModContent.GetInstance<AmazonMaskRenderTargetContent>();
-
-            if (!maskRTContent.IsRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out var maskTarget)) return;
+            if (!grassRTContent.WasRenderedInThisFrame || !grassRTContent.TryGetRenderTarget(out var grassTarget)) return;
+            if (!maskRTContent.WasRenderedInThisFrame || !maskRTContent.TryGetRenderTarget(out var maskTarget)) return;
 
             var effect = ModAssets.RequestEffect("AmazonEffect").Prepare(parameters =>
             {
@@ -284,24 +334,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Main.spriteBatch.Draw(grassTarget, Vector2.Zero, Color.White);
             Main.spriteBatch.End();
         }
-    }
 
-    public class AmazonWallsRenderTargetContent : RenderTargetContent
-    {
-        public override Point Size => new(Main.screenWidth, Main.screenHeight);
-
-        public override bool PreRender()
-        {
-            return ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
-        }
-
-        public override void DrawToTarget()
+        private void DrawWallTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassWall", AssetRequestMode.ImmediateLoad);
 
-            foreach (var tilePos in ModContent.GetInstance<AmazonEffectHandler>().GetTilePoints())
+            foreach (var tilePos in GetTilePoints())
             {
                 var tile = Main.tile[tilePos.X, tilePos.Y];
 
@@ -333,24 +373,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             Main.spriteBatch.End();
         }
-    }
 
-    public class AmazonTilesRenderTargetContent : RenderTargetContent
-    {
-        public override Point Size => new(Main.screenWidth, Main.screenHeight);
-
-        public override bool PreRender()
-        {
-            return ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
-        }
-
-        public override void DrawToTarget()
+        private void DrawTileTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassTile", AssetRequestMode.ImmediateLoad);
 
-            foreach (var tilePos in ModContent.GetInstance<AmazonEffectHandler>().GetTilePoints())
+            foreach (var tilePos in GetTilePoints())
             {
                 var tile = Main.tile[tilePos.X, tilePos.Y];
 
@@ -370,22 +400,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             Main.spriteBatch.End();
         }
-    }
 
-    public class AmazonMaskRenderTargetContent : RenderTargetContent
-    {
-        public override Point Size => new(Main.screenWidth, Main.screenHeight);
-
-        public override bool PreRender()
-        {
-            return ModContent.GetInstance<AmazonEffectHandler>()?.ProjectileObserver.AnyEntity ?? false;
-        }
-
-        public override void DrawToTarget()
+        private void DrawMaskTarget()
         {
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
-            foreach (var proj in ModContent.GetInstance<AmazonEffectHandler>().ProjectileObserver.GetEntityInstances())
+            foreach (var proj in projectileObserver.GetEntityInstances())
             {
                 AmazonProjectile.DrawMask(proj);
             }

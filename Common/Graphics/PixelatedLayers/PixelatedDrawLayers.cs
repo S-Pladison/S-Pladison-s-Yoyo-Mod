@@ -57,7 +57,7 @@ namespace SPYoyoMod.Common.Graphics.PixelatedLayers
 
             public void DrawToScreen()
             {
-                if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
+                if (!WasRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.ZoomMatrix);
                 Main.spriteBatch.Draw(target, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);

@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.RenderTargets;
-using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
@@ -58,21 +57,15 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private bool initialized;
 
-        public override void AI()
+        public void OnInitialize()
         {
-            if (!initialized)
-            {
-                ModContent.GetInstance<BlackholeRenderTargetContent>()?.AddProjectile(Projectile);
-                initialized = true;
-            }
+            if (Main.dedServ) return;
 
-            Lighting.AddLight(Projectile.Center, new Color(171, 97, 255).ToVector3() * 0.6f);
+            ModContent.GetInstance<BlackholeRenderTargetContent>().AddProjectile(Projectile);
+        }
 
-            if (IsReturning) RadiusProgress = 1f - ReturnToPlayerProgress;
-            else RadiusProgress = MathHelper.Min(RadiusProgress + 0.05f, 1f);
-
-            if (IsReturning || Main.myPlayer != Projectile.owner) return;
-
+        public void SuckNearbyEnemies()
+        {
             var currentRadius = GravityRadius * EasingFunctions.InOutSine(RadiusProgress);
             var targets = NPCUtils.NearestNPCs(
                 center: Projectile.Center,
@@ -95,26 +88,31 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             }
         }
 
-        public override void YoyoOnHitNPC(Player owner, NPC target, NPC.HitInfo hit, int damageDone)
+        public override void AI()
         {
-            if (IsReturning) return;
+            if (!initialized)
+            {
+                OnInitialize();
+
+                initialized = true;
+            }
+
+            if (IsReturning) RadiusProgress = 1f - ReturnToPlayerProgress;
+            else RadiusProgress = MathHelper.Min(RadiusProgress + 0.05f, 1f);
 
             if (!Main.dedServ)
             {
-                var blackholeRTContent = ModContent.GetInstance<BlackholeRenderTargetContent>();
+                var position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(20);
+                var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(0.75f);
+                var particle = new BlackholeParticle(position, velocity, 1f - ReturnToPlayerProgress);
 
-                for (var i = 0; i < 7; i++)
-                {
-                    var position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(20);
-                    var velocity = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Main.rand.NextFloat(0.75f);
-                    var particle = new BlackholeParticle(position, velocity);
-
-                    blackholeRTContent.AddParticle(particle);
-                }
+                ModContent.GetInstance<BlackholeRenderTargetContent>().AddParticle(particle);
             }
 
-            if (Projectile.owner == Main.myPlayer)
-                new ModProjectileOnHitNPCPacket(Projectile.identity, Projectile.type, target.whoAmI, target.type).Send();
+            if (!IsReturning && Main.myPlayer == Projectile.owner)
+            {
+                SuckNearbyEnemies();
+            }
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -158,34 +156,36 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
     public class BlackholeParticle : IParticle
     {
-        private static readonly EasingBuilder progressEasing = new(
-            (EasingFunctions.InOutCirc, 0.2f, 0f, 1f),
-            (EasingFunctions.Linear, 0.6f, 1f, 1f),
-            (EasingFunctions.InOutCirc, 0.2f, 1f, 0f)
+        public static readonly EasingBuilder ProgressEasing = new(
+            (EasingFunctions.InOutCirc, 0.05f, 0f, 1f),
+            (EasingFunctions.Linear, 0.95f, 1f, 0f)
         );
 
         public bool ShouldBeRemovedFromRenderer => timeLeft <= 0;
         public float Progress => MathHelper.Lerp(1f, 0f, timeLeft / (float)initTimeLeft);
+        public Vector2 Position => position;
 
         private readonly Asset<Texture2D> texture;
         private readonly Vector2 origin;
         private readonly Vector2 initVelocity;
         private readonly int initTimeLeft;
         private readonly float rotation;
+        private readonly float scale;
 
         private Vector2 position;
         private Vector2 velocity;
         private int timeLeft;
 
-        public BlackholeParticle(Vector2 position, Vector2 velocity)
+        public BlackholeParticle(Vector2 position, Vector2 velocity, float scale)
         {
             texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Smoke", AssetRequestMode.ImmediateLoad);
             origin = texture.Size() * 0.5f;
-            timeLeft = initTimeLeft = Main.rand.Next(60 * 1, 60 * 2);
+            timeLeft = initTimeLeft = Main.rand.Next(20, 40);
             rotation = Main.rand.NextFloat(MathHelper.TwoPi);
 
             this.position = position;
             this.velocity = initVelocity = velocity;
+            this.scale = scale;
         }
 
         public void Update(ref ParticleRendererSettings settings)
@@ -193,17 +193,13 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             velocity = Vector2.Lerp(initVelocity, Vector2.Zero, Progress);
             position += velocity;
             timeLeft--;
-
-            var lightColorMult = 0.4f * progressEasing.Evaluate(Progress);
-
-            Lighting.AddLight(position, new Color(171, 97, 255).ToVector3() * lightColorMult);
         }
 
         public void Draw(ref ParticleRendererSettings settings, SpriteBatch spriteBatch)
         {
-            var color = Color.White * progressEasing.Evaluate(Progress);
+            var color = Color.White * ProgressEasing.Evaluate(Progress);
 
-            spriteBatch.Draw(texture.Value, settings.AnchorPosition + position, null, color, rotation, origin, 0.35f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(texture.Value, settings.AnchorPosition + position, null, color, rotation, origin, 0.35f * scale, SpriteEffects.None, 0f);
         }
     }
 
@@ -226,6 +222,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             ModEvents.OnPostUpdateEverything += particleRenderer.Update;
             ModEvents.OnWorldUnload += particleRenderer.Clear;
 
+            ModEvents.OnPreDraw += EmitLight;
+
             On_Main.DoDraw_WallsAndBlacks += (orig, main) =>
             {
                 orig(main);
@@ -241,6 +239,41 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public void AddParticle(BlackholeParticle particle)
         {
             particleRenderer.Add(particle);
+        }
+
+        public void EmitLight()
+        {
+            if (!projectileObserver.AnyEntity && particleRenderer.Particles.Count == 0) return;
+
+            // Set Main.gamePaused to false to correctly emit light like torch and etc.
+            // Not sure if it's safe, but I didn't find any errors
+
+            // Lighting.AddLight(...)
+            // {
+            //     if (!Main.gamePaused && Main.netMode != 2)
+            //     {
+            //         _activeEngine.AddLight(...);
+            //     }
+            // }
+
+            var origGamePaused = Main.gamePaused;
+            Main.gamePaused = false;
+
+            foreach (var yoyoProj in projectileObserver.GetEntityInstances())
+            {
+                Lighting.AddLight(yoyoProj.Center, new Color(171, 97, 255).ToVector3() * 0.6f);
+            }
+
+            for (int i = 0; i < particleRenderer.Particles.Count; i++)
+            {
+                var particle = particleRenderer.Particles[i] as BlackholeParticle;
+
+                var lightColorMult = 0.4f * BlackholeParticle.ProgressEasing.Evaluate(particle.Progress);
+
+                Lighting.AddLight(particle.Position, new Color(171, 97, 255).ToVector3() * lightColorMult);
+            }
+
+            Main.gamePaused = origGamePaused;
         }
 
         public override bool PreRender()
@@ -265,7 +298,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public void DrawToScreen()
         {
-            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
+            if (!WasRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
             effect ??= ModAssets.RequestEffect("BlackholeBackground").Prepare(parameters =>
             {
@@ -279,6 +312,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 parameters["Cloud1Color"].SetValue(new Color(198, 50, 189).ToVector4());
                 parameters["Cloud2Color"].SetValue(new Color(25, 25, 76).ToVector4());
             });
+
+            effect.Wait();
 
             effect.Prepare(parameters =>
             {

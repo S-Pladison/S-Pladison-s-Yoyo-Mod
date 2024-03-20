@@ -423,7 +423,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public void DrawToScreen()
         {
-            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
+            if (!WasRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
             var effect = ModAssets.RequestEffect("BellowingThunderLightning").Prepare(parameters =>
             {
@@ -525,7 +525,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             var active = Filters.Scene[FilterName].IsActive();
 
-            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target))
+            if (!WasRenderedInThisFrame || !TryGetRenderTarget(out var target))
             {
                 if (!active) return;
 

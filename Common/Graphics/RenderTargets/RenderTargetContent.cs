@@ -10,19 +10,34 @@ namespace SPYoyoMod.Common.Graphics.RenderTargets
     {
         public abstract Point Size { get; }
         public virtual Color ClearColor { get => Color.Transparent; }
-        public bool IsRenderedInThisFrame { get; private set; }
+        public virtual uint? AutoDisposeTime { get => 60 * 60 * 3; }
+        public bool WasRenderedInThisFrame { get; private set; }
 
         protected RenderTarget2D renderTarget;
 
+        private uint autoDisposeTimer;
         private bool wasRendered;
 
         public abstract void DrawToTarget();
 
         public virtual bool PreRender() { return true; }
 
-        public void Reset()
+        public void Update()
         {
-            IsRenderedInThisFrame = false;
+            WasRenderedInThisFrame = false;
+
+            if (AutoDisposeTime is null || renderTarget is null || renderTarget.IsDisposed)
+                return;
+
+            if (autoDisposeTimer >= AutoDisposeTime)
+            {
+                renderTarget?.Dispose();
+                wasRendered = false;
+                autoDisposeTimer = 0;
+                return;
+            }
+
+            autoDisposeTimer++;
         }
 
         public void Render(GraphicsDevice device)
@@ -36,7 +51,7 @@ namespace SPYoyoMod.Common.Graphics.RenderTargets
 
             wasRendered = true;
 
-            IsRenderedInThisFrame = true;
+            WasRenderedInThisFrame = true;
         }
 
         public bool TryGetRenderTarget(out RenderTarget2D renderTarget)

@@ -19,7 +19,7 @@ namespace SPYoyoMod.Common.Graphics.RenderTargets
                 for (var i = 0; i < contentThatNeedsRenderTargets.Count; i++)
                 {
                     var content = contentThatNeedsRenderTargets[i];
-                    content.Reset();
+                    content.Update();
 
                     if (!content.PreRender()) continue;
 

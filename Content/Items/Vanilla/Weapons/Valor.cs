@@ -499,7 +499,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public void DrawToScreen()
         {
-            if (!IsRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
+            if (!WasRenderedInThisFrame || !TryGetRenderTarget(out var target)) return;
 
             var effect = ModAssets.RequestEffect("ValorNPCOutline").Prepare(parameters =>
             {
