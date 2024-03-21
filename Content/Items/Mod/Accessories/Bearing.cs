@@ -43,9 +43,9 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             recipe.Register();
         }
 
-        public override void UpdateEquip(Player player)
+        public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.SetEffectFlag<BearingItem>();
+            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
         }
 
         private static void SetEffectFlagForOtherModItems()
@@ -77,11 +77,11 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
             // Set effect flag for the found items
             // (Creating a separate GlobalItem class with overriding AppliesToEntity will not work)
-            ItemEvents.OnUpdateEquip += (item, player) =>
+            ItemEvents.OnUpdateAccessory += (item, player, _) =>
             {
                 if (!itemTypesWithBearingEffect.Contains(item.type)) return;
 
-                player.SetEffectFlag<BearingItem>();
+                player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
             };
         }
     }
@@ -97,7 +97,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var owner = Main.player[proj.owner];
 
-            if (!owner.GetEffectFlag<BearingItem>()) return;
+            if (!owner.GetModPlayer<PlayerEffectFlags>().GetFlag<BearingItem>()) return;
 
             statModifiers.LifeTime += 0.5f;
         }

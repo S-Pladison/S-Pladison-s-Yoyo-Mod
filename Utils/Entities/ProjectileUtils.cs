@@ -13,7 +13,7 @@ namespace SPYoyoMod.Utils
         private class RelatedToYoyoGlobalProjectile : GlobalProjectile
         {
             public bool RelatedToYoyo { get; private set; }
-            public override bool InstancePerEntity => true;
+            public override bool InstancePerEntity { get => true; }
 
             public override void OnSpawn(Projectile proj, IEntitySource source)
             {

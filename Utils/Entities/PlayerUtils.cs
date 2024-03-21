@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Common;
+﻿using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -16,19 +16,22 @@ namespace SPYoyoMod.Utils
             return false;
         }
 
-        public static void SetEffectFlag<T>(this Player player, bool value = true) where T : ModItem
-            => player.GetModPlayer<PlayerEffectFlags>().SetFlag<T>(value);
-
-        public static bool GetEffectFlag<T>(this Player player) where T : ModItem
-            => player.GetModPlayer<PlayerEffectFlags>().GetFlag<T>();
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int OwnedProjectileCounts(this Player player, int projectileType)
-            => player.ownedProjectileCounts[projectileType];
+        {
+            return player.ownedProjectileCounts[projectileType];
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int OwnedProjectileCounts<T>(this Player player) where T : ModProjectile
-            => player.ownedProjectileCounts[ModContent.ProjectileType<T>()];
+        {
+            return player.ownedProjectileCounts[ModContent.ProjectileType<T>()];
+        }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ProvideRandomCounterweight(this Player player)
-            => player.counterWeight = 556 + Main.rand.Next(6);
+        {
+            player.counterWeight = 556 + Main.rand.Next(6);
+        }
     }
 }
