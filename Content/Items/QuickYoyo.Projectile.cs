@@ -27,7 +27,11 @@ namespace SPYoyoMod.Content.Items
         /// </summary>
         public abstract float TopSpeed { get; }
 
+        /// <summary>
+        /// Return true if yoyo move back towards the player.
+        /// </summary>
         public bool IsReturning { get => Projectile.ai[0] == -1; }
+
         public float ReturnToPlayerProgress { get; private set; }
 
         private Vector2? startToReturnPosition;

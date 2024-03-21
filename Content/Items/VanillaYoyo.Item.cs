@@ -16,6 +16,13 @@ namespace SPYoyoMod.Content.Items
         /// </summary>
         public abstract int YoyoType { get; }
 
+        /// <summary>
+        /// Determines the extra range (in tile coordinates) that an item of the given item
+        /// type can be used in when using a controller.
+        /// Default value is null, which applies vanilla value.
+        /// </summary>
+        public virtual int? GamepadExtraRange { get; }
+
         public virtual string LocalizationCategory => "VanillaItems";
         public virtual LocalizedText Tooltip => this.GetLocalization("Tooltip", () => "");
 
@@ -32,6 +39,11 @@ namespace SPYoyoMod.Content.Items
         public sealed override void SetStaticDefaults()
         {
             _ = Tooltip;
+
+            if (GamepadExtraRange.HasValue)
+            {
+                ItemID.Sets.GamepadExtraRange[YoyoType] = GamepadExtraRange.Value;
+            }
 
             YoyoSetStaticDefaults();
         }
