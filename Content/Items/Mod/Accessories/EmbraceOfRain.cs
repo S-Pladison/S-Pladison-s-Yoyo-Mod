@@ -1,12 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
+using MonoMod.Cil;
+using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Utils;
 using System;
 using System.IO;
+using System.Reflection;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
+using static Mono.Cecil.Cil.OpCodes;
 
 namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
@@ -37,6 +41,39 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
     public class EmbraceOfRainGlobalNPC : GlobalNPC
     {
+        private class EmbraceOfRainDamagePacket : NPCPacket
+        {
+            public readonly short Damage;
+
+            public EmbraceOfRainDamagePacket() { }
+
+            public EmbraceOfRainDamagePacket(NPC npc, int damage) : this(npc.whoAmI, npc.type, damage) { }
+
+            public EmbraceOfRainDamagePacket(int npcWhoAmI, int npcType, int damage) : base(npcWhoAmI, npcType)
+            {
+                Damage = (short)damage;
+            }
+
+            protected override void PostSend(BinaryWriter writer, NPC npc)
+            {
+                writer.Write(Damage);
+            }
+
+            protected override void PostReceive(BinaryReader reader, int sender, NPC npc)
+            {
+                var damage = reader.ReadInt16();
+
+                if (npc is null || !npc.TryGetGlobalNPC(out EmbraceOfRainGlobalNPC globalNPC)) return;
+
+                globalNPC.DamageDoneByYoyo += damage;
+
+                if (Main.netMode == NetmodeID.Server)
+                {
+                    new EmbraceOfRainDamagePacket(npc, damage).Send(-1, sender);
+                }
+            }
+        }
+
         private static bool isRerolledLoot;
 
         public int DamageDoneByYoyo { get; private set; }
@@ -45,17 +82,27 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         public override void Load()
         {
             On_ItemDropResolver.ResolveRule += IncreaseLoot;
-        }
 
-        public override void OnHitByProjectile(NPC npc, Projectile proj, NPC.HitInfo hit, int damageDone)
-        {
-            if (!proj.TryGetOwner(out Player owner) || !owner.GetEffectFlag<EmbraceOfRainItem>())
-                return;
+            IL_Projectile.Damage += (il) =>
+            {
+                var c = new ILCursor(il);
 
-            if (!proj.IsYoyoOrRelated() || npc.immortal)
-                return;
+                // NPCKillAttempt attempt = new NPCKillAttempt(nPC);
 
-            DamageDoneByYoyo += damageDone;
+                // IL_31ec: ldloca.s 40
+                // IL_31ee: ldloc.s 26
+                // IL_31f0: call instance void Terraria.DataStructures.NPCKillAttempt::.ctor(class Terraria.NPC)
+
+                if (!c.TryGotoNext(MoveType.After,
+                        i => i.MatchLdloca(40),
+                        i => i.MatchLdloc(26),
+                        i => i.MatchCall(typeof(NPCKillAttempt).GetConstructor(BindingFlags.Public | BindingFlags.Instance, new[] { typeof(NPC) })))) return;
+
+                c.Emit(Ldarg, 0); // proj
+                c.Emit(Ldloc, 26); // npc
+                c.Emit(Ldloc, 39); // strike (hit)
+                c.EmitDelegate(BeforeStrikeNPCByProjectile);
+            };
         }
 
         public bool CanRerollLoot(NPC npc)
@@ -63,25 +110,25 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             return DamageDoneByYoyo > (npc.lifeMax / 3) || DamageDoneByYoyo < 0;
         }
 
-        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+        // The main reason why we don't use OnHitByProjectile is instant npc kill,
+        // NPCLoot is called before OnHitByProjectile...
+        // ModifyHitByProjectile will have incorrect damage values
+        private static void BeforeStrikeNPCByProjectile(Projectile proj, NPC npc, NPC.HitInfo hit)
         {
-            var flag = DamageDoneByYoyo != 0;
+            if (!proj.TryGetOwner(out Player owner) || !owner.GetEffectFlag<EmbraceOfRainItem>())
+                return;
 
-            bitWriter.WriteBit(flag);
+            if (!proj.IsYoyoOrRelated() || npc.immortal)
+                return;
 
-            if (flag)
+            if (!npc.TryGetGlobalNPC(out EmbraceOfRainGlobalNPC globalNPC))
+                return;
+
+            globalNPC.DamageDoneByYoyo += hit.Damage;
+
+            if (Main.netMode != NetmodeID.SinglePlayer)
             {
-                binaryWriter.Write(DamageDoneByYoyo);
-            }
-        }
-
-        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
-        {
-            var flag = bitReader.ReadBit();
-
-            if (flag)
-            {
-                DamageDoneByYoyo = binaryReader.ReadInt32();
+                new EmbraceOfRainDamagePacket(npc, hit.Damage).Send();
             }
         }
 
@@ -103,7 +150,17 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
             try
             {
+                /*var rerollResult = orig(@this, rule, info);
+                isRerolledLoot = false;
+                return rerollResult;*/
+
                 var rerollResult = orig(@this, rule, info);
+
+                while (rerollResult.State == ItemDropAttemptResultState.FailedRandomRoll)
+                {
+                    rerollResult = orig(@this, rule, info);
+                }
+
                 isRerolledLoot = false;
                 return rerollResult;
             }
@@ -116,4 +173,27 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             return result;
         }
     }
+
+    /*public class EmbraceOfRainPlayerLayer : PlayerDrawLayer
+    {
+        public override Position GetDefaultPosition()
+        {
+            throw new NotImplementedException();
+        }
+
+        protected override void Draw(ref PlayerDrawSet drawInfo)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    public class EmbraceOfRainRenderTargetContent : RenderTargetContent
+    {
+        public override Point Size => throw new NotImplementedException();
+
+        public override void DrawToTarget()
+        {
+            throw new NotImplementedException();
+        }
+    }*/
 }

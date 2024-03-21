@@ -1,8 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
+using System.IO;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Utils
 {
@@ -28,6 +30,16 @@ namespace SPYoyoMod.Utils
                     return;
 
                 RelatedToYoyo = parentGlobal.RelatedToYoyo;
+            }
+
+            public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
+            {
+                bitWriter.WriteBit(RelatedToYoyo);
+            }
+
+            public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
+            {
+                RelatedToYoyo = bitReader.ReadBit();
             }
         }
 

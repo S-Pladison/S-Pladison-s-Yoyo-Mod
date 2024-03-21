@@ -76,8 +76,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             globalNPC.SecureWithChain(npc, chainStartPoint);
 
-            if (proj.owner == Main.myPlayer)
+            if (Main.netMode != NetmodeID.SinglePlayer && proj.owner == Main.myPlayer)
+            {
                 globalNPC.SendSecureWithChainPacket(npc, chainStartPoint);
+            }
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
@@ -127,10 +129,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
     public class ValorGlobalNPC : GlobalNPC
     {
-        private class SecureWithChainPacket : NetPacket
+        private class SecureWithChainPacket : NPCPacket
         {
-            public readonly byte NPCWhoAmI;
-            public readonly short NPCType;
             public readonly short ChainStartPosX;
             public readonly short ChainStartPosY;
 
@@ -138,41 +138,31 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             public SecureWithChainPacket(NPC npc, Point chainStartPos) : this(npc.whoAmI, npc.type, chainStartPos) { }
 
-            public SecureWithChainPacket(int npcWhoAmI, int npcType, Point chainStartPos)
+            public SecureWithChainPacket(int npcWhoAmI, int npcType, Point chainStartPos) : base(npcWhoAmI, npcType)
             {
-                NPCWhoAmI = (byte)npcWhoAmI;
-                NPCType = (short)npcType;
                 ChainStartPosX = (short)chainStartPos.X;
                 ChainStartPosY = (short)chainStartPos.Y;
             }
 
-            public override void Send(BinaryWriter writer)
+            protected override void PostSend(BinaryWriter writer, NPC npc)
             {
-                writer.Write(NPCType);
-                writer.Write(NPCWhoAmI);
                 writer.Write(ChainStartPosX);
                 writer.Write(ChainStartPosY);
             }
 
-            public override void Receive(BinaryReader reader, int sender)
+            protected override void PostReceive(BinaryReader reader, int sender, NPC npc)
             {
                 var chainStartPos = Point.Zero;
+                chainStartPos.X = reader.ReadInt16();
+                chainStartPos.Y = reader.ReadInt16();
 
-                var npcType = reader.ReadInt16();
-                var npcWhoAmI = reader.ReadByte();
-                chainStartPos.X = (int)reader.ReadInt16();
-                chainStartPos.Y = (int)reader.ReadInt16();
-
-                var npc = Main.npc[npcWhoAmI];
-
-                if (npc.type != npcType) return;
-                if (!npc.TryGetGlobalNPC(out ValorGlobalNPC globalNPC)) return;
+                if (npc is null || !npc.TryGetGlobalNPC(out ValorGlobalNPC globalNPC)) return;
 
                 globalNPC.SecureWithChain(npc, chainStartPos);
 
                 if (Main.netMode == NetmodeID.Server)
                 {
-                    new SecureWithChainPacket(npcWhoAmI, npcType, chainStartPos).Send(-1, sender);
+                    new SecureWithChainPacket(npc, chainStartPos).Send(-1, sender);
                 }
             }
         }
