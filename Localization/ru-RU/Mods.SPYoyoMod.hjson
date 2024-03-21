@@ -12,6 +12,15 @@ Configs: {
 			Tooltip: ""
 		}
 	}
+
+	ClientSideConfig: {
+		// DisplayName: Client Side Config
+
+		FlashingLights: {
+			// Label: Flashing Lights
+			// Tooltip: ""
+		}
+	}
 }
 
 NPCs.NurseNPC.GiftButton: Подарок

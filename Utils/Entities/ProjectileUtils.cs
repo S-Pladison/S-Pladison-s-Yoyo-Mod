@@ -1,13 +1,52 @@
 ﻿using Microsoft.Xna.Framework;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
 {
     public static partial class EntityExtensions
     {
-        public static bool IsYoyo(this Projectile proj) { return proj.aiStyle.Equals(99); }
-        public static bool IsCounterweight(this Projectile proj) { return proj.IsYoyo() && proj.counterweight; }
+        private class RelatedToYoyoGlobalProjectile : GlobalProjectile
+        {
+            public bool RelatedToYoyo { get; private set; }
+            public override bool InstancePerEntity => true;
+
+            public override void OnSpawn(Projectile proj, IEntitySource source)
+            {
+                if (source is not EntitySource_Parent parentSource || parentSource.Entity is not Projectile parentProj)
+                    return;
+
+                if (parentProj.IsYoyo() || parentProj.IsCounterweight())
+                {
+                    RelatedToYoyo = true;
+                    return;
+                }
+
+                if (!parentProj.TryGetGlobalProjectile(out RelatedToYoyoGlobalProjectile parentGlobal))
+                    return;
+
+                RelatedToYoyo = parentGlobal.RelatedToYoyo;
+            }
+        }
+
+        public static bool IsYoyo(this Projectile proj)
+        {
+            return proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
+        }
+
+        public static bool IsCounterweight(this Projectile proj)
+        {
+            return proj.counterweight;
+        }
+
+        public static bool IsYoyoOrRelated(this Projectile proj)
+        {
+            return proj.IsYoyo()
+                || proj.IsCounterweight()
+                || (proj.TryGetGlobalProjectile(out RelatedToYoyoGlobalProjectile globalProj) && globalProj.RelatedToYoyo);
+        }
 
         public static void DefaultToVisualEffect(this Projectile proj)
         {
