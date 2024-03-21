@@ -2,7 +2,7 @@
 using MonoMod.Cil;
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.ModCompatibility;
-using SPYoyoMod.Utils.Entities;
+using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;

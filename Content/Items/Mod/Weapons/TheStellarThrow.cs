@@ -5,8 +5,6 @@ using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
@@ -64,7 +62,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
                 if (StarTimer <= 0)
                 {
-                    var targets = NPCUtils.NearestNPCs(Projectile.Center, SpawnStarRadius, (npc) => npc.CanBeChasedBy(Projectile, false));
+                    var targets = EntityUtils.NearestNPCs(Projectile.Center, SpawnStarRadius, (npc) => npc.CanBeChasedBy(Projectile, false));
 
                     if (targets.Count > 0)
                     {

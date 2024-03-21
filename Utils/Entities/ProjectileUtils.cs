@@ -2,9 +2,9 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Utils.Entities
+namespace SPYoyoMod.Utils
 {
-    public static class ProjectileExtensions
+    public static partial class EntityExtensions
     {
         public static bool IsYoyo(this Projectile proj) { return proj.aiStyle.Equals(99); }
         public static bool IsCounterweight(this Projectile proj) { return proj.IsYoyo() && proj.counterweight; }

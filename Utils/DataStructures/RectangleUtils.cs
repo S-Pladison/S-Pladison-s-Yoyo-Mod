@@ -1,6 +1,6 @@
 ﻿using System.Drawing;
 
-namespace SPYoyoMod.Utils.DataStructures
+namespace SPYoyoMod.Utils
 {
     public static partial class DataStructureExtensions
     {

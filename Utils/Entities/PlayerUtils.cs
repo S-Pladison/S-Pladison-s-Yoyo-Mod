@@ -2,9 +2,9 @@
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Utils.Entities
+namespace SPYoyoMod.Utils
 {
-    public static class PlayerExtensions
+    public static partial class EntityExtensions
     {
         public static bool HasEquipped(this Player player, int itemType)
         {

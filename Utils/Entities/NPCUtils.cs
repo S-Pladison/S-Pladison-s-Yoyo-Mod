@@ -5,9 +5,9 @@ using System.Linq;
 using Terraria;
 using Terraria.ID;
 
-namespace SPYoyoMod.Utils.Entities
+namespace SPYoyoMod.Utils
 {
-    public static class NPCUtils
+    public static partial class EntityUtils
     {
         public static (NPC npc, float distance) NearestNPC(Vector2 center, float? radius = null, Predicate<NPC> predicate = null)
         {
@@ -37,7 +37,7 @@ namespace SPYoyoMod.Utils.Entities
         }
     }
 
-    public static class NPCExtensions
+    public static partial class EntityExtensions
     {
         // IsBossOrRelated, IsBoss, IsBossLimb, IsMiniBoss and IsChild taken from:
         // https://github.com/SamsonAllen13/ClickerClass/blob/master/Utilities/NPCHelper.cs

@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Utils.Entities;
+﻿using SPYoyoMod.Utils;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;

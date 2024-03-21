@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Utils.DataStructures;
+using SPYoyoMod.Utils;
 using System;
 using XnaColor = Microsoft.Xna.Framework.Color;
 

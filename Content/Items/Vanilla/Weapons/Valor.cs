@@ -7,7 +7,6 @@ using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Common.Networking;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using System.IO;

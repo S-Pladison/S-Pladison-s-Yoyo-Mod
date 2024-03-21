@@ -1,7 +1,6 @@
 ﻿using SPYoyoMod.Common;
 using SPYoyoMod.Common.Interfaces;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Terraria;

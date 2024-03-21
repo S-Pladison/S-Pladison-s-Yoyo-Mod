@@ -5,7 +5,6 @@ using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Content.Dusts;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System.Collections.Generic;
 using System.IO;

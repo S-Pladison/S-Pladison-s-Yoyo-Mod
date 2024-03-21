@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics;
 using SPYoyoMod.Common.Graphics.Renderers;
-using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,11 +16,8 @@ namespace SPYoyoMod.Utils.Rendering
 {
     public static class DrawUtils
     {
-        /// <summary>
-        /// Currently used only for drawing primitive strip in <see cref="DrawUtils.DrawPrimitiveStrip(Effect, Vector2[], StripWidthDelegate, bool)"/>.
-        /// </summary>
         [Autoload(Side = ModSide.Client)]
-        private class PrimitiveDrawing : ILoadable
+        private class StripRenderer : ILoadable
         {
             public const int MaxVertices = 2 * 200;
             public const int MaxIndices = 6 * (200 - 1);
@@ -29,7 +25,6 @@ namespace SPYoyoMod.Utils.Rendering
             public PrimitiveRenderer Renderer;
             public Vertex2DPositionColorTexture[] Vertices;
             public short[] Indices;
-
             public int InitIndicesCount;
 
             void ILoadable.Load(Mod mod)
@@ -73,9 +68,9 @@ namespace SPYoyoMod.Utils.Rendering
         {
             if (points is null || points.Length < 2) return;
 
-            var primitiveDrawing = ModContent.GetInstance<PrimitiveDrawing>();
+            var stripRenderer = ModContent.GetInstance<StripRenderer>();
 
-            if (primitiveDrawing == null || primitiveDrawing.Renderer is null) return;
+            if (stripRenderer is null) return;
 
             var segmentCount = points.Length + (loop ? 0 : -1);
 
@@ -83,15 +78,15 @@ namespace SPYoyoMod.Utils.Rendering
 
             var maxIndices = 6 * segmentCount;
 
-            if (maxIndices > primitiveDrawing.InitIndicesCount)
+            if (maxIndices > stripRenderer.InitIndicesCount)
             {
                 [MethodImpl(MethodImplOptions.AggressiveInlining)]
                 void AddIndex(ref int index, int value)
                 {
-                    primitiveDrawing.Indices[index++] = (short)value;
+                    stripRenderer.Indices[index++] = (short)value;
                 }
 
-                for (var i = primitiveDrawing.InitIndicesCount / 6; i < maxIndices / 6; i++)
+                for (var i = stripRenderer.InitIndicesCount / 6; i < maxIndices / 6; i++)
                 {
                     var index = i * 6;
                     var i2 = i * 2;
@@ -105,7 +100,7 @@ namespace SPYoyoMod.Utils.Rendering
                     AddIndex(ref index, i2);
                 }
 
-                primitiveDrawing.InitIndicesCount = maxIndices;
+                stripRenderer.InitIndicesCount = maxIndices;
             }
 
             // Factors from start to end
@@ -138,7 +133,7 @@ namespace SPYoyoMod.Utils.Rendering
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void AddVertexPosition(ref int vertexIndex, Vector2 position)
             {
-                primitiveDrawing.Vertices[vertexIndex++].Position = position;
+                stripRenderer.Vertices[vertexIndex++].Position = position;
             }
 
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -180,7 +175,7 @@ namespace SPYoyoMod.Utils.Rendering
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             void AddVertexUV(ref int vertexIndex, Vector2 uv)
             {
-                primitiveDrawing.Vertices[vertexIndex++].TextureCoordinate = uv;
+                stripRenderer.Vertices[vertexIndex++].TextureCoordinate = uv;
             }
 
             vertexIndex = 0;
@@ -196,15 +191,15 @@ namespace SPYoyoMod.Utils.Rendering
 
             // Prepare
 
-            primitiveDrawing.Renderer.SetVertices(primitiveDrawing.Vertices);
-            primitiveDrawing.Renderer.SetIndices(primitiveDrawing.Indices);
+            stripRenderer.Renderer.SetVertices(stripRenderer.Vertices);
+            stripRenderer.Renderer.SetIndices(stripRenderer.Indices);
 
             // Draw
 
             var vertexCount = 2 * (segmentCount + 1);
             var indexCount = 6 * segmentCount;
 
-            primitiveDrawing.Renderer.Draw(effect, vertexCount, indexCount / 3);
+            stripRenderer.Renderer.Draw(effect, vertexCount, indexCount / 3);
         }
 
         /// <summary>

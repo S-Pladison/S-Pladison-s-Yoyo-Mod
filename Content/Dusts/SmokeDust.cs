@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
 using System;
 using Terraria;
 using Terraria.ModLoader;

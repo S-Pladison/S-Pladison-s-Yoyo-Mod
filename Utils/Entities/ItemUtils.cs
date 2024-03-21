@@ -1,9 +1,9 @@
 ﻿using Terraria;
 using Terraria.ID;
 
-namespace SPYoyoMod.Utils.Entities
+namespace SPYoyoMod.Utils
 {
-    public static class ItemExtensions
+    public static partial class EntityExtensions
     {
         public static bool IsYoyo(this Item item)
         {

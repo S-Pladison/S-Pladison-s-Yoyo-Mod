@@ -4,7 +4,6 @@ using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -147,7 +146,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         private List<(NPC npc, float distance)> GetTargets()
         {
-            return NPCUtils.NearestNPCs(Projectile.Center, TormentorRadius, (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy))
+            return EntityUtils.NearestNPCs(Projectile.Center, TormentorRadius, (npc) => npc.CanBeChasedBy(Projectile, false) || npc.type.Equals(NPCID.TargetDummy))
                 .Take(TormentorCount)
                 .ToList();
         }

@@ -4,7 +4,6 @@ using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using Terraria;
@@ -67,7 +66,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public void SuckNearbyEnemies()
         {
             var currentRadius = GravityRadius * EasingFunctions.InOutSine(RadiusProgress);
-            var targets = NPCUtils.NearestNPCs(
+            var targets = EntityUtils.NearestNPCs(
                 center: Projectile.Center,
                 radius: currentRadius,
                 predicate: npc =>
