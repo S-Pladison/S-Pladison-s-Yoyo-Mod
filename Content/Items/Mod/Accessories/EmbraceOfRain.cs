@@ -36,6 +36,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         public override void UpdateEquip(Player player)
         {
             player.SetEffectFlag<EmbraceOfRainItem>();
+            player.waterWalk2 = true;
         }
     }
 
@@ -150,17 +151,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
             try
             {
-                /*var rerollResult = orig(@this, rule, info);
-                isRerolledLoot = false;
-                return rerollResult;*/
-
                 var rerollResult = orig(@this, rule, info);
-
-                while (rerollResult.State == ItemDropAttemptResultState.FailedRandomRoll)
-                {
-                    rerollResult = orig(@this, rule, info);
-                }
-
                 isRerolledLoot = false;
                 return rerollResult;
             }

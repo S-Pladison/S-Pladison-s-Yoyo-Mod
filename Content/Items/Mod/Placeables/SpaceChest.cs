@@ -24,7 +24,7 @@ namespace SPYoyoMod.Content.Items.Mod.Placeables
     {
         public override string Texture => ModAssets.TilesPath + "SpaceChest";
         public override int PlaceItemType => ModContent.ItemType<SpaceChestItem>();
-        public override int KeyItemType => ModContent.ItemType<SpaceKey>();
+        public override int KeyItemType => ModContent.ItemType<SpaceKeyItem>();
 
         public override void ChestSetStaticDefaults()
         {

@@ -22,6 +22,7 @@ EmbraceOfRainItem: {
 	DisplayName: Embrace of Rain
 	Tooltip:
 		'''
+		Allows the ability to walk on water
 		Significantly increases loot drop chance from enemies defeated with yoyo
 		'Luck is not enough'
 		'''
@@ -77,5 +78,10 @@ TitaniumYoyoItem: {
 
 TrappedSpaceChestItem: {
 	DisplayName: Trapped Space Chest
+	Tooltip: ""
+}
+
+SpaceKeyItem: {
+	DisplayName: Space Key Item
 	Tooltip: ""
 }

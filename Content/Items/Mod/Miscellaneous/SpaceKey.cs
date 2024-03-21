@@ -8,8 +8,33 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
 {
-    public class SpaceKey : ModItem
+    public class SpaceKeyItem : ModItem
     {
+        public class DropCondition : IItemDropRuleCondition, IProvideItemConditionDescription
+        {
+            public static LocalizedText Description { get; private set; }
+
+            public DropCondition()
+            {
+                Description ??= Language.GetOrRegister("Mods.SPYoyoMod.DropConditions.SpaceKeyCondition");
+            }
+
+            public bool CanDrop(DropAttemptInfo info)
+            {
+                return info.npc.value > 0f && Main.hardMode && !info.IsInSimulation && info.player.ZoneSkyHeight;
+            }
+
+            public bool CanShowItemDropInUI()
+            {
+                return true;
+            }
+
+            public string GetConditionDescription()
+            {
+                return Description.Value;
+            }
+        }
+
         public override string Texture => ModAssets.ItemsPath + "SpaceKey";
 
         public override void SetStaticDefaults()
@@ -35,31 +60,6 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
             {
                 tooltip.Text = Language.GetTextValue("LegacyTooltip.59");
             }
-        }
-    }
-
-    public class SpaceKeyCondition : IItemDropRuleCondition
-    {
-        public static LocalizedText Description { get; private set; }
-
-        public SpaceKeyCondition()
-        {
-            Description ??= Language.GetOrRegister($"Mods.SPYoyoMod.DropConditions.{nameof(SpaceKeyCondition)}");
-        }
-
-        public bool CanDrop(DropAttemptInfo info)
-        {
-            return info.npc.value > 0f && Main.hardMode && !info.IsInSimulation && info.player.ZoneSkyHeight;
-        }
-
-        public bool CanShowItemDropInUI()
-        {
-            return true;
-        }
-
-        public string GetConditionDescription()
-        {
-            return Description.Value;
         }
     }
 }

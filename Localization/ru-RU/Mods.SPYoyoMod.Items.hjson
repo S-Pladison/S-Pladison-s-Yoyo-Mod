@@ -23,6 +23,7 @@ EmbraceOfRainItem: {
 	Tooltip:
 		'''
 		Значительно увеличивает шанс выпадения предметов с поверженных с помощью йо-йо врагов
+		Дает возможность ходить по воде
 		«Одной удачи здесь недостаточно»
 		'''
 }
@@ -78,4 +79,9 @@ TitaniumYoyoItem: {
 TrappedSpaceChestItem: {
 	DisplayName: Фальшивый космический сундук
 	Tooltip: ""
+}
+
+SpaceKeyItem: {
+	// DisplayName: Space Key Item
+	// Tooltip: ""
 }
