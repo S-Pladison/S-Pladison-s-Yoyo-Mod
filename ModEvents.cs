@@ -31,6 +31,11 @@ namespace SPYoyoMod
         public static event Action OnPostSetupContent;
 
         /// <summary>
+        /// Called before Players get updated.
+        /// </summary>
+        public static event Action OnPreUpdatePlayers;
+
+        /// <summary>
         /// Called after the Network got updated, this is the last hook that happens in an update.
         /// </summary>
         public static event Action OnPostUpdateEverything;
@@ -94,6 +99,7 @@ namespace SPYoyoMod
             OnPostAddRecipes += EmptyAction;
             OnPostSetupRecipes += EmptyAction;
             OnPostSetupContent += EmptyAction;
+            OnPreUpdatePlayers += EmptyAction;
             OnPostUpdateEverything += EmptyAction;
             OnWorldLoad += EmptyAction;
             OnWorldUnload += EmptyAction;
@@ -108,6 +114,7 @@ namespace SPYoyoMod
             OnPostAddRecipes = null;
             OnPostSetupRecipes = null;
             OnPostSetupContent = null;
+            OnPreUpdatePlayers = null;
             OnPostUpdateEverything = null;
             OnWorldLoad = null;
             OnWorldUnload = null;
@@ -158,6 +165,7 @@ namespace SPYoyoMod
             public override void PostAddRecipes() => ModEvents.OnPostAddRecipes(Main.recipe);
             public override void PostSetupRecipes() => ModEvents.OnPostSetupRecipes(Main.recipe);
             public override void PostSetupContent() => ModEvents.OnPostSetupContent();
+            public override void PreUpdatePlayers() => ModEvents.OnPreUpdatePlayers();
             public override void PostUpdateEverything() => ModEvents.OnPostUpdateEverything();
             public override void OnWorldLoad() => ModEvents.OnWorldLoad();
             public override void OnWorldUnload() => ModEvents.OnWorldUnload();

@@ -1,14 +1,24 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using SPYoyoMod.Common;
+using SPYoyoMod.Common.Graphics.RenderTargets;
+using SPYoyoMod.Common.Interfaces;
+using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Rendering;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
+using Terraria.DataStructures;
+using Terraria.GameContent;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
-    public class EmbraceOfRainItem : ModItem
+    public class EmbraceOfRainItem : ModItem, IDyeableEquipmentItem
     {
         // Flag to stop recursion of the ItemDropResolver.ResolveRule(...)
         private static bool isRerolledLoot;
@@ -42,12 +52,17 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
             if (hideVisual) return;
 
-            player.GetModPlayer<EmbraceOfRainPlayer>().Visible = true;
+            player.GetModPlayer<EmbraceOfRainPlayer>().SetVisibleFlag();
         }
 
         public override void UpdateVanity(Player player)
         {
-            player.GetModPlayer<EmbraceOfRainPlayer>().Visible = true;
+            player.GetModPlayer<EmbraceOfRainPlayer>().SetVisibleFlag();
+        }
+
+        void IDyeableEquipmentItem.UpdateDye(Item _, int dye, Player player, bool isNotInVanitySlot, bool isSetToHidden)
+        {
+            player.GetModPlayer<EmbraceOfRainPlayer>().SetDyeType(dye);
         }
 
         private static bool CanRerollLoot(Player player, NPC npc)
@@ -90,35 +105,127 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
     public class EmbraceOfRainPlayer : ModPlayer
     {
-        public bool Visible { get; set; }
+        public bool Visible { get; private set; }
         public int DyeType { get; private set; }
 
         public override void ResetEffects()
         {
             Visible = false;
-        }
-    }
-
-    /*public class EmbraceOfRainPlayerLayer : PlayerDrawLayer
-    {
-        public override Position GetDefaultPosition()
-        {
-            throw new NotImplementedException();
+            DyeType = 0;
         }
 
-        protected override void Draw(ref PlayerDrawSet drawInfo)
+        public void SetVisibleFlag()
         {
-            throw new NotImplementedException();
+            if (Visible) return;
+
+            Visible = true;
+            ModContent.GetInstance<EmbraceOfRainRenderTargetContent>()?.Request();
+        }
+
+        public void SetDyeType(int type)
+        {
+            DyeType = type;
         }
     }
 
     public class EmbraceOfRainRenderTargetContent : RenderTargetContent
     {
-        public override Point Size => throw new NotImplementedException();
+        private bool anyPlayerWithAcc;
+
+        public override Point Size => new(40, 48);
+        public override Color ClearColor => Color.Black;
+
+        public void Request()
+        {
+            anyPlayerWithAcc = true;
+        }
+
+        public override void Load()
+        {
+            ModEvents.OnPreUpdatePlayers += () => anyPlayerWithAcc = false;
+        }
+
+        public override bool PreRender()
+        {
+            return anyPlayerWithAcc;
+        }
 
         public override void DrawToTarget()
         {
-            throw new NotImplementedException();
+            var spriteBatchSpanshot = new SpriteBatchSnapshot
+            {
+                SortMode = SpriteSortMode.Deferred,
+                BlendState = BlendState.AlphaBlend,
+                SamplerState = Main.DefaultSamplerState,
+                DepthStencilState = DepthStencilState.None,
+                RasterizerState = RasterizerState.CullNone,
+                Effect = null,
+                Matrix = Matrix.Identity
+            };
+
+            Main.graphics.GraphicsDevice.PrepRenderState(spriteBatchSpanshot);
+            Main.spriteBatch.Begin(spriteBatchSpanshot);
+
+            var points = new[] { Vector2.Zero, new Vector2(16, 16), new Vector2(16, 48) };
+
+            var effect = ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
+            {
+                parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                parameters["TransformMatrix"].SetValue(Matrix.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
+
+                var colorVec4 = (Color.White).ToVector4();
+
+                parameters["ColorTL"].SetValue(colorVec4);
+                parameters["ColorTR"].SetValue(colorVec4);
+                parameters["ColorBL"].SetValue(colorVec4);
+                parameters["ColorBR"].SetValue(colorVec4);
+            });
+
+            DrawUtils.DrawPrimitiveStrip(effect.Value, points, _ => 8f, false);
+
+            //Main.spriteBatch.Draw(TextureAssets.Sun.Value, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 0.3f, SpriteEffects.None, 0);
+
+            Main.spriteBatch.End();
         }
-    }*/
+    }
+
+    public class EmbraceOfRainPlayerLayer : PlayerDrawLayer
+    {
+        public override Position GetDefaultPosition()
+        {
+            return new Between(PlayerDrawLayers.JimsCloak, PlayerDrawLayers.MountBack);
+        }
+
+        public override bool GetDefaultVisibility(PlayerDrawSet drawInfo)
+        {
+            var player = drawInfo.drawPlayer;
+
+            return !player.dead && player.GetModPlayer<EmbraceOfRainPlayer>().Visible;
+        }
+
+        protected override void Draw(ref PlayerDrawSet drawInfo)
+        {
+            var rtContent = ModContent.GetInstance<EmbraceOfRainRenderTargetContent>();
+
+            if (!rtContent.WasRenderedInThisFrame || !rtContent.TryGetRenderTarget(out var embraceOfRainTarget))
+                return;
+
+            var player = drawInfo.drawPlayer;
+            var position = (player.MountedCenter + new Vector2(-30 * player.direction, -20 * player.gravDir + player.gfxOffY) - Main.screenPosition).Floor();
+            var spriteEffects = SpriteEffects.None;
+
+            if (player.direction < 0)
+                spriteEffects |= SpriteEffects.FlipHorizontally;
+
+            if (player.gravDir < 0)
+                spriteEffects |= SpriteEffects.FlipVertically;
+
+            drawInfo.DrawDataCache.Add(
+                new DrawData(embraceOfRainTarget, position, null, Color.White, 0f, embraceOfRainTarget.Size() * 0.5f, 2f, spriteEffects, 0) with
+                {
+                    shader = player.GetModPlayer<EmbraceOfRainPlayer>().DyeType
+                }
+            );
+        }
+    }
 }

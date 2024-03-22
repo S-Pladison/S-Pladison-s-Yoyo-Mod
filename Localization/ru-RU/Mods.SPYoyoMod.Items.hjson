@@ -48,7 +48,7 @@ SpaceChestItem: {
 	Tooltip: ""
 }
 
-SpaceKey: {
+SpaceKeyItem: {
 	DisplayName: Космический ключ
 	Tooltip: Открывает космический сундук в Темнице
 }
@@ -79,9 +79,4 @@ TitaniumYoyoItem: {
 TrappedSpaceChestItem: {
 	DisplayName: Фальшивый космический сундук
 	Tooltip: ""
-}
-
-SpaceKeyItem: {
-	// DisplayName: Space Key Item
-	// Tooltip: ""
 }

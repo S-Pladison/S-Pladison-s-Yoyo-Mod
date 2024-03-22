@@ -48,7 +48,7 @@ SpaceChestItem: {
 	Tooltip: ""
 }
 
-SpaceKey: {
+SpaceKeyItem: {
 	DisplayName: Space Key
 	Tooltip: Unlocks a Space Chest in the dungeon
 }
@@ -78,10 +78,5 @@ TitaniumYoyoItem: {
 
 TrappedSpaceChestItem: {
 	DisplayName: Trapped Space Chest
-	Tooltip: ""
-}
-
-SpaceKeyItem: {
-	DisplayName: Space Key Item
 	Tooltip: ""
 }
