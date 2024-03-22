@@ -3,7 +3,9 @@ using MonoMod.Cil;
 using SPYoyoMod.Common.Configs;
 using SPYoyoMod.Common.ModCompatibility;
 using SPYoyoMod.Utils;
+using System;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using static Mono.Cecil.Cil.OpCodes;
@@ -75,6 +77,12 @@ namespace SPYoyoMod.Common
                 c.Emit(Ldloca, mountedCenterIndex);
                 c.EmitDelegate<ModifyMountedCenterDelegate>(ModifyMountedCenter);
             });
+        }
+
+        public override void ModifyShootStats(Item item, Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
+        {
+            // Fix one-frame incorrect player direction
+            position += Vector2.Normalize(velocity) * 2f;
         }
 
         public override void UseStyle(Item item, Player player, Rectangle heldItemFrame)
