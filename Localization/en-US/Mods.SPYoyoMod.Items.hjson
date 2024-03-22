@@ -18,8 +18,8 @@ BlackholeItem: {
 	Tooltip: Pulls enemies to itself
 }
 
-EmbraceOfRainItem: {
-	DisplayName: Embrace of Rain
+BowOfDivinePriestessItem: {
+	DisplayName: Bow of Divine Priestess
 	Tooltip:
 		'''
 		Allows the ability to walk on water

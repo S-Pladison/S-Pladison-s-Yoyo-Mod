@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
 using SPYoyoMod.Common;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Common.Interfaces;
@@ -8,7 +7,6 @@ using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Rendering;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent;
@@ -18,7 +16,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
-    public class EmbraceOfRainItem : ModItem, IDyeableEquipmentItem
+    public class BowOfDivinePriestessItem : ModItem, IDyeableEquipmentItem
     {
         // Flag to stop recursion of the ItemDropResolver.ResolveRule(...)
         private static bool isRerolledLoot;
@@ -47,27 +45,27 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<PlayerEffectFlags>().SetFlag<EmbraceOfRainItem>();
+            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BowOfDivinePriestessItem>();
             player.waterWalk2 = true;
 
             if (hideVisual) return;
 
-            player.GetModPlayer<EmbraceOfRainPlayer>().SetVisibleFlag();
+            player.GetModPlayer<BowOfDivinePriestessPlayer>().SetVisibleFlag();
         }
 
         public override void UpdateVanity(Player player)
         {
-            player.GetModPlayer<EmbraceOfRainPlayer>().SetVisibleFlag();
+            player.GetModPlayer<BowOfDivinePriestessPlayer>().SetVisibleFlag();
         }
 
         void IDyeableEquipmentItem.UpdateDye(Item _, int dye, Player player, bool isNotInVanitySlot, bool isSetToHidden)
         {
-            player.GetModPlayer<EmbraceOfRainPlayer>().SetDyeType(dye);
+            player.GetModPlayer<BowOfDivinePriestessPlayer>().SetDyeType(dye);
         }
 
         private static bool CanRerollLoot(Player player, NPC npc)
         {
-            return player.GetModPlayer<PlayerEffectFlags>().GetFlag<EmbraceOfRainItem>()
+            return player.GetModPlayer<PlayerEffectFlags>().GetFlag<BowOfDivinePriestessItem>()
                 && npc.TryGetGlobalNPC(out NPCTotalDamageByYoyos totalDamageNPC)
                 && (totalDamageNPC.TotalDamage > (npc.lifeMax / 4) || totalDamageNPC.TotalDamage < 0);
         }
@@ -103,7 +101,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
-    public class EmbraceOfRainPlayer : ModPlayer
+    public class BowOfDivinePriestessPlayer : ModPlayer
     {
         public bool Visible { get; private set; }
         public int DyeType { get; private set; }
@@ -119,7 +117,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             if (Visible) return;
 
             Visible = true;
-            ModContent.GetInstance<EmbraceOfRainRenderTargetContent>()?.Request();
+            ModContent.GetInstance<BowOfDivinePriestessRenderTargetContent>()?.Request();
         }
 
         public void SetDyeType(int type)
@@ -128,11 +126,11 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
-    public class EmbraceOfRainRenderTargetContent : RenderTargetContent
+    public class BowOfDivinePriestessRenderTargetContent : RenderTargetContent
     {
         private bool anyPlayerWithAcc;
 
-        public override Point Size => new(40, 48);
+        public override Point Size => new(56, 70);
         public override Color ClearColor => Color.Black;
 
         public void Request()
@@ -166,7 +164,14 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             Main.graphics.GraphicsDevice.PrepRenderState(spriteBatchSpanshot);
             Main.spriteBatch.Begin(spriteBatchSpanshot);
 
-            var points = new[] { Vector2.Zero, new Vector2(16, 16), new Vector2(16, 48) };
+            var points = new List<Vector2>();
+            var center = Size.ToVector2() / 2f + new Vector2(6, -10);
+
+            for (int i = 0; i < 20; i++)
+            {
+                var angle = MathHelper.TwoPi / 20f * i;
+                points.Add(center + Vector2.UnitX.RotatedBy(angle) * 14f * new Vector2(0.8f, 1f));
+            }
 
             var effect = ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
             {
@@ -181,7 +186,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
                 parameters["ColorBR"].SetValue(colorVec4);
             });
 
-            DrawUtils.DrawPrimitiveStrip(effect.Value, points, _ => 8f, false);
+            DrawUtils.DrawPrimitiveStrip(effect.Value, points, _ => 5f, false);
 
             //Main.spriteBatch.Draw(TextureAssets.Sun.Value, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 0.3f, SpriteEffects.None, 0);
 
@@ -189,7 +194,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
-    public class EmbraceOfRainPlayerLayer : PlayerDrawLayer
+    public class BowOfDivinePriestessPlayerLayer : PlayerDrawLayer
     {
         public override Position GetDefaultPosition()
         {
@@ -200,18 +205,18 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var player = drawInfo.drawPlayer;
 
-            return !player.dead && player.GetModPlayer<EmbraceOfRainPlayer>().Visible;
+            return !player.dead && player.GetModPlayer<BowOfDivinePriestessPlayer>().Visible;
         }
 
         protected override void Draw(ref PlayerDrawSet drawInfo)
         {
-            var rtContent = ModContent.GetInstance<EmbraceOfRainRenderTargetContent>();
+            var rtContent = ModContent.GetInstance<BowOfDivinePriestessRenderTargetContent>();
 
             if (!rtContent.WasRenderedInThisFrame || !rtContent.TryGetRenderTarget(out var embraceOfRainTarget))
                 return;
 
             var player = drawInfo.drawPlayer;
-            var position = (player.MountedCenter + new Vector2(-30 * player.direction, -20 * player.gravDir + player.gfxOffY) - Main.screenPosition).Floor();
+            var position = (player.MountedCenter + new Vector2(-16 * player.direction, -12 * player.gravDir + player.gfxOffY) - Main.screenPosition).Floor();
             var spriteEffects = SpriteEffects.None;
 
             if (player.direction < 0)
@@ -221,9 +226,9 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
                 spriteEffects |= SpriteEffects.FlipVertically;
 
             drawInfo.DrawDataCache.Add(
-                new DrawData(embraceOfRainTarget, position, null, Color.White, 0f, embraceOfRainTarget.Size() * 0.5f, 2f, spriteEffects, 0) with
+                new DrawData(embraceOfRainTarget, position, null, Color.White, 0f, embraceOfRainTarget.Size() * 0.5f, 1f, spriteEffects, 0) with
                 {
-                    shader = player.GetModPlayer<EmbraceOfRainPlayer>().DyeType
+                    shader = player.GetModPlayer<BowOfDivinePriestessPlayer>().DyeType
                 }
             );
         }

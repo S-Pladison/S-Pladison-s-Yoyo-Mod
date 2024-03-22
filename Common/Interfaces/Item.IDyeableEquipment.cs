@@ -1,6 +1,6 @@
-﻿using Terraria.ModLoader.Core;
+﻿using Terraria;
 using Terraria.ModLoader;
-using Terraria;
+using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Common.Interfaces
 {

@@ -1,8 +1,5 @@
-﻿using SPYoyoMod.Content.Items.Mod.Accessories;
-using SPYoyoMod.Content.Items.Mod.Miscellaneous;
-using Terraria;
+﻿using SPYoyoMod.Content.Items.Mod.Miscellaneous;
 using Terraria.GameContent.ItemDropRules;
-using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
@@ -21,18 +18,6 @@ namespace SPYoyoMod.Common
                 {
                     globalLoot.Remove(rule);
                 }
-            }
-        }
-
-        public override void ModifyNPCLoot(NPC npc, NPCLoot npcLoot)
-        {
-            switch (npc.type)
-            {
-                case NPCID.AngryNimbus:
-                    npcLoot.Add(ItemDropRule.Common(ModContent.ItemType<EmbraceOfRainItem>(), 50));
-                    break;
-                default:
-                    break;
             }
         }
     }
