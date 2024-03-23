@@ -15,7 +15,7 @@ namespace SPYoyoMod.Common
     {
         private class NPCTotalDamageByYoyosPacket : NPCPacket
         {
-            public readonly short Damage;
+            public readonly int Damage;
 
             public NPCTotalDamageByYoyosPacket() { }
 
@@ -23,7 +23,7 @@ namespace SPYoyoMod.Common
 
             public NPCTotalDamageByYoyosPacket(int npcWhoAmI, int npcType, int damage) : base(npcWhoAmI, npcType)
             {
-                Damage = (short)damage;
+                Damage = damage;
             }
 
             protected override void PostSend(BinaryWriter writer, NPC npc)
@@ -33,7 +33,7 @@ namespace SPYoyoMod.Common
 
             protected override void PostReceive(BinaryReader reader, int sender, NPC npc)
             {
-                var damage = reader.ReadInt16();
+                var damage = reader.ReadInt32();
 
                 if (npc is null || !npc.TryGetGlobalNPC(out NPCTotalDamageByYoyos globalNPC)) return;
 

@@ -73,7 +73,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             return player.GetModPlayer<BowOfDivinePriestessPlayer>().Equipped
                 && npc.TryGetGlobalNPC(out NPCTotalDamageByYoyos totalDamageNPC)
-                && (totalDamageNPC.TotalDamage > (npc.lifeMax / 4) || totalDamageNPC.TotalDamage < 0);
+                && (totalDamageNPC.TotalDamage > (npc.lifeMax / 4));
         }
 
         private static ItemDropAttemptResult IncreaseLoot(On_ItemDropResolver.orig_ResolveRule orig, ItemDropResolver @this, IItemDropRule rule, DropAttemptInfo info)
