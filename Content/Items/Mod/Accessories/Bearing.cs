@@ -45,7 +45,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
+            player.GetModPlayer<BearingPlayer>().Equipped = true;
         }
 
         private static void SetEffectFlagForOtherModItems()
@@ -81,8 +81,18 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             {
                 if (!itemTypesWithBearingEffect.Contains(item.type)) return;
 
-                player.GetModPlayer<PlayerEffectFlags>().SetFlag<BearingItem>();
+                player.GetModPlayer<BearingPlayer>().Equipped = true;
             };
+        }
+    }
+
+    public class BearingPlayer : ModPlayer
+    {
+        public bool Equipped { get; set; }
+
+        public override void ResetEffects()
+        {
+            Equipped = false;
         }
     }
 
@@ -97,7 +107,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var owner = Main.player[proj.owner];
 
-            if (!owner.GetModPlayer<PlayerEffectFlags>().GetFlag<BearingItem>()) return;
+            if (!owner.GetModPlayer<BearingPlayer>().Equipped) return;
 
             statModifiers.LifeTime += 0.5f;
         }

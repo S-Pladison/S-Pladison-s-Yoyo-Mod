@@ -45,27 +45,33 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public override void UpdateAccessory(Player player, bool hideVisual)
         {
-            player.GetModPlayer<PlayerEffectFlags>().SetFlag<BowOfDivinePriestessItem>();
+            var modPlayer = player.GetModPlayer<BowOfDivinePriestessPlayer>();
+
+            modPlayer.Equipped = true;
             player.waterWalk2 = true;
 
             if (hideVisual) return;
 
-            player.GetModPlayer<BowOfDivinePriestessPlayer>().SetVisibleFlag();
+            modPlayer.Visible = true;
+
+            ModContent.GetInstance<BowOfDivinePriestessRenderTargetContent>()?.Request();
         }
 
         public override void UpdateVanity(Player player)
         {
-            player.GetModPlayer<BowOfDivinePriestessPlayer>().SetVisibleFlag();
+            player.GetModPlayer<BowOfDivinePriestessPlayer>().Visible = true;
+
+            ModContent.GetInstance<BowOfDivinePriestessRenderTargetContent>()?.Request();
         }
 
         void IDyeableEquipmentItem.UpdateDye(Item _, int dye, Player player, bool isNotInVanitySlot, bool isSetToHidden)
         {
-            player.GetModPlayer<BowOfDivinePriestessPlayer>().SetDyeType(dye);
+            player.GetModPlayer<BowOfDivinePriestessPlayer>().Dye = dye;
         }
 
         private static bool CanRerollLoot(Player player, NPC npc)
         {
-            return player.GetModPlayer<PlayerEffectFlags>().GetFlag<BowOfDivinePriestessItem>()
+            return player.GetModPlayer<BowOfDivinePriestessPlayer>().Equipped
                 && npc.TryGetGlobalNPC(out NPCTotalDamageByYoyos totalDamageNPC)
                 && (totalDamageNPC.TotalDamage > (npc.lifeMax / 4) || totalDamageNPC.TotalDamage < 0);
         }
@@ -103,26 +109,15 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
     public class BowOfDivinePriestessPlayer : ModPlayer
     {
-        public bool Visible { get; private set; }
-        public int DyeType { get; private set; }
+        public bool Equipped { get; set; }
+        public bool Visible { get; set; }
+        public int Dye { get; set; }
 
         public override void ResetEffects()
         {
+            Equipped = false;
             Visible = false;
-            DyeType = 0;
-        }
-
-        public void SetVisibleFlag()
-        {
-            if (Visible) return;
-
-            Visible = true;
-            ModContent.GetInstance<BowOfDivinePriestessRenderTargetContent>()?.Request();
-        }
-
-        public void SetDyeType(int type)
-        {
-            DyeType = type;
+            Dye = 0;
         }
     }
 
@@ -135,7 +130,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public override void ModifyWeaponCrit(Item item, Player player, ref float crit)
         {
-            if (!player.GetModPlayer<PlayerEffectFlags>().GetFlag<BowOfDivinePriestessItem>())
+            if (!player.GetModPlayer<BowOfDivinePriestessPlayer>().Equipped)
                 return;
 
             crit -= 100;
@@ -244,7 +239,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             drawInfo.DrawDataCache.Add(
                 new DrawData(embraceOfRainTarget, position, null, Color.White, 0f, embraceOfRainTarget.Size() * 0.5f, 1f, spriteEffects, 0) with
                 {
-                    shader = player.GetModPlayer<BowOfDivinePriestessPlayer>().DyeType
+                    shader = player.GetModPlayer<BowOfDivinePriestessPlayer>().Dye
                 }
             );
         }
