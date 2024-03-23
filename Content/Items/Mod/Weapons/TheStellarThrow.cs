@@ -186,7 +186,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override void OnKill(int timeLeft)
         {
-            for (int i = 0; i < 10; i++)
+            for (int i = 0; i < 14; i++)
             {
                 var isStarDust = Main.rand.NextBool();
                 var dustType = isStarDust ? ModContent.DustType<StarGlowDust>() : ModContent.DustType<CircleGlowDust>();
@@ -196,8 +196,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 var dust = Main.dust[dustIndex];
 
                 dust.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
-                dust.velocity *= 1.33f;
+                dust.velocity *= 1.5f;
             }
+
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowHitProjectile>(), 0, 0, Projectile.owner);
         }
 
         public override void AI()
@@ -312,6 +314,50 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 color = StyleColors.Item2 with { A = 0 };
 
                 Main.spriteBatch.Draw(texture.Value, position, null, color, Projectile.rotation * 0.1f, texture.Size() * 0.5f, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
+            });
+
+            return false;
+        }
+    }
+
+    public class TheStellarThrowHitProjectile : ModProjectile
+    {
+        public const float InitTimeLeft = 25;
+
+        private static readonly EasingBuilder scaleEasing = new(
+            (EasingFunctions.InOutExpo, 0.2f, 0f, 1f),
+            (EasingFunctions.InOutQuad, 0.8f, 1f, 0f)
+        );
+
+        public override string Texture => ModAssets.MiscPath + "Invisible";
+
+        public override void SetDefaults()
+        {
+            Projectile.DefaultToVisualEffect();
+
+            Projectile.timeLeft = (int)InitTimeLeft;
+            Projectile.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+        }
+
+        public override void AI()
+        {
+            Projectile.rotation += 0.3f;
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
+            {
+                var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Star", AssetRequestMode.ImmediateLoad);
+                var color = new Color(100, 25, 75) * 0.25f;
+                var scale = scaleEasing.Evaluate(1f - Projectile.timeLeft / InitTimeLeft);
+
+                Main.spriteBatch.Draw(texture.Value, position, null, color, Projectile.rotation * 0.05f, texture.Size() * 0.5f, scale * 0.8f, SpriteEffects.None, 0f);
+
+                color = new Color(255, 0, 80) with { A = 0 };
+
+                Main.spriteBatch.Draw(texture.Value, position, null, color, Projectile.rotation * 0.1f, texture.Size() * 0.5f, scale * 0.6f, SpriteEffects.None, 0f);
             });
 
             return false;

@@ -8,6 +8,7 @@
 // ResidualLightProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.ResidualLightItem.DisplayName}"
 // SoulTormentorProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.SoulTormentorItem.DisplayName}"
 // TheEyeOfCthulhuServantProjectile.DisplayName: "{$ProjectileName.TheEyeOfCthulhu}"
+// TheStellarThrowHitProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TheStellarThrowItem.DisplayName}"
 // TheStellarThrowProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TheStellarThrowItem.DisplayName}"
 // TheStellarThrowStarProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TheStellarThrowItem.DisplayName}"
 // TitaniumYoyoProjectile.DisplayName: "{$Mods.SPYoyoMod.Items.TitaniumYoyoItem.DisplayName}"
