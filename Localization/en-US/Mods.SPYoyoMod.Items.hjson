@@ -24,7 +24,8 @@ BowOfDivinePriestessItem: {
 		'''
 		Allows the ability to walk on water
 		Significantly increases loot drop chance from enemies defeated with yoyo
-		'Luck is not enough'
+		100% decreased yoyo critical strike chance
+		'Wait a minute... Just for yoyos? Who the hell came up with this!? Oh, wait...'
 		'''
 }
 
