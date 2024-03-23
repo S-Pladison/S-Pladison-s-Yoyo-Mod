@@ -236,6 +236,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         private AmazonRenderTargetContent tileRTContent;
         private AmazonRenderTargetContent maskRTContent;
         private ProjectileObserver projectileObserver;
+        private List<Point> tilePoints;
 
         public bool IsActive => projectileObserver.AnyEntity;
 
@@ -255,6 +256,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             ModEvents.OnPostUpdateEverything += projectileObserver.Update;
             ModEvents.OnWorldUnload += projectileObserver.Clear;
 
+            tilePoints = new List<Point>();
+
+            ModEvents.OnPostUpdateEverything += GetTilePoints;
+
             On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
             {
                 orig(main);
@@ -266,8 +271,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         void ILoadable.Unload() { }
 
-        private IReadOnlyList<Point> GetTilePoints()
+        private void GetTilePoints()
         {
+            if (!IsActive) return;
+
             var tilesInAreasHashSet = new HashSet<Point>();
 
             foreach (var proj in projectileObserver.GetEntityInstances())
@@ -303,7 +310,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 }
             }
 
-            return tilesInAreasHashSet.ToList();
+            tilePoints.Clear();
+            tilePoints.AddRange(tilesInAreasHashSet);
         }
 
         private void DrawBehindTiles()
@@ -341,7 +349,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassWall", AssetRequestMode.ImmediateLoad);
 
-            foreach (var tilePos in GetTilePoints())
+            foreach (var tilePos in tilePoints)
             {
                 var tile = Main.tile[tilePos.X, tilePos.Y];
 
@@ -380,7 +388,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
             var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Amazon_GrassTile", AssetRequestMode.ImmediateLoad);
 
-            foreach (var tilePos in GetTilePoints())
+            foreach (var tilePos in tilePoints)
             {
                 var tile = Main.tile[tilePos.X, tilePos.Y];
 
