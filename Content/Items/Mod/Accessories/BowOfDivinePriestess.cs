@@ -126,6 +126,22 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
+    public class BowOfDivinePriestessGlobalItem : GlobalItem
+    {
+        public override bool AppliesToEntity(Item item, bool lateInstantiation)
+        {
+            return lateInstantiation && item.IsYoyo();
+        }
+
+        public override void ModifyWeaponCrit(Item item, Player player, ref float crit)
+        {
+            if (!player.GetModPlayer<PlayerEffectFlags>().GetFlag<BowOfDivinePriestessItem>())
+                return;
+
+            crit -= 100;
+        }
+    }
+
     public class BowOfDivinePriestessRenderTargetContent : RenderTargetContent
     {
         private bool anyPlayerWithAcc;
