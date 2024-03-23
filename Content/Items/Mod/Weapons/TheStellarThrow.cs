@@ -41,7 +41,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public const float SpawnStarCooldownMax = 60f * 2f;
 
         private TrailRenderer trailRenderer;
-        private float starScale;
 
         public override string Texture => ModAssets.ProjectilesPath + "TheStellarThrow";
         public override float LifeTime => -1f;
@@ -78,8 +77,6 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             }
 
             var isMoving = Projectile.velocity.Length() >= 3f;
-
-            starScale = MathHelper.Clamp(starScale + (isMoving ? 0.03f : -0.03f), 0f, 2f);
 
             if (isMoving && Main.rand.NextBool(2))
             {
@@ -138,11 +135,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
                 color = new Color(255, 0, 80) with { A = 0 };
 
-                Main.spriteBatch.Draw(texture.Value, position, null, color, Projectile.rotation * 0.1f, texture.Size() * 0.5f, MathHelper.Min(starScale, 1f) * 0.4f, SpriteEffects.None, 0f);
-
-                color = new Color(255, 240, 185) with { A = 0 };
-
-                Main.spriteBatch.Draw(texture.Value, position, null, color, Projectile.rotation * 0.1f, texture.Size() * 0.5f, MathHelper.Min(starScale, 1f) * 0.35f, SpriteEffects.None, 0f);
+                Main.spriteBatch.Draw(texture.Value, position, null, color, Projectile.rotation * 0.1f, texture.Size() * 0.5f, 0.4f, SpriteEffects.None, 0f);
             });
 
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
