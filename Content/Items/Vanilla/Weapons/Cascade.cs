@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common;
 using SPYoyoMod.Common.Graphics.PixelatedLayers;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Content.Dusts;
@@ -85,6 +86,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             trailRenderer?.SetNextPoint(proj.Center + proj.velocity);
 
             Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.25f);
+        }
+
+        public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (timer >= StartToChargeTime) return;
+
+            timer += 5;
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
@@ -175,6 +183,31 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Projectile.localNPCHitCooldown = -1;
         }
 
+        public void OnInitialize()
+        {
+            var dustType = ModContent.DustType<SmokeDust>();
+
+            for (int i = 0; i < 15; i++)
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
+                var velocity = vector * Main.rand.NextFloat(1f, 3f);
+                var dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
+                dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(50, 50, 50), false);
+
+                vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
+                velocity = vector * Main.rand.NextFloat(1f, 3f);
+                dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
+                dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(25, 25, 25), false);
+            }
+
+            if (Main.dedServ || Main.myPlayer != Projectile.owner) return;
+
+            ModContent.GetInstance<ScreenEffects>()
+                .Shake(Projectile.Center, Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)), 7f, 6f, 15, 16f * 25f);
+        }
+
         public override void OnKill(int timeLeft)
         {
             ringRenderer?.Dispose();
@@ -184,22 +217,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
         {
             if (!initialized)
             {
-                var dustType = ModContent.DustType<SmokeDust>();
-
-                for (int i = 0; i < 15; i++)
-                {
-                    var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                    var position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
-                    var velocity = vector * Main.rand.NextFloat(1f, 3f);
-                    var dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
-                    dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(50, 50, 50), false);
-
-                    vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                    position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
-                    velocity = vector * Main.rand.NextFloat(1f, 3f);
-                    dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
-                    dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(25, 25, 25), false);
-                }
+                OnInitialize();
 
                 initialized = true;
             }
