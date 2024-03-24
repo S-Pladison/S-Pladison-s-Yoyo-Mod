@@ -11,21 +11,42 @@ using Terraria;
 using Terraria.DataStructures;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
     public class BowOfDivinePriestessItem : ModItem, IDyeableEquipmentItem
     {
+        public class DropCondition : IItemDropRuleCondition, IProvideItemConditionDescription
+        {
+            public static LocalizedText Description { get; private set; }
+
+            public DropCondition()
+            {
+                Description ??= Language.GetOrRegister("Mods.SPYoyoMod.DropConditions.BowOfDivinePriestessCondition");
+            }
+
+            public bool CanDrop(DropAttemptInfo info)
+            {
+                return info.npc.value > 0f && !info.IsInSimulation && Main.raining && (info.player.ZoneOverworldHeight || info.player.ZoneSkyHeight);
+            }
+
+            public bool CanShowItemDropInUI()
+            {
+                return true;
+            }
+
+            public string GetConditionDescription()
+            {
+                return Description.Value;
+            }
+        }
+
         // Flag to stop recursion of the ItemDropResolver.ResolveRule(...)
         private static bool isRerolledLoot;
 
-        public override string Texture => ModAssets.ItemsPath + "Bearing";
-
-        public override Color? GetAlpha(Color lightColor)
-        {
-            return Main.DiscoColor;
-        }
+        public override string Texture => ModAssets.ItemsPath + "BowOfDivinePriestess";
 
         public override void Load()
         {
@@ -35,8 +56,8 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         public override void SetDefaults()
         {
             Item.accessory = true;
-            Item.width = 36;
-            Item.height = 34;
+            Item.width = 46;
+            Item.height = 32;
 
             Item.rare = ItemRarityID.LightPurple;
             Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);

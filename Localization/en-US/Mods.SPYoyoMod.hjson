@@ -25,7 +25,11 @@ Configs: {
 
 NPCs.NurseNPC.GiftButton: Gift
 Dialogue.NurseNPC.Dialogue.ReceivedGift: Oh, it wasn't necessary, thank you. Take this as a replacement. I believe it will be more valuable to you than to me.
-DropConditions.SpaceKeyCondition: Drops in the Hardmode Space
+
+DropConditions: {
+	BowOfDivinePriestessCondition: Drops during the rain
+	SpaceKeyCondition: Drops in the Hardmode Space
+}
 
 Tiles: {
 	SpaceChestTile: {

@@ -25,7 +25,11 @@ Configs: {
 
 NPCs.NurseNPC.GiftButton: Подарок
 Dialogue.NurseNPC.Dialogue.ReceivedGift: О, это было необязательно, спасибо. Прими это взамен. Я думаю, для тебя это будет более ценным, чем для меня.
-DropConditions.SpaceKeyCondition: Выпадает в сложном режиме в космосе
+
+DropConditions: {
+	BowOfDivinePriestessCondition: Выпадает во время дождя
+	SpaceKeyCondition: Выпадает в сложном режиме в космосе
+}
 
 Tiles: {
 	SpaceChestTile: {
