@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.DataStructures;
-using Terraria.GameContent;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -137,12 +136,13 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
+    [Autoload(false)]
     public class BowOfDivinePriestessRenderTargetContent : RenderTargetContent
     {
         private bool anyPlayerWithAcc;
 
         public override Point Size => new(56, 70);
-        public override Color ClearColor => Color.Black;
+        //public override Color ClearColor => Color.Black;
 
         public void Request()
         {
@@ -178,26 +178,27 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             var points = new List<Vector2>();
             var center = Size.ToVector2() / 2f + new Vector2(6, -10);
 
+            points.Add(center + Vector2.UnitY * 14f * new Vector2(0.8f, 1f) + new Vector2(14, 0));
+
             for (int i = 0; i < 20; i++)
             {
                 var angle = MathHelper.TwoPi / 20f * i;
-                points.Add(center + Vector2.UnitX.RotatedBy(angle) * 14f * new Vector2(0.8f, 1f));
+                var offset = Vector2.UnitY.RotatedBy(angle) * 14f * new Vector2(0.8f, 1f);
+
+                var position = center + offset;
+                position.X += offset.Y * 0.7f;
+
+                points.Add(position);
             }
 
-            var effect = ModAssets.RequestEffect("DefaultStrip").Prepare(parameters =>
+            var effect = ModAssets.RequestEffect("Test").Prepare(parameters =>
             {
-                parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                parameters["Texture0"].SetValue(ModContent.Request<Texture2D>(ModAssets.MiscPath + "Test").Value);
                 parameters["TransformMatrix"].SetValue(Matrix.CreateOrthographicOffCenter(0, Size.X, Size.Y, 0, -1, 1));
-
-                var colorVec4 = (Color.White).ToVector4();
-
-                parameters["ColorTL"].SetValue(colorVec4);
-                parameters["ColorTR"].SetValue(colorVec4);
-                parameters["ColorBL"].SetValue(colorVec4);
-                parameters["ColorBR"].SetValue(colorVec4);
+                parameters["Time"].SetValue((float)Main.timeForVisualEffects * 0.02f);
             });
 
-            DrawUtils.DrawPrimitiveStrip(effect.Value, points, _ => 5f, false);
+            DrawUtils.DrawPrimitiveStrip(effect.Value, points, _ => 22f, false);
 
             //Main.spriteBatch.Draw(TextureAssets.Sun.Value, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 0.3f, SpriteEffects.None, 0);
 
@@ -205,6 +206,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         }
     }
 
+    [Autoload(false)]
     public class BowOfDivinePriestessPlayerLayer : PlayerDrawLayer
     {
         public override Position GetDefaultPosition()
@@ -216,7 +218,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         {
             var player = drawInfo.drawPlayer;
 
-            return !player.dead && player.GetModPlayer<BowOfDivinePriestessPlayer>().Visible;
+            return !player.dead && !player.invis && player.GetModPlayer<BowOfDivinePriestessPlayer>().Visible;
         }
 
         protected override void Draw(ref PlayerDrawSet drawInfo)
@@ -227,7 +229,9 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
                 return;
 
             var player = drawInfo.drawPlayer;
-            var position = (player.MountedCenter + new Vector2(-16 * player.direction, -12 * player.gravDir + player.gfxOffY) - Main.screenPosition).Floor();
+            var position = (player.MountedCenter + new Vector2(-60 * player.direction, -12 * player.gravDir + player.gfxOffY) - Main.screenPosition).Floor();
+            var color = Color.White * player.stealth;
+            var origin = embraceOfRainTarget.Size() * 0.5f;
             var spriteEffects = SpriteEffects.None;
 
             if (player.direction < 0)
@@ -237,7 +241,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
                 spriteEffects |= SpriteEffects.FlipVertically;
 
             drawInfo.DrawDataCache.Add(
-                new DrawData(embraceOfRainTarget, position, null, Color.White, 0f, embraceOfRainTarget.Size() * 0.5f, 1f, spriteEffects, 0) with
+                new DrawData(embraceOfRainTarget, position, null, color, 0f, origin, 1f, spriteEffects, 0) with
                 {
                     shader = player.GetModPlayer<BowOfDivinePriestessPlayer>().Dye
                 }
