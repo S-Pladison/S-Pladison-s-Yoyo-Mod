@@ -482,10 +482,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         {
             var player = Main.LocalPlayer;
 
-            if (player.heldProj != ModContent.ProjectileType<BellowingThunderProjectile>()) return;
-
-            var visualPlayer = Main.playerVisualClone[player.whoAmI] ??= new();
-
+            var visualPlayer = new Player();
             visualPlayer.CopyVisuals(player);
             visualPlayer.isFirstFractalAfterImage = true;
             visualPlayer.firstFractalAfterImageOpacity = 1f;
