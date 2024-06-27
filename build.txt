@@ -1,6 +1,6 @@
 displayName = S-Pladison's Yoyo Mod
 author = S-Pladison
-version = 0.1.2
+version = 1.0.0
 hideCode = true
 hideResources = false
 buildIgnore = Assets\Effects\Compiler\*, Common\ModCompatibility\ModCompatibilityInfo.txt

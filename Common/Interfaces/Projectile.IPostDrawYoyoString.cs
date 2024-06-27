@@ -12,9 +12,7 @@ namespace SPYoyoMod.Common.Interfaces
     public interface IPostDrawYoyoStringProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook =
-            ProjectileLoader.AddModHook(
-                new GlobalHookList<GlobalProjectile>(typeof(IPostDrawYoyoStringProjectile).GetMethod(nameof(PostDrawYoyoString)))
-            );
+            ProjectileLoader.AddModHook(GlobalHookList<GlobalProjectile>.Create(i => ((IPostDrawYoyoStringProjectile)i).PostDrawYoyoString));
 
         /// <summary>
         /// Allows you to draw in front of yoyo string. Use <see cref="DrawUtils.DrawYoyoString"/> to draw vanilla string.

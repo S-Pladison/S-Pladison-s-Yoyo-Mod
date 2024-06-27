@@ -1,1 +1,14 @@
-S-Pladison's Yoyo Mod is a pretty cool mod, it does...this. Modify this file with a description of your mod.
+[ The Mod ]
+
+Nothing unusual. Adds new yoyos and reworks vanilla ones.
+
+-| "Why does it add so few things?"
+ | Because I have no ideas.
+
+-| Why does so few things get remade?
+ | The same answer.
+
+[ Credits ]
+
+Decrypt - a couple of new sprites
+Dia, sixtydegrees, Skeletony - It was a long, long time ago, but I still have their sprites (thanks, and sorry if I offended anyone...)

@@ -20,17 +20,17 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public const int LootChanceDenominator = 3;
 
         public override string Texture => ModAssets.ItemsPath + "TheStellarThrow";
-        public override int GamepadExtraRange => 15;
+        public override int GamepadExtraRange => 9;
 
         public override void YoyoSetDefaults()
         {
-            Item.damage = 17;
+            Item.damage = 18;
             Item.knockBack = 3f;
 
             Item.shoot = ModContent.ProjectileType<TheStellarThrowProjectile>();
 
             Item.rare = ItemRarityID.Green;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 0, copper: 0);
         }
     }
 
@@ -43,8 +43,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         private TrailRenderer trailRenderer;
 
         public override string Texture => ModAssets.ProjectilesPath + "TheStellarThrow";
-        public override float LifeTime => -1f;
-        public override float MaxRange => 300f;
+        public override float LifeTime => 8f;
+        public override float MaxRange => 215f;
         public override float TopSpeed => 13f;
         public ref float StarTimer => ref Projectile.ai[2];
 

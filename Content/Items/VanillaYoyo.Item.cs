@@ -55,7 +55,7 @@ namespace SPYoyoMod.Content.Items
                 var tooltipLine = new TooltipLine(Mod, "ModTooltip", Tooltip.Value);
                 var tooltipLines = TooltipUtils.Split(tooltipLine, '\n');
 
-                TooltipUtils.InsertDescriptions(tooltips, tooltipLines);
+                TooltipUtils.InsertDescription(tooltips, tooltipLines);
             }
 
             YoyoModifyTooltips(item, tooltips);

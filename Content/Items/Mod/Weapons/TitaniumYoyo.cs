@@ -14,17 +14,18 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class TitaniumYoyoItem : YoyoItem
     {
         public override string Texture => ModAssets.ItemsPath + "TitaniumYoyo";
-        public override int GamepadExtraRange => 15;
+        public override int GamepadExtraRange => 13;
 
         public override void YoyoSetDefaults()
         {
-            Item.damage = 5;
-            Item.knockBack = 2.5f;
+            Item.damage = 42;
+            Item.knockBack = 4.0f;
+            Item.autoReuse = true;
 
             Item.shoot = ModContent.ProjectileType<TitaniumYoyoProjectile>();
 
             Item.rare = ItemRarityID.LightRed;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 3, silver: 0, copper: 0);
         }
 
         public override void AddRecipes()
@@ -39,9 +40,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class TitaniumYoyoProjectile : YoyoProjectile
     {
         public override string Texture => ModAssets.ProjectilesPath + "TitaniumYoyo";
-        public override float LifeTime => -1f;
-        public override float MaxRange => 300f;
-        public override float TopSpeed => 13f;
+        public override float LifeTime => 15f;
+        public override float MaxRange => 275f;
+        public override float TopSpeed => 15f;
 
         private SpriteTrailRenderer spriteTrailRenderer;
 

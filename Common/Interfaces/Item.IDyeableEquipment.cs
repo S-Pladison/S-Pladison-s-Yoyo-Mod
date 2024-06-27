@@ -10,9 +10,7 @@ namespace SPYoyoMod.Common.Interfaces
     public interface IDyeableEquipmentItem
     {
         public static readonly GlobalHookList<GlobalItem> Hook =
-            ItemLoader.AddModHook(
-                new GlobalHookList<GlobalItem>(typeof(IDyeableEquipmentItem).GetMethod(nameof(UpdateDye)))
-            );
+            ItemLoader.AddModHook(GlobalHookList<GlobalItem>.Create(i => ((IDyeableEquipmentItem)i).UpdateDye));
 
         /// <summary>
         /// Allows you to give dye to this armor or accessory.

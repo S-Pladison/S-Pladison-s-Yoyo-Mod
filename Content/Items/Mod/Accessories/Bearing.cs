@@ -32,7 +32,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             Item.height = 34;
 
             Item.rare = ItemRarityID.Blue;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 0, silver: 20, copper: 0);
         }
 
         public override void AddRecipes()

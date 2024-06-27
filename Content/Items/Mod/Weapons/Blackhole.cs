@@ -16,7 +16,7 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class BlackholeItem : YoyoItem
     {
         public override string Texture => ModAssets.ItemsPath + "Blackhole";
-        public override int GamepadExtraRange => 15;
+        public override int GamepadExtraRange => 21;
 
         public override void YoyoSetStaticDefaults()
         {
@@ -28,13 +28,14 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
             Item.width = 42;
             Item.height = 26;
 
-            Item.damage = 43;
-            Item.knockBack = 2.5f;
+            Item.damage = 90;
+            Item.knockBack = 2.0f;
+            Item.autoReuse = true;
 
             Item.shoot = ModContent.ProjectileType<BlackholeProjectile>();
 
             Item.rare = ItemRarityID.Yellow;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 20, silver: 0, copper: 0);
         }
     }
 
@@ -44,8 +45,8 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
 
         public override string Texture => ModAssets.ProjectilesPath + "Blackhole";
         public override float LifeTime => -1f;
-        public override float MaxRange => 300f;
-        public override float TopSpeed => 13f;
+        public override float MaxRange => 400f;
+        public override float TopSpeed => 16f;
         public float TimeForVisualEffects => (Projectile.whoAmI * 200f + (float)Main.timeForVisualEffects) % 216000f;
 
         public float RadiusProgress

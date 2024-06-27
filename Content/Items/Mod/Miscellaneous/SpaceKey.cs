@@ -48,7 +48,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
             Item.height = 26;
 
             Item.rare = ItemRarityID.Yellow;
-            Item.value = Item.sellPrice(platinum: 0, gold: 2, silver: 0, copper: 0);
+            Item.value = Item.sellPrice(platinum: 0, gold: 0, silver: 0, copper: 0);
             Item.maxStack = Item.CommonMaxStack;
         }
 

@@ -19,65 +19,84 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public override int YoyoType => ItemID.Code1;
 
-        public override void Load()
+        public override void SetDefaults(Item item)
         {
-            On_Player.GetWeaponDamage += (orig, player, item, forTooltip) =>
+            item.damage = 19;
+        }
+
+        public override void YoyoModifyTooltips(Item item, List<TooltipLine> tooltips)
+        {
+            TooltipUtils.ModifyWeaponDamage(tooltips, damage =>
             {
-                if (!forTooltip)
-                    return orig(player, item, forTooltip);
+                if (!Main.LocalPlayer.GetModPlayer<CodeOnePlayer>().IsBuffActive)
+                    return damage;
 
-                var isCode1 = item.type == ItemID.Code1;
-
-                if (isCode1 && player.GetModPlayer<CodeOnePlayer>().IsBuffActive)
-                    ItemID.Sets.ToolTipDamageMultiplier[item.type] = 1.33f;
-
-                var result = orig(player, item, forTooltip);
-
-                if (isCode1)
-                    ItemID.Sets.ToolTipDamageMultiplier[item.type] = 1f;
-
-                return result;
-            };
+                return (int)(damage * 1.33f);
+            });
         }
     }
 
     public class CodeOneProjectile : VanillaYoyoProjectile
     {
-        public override int YoyoType => ProjectileID.Code1;
+        public const int HitsForCrit = 7;
 
         private bool buffActive;
+        private int hitCounter;
+
+        public override int YoyoType => ProjectileID.Code1;
 
         public override void AI(Projectile proj)
         {
-            if (Main.myPlayer == proj.owner)
-            {
-                var oldBuffActiveValue = buffActive;
-                buffActive = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>().IsBuffActive;
+            UpdateBuffState(proj);
 
-                if (oldBuffActiveValue != buffActive)
-                    proj.netUpdate = true;
-            }
+            ref float buffGlowProgress = ref proj.localAI[1];
+            buffGlowProgress = MathHelper.Clamp(buffGlowProgress + (buffActive ? 0.05f : -0.02f), 0f, 1f);
 
-            proj.localAI[1] = MathHelper.Clamp(proj.localAI[1] + (buffActive ? 0.05f : -0.02f), 0f, 1f);
+            if (!buffActive)
+                return;
 
-            Lighting.AddLight(proj.Center, new Color(65, 185, 255).ToVector3() * 0.15f);
+            Lighting.AddLight(proj.Center, new Color(65, 185, 255).ToVector3() * 0.15f * proj.localAI[1]);
+        }
+
+        public void UpdateBuffState(Projectile proj)
+        {
+            if (Main.myPlayer != proj.owner)
+                return;
+
+            var oldBuffActiveValue = buffActive;
+            buffActive = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>().IsBuffActive;
+
+            if (oldBuffActiveValue != buffActive)
+                proj.netUpdate = true;
         }
 
         public override void ModifyHitNPC(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (!buffActive) return;
+            if (++hitCounter >= HitsForCrit)
+            {
+                modifiers.SetCrit();
+                hitCounter = 0;
+            }
+
+            if (!buffActive)
+                return;
 
             modifiers.FinalDamage += 0.33f;
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (Main.myPlayer != proj.owner) return;
+            if (hit.Crit)
+                hitCounter = 0;
+
+            if (Main.myPlayer != proj.owner)
+                return;
 
             var codeOnePlayer = Main.player[proj.owner].GetModPlayer<CodeOnePlayer>();
-            codeOnePlayer.AddTimerToDict(target);
+            codeOnePlayer.AddTimer(target);
 
-            if (!buffActive) return;
+            if (!buffActive)
+                return;
 
             Projectile.NewProjectile(proj.GetSource_FromThis(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CodeOneHitProjectile>(), 0, 0, proj.owner);
 
@@ -105,34 +124,35 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            if (proj.localAI[1] <= 0f) return;
+            ref float buffGlowProgress = ref proj.localAI[1];
 
-            var progress = EasingFunctions.InOutQuint(proj.localAI[1]);
+            if (buffGlowProgress <= 0f)
+                return;
 
-            DrawUtils.DrawGradientYoyoStringWithShadow(proj, mountedCenter, (Color.Transparent, true), (new Color(65, 185, 255) * progress, true));
+            var buffGlowColor = new Color(65, 185, 255) * EasingFunctions.InOutQuint(buffGlowProgress);
+
+            DrawUtils.DrawGradientYoyoStringWithShadow(proj, mountedCenter, (Color.Transparent, true), (buffGlowColor, true));
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            if (proj.localAI[1] <= 0f) return true;
+            ref float buffGlowProgress = ref proj.localAI[1];
 
-            var progress = EasingFunctions.InOutQuint(proj.localAI[1]);
+            if (buffGlowProgress <= 0f)
+                return true;
+
             var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
-            var color = new Color(65, 185, 255) * progress;
+            var glowTexture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "Yoyo_GlowWithShadow", AssetRequestMode.ImmediateLoad);
+            var glowColor = new Color(65, 185, 255) * EasingFunctions.InOutQuint(buffGlowProgress);
 
-            Main.spriteBatch.Draw(texture.Value, position, null, color, proj.rotation, texture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(glowTexture.Value, position, null, glowColor, proj.rotation, glowTexture.Size() * 0.5f, proj.scale * 1.2f, SpriteEffects.None, 0f);
+
             return true;
         }
     }
 
-    // Warning: Client-Side only
     public class CodeOnePlayer : ModPlayer
     {
-        public const int TimeToForgetNPC = 60 * 5;
-
-        public bool IsBuffActive => timers.Count <= 2;
-
         private class TimerData
         {
             public int NpcType;
@@ -145,14 +165,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             }
         }
 
+        public const int TimeToForgetNPC = 60 * 5;
+
         private readonly Dictionary<int, TimerData> timers;
+
+        public bool IsBuffActive => timers.Count <= 2;
 
         public CodeOnePlayer()
         {
             timers = new Dictionary<int, TimerData>();
         }
 
-        public void AddTimerToDict(NPC npc)
+        public void AddTimer(NPC npc)
         {
             timers[npc.whoAmI] = new TimerData(npc.type);
         }
@@ -167,7 +191,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
                 ref var npc = ref Main.npc[npcWhoAmI];
 
                 if (!npc.active || npc.type != timerData.NpcType || timerData.Counter < 0)
+                {
                     timers.Remove(npcWhoAmI);
+                }
             }
         }
     }
@@ -176,9 +202,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public const float InitTimeLeft = 15f;
 
-        public override string Texture => ModAssets.MiscPath + "Invisible";
-
+        private bool initialized;
         private RingRenderer ringRenderer;
+
+        public override string Texture => ModAssets.MiscPath + "Invisible";
 
         public override void SetDefaults()
         {
@@ -187,42 +214,32 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Projectile.timeLeft = (int)InitTimeLeft;
         }
 
+        public void OnInitialize()
+        {
+            if (Main.dedServ)
+                return;
+
+            ringRenderer = new RingRenderer(26, 16f, 16f);
+        }
+
         public override void OnKill(int timeLeft)
         {
             ringRenderer?.Dispose();
         }
 
+        public override void AI()
+        {
+            if (!initialized)
+            {
+                OnInitialize();
+
+                initialized = true;
+            }
+        }
+
         public override bool PreDraw(ref Color lightColor)
         {
-            ringRenderer ??= new RingRenderer(26, 16f, 16f);
-
-            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.UnderProjectiles, () =>
-            {
-                var factor = Projectile.timeLeft / InitTimeLeft;
-                var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-                var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "CodeOneHit_Ring", AssetRequestMode.ImmediateLoad);
-
-                var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
-                var effect = effectAsset.Value;
-                var effectParameters = effect.Parameters;
-
-                effectParameters["Texture0"].SetValue(texture.Value);
-                effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.Transform);
-
-                var colorProgress = EasingFunctions.OutQuint(factor);
-                var color = (Color.Lerp(new Color(55, 0, 255), new Color(65, 185, 255), colorProgress) * colorProgress) with { A = 0 };
-                var colorVec4 = color.ToVector4();
-
-                effectParameters["ColorTL"].SetValue(colorVec4);
-                effectParameters["ColorTR"].SetValue(colorVec4);
-                effectParameters["ColorBL"].SetValue(colorVec4);
-                effectParameters["ColorBR"].SetValue(colorVec4);
-
-                ringRenderer?
-                    .SetRadius(16f * 1.275f * EasingFunctions.OutCubic(1f - factor))
-                    .SetPosition(position)
-                    .Draw(effect);
-            });
+            ModContent.GetInstance<PixelatedDrawLayers>().QueueDrawAction(PixelatedLayer.OverProjectiles, DrawPixelated);
 
             var factor = Projectile.timeLeft / InitTimeLeft;
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
@@ -250,6 +267,34 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
             Main.spriteBatch.Draw(texture.Value, position, null, color, rotation, texture.Size() * 0.5f, scale, SpriteEffects.None, 0f);
 
             return true;
+        }
+
+        public void DrawPixelated()
+        {
+            var factor = Projectile.timeLeft / InitTimeLeft;
+            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var texture = ModContent.Request<Texture2D>(ModAssets.MiscPath + "CodeOneHit_Ring", AssetRequestMode.ImmediateLoad);
+
+            var effectAsset = ModContent.Request<Effect>(ModAssets.EffectsPath + "DefaultStrip", AssetRequestMode.ImmediateLoad);
+            var effect = effectAsset.Value;
+            var effectParameters = effect.Parameters;
+
+            effectParameters["Texture0"].SetValue(texture.Value);
+            effectParameters["TransformMatrix"].SetValue(PrimitiveMatrices.PixelatedPrimitiveMatrices.Transform);
+
+            var colorProgress = EasingFunctions.OutQuint(factor);
+            var color = (Color.Lerp(new Color(55, 0, 255), new Color(65, 185, 255), colorProgress) * colorProgress) with { A = 0 };
+            var colorVec4 = color.ToVector4();
+
+            effectParameters["ColorTL"].SetValue(colorVec4);
+            effectParameters["ColorTR"].SetValue(colorVec4);
+            effectParameters["ColorBL"].SetValue(colorVec4);
+            effectParameters["ColorBR"].SetValue(colorVec4);
+
+            ringRenderer?
+                .SetRadius(16f * 1.275f * EasingFunctions.OutCubic(1f - factor))
+                .SetPosition(position)
+                .Draw(effect);
         }
     }
 }

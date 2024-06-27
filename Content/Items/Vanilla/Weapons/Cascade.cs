@@ -19,6 +19,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Weapons
     {
         public override int YoyoType => ItemID.Cascade;
 
+        public override void SetDefaults(Item item)
+        {
+            item.damage = 25;
+        }
+
         public override void AddRecipes()
         {
             Recipe.Create(ItemID.Cascade)

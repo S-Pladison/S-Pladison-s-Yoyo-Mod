@@ -16,21 +16,21 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
     public class SoulTormentorItem : YoyoItem
     {
         public override string Texture => ModAssets.ItemsPath + "SoulTormentor";
-        public override int GamepadExtraRange => 15;
+        public override int GamepadExtraRange => 11;
 
         public override void YoyoSetDefaults()
         {
             Item.width = 42;
             Item.height = 26;
 
-            Item.damage = 43;
-            Item.knockBack = 2.5f;
+            Item.damage = 57;
+            Item.knockBack = 3.0f;
             Item.autoReuse = true;
 
             Item.shoot = ModContent.ProjectileType<SoulTormentorProjectile>();
 
             Item.rare = ItemRarityID.Lime;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 5, silver: 0, copper: 0);
         }
     }
 
@@ -40,9 +40,9 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
         public static readonly int TormentorCount = 3;
 
         public override string Texture => ModAssets.ProjectilesPath + "SoulTormentor";
-        public override float LifeTime => -1f;
-        public override float MaxRange => 300f;
-        public override float TopSpeed => 13f;
+        public override float LifeTime => 15f;
+        public override float MaxRange => 250f;
+        public override float TopSpeed => 16f;
 
         private TrailRenderer blackTrailRenderer;
         private TrailRenderer redTrailRenderer;
@@ -74,7 +74,10 @@ namespace SPYoyoMod.Content.Items.Mod.Weapons
                 hitInfo.Damage /= 2;
                 hitInfo.Knockback /= 2;
 
-                npc.StrikeNPC(hitInfo);
+                var damage = npc.StrikeNPC(hitInfo);
+
+                if (owner.accDreamCatcher && !npc.HideStrikeDamage)
+                    owner.addDPS(damage);
 
                 if (Main.netMode != NetmodeID.SinglePlayer)
                     NetMessage.SendStrikeNPC(npc, in hitInfo);

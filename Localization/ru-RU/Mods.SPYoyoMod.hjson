@@ -14,11 +14,11 @@ Configs: {
 	}
 
 	ClientSideConfig: {
-		// DisplayName: Client Side Config
+		DisplayName: Client Side Config
 
 		FlashingLights: {
-			// Label: Flashing Lights
-			// Tooltip: ""
+			Label: Flashing Lights
+			Tooltip: ""
 		}
 	}
 }

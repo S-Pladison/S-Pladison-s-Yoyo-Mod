@@ -73,11 +73,22 @@ TitaniumYoyoItem: {
 	Tooltip:
 		'''
 		Hits generates a defensive barrier of titanium shards
-		Shards deals 30% more damage if player is equipped with titanium armor
+		Shards deals 30% more damage if titanium armor is equipped
 		'''
 }
 
 TrappedSpaceChestItem: {
 	DisplayName: Trapped Space Chest
 	Tooltip: ""
+}
+
+ShadowYoyo: {
+	DisplayName: Shadow Yoyo
+	Tooltip:
+		'''
+		No, not a weapon, just a note
+		There is no way to get this item
+		This item is to tell you that mod also changes some vanilla yoyos
+		I know how lazy you are to read description of the mod...
+		'''
 }

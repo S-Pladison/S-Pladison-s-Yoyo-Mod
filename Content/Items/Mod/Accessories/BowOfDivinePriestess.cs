@@ -60,7 +60,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             Item.height = 32;
 
             Item.rare = ItemRarityID.LightPurple;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 4, silver: 50, copper: 0);
         }
 
         public override void UpdateAccessory(Player player, bool hideVisual)

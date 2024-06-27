@@ -10,7 +10,12 @@ namespace SPYoyoMod.Utils
             if (ItemID.Sets.Yoyo[item.type]) return true;
             if (item.shoot <= ProjectileID.None) return false;
 
-            var proj = new Projectile();
+            var dict = ContentSamples.ProjectilesByType;
+
+            if (dict.TryGetValue(item.shoot, out Projectile proj))
+                return proj.IsYoyo();
+
+            proj = new Projectile();
             proj.SetDefaults(item.shoot);
 
             return proj.IsYoyo();

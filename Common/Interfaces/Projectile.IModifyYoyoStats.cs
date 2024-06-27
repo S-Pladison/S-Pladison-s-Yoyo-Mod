@@ -17,9 +17,7 @@ namespace SPYoyoMod.Common.Interfaces
     public interface IModifyYoyoStatsProjectile
     {
         public static readonly GlobalHookList<GlobalProjectile> Hook =
-            ProjectileLoader.AddModHook(
-                new GlobalHookList<GlobalProjectile>(typeof(IModifyYoyoStatsProjectile).GetMethod(nameof(ModifyYoyoStats)))
-            );
+            ProjectileLoader.AddModHook(GlobalHookList<GlobalProjectile>.Create(i => ((IModifyYoyoStatsProjectile)i).ModifyYoyoStats));
 
         /// <summary>
         /// Allows you to modify life time or max range of the yoyo.
@@ -122,6 +120,10 @@ namespace SPYoyoMod.Common.Interfaces
                 if (lifeTime <= 0) return;
 
                 lifeTime = statModifiers.LifeTime.ApplyTo(lifeTime);
+
+                if (lifeTime > 0) return;
+
+                lifeTime = -1;
             }
 
             public static void ModifyYoyoMaxRange(Projectile _, ref YoyoStatModifiers statModifiers, ref float maxRange)

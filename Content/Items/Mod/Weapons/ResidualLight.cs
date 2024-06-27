@@ -4,6 +4,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Weapons
 {
+    [Autoload(false)]
     public class ResidualLightItem : YoyoItem
     {
         public override string Texture => ModAssets.ItemsPath + "ResidualLight";

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils.Rendering
@@ -16,20 +17,26 @@ namespace SPYoyoMod.Utils.Rendering
 
             for (var i = 0; i < split.Length; i++)
             {
-                lines[i] = new(mod, line.Name + i.ToString(), split[i]);
-                lines[i].IsModifier = line.IsModifier;
-                lines[i].IsModifierBad = line.IsModifierBad;
-                lines[i].OverrideColor = line.OverrideColor;
+                lines[i] = new(mod, line.Name + i.ToString(), split[i])
+                {
+                    IsModifier = line.IsModifier,
+                    IsModifierBad = line.IsModifierBad,
+                    OverrideColor = line.OverrideColor
+                };
             }
 
             return lines;
         }
 
         public static TooltipLine FindDescriptionLast(List<TooltipLine> tooltips)
-            => tooltips.FindLast(i => i.Mod == "Terraria" && i.Name.StartsWith("Tooltip"));
+        {
+            return tooltips.FindLast(i => i.Mod == "Terraria" && i.Name.StartsWith("Tooltip"));
+        }
 
         public static int FindDescriptionLastIndex(List<TooltipLine> tooltips)
-            => tooltips.FindLastIndex(i => i.Mod == "Terraria" && i.Name.StartsWith("Tooltip"));
+        {
+            return tooltips.FindLastIndex(i => i.Mod == "Terraria" && i.Name.StartsWith("Tooltip"));
+        }
 
         public static void InsertDescription(List<TooltipLine> tooltips, TooltipLine line)
         {
@@ -41,7 +48,7 @@ namespace SPYoyoMod.Utils.Rendering
                     continue;
 
                 if (!tooltipLine.Name.StartsWith("Tooltip")
-                    && !insertDescriptionWhiteList.Contains(tooltipLine.Name))
+                    && !insertDescriptionWhitelist.Contains(tooltipLine.Name))
                     continue;
 
                 tooltips.Insert(i + 1, line);
@@ -49,7 +56,7 @@ namespace SPYoyoMod.Utils.Rendering
             }
         }
 
-        public static void InsertDescriptions(List<TooltipLine> tooltips, IList<TooltipLine> lines)
+        public static void InsertDescription(List<TooltipLine> tooltips, IList<TooltipLine> lines)
         {
             for (var i = tooltips.Count - 1; i >= 0; i--)
             {
@@ -59,7 +66,7 @@ namespace SPYoyoMod.Utils.Rendering
                     continue;
 
                 if (!tooltipLine.Name.StartsWith("Tooltip")
-                    && !insertDescriptionWhiteList.Contains(tooltipLine.Name))
+                    && !insertDescriptionWhitelist.Contains(tooltipLine.Name))
                     continue;
 
                 for (var j = 0; j < lines.Count; j++)
@@ -69,7 +76,54 @@ namespace SPYoyoMod.Utils.Rendering
             }
         }
 
-        private static readonly HashSet<string> insertDescriptionWhiteList = new()
+        public static void ModifyWeaponDamage(List<TooltipLine> tooltips, Func<int, int> func)
+        {
+            var damageLine = tooltips.FirstOrDefault(x => x.Mod == "Terraria" && x.Name == "Damage");
+
+            if (damageLine is null)
+                return;
+
+            ModifyFirstIntegerInLine(damageLine, func);
+        }
+
+        public static void ModifyWeaponCrit(List<TooltipLine> tooltips, Func<int, int> func)
+        {
+            var critLine = tooltips.FirstOrDefault(x => x.Mod == "Terraria" && x.Name == "CritChance");
+
+            if (critLine is null)
+                return;
+
+            ModifyFirstIntegerInLine(critLine, func);
+        }
+
+        private static void ModifyFirstIntegerInLine(TooltipLine line, Func<int, int> func)
+        {
+            var split = line.Text.Split(' ');
+
+            if (split.Length == 0)
+                return;
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                ref var str = ref split[i];
+
+                if (int.TryParse(str, out int @int))
+                {
+                    str = $"{func(@int)}";
+                    line.Text = string.Join(' ', split);
+                    return;
+                }
+
+                if (str.EndsWith("%") && int.TryParse(str.Replace("%", ""), out @int))
+                {
+                    str = $"{func(@int)}%";
+                    line.Text = string.Join(' ', split);
+                    return;
+                }
+            }
+        }
+
+        private static readonly HashSet<string> insertDescriptionWhitelist = new()
         {
             "Material", "Consumable", "Ammo", "Placeable", "UseMana", "HealMana",
             "HealLife", "TileBoost", "HammerPower", "AxePower", "PickPower", "Defense",
