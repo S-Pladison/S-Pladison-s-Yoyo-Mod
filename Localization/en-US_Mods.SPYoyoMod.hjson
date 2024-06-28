@@ -1,0 +1,8 @@
+Projectiles.BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+
+Items: {
+	BellowingThunderItem: {
+		Tooltip: ""
+		DisplayName: Bellowing Thunder Item
+	}
+}

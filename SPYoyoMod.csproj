@@ -6,36 +6,7 @@
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <ItemGroup>
-    <AdditionalFiles Remove="Assets\Textures\Misc\Temp.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Assets\BellowingThunder.png" />
-    <None Remove="Assets\Effects\Compiler\ArteryBlackAura.fx" />
-    <None Remove="Assets\Effects\Compiler\BlackholeBackground.fx" />
-    <None Remove="Assets\Effects\Compiler\BlackholeOutline.fx" />
-    <None Remove="Assets\Effects\Compiler\Test.fx" />
-    <None Remove="Assets\Effects\Compiler\ValorEffect.fx" />
-    <None Remove="Assets\Sounds\Links.txt" />
-    <None Remove="Assets\Textures\BellowingThunderProjectile.png" />
-    <None Remove="Assets\Textures\Effects\Extra_28.png" />
-    <None Remove="Assets\Textures\Effects\Extra_29.png" />
-    <None Remove="Assets\Textures\Effects\HDSmokeParticle.png" />
-    <None Remove="Assets\Textures\Items\AdamantiteYoyo.png" />
-    <None Remove="Assets\Textures\Items\Bearing.png" />
-    <None Remove="Assets\Textures\Items\Blackhole.png" />
-    <None Remove="Assets\Textures\Items\FlamingFlower.png" />
-    <None Remove="Assets\Textures\Items\MyocardialInfarction.png" />
-    <None Remove="Assets\Textures\Items\StrangeDrink.png" />
-    <None Remove="Assets\Textures\Items\TitaniumYoyo.png" />
-    <None Remove="Assets\Textures\Projectiles\AdamantiteYoyo.png" />
-    <None Remove="Assets\Textures\Projectiles\Blackhole.png" />
-    <None Remove="Assets\Textures\Projectiles\MyocardialInfarction.png" />
-    <None Remove="Assets\Textures\Projectiles\TitaniumYoyo.png" />
-    <None Remove="Localization\en-US\Mods.SPYoyoMod.Items.hjson" />
-    <None Remove="Localization\en-US\Mods.SPYoyoMod.Projectiles.hjson" />
-    <None Remove="Localization\en-US\Mods.SPYoyoMod.VanillaItems.hjson" />
-    <None Remove="Localization\ru-RU\Mods.SPYoyoMod.Items.hjson" />
-    <None Remove="Localization\ru-RU\Mods.SPYoyoMod.VanillaItems.hjson" />
-    <None Remove="Localization\ru-RU_Mods.SPYoyoMod.hjson" />
+    <None Remove="Assets\Items\Mod.Yoyos\BellowingThunder\BellowingThunder_Item.png" />
+    <None Remove="Assets\Items\Mod.Yoyos\BellowingThunder\BellowingThunder_Proj.png" />
   </ItemGroup>
 </Project>
