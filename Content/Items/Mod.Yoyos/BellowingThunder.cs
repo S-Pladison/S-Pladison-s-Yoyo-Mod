@@ -4,17 +4,17 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
-    public class BellowingThunderAssets
+    public sealed class BellowingThunderAssets
     {
-        public const string Item = $"{_path}BellowingThunder_Item";
-        public const string Proj = $"{_path}BellowingThunder_Proj";
+        public const string ItemPath = $"{_path}BellowingThunder_Item";
+        public const string ProjPath = $"{_path}BellowingThunder_Proj";
 
         private const string _path = $"{nameof(SPYoyoMod)}/Assets/Items/Mod.Yoyos/BellowingThunder/";
     }
 
     public sealed class BellowingThunderItem : YoyoBaseItem
     {
-        public override string Texture => BellowingThunderAssets.Item;
+        public override string Texture => BellowingThunderAssets.ItemPath;
         public override int GamepadExtraRange => 10;
 
         public override void SetDefaults()
@@ -34,7 +34,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class BellowingThunderProjectile : YoyoBaseProjectile
     {
-        public override string Texture => BellowingThunderAssets.Proj;
+        public override string Texture => BellowingThunderAssets.ProjPath;
         public override float LifeTime => -1f;
         public override float MaxRange => 235f;
         public override float TopSpeed => 14f;
