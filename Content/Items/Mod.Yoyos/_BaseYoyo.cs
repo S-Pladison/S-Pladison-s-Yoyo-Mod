@@ -1,4 +1,6 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Common.Hooks;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -43,7 +45,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     /// <summary>
     /// Базовый класс снаряда йо-йо. Пример использования предоставлен в Items.Yoyos.<see cref="ExampleYoyoProjectile"/>.
     /// </summary>
-    public abstract class YoyoBaseProjectile : ModProjectile
+    public abstract class YoyoBaseProjectile : ModProjectile, IPostDrawYoyoStringProjectile
     {
         /// <summary>
         /// Как долго в секундах йо-йо будет 'оставаться в бою', прежде чем автоматически вернуться к игроку.<br/>
@@ -78,6 +80,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.aiStyle = ProjAIStyleID.Yoyo;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
+        }
+
+        /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
+        public virtual void PostDrawYoyoString(Vector2 mountedCenter) { }
+
+        void IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        {
+            PostDrawYoyoString(mountedCenter);
         }
     }
 }
