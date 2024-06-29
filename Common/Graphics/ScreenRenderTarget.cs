@@ -25,12 +25,12 @@ namespace SPYoyoMod.Common.Graphics
         /// </summary>
         public static ScreenRenderTarget Create(ScreenRenderTargetScale scale, bool mipMap, SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat, int preferredMultiSampleCount, RenderTargetUsage usage)
         {
-            var target = new(
+            var target = new ScreenRenderTarget(
                 ManagedRenderTarget.Create(Main.screenWidth, Main.screenHeight, mipMap, preferredFormat, preferredDepthFormat, preferredMultiSampleCount, usage),
                 scale
             );
 
-            RenderTargetSystem.ScreenTargets.Add(target);
+            ScreenRenderTargetSystem.ScreenTargets.Add(target);
 
             return target;
         }
@@ -66,7 +66,7 @@ namespace SPYoyoMod.Common.Graphics
         /// <summary>
         /// Система, обрабатывающая все созданные экземпляры <see cref="ScreenRenderTarget"/>.
         /// </summary>
-        private class RenderTargetSystem : ModSystem
+        private class ScreenRenderTargetSystem : ModSystem
         {
             public static List<ScreenRenderTarget> ScreenTargets = new();
 

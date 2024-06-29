@@ -24,7 +24,7 @@ namespace SPYoyoMod.Common.Graphics
             var info = new RenderTargetInfo(width, height, mipMap, preferredFormat, preferredDepthFormat, preferredMultiSampleCount, usage);
             var target = new ManagedRenderTarget(info);
 
-            RenderTargetSystem.ManagedTargets.Add(target);
+            ManagedRenderTargetSystem.ManagedTargets.Add(target);
 
             return target;
         }
@@ -97,7 +97,7 @@ namespace SPYoyoMod.Common.Graphics
             if (IsDisposed)
                 return;
 
-            RenderTargetSystem.ActiveManagedTargets.Remove(this);
+            ManagedRenderTargetSystem.ActiveManagedTargets.Remove(this);
 
             IsDisposed = true;
             _target?.Dispose();
@@ -122,7 +122,7 @@ namespace SPYoyoMod.Common.Graphics
                 _info.Usage
             );
 
-            RenderTargetSystem.ActiveManagedTargets.Add(this);
+            ManagedRenderTargetSystem.ActiveManagedTargets.Add(this);
         }
 
         public static implicit operator RenderTarget2D(ManagedRenderTarget target)
@@ -156,7 +156,7 @@ namespace SPYoyoMod.Common.Graphics
         /// <summary>
         /// Система, обрабатывающая все созданные экземпляры <see cref="ManagedRenderTarget"/>.
         /// </summary>
-        private class RenderTargetSystem : ModSystem
+        private class ManagedRenderTargetSystem : ModSystem
         {
             public static readonly int TimeBeforeAutoDispose = SecondsToTicks(60);
             public static List<ManagedRenderTarget> ManagedTargets = new();
