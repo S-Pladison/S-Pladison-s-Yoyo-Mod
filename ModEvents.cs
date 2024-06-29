@@ -16,7 +16,7 @@ namespace SPYoyoMod
         /// <summary>
         /// Вызывается при изменении разрешения экрана.
         /// </summary>
-        public static event Action<Vector2> OnResolutionChanged;
+        public static event Action<Point> OnResolutionChanged;
 
         void ILoadable.Load(Mod mod)
         {
@@ -50,6 +50,6 @@ namespace SPYoyoMod
             => ModEvents.OnPreDraw();
 
         private static void ModOnResolutionChanged(Vector2 screenSize)
-            => ModEvents.OnResolutionChanged(screenSize);
+            => ModEvents.OnResolutionChanged(screenSize.ToPoint());
     }
 }
