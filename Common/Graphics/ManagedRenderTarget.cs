@@ -14,7 +14,7 @@ namespace SPYoyoMod.Common.Graphics
     /// Класс-оболочка для <see cref="RenderTarget2D"/>, который безопасно обрабатывает изменение размера, выгрузку<br/>
     /// и автоматическое удаление, если он в данный момент не используется для экономии памяти графического процессора.
     /// </summary>
-    public class ManagedRenderTarget : IDisposable
+    public sealed class ManagedRenderTarget : IDisposable
     {
         /// <summary>
         /// Создает объект управляемой цели рендеринга. Удивительно...
@@ -41,8 +41,8 @@ namespace SPYoyoMod.Common.Graphics
         private RenderTargetInfo _info;
         private int _timeSinceLastAccessed;
 
-        public int Width => Target.Width;
-        public int Height => Target.Height;
+        public int Width => _info.Width;
+        public int Height => _info.Height;
         public Vector2 Size => new(Width, Height);
         public bool IsUninitialized => _target is null || _target.IsDisposed;
 
@@ -97,8 +97,11 @@ namespace SPYoyoMod.Common.Graphics
             if (IsDisposed)
                 return;
 
+            RenderTargetSystem.ActiveManagedTargets.Remove(this);
+
             IsDisposed = true;
             _target?.Dispose();
+
             GC.SuppressFinalize(this);
         }
 
@@ -118,6 +121,8 @@ namespace SPYoyoMod.Common.Graphics
                 _info.PreferredMultiSampleCount,
                 _info.Usage
             );
+
+            RenderTargetSystem.ActiveManagedTargets.Add(this);
         }
 
         public static implicit operator RenderTarget2D(ManagedRenderTarget target)
@@ -155,6 +160,7 @@ namespace SPYoyoMod.Common.Graphics
         {
             public static readonly int TimeBeforeAutoDispose = SecondsToTicks(60);
             public static List<ManagedRenderTarget> ManagedTargets = new();
+            public static HashSet<ManagedRenderTarget> ActiveManagedTargets = new();
 
             public override void OnModLoad()
             {
@@ -171,12 +177,13 @@ namespace SPYoyoMod.Common.Graphics
                         managedTarget?.Dispose();
 
                     ManagedTargets.Clear();
+                    ActiveManagedTargets.Clear();
                 });
             }
 
             private static void HandleTargets()
             {
-                foreach (var managedTarget in ManagedTargets)
+                foreach (var managedTarget in ActiveManagedTargets)
                 {
                     if (managedTarget.IsDisposed)
                         continue;
