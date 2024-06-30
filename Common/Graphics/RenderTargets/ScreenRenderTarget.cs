@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.Graphics
+namespace SPYoyoMod.Common.Graphics.RenderTargets
 {
     public enum ScreenRenderTargetScale
     {
@@ -13,9 +13,9 @@ namespace SPYoyoMod.Common.Graphics
     }
 
     /// <summary>
-    /// Класс-оболочка для <see cref="RenderTarget2D"/>, который безопасно обрабатывает изменение размера, выгрузку<br/>
+    /// Класс-оболочка для <see cref="RenderTarget2D"/>, который безопасно обрабатывает изменение размера, выгрузку
     /// и автоматическое удаление, если он в данный момент не используется для экономии памяти графического процессора.<br/>
-    /// В отличии от <see cref="ManagedRenderTarget"/>, размер устанавливается не вручную, а автоматически в зависимости<br/>
+    /// В отличии от <see cref="ManagedRenderTarget"/>, размер устанавливается не вручную, а автоматически в зависимости
     /// от разрешения экрана.
     /// </summary>
     public sealed class ScreenRenderTarget
@@ -63,9 +63,7 @@ namespace SPYoyoMod.Common.Graphics
         public static implicit operator RenderTarget2D(ScreenRenderTarget target)
             => target.Target;
 
-        /// <summary>
-        /// Система, обрабатывающая все созданные экземпляры <see cref="ScreenRenderTarget"/>.
-        /// </summary>
+        [Autoload(Side = ModSide.Client)]
         private class ScreenRenderTargetSystem : ModSystem
         {
             public static List<ScreenRenderTarget> ScreenTargets = new();

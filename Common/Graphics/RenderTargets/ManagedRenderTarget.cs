@@ -6,12 +6,12 @@ using Terraria;
 using Terraria.ModLoader;
 using static SPYoyoMod.Utils.ModUtils;
 
-namespace SPYoyoMod.Common.Graphics
+namespace SPYoyoMod.Common.Graphics.RenderTargets
 {
     // [ Based on code from the Calamity Mod GitHub Repository (https://github.com/CalamityTeam/CalamityModPublic/) ]
 
     /// <summary>
-    /// Класс-оболочка для <see cref="RenderTarget2D"/>, который безопасно обрабатывает изменение размера, выгрузку<br/>
+    /// Класс-оболочка для <see cref="RenderTarget2D"/>, который безопасно обрабатывает изменение размера, выгрузку
     /// и автоматическое удаление, если он в данный момент не используется для экономии памяти графического процессора.
     /// </summary>
     public sealed class ManagedRenderTarget : IDisposable
@@ -153,9 +153,7 @@ namespace SPYoyoMod.Common.Graphics
             }
         };
 
-        /// <summary>
-        /// Система, обрабатывающая все созданные экземпляры <see cref="ManagedRenderTarget"/>.
-        /// </summary>
+        [Autoload(Side = ModSide.Client)]
         private class ManagedRenderTargetSystem : ModSystem
         {
             public static readonly int TimeBeforeAutoDispose = SecondsToTicks(60);
