@@ -6,13 +6,13 @@ namespace SPYoyoMod.Utils
 {
     public struct SpriteBatchSnapshot
     {
-        private static readonly Func<SpriteBatch, SpriteSortMode> sortModeFieldAccessor;
-        private static readonly Func<SpriteBatch, BlendState> blendStateFieldAccessor;
-        private static readonly Func<SpriteBatch, SamplerState> samplerStateFieldAccessor;
-        private static readonly Func<SpriteBatch, DepthStencilState> depthStencilStateFieldAccessor;
-        private static readonly Func<SpriteBatch, RasterizerState> rasterizerStateFieldAccessor;
-        private static readonly Func<SpriteBatch, Effect> effectFieldAccessor;
-        private static readonly Func<SpriteBatch, Matrix> matrixFieldAccessor;
+        private static readonly Func<SpriteBatch, SpriteSortMode> _sortModeFieldAccessor;
+        private static readonly Func<SpriteBatch, BlendState> _blendStateFieldAccessor;
+        private static readonly Func<SpriteBatch, SamplerState> _samplerStateFieldAccessor;
+        private static readonly Func<SpriteBatch, DepthStencilState> _depthStencilStateFieldAccessor;
+        private static readonly Func<SpriteBatch, RasterizerState> _rasterizerStateFieldAccessor;
+        private static readonly Func<SpriteBatch, Effect> _effectFieldAccessor;
+        private static readonly Func<SpriteBatch, Matrix> _matrixFieldAccessor;
 
         public SpriteSortMode SortMode;
         public BlendState BlendState;
@@ -24,13 +24,13 @@ namespace SPYoyoMod.Utils
 
         static SpriteBatchSnapshot()
         {
-            sortModeFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, SpriteSortMode>("sortMode");
-            blendStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, BlendState>("blendState");
-            samplerStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, SamplerState>("samplerState");
-            depthStencilStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, DepthStencilState>("depthStencilState");
-            rasterizerStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, RasterizerState>("rasterizerState");
-            effectFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, Effect>("customEffect");
-            matrixFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, Matrix>("transformMatrix");
+            _sortModeFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, SpriteSortMode>("sortMode");
+            _blendStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, BlendState>("blendState");
+            _samplerStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, SamplerState>("samplerState");
+            _depthStencilStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, DepthStencilState>("depthStencilState");
+            _rasterizerStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, RasterizerState>("rasterizerState");
+            _effectFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, Effect>("customEffect");
+            _matrixFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, Matrix>("transformMatrix");
         }
 
         public SpriteBatchSnapshot(SpriteBatch spriteBatch)
@@ -38,13 +38,13 @@ namespace SPYoyoMod.Utils
             if (spriteBatch is null)
                 throw new ArgumentNullException(nameof(spriteBatch));
 
-            SortMode = sortModeFieldAccessor(spriteBatch);
-            BlendState = blendStateFieldAccessor(spriteBatch);
-            SamplerState = samplerStateFieldAccessor(spriteBatch);
-            DepthStencilState = depthStencilStateFieldAccessor(spriteBatch);
-            RasterizerState = rasterizerStateFieldAccessor(spriteBatch);
-            Effect = effectFieldAccessor(spriteBatch);
-            Matrix = matrixFieldAccessor(spriteBatch);
+            SortMode = _sortModeFieldAccessor(spriteBatch);
+            BlendState = _blendStateFieldAccessor(spriteBatch);
+            SamplerState = _samplerStateFieldAccessor(spriteBatch);
+            DepthStencilState = _depthStencilStateFieldAccessor(spriteBatch);
+            RasterizerState = _rasterizerStateFieldAccessor(spriteBatch);
+            Effect = _effectFieldAccessor(spriteBatch);
+            Matrix = _matrixFieldAccessor(spriteBatch);
         }
     }
 
