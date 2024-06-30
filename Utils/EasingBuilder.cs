@@ -6,17 +6,17 @@ namespace SPYoyoMod.Utils
 {
     public class EasingBuilder
     {
-        private EasingData[] easings;
-        private float[] shiftedDurations;
-        private float totalDuration;
-        private int addedEasingCount;
+        private EasingData[] _easings;
+        private float[] _shiftedDurations;
+        private float _totalDuration;
+        private int _addedEasingCount;
 
         public EasingBuilder(int? easingCount = null)
         {
             if (easingCount is null || easingCount.Value <= 0)
             {
-                easings = Array.Empty<EasingData>();
-                shiftedDurations = Array.Empty<float>();
+                _easings = Array.Empty<EasingData>();
+                _shiftedDurations = Array.Empty<float>();
                 return;
             }
 
@@ -42,51 +42,51 @@ namespace SPYoyoMod.Utils
             if (easing.Duration <= 0)
                 throw new ArgumentException($"{nameof(easing.Duration)} must be greater than 0");
 
-            if (addedEasingCount >= easings.Length)
-                ResizeArrays(addedEasingCount + 1);
+            if (_addedEasingCount >= _easings.Length)
+                ResizeArrays(_addedEasingCount + 1);
 
-            totalDuration += easing.Duration;
+            _totalDuration += easing.Duration;
 
-            shiftedDurations[addedEasingCount] = totalDuration;
-            easings[addedEasingCount] = easing;
+            _shiftedDurations[_addedEasingCount] = _totalDuration;
+            _easings[_addedEasingCount] = easing;
 
-            addedEasingCount++;
+            _addedEasingCount++;
 
             return this;
         }
 
         public float Evaluate(float t)
         {
-            if (easings.Length == 0)
+            if (_easings.Length == 0)
                 return 0f;
 
             if (t <= 0f)
-                return easings[0].StartY;
+                return _easings[0].StartY;
 
             if (t >= 1f)
-                return easings[addedEasingCount - 1].EndY;
+                return _easings[_addedEasingCount - 1].EndY;
 
-            var progress = t * totalDuration;
+            var progress = t * _totalDuration;
             var easingIndex = 0;
 
-            for (var i = 0; i < addedEasingCount; i++)
+            for (var i = 0; i < _addedEasingCount; i++)
             {
-                if (progress > shiftedDurations[i])
+                if (progress > _shiftedDurations[i])
                     continue;
 
                 easingIndex = i;
                 break;
             }
 
-            ref var easingData = ref easings[easingIndex];
+            ref var easingData = ref _easings[easingIndex];
 
-            return MathHelper.Lerp(easingData.StartY, easingData.EndY, (progress - shiftedDurations[easingIndex] + easingData.Duration) / easingData.Duration);
+            return MathHelper.Lerp(easingData.StartY, easingData.EndY, (progress - _shiftedDurations[easingIndex] + easingData.Duration) / easingData.Duration);
         }
 
         private void ResizeArrays(int size)
         {
-            Array.Resize(ref easings, size);
-            Array.Resize(ref shiftedDurations, size);
+            Array.Resize(ref _easings, size);
+            Array.Resize(ref _shiftedDurations, size);
         }
 
         public record struct EasingData(EasingFunctions.EasingDelegate Easing, float Duration, float StartY, float EndY)

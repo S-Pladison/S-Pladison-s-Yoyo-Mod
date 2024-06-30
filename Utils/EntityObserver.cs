@@ -18,19 +18,19 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Ведется ли наблюдение хотя бы за 1 сущностью.
         /// </summary>
-        public bool AnyEntity { get => entities.Count > 0; }
+        public bool AnyEntity { get => _entities.Count > 0; }
 
-        protected readonly List<EntityData> entities;
-        protected readonly T[] sourseArray;
-        protected readonly Predicate<T> entityShouldBeRemovedPredicate;
+        protected readonly List<EntityData> _entities;
+        protected readonly T[] _sourseArray;
+        protected readonly Predicate<T> _entityShouldBeRemovedPredicate;
 
         public EntityObserver(T[] sourse) : this(sourse, null) { }
 
         public EntityObserver(T[] sourse, Predicate<T> entityShouldBeRemovedPredicate)
         {
-            this.entities = new List<EntityData>();
-            this.sourseArray = sourse;
-            this.entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
+            _entities = new List<EntityData>();
+            _sourseArray = sourse;
+            _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
         }
 
         /// <summary>
@@ -38,7 +38,7 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public void Add(T entity)
         {
-            entities.Add(new EntityData(entity.whoAmI, GetEntityType(entity)));
+            _entities.Add(new EntityData(entity.whoAmI, GetEntityType(entity)));
         }
 
         /// <summary>
@@ -46,13 +46,13 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public void Update()
         {
-            for (var i = 0; i < entities.Count; i++)
+            for (var i = 0; i < _entities.Count; i++)
             {
-                ref var entity = ref sourseArray[entities[i].WhoAmI];
+                ref var entity = ref _sourseArray[_entities[i].WhoAmI];
 
-                if (!entity.active || GetEntityType(entity) != entities[i].Type || (entityShouldBeRemovedPredicate?.Invoke(entity) ?? false))
+                if (!entity.active || GetEntityType(entity) != _entities[i].Type || (_entityShouldBeRemovedPredicate?.Invoke(entity) ?? false))
                 {
-                    entities.RemoveAt(i);
+                    _entities.RemoveAt(i);
                     i--;
                 }
             }
@@ -63,11 +63,11 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public IList<T> GetEntityInstances()
         {
-            var result = new List<T>(entities.Count);
+            var result = new List<T>(_entities.Count);
 
-            foreach (var entityData in entities)
+            foreach (var entityData in _entities)
             {
-                result.Add(sourseArray[entityData.WhoAmI]);
+                result.Add(_sourseArray[entityData.WhoAmI]);
             }
 
             return result;
@@ -76,7 +76,7 @@ namespace SPYoyoMod.Utils
         // Очистить список наблюдаемых сущностей.
         public void Clear()
         {
-            entities.Clear();
+            _entities.Clear();
         }
 
         protected abstract int GetEntityType(T entity);
