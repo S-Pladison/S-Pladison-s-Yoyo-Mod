@@ -34,10 +34,13 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
         }
 
         public abstract Position GetDefaultPosition();
+
         public virtual bool GetDefaultVisibility()
             => true;
+        
         public sealed override void SetupContent()
             => SetStaticDefaults();
+        
         public override string ToString()
             => Name;
 
@@ -49,8 +52,11 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
             GameDrawLayerLoader.Add(this);
         }
 
-        private void AddChildBefore(GameDrawLayer child) => _childrenBefore.Add(child);
-        private void AddChildAfter(GameDrawLayer child) => _childrenAfter.Add(child);
+        private void AddChildBefore(GameDrawLayer child)
+        => _childrenBefore.Add(child);
+
+        private void AddChildAfter(GameDrawLayer child)
+        => _childrenAfter.Add(child);
 
         private void ResetVisibility()
         {
