@@ -39,7 +39,15 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
         private static void LoadHooks()
         {
             // - Зачем они нужны, если можно сделать то же самое, но с On_Main?
-            // Не хочу делать постоянные проверки/поиска нужного списка...
+            // Не хочу делать постоянные проверки/поиски нужного списка...
+            // Пример:
+            // void DrawCachedProjs(List<int> projs) {
+            //   if (projs == Main.instance.DrawCacheProjsBehindNPCs) {}
+            //   else (projs == Main.instance.DrawCacheProjsBehindNPCsAndTiles) {}
+            //   else (...) {}
+            //   ...
+            // }
+            // А текущим методом: просто вызовем наши функции без каких либо проверок
             // Такая проблема есть у таких методов, как DrawCachedNPCs и DrawCachedProjs (а может и еще есть, хз)
 
             IL_Main.DoDraw += (il) =>
@@ -59,6 +67,7 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
 
         private static void Impl_DrawCachedProjs_OverPlayers(ILCursor cursor)
         {
+            Main.instance.DrawCacheProjsBehindNPCsAndTiles
             // DrawCachedProjs(DrawCacheProjsOverPlayers);
 
             // IL_1762: ldarg.0
