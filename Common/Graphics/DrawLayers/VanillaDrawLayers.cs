@@ -67,7 +67,6 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
 
         private static void Impl_DrawCachedProjs_OverPlayers(ILCursor cursor)
         {
-            Main.instance.DrawCacheProjsBehindNPCsAndTiles
             // DrawCachedProjs(DrawCacheProjsOverPlayers);
 
             // IL_1762: ldarg.0
