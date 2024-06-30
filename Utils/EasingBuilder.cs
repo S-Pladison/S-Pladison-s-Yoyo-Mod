@@ -34,6 +34,10 @@ namespace SPYoyoMod.Utils
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public EasingBuilder Add(EasingFunctions.EasingDelegate easing, float duration, float endY)
+            => Add(new EasingData(easing, duration, _addedEasingCount > 0 ? _easings[_addedEasingCount - 1].EndY : 0, endY));
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public EasingBuilder Add(EasingFunctions.EasingDelegate easing, float duration, float startY, float endY)
             => Add(new EasingData(easing, duration, startY, endY));
 
