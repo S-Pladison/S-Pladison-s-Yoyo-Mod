@@ -8,6 +8,15 @@ namespace SPYoyoMod
 {
     public class ModEvents : ILoadable
     {
+        // Mod
+
+        /// <summary>
+        /// Позволяет загружать вещи после того, как мод подготовил весь свой контент.
+        /// </summary>
+        public static event Action OnPostSetupContent;
+
+        // Vanilla
+
         /// <summary>
         /// Вызывается перед началом отрисовки игры.
         /// </summary>
@@ -20,12 +29,24 @@ namespace SPYoyoMod
 
         void ILoadable.Load(Mod mod)
         {
+            LoadModEvents();
             LoadVanillaEvents();
         }
 
         void ILoadable.Unload()
         {
             UnloadVanillaEvents();
+            UnloadModEvents();
+        }
+
+        private static void LoadModEvents()
+        {
+            OnPostSetupContent += ModUtils.EmptyAction;
+        }
+
+        private static void UnloadModEvents()
+        {
+            OnPostSetupContent = null;
         }
 
         private static void LoadVanillaEvents()
@@ -51,5 +72,10 @@ namespace SPYoyoMod
 
         private static void ModOnResolutionChanged(Vector2 screenSize)
             => ModEvents.OnResolutionChanged(screenSize.ToPoint());
+
+        private sealed class EventSystem : ModSystem
+        {
+            public override void PostSetupContent() => ModEvents.OnPostSetupContent();
+        }
     }
 }
