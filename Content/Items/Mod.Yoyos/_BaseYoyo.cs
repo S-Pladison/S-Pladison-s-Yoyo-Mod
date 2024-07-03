@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
     /// <summary>
-    /// Базовый класс предмета йо-йо. Пример использования предоставлен в Items.Yoyos.<see cref="ExampleYoyoItem"/>.
+    /// Базовый класс предмета йо-йо. Пример использования предоставлен в Items.Mod.Yoyos.<see cref="ExampleYoyoItem"/>.
     /// </summary>
     public abstract class YoyoBaseItem : ModItem
     {
