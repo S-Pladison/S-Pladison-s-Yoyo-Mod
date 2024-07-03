@@ -6,3 +6,5 @@ Items: {
 		DisplayName: Bellowing Thunder Item
 	}
 }
+
+VanillaItems.CascadeItem.Tooltip: ""
