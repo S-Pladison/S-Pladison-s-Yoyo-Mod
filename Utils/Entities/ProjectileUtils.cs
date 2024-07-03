@@ -11,8 +11,22 @@ namespace SPYoyoMod.Utils
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsYoyo(this Projectile proj)
+            => proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
+
+        /// <summary>
+        /// Получить владельца (игрока) снаряда.
+        /// </summary>
+        public static Player? GetOwner(this Projectile proj)
         {
-            return proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
+            if (!Main.player.IndexInRange(proj.owner))
+                return null;
+            
+            var player = Main.player[proj.owner];
+
+            if (player == null || !player.active)
+                return null;
+
+            return player;
         }
     }
 }
