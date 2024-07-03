@@ -1,4 +1,8 @@
-﻿using SPYoyoMod.Utils;
+﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Common.Graphics;
+using SPYoyoMod.Common.Hooks;
+using SPYoyoMod.Utils;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -32,11 +36,25 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderProjectile : YoyoBaseProjectile
+    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile
     {
+        private YoyoStringRenderer _stringRenderer;
+
         public override string Texture => BellowingThunderAssets.ProjPath;
         public override float LifeTime => -1f;
         public override float MaxRange => 235f;
         public override float TopSpeed => 14f;
+
+        public void Initialize(Projectile _)
+        {
+            _stringRenderer = new YoyoStringRenderer(Projectile, new IDrawYoyoStringSegment.Gradient(
+                (Color.Transparent, true), (Color.Transparent, true), (Color.Cyan, true))
+            );
+        }
+
+        public override void PostDrawYoyoString(Vector2 mountedCenter)
+        {
+            _stringRenderer.Draw(mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
+        }
     }
 }
