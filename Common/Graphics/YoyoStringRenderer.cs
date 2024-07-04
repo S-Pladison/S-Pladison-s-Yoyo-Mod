@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Utils;
@@ -9,8 +10,9 @@ using Terraria.GameContent;
 
 namespace SPYoyoMod.Common.Graphics
 {
-    public readonly struct YoyoStringSegment(int index, Vector2 position, float rotation, float width)
+    public readonly struct YoyoStringSegment(Projectile proj, int index, Vector2 position, float rotation, float width)
     {
+        public readonly Projectile Proj = proj;
         public readonly int Index = index;
         public readonly Vector2 Position = position;
         public readonly float Rotation = rotation;
@@ -26,6 +28,30 @@ namespace SPYoyoMod.Common.Graphics
         {
             public static implicit operator ColorData((Color Value, bool Glow) tuple)
                 => new(tuple.Value, tuple.Glow);
+        }
+
+        public class Vanilla : IDrawYoyoStringSegment
+        {
+            public Texture2D Texture { get => TextureAssets.FishingLine.Value; }
+
+            public void Draw(int segmentCount, YoyoStringSegment segment)
+            {
+                var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
+                var origin = new Vector2(Texture.Width * 0.5f, 0f);
+                var color = _tryApplyingPlayerStringColorFunc(segment.Proj.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
+
+                color = Lighting.GetColor(segment.Position.ToTileCoordinates(), color);
+                color = new Color((byte)(color.R * 0.5f), (byte)(color.G * 0.5f), (byte)(color.B * 0.5f), (byte)(color.A * 0.5f));
+
+                Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+            }
+
+            private static readonly TryApplyingPlayerStringColorDelegate _tryApplyingPlayerStringColorFunc = typeof(Main)
+                ?.GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static)
+                ?.CreateDelegate<TryApplyingPlayerStringColorDelegate>()
+                ?? throw new InvalidOperationException($"Failed to init {nameof(TryApplyingPlayerStringColorDelegate)}");
+
+            private delegate Color TryApplyingPlayerStringColorDelegate(int playerStringColor, Color defaultColor);
         }
 
         public class Default : IDrawYoyoStringSegment
@@ -232,7 +258,7 @@ namespace SPYoyoMod.Common.Graphics
                     var position = new Vector2(segmentStartPos.X, (float)(segmentStartPos.Y + _segmentRenderer.Texture.Height * 0.5f + (vanillaLineHeightValue - _segmentRenderer.Texture.Height) * 0.5f));
                     var rotation = (float)Math.Atan2((double)y, (double)x) - MathHelper.PiOver2;
 
-                    _segments.Add(new YoyoStringSegment(_segments.Count, position, rotation, width));
+                    _segments.Add(new YoyoStringSegment(Projectile, _segments.Count, position, rotation, width));
                 }
             }
         }

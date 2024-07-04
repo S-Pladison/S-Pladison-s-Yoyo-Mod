@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
@@ -28,6 +29,9 @@ namespace SPYoyoMod.Common.Hooks
         public static void DrawYoyoString(On_Main.orig_DrawProj_DrawYoyoString orig, Main main, Projectile proj, Vector2 mountedCenter)
         {
             orig(main, proj, mountedCenter);
+
+            if (!proj.IsYoyo())
+                return;
 
             (proj.ModProjectile as IHook)?.PostDrawYoyoString(proj, mountedCenter);
 
