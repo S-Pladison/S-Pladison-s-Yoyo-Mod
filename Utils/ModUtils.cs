@@ -10,6 +10,10 @@ namespace SPYoyoMod.Utils
         public static int SecondsToTicks(int seconds)
             => seconds * 60;
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static int SecondsToTicks(float seconds)
+            => (int)(seconds * 60);
+
         public static Func<T, V> GetFieldAccessor<T, V>(string fieldName)
         {
             var param = Expression.Parameter(typeof(T), "arg");
