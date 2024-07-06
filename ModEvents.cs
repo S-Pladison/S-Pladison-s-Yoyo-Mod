@@ -15,6 +15,11 @@ namespace SPYoyoMod
         /// </summary>
         public static event Action OnPostSetupContent;
 
+        /// <summary>
+        /// Вызывается после обновления позиции камеры. Полезен для отрисовки на целях рендеринга.
+        /// </summary>
+        public static event Action OnPostUpdateCameraPosition;
+
         // Vanilla
 
         /// <summary>
@@ -42,10 +47,18 @@ namespace SPYoyoMod
         private static void LoadModEvents()
         {
             OnPostSetupContent += ModUtils.EmptyAction;
+            OnPostUpdateCameraPosition += ModUtils.EmptyAction;
+
+            On_Main.DoDraw_UpdateCameraPosition += (orig) =>
+            {
+                orig();
+                OnPostUpdateCameraPosition();
+            };
         }
 
         private static void UnloadModEvents()
         {
+            OnPostUpdateCameraPosition = null;
             OnPostSetupContent = null;
         }
 
