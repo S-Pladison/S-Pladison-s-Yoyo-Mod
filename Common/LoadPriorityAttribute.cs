@@ -11,7 +11,7 @@ namespace SPYoyoMod.Common
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
     public sealed class LoadPriorityAttribute(sbyte value) : Attribute
     {
-        private static readonly LoadPriorityAttribute Default = new(0);
+        private static readonly LoadPriorityAttribute _default = new(0);
 
         /// <summary>
         /// Значение приоритета. Чем больше значение, тем раньше загрузится тип.
@@ -22,7 +22,7 @@ namespace SPYoyoMod.Common
         {
             object[] all = type.GetCustomAttributes(typeof(LoadPriorityAttribute), true);
             var mostDerived = all.FirstOrDefault() as LoadPriorityAttribute;
-            return mostDerived ?? Default;
+            return mostDerived ?? _default;
         }
     }
 }
