@@ -30,13 +30,18 @@ namespace SPYoyoMod.Common
 
                 var mountedCenterIndex = -1;
 
-                if (!c.TryGotoNext(MoveType.After,
-                        i => i.MatchLdsfld(typeof(Main).GetField("player")),
-                        i => i.MatchLdarg(1),
-                        i => i.MatchLdfld<Projectile>("owner"),
-                        i => i.MatchLdelemRef(),
-                        i => i.MatchCallvirt<Player>("get_MountedCenter"),
-                        i => i.MatchStloc(out mountedCenterIndex))) return;
+                if (!c.TryGotoNext(
+                    MoveType.After,
+                    i => i.MatchLdsfld(typeof(Main).GetField("player")),
+                    i => i.MatchLdarg(1),
+                    i => i.MatchLdfld<Projectile>("owner"),
+                    i => i.MatchLdelemRef(),
+                    i => i.MatchCallvirt<Player>("get_MountedCenter"),
+                    i => i.MatchStloc(out mountedCenterIndex))) {
+
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(YoyoUseStyle)}..{nameof(IL_Main.DrawProj_Inner)}\" failed...");
+                    return;
+                }
 
                 c.Emit(OpCodes.Ldarg_1);
                 c.Emit(OpCodes.Ldloca, mountedCenterIndex);
