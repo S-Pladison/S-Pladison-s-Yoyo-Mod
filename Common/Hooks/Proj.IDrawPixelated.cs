@@ -79,20 +79,24 @@ namespace SPYoyoMod.Common.Hooks
                 )
             );
 
-            ModEvents.OnPostUpdateCameraPosition += PrepareLayers;
+            ModEvents.OnPostUpdateCameraPosition += RenderLayers;
         }
 
         public void Unload()
         {   
-            ModEvents.OnPostUpdateCameraPosition -= PrepareLayers;
+            ModEvents.OnPostUpdateCameraPosition -= RenderLayers;
             
             PostDrawPlayers_AfterProjectiles = null;
             PostDrawProjectiles = null;
             PreDrawProjectiles = null;
         }
 
-        private static void PrepareLayers()
+        private static void RenderLayers()
         {
+            PreDrawProjectiles.ResetRenderFlag();
+            PostDrawProjectiles.ResetRenderFlag();
+            PostDrawPlayers_AfterProjectiles.ResetRenderFlag();
+
             var playerHeldProjs = new List<int>(Main.player.Length / 4);
             var notHiddenProjs = new List<int>(Main.projectile.Length / 2);
 
@@ -108,9 +112,9 @@ namespace SPYoyoMod.Common.Hooks
                     notHiddenProjs.Add(proj.whoAmI);
             }
 
-            PreDrawProjectiles.SetProjectiles(notHiddenProjs);
-            PostDrawProjectiles.SetProjectiles(notHiddenProjs.Except(playerHeldProjs));
-            PostDrawPlayers_AfterProjectiles.SetProjectiles(playerHeldProjs);
+            PreDrawProjectiles.Render(notHiddenProjs);
+            PostDrawProjectiles.Render(notHiddenProjs.Except(playerHeldProjs));
+            PostDrawPlayers_AfterProjectiles.Render(playerHeldProjs);
         }
 
         private static void PreDrawPixelatedProjectile(IEnumerable<int> projs)
@@ -150,7 +154,6 @@ namespace SPYoyoMod.Common.Hooks
             private readonly string _layerName;
             private readonly Position _position;
             private readonly Action<IEnumerable<int>> _drawAction;
-            private IEnumerable<int> _projectiles;
             private bool _wasRendered;
 
             public override string Name => $"{base.Name}_{_layerName}";
@@ -161,14 +164,7 @@ namespace SPYoyoMod.Common.Hooks
                 _layerName = name;
                 _position = position;
                 _drawAction = drawAction;
-                _projectiles = null;
             }
-
-            public override void Load()
-                => ModEvents.OnPostUpdateCameraPosition += Render;
-
-            public override void Unload()
-                => ModEvents.OnPostUpdateCameraPosition -= Render;
 
             public override Position GetDefaultPosition()
                 => _position;
@@ -176,14 +172,12 @@ namespace SPYoyoMod.Common.Hooks
             public override bool GetDefaultVisibility()
                 => true;
 
-            public void SetProjectiles(IEnumerable<int> projectiles)
-                => _projectiles = projectiles;
+            public void ResetRenderFlag()
+                => _wasRendered = false;
 
-            public void Render()
+            public void Render(IEnumerable<int> projectiles)
             {
-                _wasRendered = false;
-
-                if (_projectiles == null || !_projectiles.Any())
+                if (!projectiles.Any())
                     return;
 
                 Main.graphics.GraphicsDevice.SetRenderTarget(_renderTarget);
@@ -201,13 +195,12 @@ namespace SPYoyoMod.Common.Hooks
                     };
 
                     Main.spriteBatch.Begin(spriteBatchSpanshot);
-                    _drawAction(_projectiles);
+                    _drawAction(projectiles);
                     Main.spriteBatch.End();
 
                 }
                 Main.graphics.GraphicsDevice.SetRenderTarget(null);
 
-                _projectiles = null;            
                 _wasRendered = true;
             }
 
