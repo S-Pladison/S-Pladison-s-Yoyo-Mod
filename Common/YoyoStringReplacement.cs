@@ -9,6 +9,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
+    [Autoload(Side = ModSide.Client)]
     public sealed class YoyoStringReplacement : GlobalProjectile, IInitializableProjectile
     {
         private YoyoStringRenderer _stringRenderer;
