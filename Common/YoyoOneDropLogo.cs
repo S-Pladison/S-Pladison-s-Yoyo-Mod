@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
+    [Autoload(Side = ModSide.Client)]
     public sealed class YoyoOneDropLogoGlobalItem : GlobalItem
     {
         public override bool AppliesToEntity(Item item, bool lateInstantiation)
