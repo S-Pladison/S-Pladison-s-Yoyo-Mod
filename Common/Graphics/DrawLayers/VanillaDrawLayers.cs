@@ -16,7 +16,27 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
     {
         /// <summary>
         /// Расположение в коде:
+        /// <br/>- DrawSuperSpecialProjectiles(DrawCacheFirstFractals)
+        /// <br/>- DrawCachedProjs(DrawCacheProjsBehindProjectiles)
+        /// <br/>=| DrawProjectiles()
+        /// <br/>- ParticleSystem_World_BehindPlayers.Draw(spriteBatch)
+        /// <br/>- DrawPlayers_AfterProjectiles()
+        /// </summary>
+        public static GameDrawLayer DrawProjectiles { get; private set; }
+
+        /// <summary>
+        /// Расположение в коде:
         /// <br/>- DrawProjectiles()
+        /// <br/>- ParticleSystem_World_BehindPlayers.Draw(spriteBatch)
+        /// <br/>=| DrawPlayers_AfterProjectiles()
+        /// <br/>- DrawCachedProjs(DrawCacheProjsOverPlayers)
+        /// <br/>- ParticleSystem_World_OverPlayers.Draw(spriteBatch)
+        /// </summary>
+        public static GameDrawLayer DrawPlayers_AfterProjectiles { get; private set; }
+
+        /// <summary>
+        /// Расположение в коде:
+        /// <br/>- ParticleSystem_World_BehindPlayers.Draw(spriteBatch)
         /// <br/>- DrawPlayers_AfterProjectiles()
         /// <br/>=| DrawCachedProjs(DrawCacheProjsOverPlayers)
         /// <br/>- ParticleSystem_World_OverPlayers.Draw(spriteBatch)
@@ -26,6 +46,8 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
 
         void ILoadable.Load(Mod mod)
         {
+            mod.AddContent(DrawProjectiles = new VanillaDrawLayer(nameof(DrawProjectiles)));
+            mod.AddContent(DrawPlayers_AfterProjectiles = new VanillaDrawLayer(nameof(DrawPlayers_AfterProjectiles)));
             mod.AddContent(DrawCachedProjs_OverPlayers = new VanillaDrawLayer(nameof(DrawCachedProjs_OverPlayers)));
 
             LoadHooks();
@@ -34,11 +56,26 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
         void ILoadable.Unload()
         {
             DrawCachedProjs_OverPlayers = null;
+            DrawProjectiles = null;
         }
 
         private static void LoadHooks()
         {
-            // - Зачем они нужны, если можно сделать то же самое, но с On_Main?
+            On_Main.DrawProjectiles += (orig, main) =>
+            {
+                DrawChildBefore(DrawProjectiles);
+                orig(main);
+                DrawChildAfter(DrawProjectiles);
+            };
+
+            On_Main.DrawPlayers_AfterProjectiles += (orig, main) =>
+            {
+                DrawChildBefore(DrawPlayers_AfterProjectiles);
+                orig(main);
+                DrawChildAfter(DrawPlayers_AfterProjectiles);
+            };
+
+            // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
             // Не хочу делать постоянные проверки/поиски нужного списка...
             // Пример:
             // void DrawCachedProjs(List<int> projs) {
