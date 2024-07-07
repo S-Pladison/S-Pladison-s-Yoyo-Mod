@@ -25,7 +25,7 @@ namespace SPYoyoMod.Common.Hooks
         void Initialize(Projectile proj);
     }
 
-    [LoadPriority(sbyte.MaxValue)]
+    [LoadPriority(sbyte.MinValue)]
     internal sealed class InitializableProjectileImplementation : GlobalProjectile
     {
         private bool _initialized;
@@ -34,13 +34,9 @@ namespace SPYoyoMod.Common.Hooks
 
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
         {
-            if (!lateInstantiation)
-                return false;
-
-            if (proj.ModProjectile is IHook)
-                return true;
-
-            return IHook._hook.Enumerate().Length > 0;
+            // Ну, я не придумал способа ограничить данный Global лишь для снарядов с интерфейсом, что выше...
+            // Да, для ModProjectile это не проблеме, но как это сделать с остальными GlobalProjectile?..
+            return true;
         }
 
         public override void Load()
