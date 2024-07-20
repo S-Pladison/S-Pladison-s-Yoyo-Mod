@@ -1,5 +1,6 @@
 using System.IO;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Common.Graphics;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
@@ -13,7 +14,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
     public sealed class CascadeAssets
     {
-        public const string InvisiblePath =  $"{nameof(SPYoyoMod)}/Assets/Invisible";
+        public const string InvisiblePath = $"{nameof(SPYoyoMod)}/Assets/Invisible";
+        public const string StringPath = $"{nameof(SPYoyoMod)}/Assets/FishingLine_WithShadow";
 
         public static readonly SoundStyle StartChargingSound = new($"{_path}CascadeSound_StartCharging");
 
@@ -46,6 +48,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private StateMachine<AIStates> _aiStateMachine;
         private int _aiTimer;
+        private YoyoStringRenderer _stringRenderer;
 
         public override int ProjType => ProjectileID.Cascade;
         public override bool InstancePerEntity => true;
@@ -53,6 +56,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public void Initialize(Projectile proj)
         {
             InitAIStates(proj);
+
+            if (Main.dedServ)
+                return;
+
+            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegment.Gradient(
+                ModContent.Request<Texture2D>(CascadeAssets.StringPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value,
+                (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
+            ));
         }
 
         private void InitAIStates(Projectile proj)
@@ -72,7 +83,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             // Увеличиваем таймер для всех состояний
             _aiStateMachine.OnPreProcess += () => { _aiTimer++; };
 
-            // Сбрасываем таймер и синхранизируем снаряд с другими клиентами
+            // Сбрасываем таймер и синхронизируем снаряд с другими клиентами
             _aiStateMachine.OnStateChanged += () =>
             {
                 _aiTimer = 0;
@@ -85,6 +96,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override void AI(Projectile proj)
         {
             _aiStateMachine.Process();
+
+            Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.25f);
         }
 
         private void WaitingToStartCharge(StateMachine<AIStates> aiStateMachine)
@@ -129,6 +142,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 _aiStateMachine.SetState(state);
             
             _aiTimer = binaryReader.ReadUInt16();
+        }
+
+        public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (_aiStateMachine.CurrentState != AIStates.NonActive)
+                return;
+
+            _aiTimer += 5;
+        }
+
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        {
+            _stringRenderer.Draw(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
         }
     }
 
