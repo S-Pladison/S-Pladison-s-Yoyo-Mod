@@ -3,14 +3,14 @@ using Microsoft.Xna.Framework.Graphics;
 
 namespace SPYoyoMod.Common.Graphics
 {
-    public class PrimitiveRenderer(GraphicsDevice device, int maxVertices, int maxIndices) : IDisposable
-    {
-        private readonly DynamicVertexBuffer _vertexBuffer = new(device, typeof(Vertex2DPositionColorTexture), maxVertices, BufferUsage.WriteOnly);
-        private readonly DynamicIndexBuffer _indexBuffer = new(device, IndexElementSize.SixteenBits, maxIndices, BufferUsage.WriteOnly);
+	public class PrimitiveRenderer(GraphicsDevice device, int maxVertices, int maxIndices) : IDisposable
+	{
+		private readonly DynamicVertexBuffer _vertexBuffer = new(device, typeof(Vertex2DPositionColorTexture), maxVertices, BufferUsage.WriteOnly);
+		private readonly DynamicIndexBuffer _indexBuffer = new(device, IndexElementSize.SixteenBits, maxIndices, BufferUsage.WriteOnly);
 
-        public bool IsDisposed { get; private set; }
+		public bool IsDisposed { get; private set; }
 
-        public void SetVertices(Vertex2DPositionColorTexture[] vertices)
+		public void SetVertices(Vertex2DPositionColorTexture[] vertices)
 		{
 			_vertexBuffer?.SetData(0, vertices, 0, vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
 		}
@@ -20,7 +20,7 @@ namespace SPYoyoMod.Common.Graphics
 			_indexBuffer?.SetData(0, indices, 0, indices.Length, SetDataOptions.Discard);
 		}
 
-        public void Draw(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
+		public void Draw(PrimitiveType primitiveType, int baseVertex, int minVertexIndex, int numVertices, int startIndex, int primitiveCount)
 		{
 			if (IsDisposed || _vertexBuffer is null || _indexBuffer is null)
 				return;
@@ -31,12 +31,12 @@ namespace SPYoyoMod.Common.Graphics
 			device.DrawIndexedPrimitives(primitiveType, baseVertex, minVertexIndex, numVertices, startIndex, primitiveCount);
 		}
 
-        public void Dispose()
+		public void Dispose()
 		{
 			IsDisposed = true;
 
 			_vertexBuffer?.Dispose();
 			_indexBuffer?.Dispose();
 		}
-    }
+	}
 }
