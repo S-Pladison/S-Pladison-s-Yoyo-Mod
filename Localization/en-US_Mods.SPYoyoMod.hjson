@@ -1,4 +1,7 @@
-Projectiles.BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+Projectiles: {
+	BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+	CascadeExplosionProjectile.DisplayName: Cascade Explosion Projectile
+}
 
 Items: {
 	BellowingThunderItem: {

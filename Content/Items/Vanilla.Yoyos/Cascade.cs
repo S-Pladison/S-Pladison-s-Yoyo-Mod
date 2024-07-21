@@ -1,6 +1,8 @@
+using System;
 using System.IO;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
 using SPYoyoMod.Common.Graphics;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
@@ -12,14 +14,29 @@ using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    public sealed class CascadeAssets
+    public sealed class CascadeAssets : ILoadable
     {
+        // [ Текстуры ]
         public const string InvisiblePath = $"{nameof(SPYoyoMod)}/Assets/Invisible";
         public const string StringPath = $"{nameof(SPYoyoMod)}/Assets/FishingLine_WithShadow";
+        public static Asset<Texture2D> ExplosionRingTexture { get; private set; } = ModContent.Request<Texture2D>($"{_path}CascadeExplosion");
 
+        // [ Эффекты ]
+        public static Asset<Effect> ExplosionRingEffect { get; private set; } = ModContent.Request<Effect>($"{_path}CascadeExplosionShader");
+
+        // [ Звуки ]
         public static readonly SoundStyle StartChargingSound = new($"{_path}CascadeSound_StartCharging");
 
+        // [ Общее ]
         private const string _path = $"{nameof(SPYoyoMod)}/Assets/Items/Vanilla.Yoyos/Cascade/";
+
+        void ILoadable.Unload()
+        {
+            ExplosionRingTexture = null;
+            ExplosionRingEffect = null;
+        }
+
+        void ILoadable.Load(Terraria.ModLoader.Mod mod) {}
     }
 
     public sealed class CascadeItem : VanillaYoyoBaseItem
@@ -158,7 +175,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile
+    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
     {
         public static readonly int ExplosionRadius = TileUtils.TileSizeInPixels * 6;
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(0.33f);
@@ -166,6 +183,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private RingRenderer _ringRenderer;
 
         public override string Texture => CascadeAssets.InvisiblePath;
+        public float TimeLeftProgress => 1f - Projectile.timeLeft / (float)InitTimeLeft;
 
         public override void SetDefaults()
         {
@@ -188,12 +206,61 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            //_ringRenderer = new RingRenderer();
+            _ringRenderer = new RingRenderer();
         }
 
         public override void OnKill(int timeLeft)
         {
             _ringRenderer?.Dispose();
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            var projCenter = projHitbox.Center.ToVector2();
+            var vectorToTarget = Vector2.Normalize(targetHitbox.Center.ToVector2() - projCenter);
+            var radius = ExplosionRadius * EasingFunctions.OutExpo(TimeLeftProgress);
+
+            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projCenter, projCenter + vectorToTarget * radius);
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.HitDirectionOverride = MathF.Sign((target.Center - Projectile.Center).X);
+            modifiers.SourceDamage += 2f;
+            modifiers.Knockback += 2f;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            target.AddBuff(BuffID.OnFire, Main.rand.Next(ModUtils.SecondsToTicks(1f), ModUtils.SecondsToTicks(4f)));
+
+            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
+        public void PostDrawPixelated(Projectile proj)
+        {
+            var thickness = MathHelper.Clamp(1f - TimeLeftProgress, 0f, 1f) * TileUtils.TileSizeInPixels * 5f;
+            var radius = ExplosionRadius * EasingFunctions.OutExpo(TimeLeftProgress) - thickness * TimeLeftProgress * 0.5f;
+
+            _ringRenderer?
+                .SetThickness(thickness)
+                .SetPointCount(20) // Можно сделать ее динамической в зависимости от того же радиуса
+                .SetRadius(radius)
+                .SetPosition(Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition);
+
+            CascadeAssets.ExplosionRingEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(CascadeAssets.ExplosionRingTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
+                    parameters["UvRepeat"].SetValue(3f);
+                    parameters["Color0"].SetValue(new Color(255, 180, 100).ToVector4());
+                    parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+                })
+                .Apply("CascadeExplosionRing");
+
+            _ringRenderer?.Draw();
         }
     }
 }
