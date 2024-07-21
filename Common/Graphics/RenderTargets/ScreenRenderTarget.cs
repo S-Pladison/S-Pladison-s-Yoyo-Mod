@@ -64,9 +64,10 @@ namespace SPYoyoMod.Common.Graphics.RenderTargets
             => target.Target;
 
         [Autoload(Side = ModSide.Client)]
+        [LoadPriority(sbyte.MaxValue)]
         private class ScreenRenderTargetSystem : ModSystem
         {
-            public static List<ScreenRenderTarget> ScreenTargets = new();
+            public static List<ScreenRenderTarget> ScreenTargets = [];
 
             public override void OnModLoad()
             {
@@ -84,6 +85,12 @@ namespace SPYoyoMod.Common.Graphics.RenderTargets
 
                     ScreenTargets.Clear();
                 });
+            }
+
+            public override void PostSetupContent()
+            {
+                // Да, костыльно немного... но на всякий случай... пусть будет
+                ResizeTargets(Main.ScreenSize);
             }
 
             private static void ResizeTargets(Point screenSize)
