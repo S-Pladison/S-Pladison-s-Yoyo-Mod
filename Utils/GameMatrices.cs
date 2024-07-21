@@ -24,11 +24,11 @@ namespace SPYoyoMod.Utils
 
                 Effect = Matrix.Identity;
 
-		        if (spriteEffect.HasFlag(SpriteEffects.FlipHorizontally))
-			        Effect *= Matrix.CreateScale(-1f, 1f, 1f) * Matrix.CreateTranslation(viewport.Width, 0f, 0f);
+                if (spriteEffect.HasFlag(SpriteEffects.FlipHorizontally))
+                    Effect *= Matrix.CreateScale(-1f, 1f, 1f) * Matrix.CreateTranslation(viewport.Width, 0f, 0f);
 
-		        if (spriteEffect.HasFlag(SpriteEffects.FlipVertically))
-			        Effect *= Matrix.CreateScale(1f, -1f, 1f) * Matrix.CreateTranslation(0f, viewport.Height, 0f);
+                if (spriteEffect.HasFlag(SpriteEffects.FlipVertically))
+                    Effect *= Matrix.CreateScale(1f, -1f, 1f) * Matrix.CreateTranslation(0f, viewport.Height, 0f);
 
                 Projection = Matrix.CreateOrthographicOffCenter(0, viewport.Width, viewport.Height, 0f, -1f, 1f);
             }
