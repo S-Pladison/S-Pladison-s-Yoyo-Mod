@@ -159,74 +159,11 @@ namespace SPYoyoMod.Common.Graphics
                 _renderer.SetIndices(_indices);
             }
 
-            CalculateVertexPositionsAndUVs();
+            CalculateVertexPositions(out Vector2[] points);
+            CalculateFactorsFromStartToEnd(points, out float[] factorsFromStartToEnd);
+            CalculateVertexUVs(factorsFromStartToEnd);
 
             _renderer.SetVertices(_vertices);
-        }
-
-        private void CalculateVertexPositionsAndUVs()
-        {
-            var vertexIndex = 0;
-            var step = MathHelper.TwoPi / PointCount;
-            var points = new Vector2[PointCount + 1];
-
-            for (var i = 0; i <= PointCount; i++)
-            {
-                var angle = step * i;
-                var direction = Vector2.UnitX.RotatedBy(angle);
-                var pointPosition = Position + direction * Radius;
-                var offset = direction * _halfThickness;
-
-                points[i] = pointPosition;
-
-                AddVertexPosition(ref vertexIndex, pointPosition - offset);
-                AddVertexPosition(ref vertexIndex, pointPosition + offset);
-            }
-
-            CalculateFactorsFromStartToEnd(points, out var factorsFromStartToEnd);
-
-            vertexIndex = 0;
-
-            for (var i = 0; i < factorsFromStartToEnd.Length; i++)
-            {
-                AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 0));
-                AddVertexUV(ref vertexIndex, new Vector2(factorsFromStartToEnd[i], 1));
-            }
-        }
-
-        private void CalculateFactorsFromStartToEnd(Vector2[] points, out float[] factorsFromStartToEnd)
-        {
-            var accumulativeLength = 0f;
-            var lengths = new float[PointCount];
-            var totalLength = 0f;
-
-            factorsFromStartToEnd = new float[PointCount + 1];
-
-            for (var i = 0; i < PointCount; i++)
-            {
-                var j = (i + 1) % PointCount;
-
-                lengths[i] = Vector2.DistanceSquared(points[i], points[j]);
-                totalLength += lengths[i];
-            }
-
-            for (var i = 0; i < PointCount; i++)
-            {
-                accumulativeLength += lengths[i];
-                factorsFromStartToEnd[i + 1] = accumulativeLength / totalLength;
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddVertexPosition(ref int vertexIndex, Vector2 position)
-        {
-            _vertices[vertexIndex++].Position = position;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private void AddVertexUV(ref int vertexIndex, Vector2 uv)
-        {
-            _vertices[vertexIndex++].TextureCoordinate = uv;
         }
 
         private void CalculateVertexIndices(int start, int end)
@@ -260,6 +197,60 @@ namespace SPYoyoMod.Common.Graphics
 
                 _vertices[index].Color = Color.White;
                 _vertices[index + 1].Color = Color.White;
+            }
+        }
+
+        private void CalculateVertexPositions(out Vector2[] points)
+        {
+            var vertexIndex = 0;
+            var step = MathHelper.TwoPi / PointCount;
+            points = new Vector2[PointCount + 1];
+
+            for (var i = 0; i <= PointCount; i++)
+            {
+                var angle = step * i;
+                var direction = Vector2.UnitX.RotatedBy(angle);
+                var pointPosition = Position + direction * Radius;
+                var offset = direction * _halfThickness;
+
+                points[i] = pointPosition;
+
+                _vertices[vertexIndex++].Position = pointPosition - offset;
+                _vertices[vertexIndex++].Position = pointPosition + offset;
+            }
+        }
+
+        private void CalculateVertexUVs(float[] factorsFromStartToEnd)
+        {
+            var vertexIndex = 0;
+
+            for (var i = 0; i < factorsFromStartToEnd.Length; i++)
+            {
+                _vertices[vertexIndex++].TextureCoordinate = new Vector2(factorsFromStartToEnd[i], 0);
+                _vertices[vertexIndex++].TextureCoordinate = new Vector2(factorsFromStartToEnd[i], 1);
+            }
+        }
+
+        private void CalculateFactorsFromStartToEnd(Vector2[] points, out float[] factorsFromStartToEnd)
+        {
+            var accumulativeLength = 0f;
+            var lengths = new float[PointCount];
+            var totalLength = 0f;
+
+            factorsFromStartToEnd = new float[PointCount + 1];
+
+            for (var i = 0; i < PointCount; i++)
+            {
+                var j = (i + 1) % PointCount;
+
+                lengths[i] = Vector2.DistanceSquared(points[i], points[j]);
+                totalLength += lengths[i];
+            }
+
+            for (var i = 0; i < PointCount; i++)
+            {
+                accumulativeLength += lengths[i];
+                factorsFromStartToEnd[i + 1] = accumulativeLength / totalLength;
             }
         }
     }
