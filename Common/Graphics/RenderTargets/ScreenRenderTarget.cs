@@ -87,12 +87,6 @@ namespace SPYoyoMod.Common.Graphics.RenderTargets
                 });
             }
 
-            public override void PostSetupContent()
-            {
-                // Да, костыльно немного... но на всякий случай... пусть будет
-                ResizeTargets(Main.ScreenSize);
-            }
-
             private static void ResizeTargets(Point screenSize)
             {
                 foreach (var screenTarget in ScreenTargets)

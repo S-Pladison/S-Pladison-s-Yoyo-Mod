@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Common;
 using SPYoyoMod.Utils;
 using System;
 using Terraria;
@@ -20,17 +21,17 @@ namespace SPYoyoMod
         /// </summary>
         public static event Action OnPostUpdateCameraPosition;
 
+        /// <summary>
+        /// Вызывается при изменении разрешения экрана.
+        /// </summary>
+        public static event Action<Point> OnResolutionChanged;
+
         // Vanilla
 
         /// <summary>
         /// Вызывается перед началом отрисовки игры.
         /// </summary>
         public static event Action OnPreDraw;
-
-        /// <summary>
-        /// Вызывается при изменении разрешения экрана.
-        /// </summary>
-        public static event Action<Point> OnResolutionChanged;
 
         void ILoadable.Load(Mod mod)
         {
@@ -48,6 +49,7 @@ namespace SPYoyoMod
         {
             OnPostSetupContent += ModUtils.EmptyAction;
             OnPostUpdateCameraPosition += ModUtils.EmptyAction;
+            OnResolutionChanged += ModUtils.EmptyAction;
 
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
             {
@@ -58,6 +60,7 @@ namespace SPYoyoMod
 
         private static void UnloadModEvents()
         {
+            OnResolutionChanged = null;
             OnPostUpdateCameraPosition = null;
             OnPostSetupContent = null;
         }
@@ -66,16 +69,10 @@ namespace SPYoyoMod
         {
             OnPreDraw += ModUtils.EmptyAction;
             Main.OnPreDraw += ModOnPreDraw;
-
-            OnResolutionChanged += ModUtils.EmptyAction;
-            Main.OnResolutionChanged += ModOnResolutionChanged;
         }
 
         private static void UnloadVanillaEvents()
         {
-            Main.OnResolutionChanged -= ModOnResolutionChanged;
-            OnResolutionChanged = null;
-
             Main.OnPreDraw -= ModOnPreDraw;
             OnPreDraw = null;
         }
@@ -83,12 +80,39 @@ namespace SPYoyoMod
         private static void ModOnPreDraw(GameTime _)
             => ModEvents.OnPreDraw();
 
-        private static void ModOnResolutionChanged(Vector2 screenSize)
-            => ModEvents.OnResolutionChanged(screenSize.ToPoint());
-
+        [LoadPriority(sbyte.MinValue)]
         private sealed class EventSystem : ModSystem
         {
-            public override void PostSetupContent() => ModEvents.OnPostSetupContent();
+            private Point _savedScreenSize;
+
+            public override void Load()
+            {
+                // - Почему не используется только ванильный Main.OnResolutionChanged?
+                // При загрузке мода с разрешением происходят какиет проблемы,
+                // а вызова OnResolutionChanged не происходит.
+                // Данный способ хоть и добавляет дополнительную постоянную проверку,
+                // но гарантирует, что размер экрана действительно был изменен.
+                ModEvents.OnPreDraw += () => ResolutionChangedHandler(Main.ScreenSize.ToVector2());
+
+                Main.OnResolutionChanged += ResolutionChangedHandler;
+            }
+
+            public override void PostSetupContent()
+                => ModEvents.OnPostSetupContent();
+
+            public override void Unload()
+            {
+                Main.OnResolutionChanged -= ResolutionChangedHandler;
+            }
+
+            private void ResolutionChangedHandler(Vector2 screenSize)
+            {
+                if (_savedScreenSize != Main.ScreenSize)
+                {
+                    _savedScreenSize = Main.ScreenSize;
+                    ModEvents.OnResolutionChanged(Main.ScreenSize);
+                }
+            }
         }
     }
 }
