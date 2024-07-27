@@ -117,7 +117,11 @@ namespace SPYoyoMod.Common.Graphics
             set => SetStartPosition(value);
         }
 
-        public Projectile Projectile { get; init; }
+        public Projectile Projectile
+        {
+            get;
+            init;
+        }
 
         public YoyoStringRenderer(Projectile proj, IDrawYoyoStringSegment segmentRenderer)
         {

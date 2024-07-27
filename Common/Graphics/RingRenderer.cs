@@ -47,7 +47,11 @@ namespace SPYoyoMod.Common.Graphics
             set => SetRadius(value);
         }
 
-        public bool IsDisposed { get; private set; }
+        public bool IsDisposed
+        {
+            get;
+            private set;
+        }
 
         public RingRenderer()
         {
