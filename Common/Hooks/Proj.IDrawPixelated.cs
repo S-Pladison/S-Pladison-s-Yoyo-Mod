@@ -170,7 +170,7 @@ namespace SPYoyoMod.Common.Hooks
                 => _position;
 
             public override bool GetDefaultVisibility()
-                => true;
+                => _wasRendered;
 
             public void ResetRenderFlag()
                 => _wasRendered = false;
@@ -213,9 +213,6 @@ namespace SPYoyoMod.Common.Hooks
 
             protected override void Draw()
             {
-                if (!_wasRendered)
-                    return;
-
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GameMatrices.Zoom);
                 Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
