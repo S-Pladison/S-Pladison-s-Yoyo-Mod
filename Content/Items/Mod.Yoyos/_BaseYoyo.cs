@@ -80,6 +80,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.aiStyle = ProjAIStyleID.Yoyo;
             Projectile.friendly = true;
             Projectile.penetrate = -1;
+
+            Projectile.hide = true;
         }
 
         /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
