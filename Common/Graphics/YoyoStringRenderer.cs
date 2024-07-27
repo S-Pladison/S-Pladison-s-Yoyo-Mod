@@ -101,20 +101,30 @@ namespace SPYoyoMod.Common.Graphics
         }
     }
 
-    public sealed class YoyoStringRenderer
+    public sealed class YoyoStringRenderer : IRenderer
     {
         private readonly IDrawYoyoStringSegment _segmentRenderer;
         private readonly List<YoyoStringSegment> _segments;
+
+        private bool _isDirty;
         private Rectangle _projHitbox;
         private Vector2 _projVelocity;
         private Vector2 _startPosition;
+
+        public Vector2 StartPosition
+        {
+            get => _startPosition;
+            set => SetStartPosition(value);
+        }
 
         public Projectile Projectile { get; init; }
 
         public YoyoStringRenderer(Projectile proj, IDrawYoyoStringSegment segmentRenderer)
         {
             _segmentRenderer = segmentRenderer;
-            _segments = new();
+            _segments = [];
+
+            SetStartPosition(Vector2.Zero);
 
             // Да, проверки идут после присваивания. Так и задумано.
             Projectile = proj;
@@ -126,14 +136,27 @@ namespace SPYoyoMod.Common.Graphics
                 throw new ArgumentException("Projectile is not a yoyo", nameof(proj));
         }
 
-        public void Draw(Vector2 startPosition)
+        public YoyoStringRenderer SetStartPosition(Vector2 position)
+        {
+            if (_startPosition == position)
+                return this;
+
+            _isDirty = true;
+            _startPosition = position;
+            
+            return this;
+        }
+
+        public void Render()
         {
             if (Projectile is null)
                 return;
+        
+            if (_projVelocity != Projectile.velocity || _projHitbox != Projectile.Hitbox)
+                _isDirty = true;
 
-            if (_startPosition != startPosition || _projVelocity != Projectile.velocity || _projHitbox != Projectile.Hitbox)
+            if (_isDirty)
             {
-                _startPosition = startPosition;
                 _projVelocity = Projectile.velocity;
                 _projHitbox = Projectile.Hitbox;
 

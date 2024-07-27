@@ -30,10 +30,13 @@ namespace SPYoyoMod.Common
                 cursor.Emit(OpCodes.Ldarg_2);
                 cursor.EmitDelegate((Projectile proj, Vector2 mountedCenter) =>
                 {
-                    if (!proj.IsYoyo() || !proj.TryGetGlobalProjectile(out YoyoStringReplacement globalProj))
+                    if (!proj.IsYoyo() || !proj.TryGetGlobalProjectile(out YoyoStringReplacement globalProj) || globalProj._stringRenderer is null)
                         return;
 
-                    globalProj._stringRenderer.Draw(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
+                    ref var renderer = ref globalProj._stringRenderer;
+                    
+                    renderer.SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
+                    renderer.Render();
                 });
 
                 cursor.Emit(OpCodes.Ret);

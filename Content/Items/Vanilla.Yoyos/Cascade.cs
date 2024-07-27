@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics;
+using SPYoyoMod.Common.Graphics.Particles;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
@@ -52,7 +53,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
+    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
         private enum AIStates
         {
@@ -66,6 +67,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private StateMachine<AIStates> _aiStateMachine;
         private int _aiTimer;
         private YoyoStringRenderer _stringRenderer;
+        //private StripRenderer _trailRenderer;
 
         public override int ProjType => ProjectileID.Cascade;
         public override bool InstancePerEntity => true;
@@ -81,6 +83,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 ModContent.Request<Texture2D>(CascadeAssets.StringPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value,
                 (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
             ));
+
+            //_trailRenderer = new StripRenderer();
         }
 
         private void InitAIStates(Projectile proj)
@@ -108,6 +112,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             };
 
             _aiStateMachine.SetState(AIStates.NonActive);
+        }
+
+        public override void OnKill(Projectile proj, int timeLeft)
+        {
+            //_trailRenderer?.Dispose();
         }
 
         public override void AI(Projectile proj)
@@ -169,9 +178,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _aiTimer += 5;
         }
 
+        public void PreDrawPixelated(Projectile proj)
+        {
+            /*_trailRenderer?
+                .SetPoints(proj.oldPos)
+                .Draw();*/
+        }
+
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            _stringRenderer.Draw(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
+            _stringRenderer?
+                .SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero)
+                .Render();
         }
     }
 
@@ -203,6 +221,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public void Initialize(Projectile proj)
         {
+            for (int i = 0; i < 15; i++)
+            {
+                /*var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
+                var velocity = vector * Main.rand.NextFloat(1f, 3f);
+                var dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
+                dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(50, 50, 50), false);
+
+                vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
+                velocity = vector * Main.rand.NextFloat(1f, 3f);
+                dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
+                dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(25, 25, 25), false);*/
+
+                //ParticleSystem.NewParticle<CircleGlowParticleRenderer>(new Particle(Projectile.Center, 0f));
+            }
+
             if (Main.dedServ)
                 return;
 
@@ -260,7 +295,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 })
                 .Apply("CascadeExplosionRing");
 
-            _ringRenderer?.Draw();
+            _ringRenderer?.Render();
         }
     }
 }

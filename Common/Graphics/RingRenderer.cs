@@ -6,11 +6,12 @@ using Terraria;
 
 namespace SPYoyoMod.Common.Graphics
 {
-    public class RingRenderer : IDisposable
+    public sealed class RingRenderer : IRenderer, IDisposable
     {
         public const int MinPointCount = 3;
 
-        private PrimitiveRenderer _renderer;
+        private DynamicVertexBuffer _vertexBuffer;
+        private DynamicIndexBuffer _indexBuffer;
         private Vertex2DPositionColorTexture[] _vertices;
         private short[] _indices;
 
@@ -45,6 +46,8 @@ namespace SPYoyoMod.Common.Graphics
             get => _innerRadius;
             set => SetRadius(value);
         }
+
+        public bool IsDisposed { get; private set; }
 
         public RingRenderer()
         {
@@ -106,8 +109,11 @@ namespace SPYoyoMod.Common.Graphics
             return this;
         }
 
-        public void Draw()
+        public void Render()
         {
+            if (IsDisposed)
+                return;
+
             if (_isDirty)
             {
                 Recalculate();
@@ -117,13 +123,23 @@ namespace SPYoyoMod.Common.Graphics
 
             var vertexCount = 2 * (PointCount + 1);
             var indexCount = 6 * PointCount;
+            var device = Main.graphics.GraphicsDevice;
 
-            _renderer.Draw(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
+            device.SetVertexBuffer(_vertexBuffer);
+            device.Indices = _indexBuffer;
+
+            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
         }
 
         public void Dispose()
         {
-            _renderer?.Dispose();
+            if (IsDisposed)
+                return;
+
+            IsDisposed = true;
+
+            _vertexBuffer?.Dispose();
+            _indexBuffer?.Dispose();
         }
 
         private void Offset(Vector2 offset)
@@ -134,7 +150,7 @@ namespace SPYoyoMod.Common.Graphics
                 _vertices[i].Position.Y += offset.Y;
             }
 
-            _renderer.SetVertices(_vertices);
+            _vertexBuffer.SetData(0, _vertices, 0, _vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
         }
 
         private void Recalculate()
@@ -148,7 +164,11 @@ namespace SPYoyoMod.Common.Graphics
                 var maxVertices = 2 * (_maxPointCount + 1);
                 var maxIndices = 6 * _maxPointCount;
 
-                _renderer = new PrimitiveRenderer(Main.graphics.GraphicsDevice, maxVertices, maxIndices);
+                _vertexBuffer?.Dispose();
+                _vertexBuffer = new(Main.graphics.GraphicsDevice, typeof(Vertex2DPositionColorTexture), maxVertices, BufferUsage.WriteOnly);
+
+                _indexBuffer?.Dispose();
+                _indexBuffer = new(Main.graphics.GraphicsDevice, IndexElementSize.SixteenBits, maxIndices, BufferUsage.WriteOnly);
 
                 Array.Resize(ref _vertices, maxVertices);
                 Array.Resize(ref _indices, maxIndices);
@@ -156,14 +176,14 @@ namespace SPYoyoMod.Common.Graphics
                 CalculateVertexIndices(oldMaxPointCount, _maxPointCount);
                 CalculateVertexColors(oldMaxPointCount, _maxPointCount);
 
-                _renderer.SetIndices(_indices);
+                _indexBuffer.SetData(0, _indices, 0, _indices.Length, SetDataOptions.Discard);
             }
 
             CalculateVertexPositions(out Vector2[] points);
             CalculateFactorsFromStartToEnd(points, out float[] factorsFromStartToEnd);
             CalculateVertexUVs(factorsFromStartToEnd);
 
-            _renderer.SetVertices(_vertices);
+            _vertexBuffer.SetData(0, _vertices, 0, _vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
         }
 
         private void CalculateVertexIndices(int start, int end)
