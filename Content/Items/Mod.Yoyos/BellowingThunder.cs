@@ -3,6 +3,7 @@ using SPYoyoMod.Common.Graphics;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -36,9 +37,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile
+    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
     {
-        private YoyoStringRenderer _stringRenderer;
+        //private YoyoStringRenderer _stringRenderer;
 
         public override string Texture => BellowingThunderAssets.ProjPath;
         public override float LifeTime => -1f;
@@ -47,14 +48,19 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public void Initialize(Projectile _)
         {
-            _stringRenderer = new YoyoStringRenderer(Projectile, new IDrawYoyoStringSegment.Gradient(
-                (Color.Transparent, true), (Color.Transparent, true), (Color.Cyan, true))
-            );
+            /*_stringRenderer = new YoyoStringRenderer(Projectile, new IDrawYoyoStringSegment.Gradient(
+                (Color.Transparent, true), (Color.Transparent, true), (Color.Cyan, true)
+            ));*/
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            _stringRenderer.Draw(mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
+            //_stringRenderer.Draw(mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
+        }
+
+        public void PostDrawPixelated(Projectile _)
+        {
+            Main.spriteBatch.Draw(TextureAssets.Item[ModContent.ItemType<BellowingThunderItem>()].Value, Projectile.Center - Main.screenPosition - new Vector2(10, 10), null, Color.White, MathHelper.PiOver4, Vector2.Zero, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0);
         }
     }
 }

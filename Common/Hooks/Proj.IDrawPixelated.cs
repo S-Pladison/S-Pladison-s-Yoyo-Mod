@@ -170,7 +170,7 @@ namespace SPYoyoMod.Common.Hooks
                 => _position;
 
             public override bool GetDefaultVisibility()
-                => true;
+                => _wasRendered;
 
             public void ResetRenderFlag()
                 => _wasRendered = false;
@@ -180,36 +180,40 @@ namespace SPYoyoMod.Common.Hooks
                 if (!projectiles.Any())
                     return;
 
-                Main.graphics.GraphicsDevice.SetRenderTarget(_renderTarget);
-                Main.graphics.GraphicsDevice.Clear(Color.Transparent);
+                var device = Main.graphics.GraphicsDevice;
+                var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
-                    var spriteBatchSpanshot = new SpriteBatchSnapshot
-                    {
-                        SortMode = SpriteSortMode.Deferred,
-                        BlendState = BlendState.AlphaBlend,
-                        SamplerState = Main.DefaultSamplerState,
-                        DepthStencilState = DepthStencilState.None,
-                        RasterizerState = RasterizerState.CullCounterClockwise,
-                        Effect = null,
-                        Matrix = Matrix.CreateScale(0.5f)
-                    };
+                    SortMode = SpriteSortMode.Deferred,
+                    BlendState = BlendState.AlphaBlend,
+                    SamplerState = Main.DefaultSamplerState,
+                    DepthStencilState = DepthStencilState.None,
+                    RasterizerState = Main.Rasterizer,
+                    Effect = null,
+                    Matrix = GameMatrices.Effect * Matrix.CreateScale(0.5f)
+                };
 
+                // Требуется для отрисовки примитивов
+                // И да, без этого никак...
+                device.BlendState = spriteBatchSpanshot.BlendState;
+                device.SamplerStates[0] = spriteBatchSpanshot.SamplerState;
+                device.DepthStencilState = spriteBatchSpanshot.DepthStencilState;
+                device.RasterizerState = spriteBatchSpanshot.RasterizerState;
+
+                device.SetRenderTarget(_renderTarget);
+                device.Clear(Color.Transparent);
+                {
                     Main.spriteBatch.Begin(spriteBatchSpanshot);
                     _drawAction(projectiles);
                     Main.spriteBatch.End();
-
                 }
-                Main.graphics.GraphicsDevice.SetRenderTarget(null);
+                device.SetRenderTarget(null);
 
                 _wasRendered = true;
             }
 
             protected override void Draw()
             {
-                if (!_wasRendered)
-                    return;
-
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, null,  Main.GameViewMatrix.TransformationMatrix);
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GameMatrices.Zoom);
                 Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
             }
