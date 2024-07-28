@@ -1,0 +1,14 @@
+Projectiles: {
+	BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+	CascadeExplosionProjectile.DisplayName: Cascade Explosion Projectile
+}
+
+BellowingThunderItem: {
+	DisplayName: Bellowing Thunder Item
+	Tooltip: ""
+}
+
+BearingItem: {
+	DisplayName: Bearing
+	Tooltip: "{0}% increased yoyo duration"
+}

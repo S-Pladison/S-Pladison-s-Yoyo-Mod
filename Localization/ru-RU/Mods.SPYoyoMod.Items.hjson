@@ -1,0 +1,14 @@
+Projectiles: {
+	// BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+	// CascadeExplosionProjectile.DisplayName: Cascade Explosion Projectile
+}
+
+BellowingThunderItem: {
+	// DisplayName: Bellowing Thunder Item
+	// Tooltip: ""
+}
+
+BearingItem: {
+	DisplayName: Подшипник
+	Tooltip: Увеличивает время полета йо-йо на {0}%
+}
