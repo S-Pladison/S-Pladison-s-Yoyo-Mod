@@ -8,6 +8,11 @@ Items: {
 		Tooltip: ""
 		DisplayName: Bellowing Thunder Item
 	}
+
+	BearingItem: {
+		Tooltip: ""
+		DisplayName: Bearing
+	}
 }
 
 VanillaItems.CascadeItem.Tooltip: ""
