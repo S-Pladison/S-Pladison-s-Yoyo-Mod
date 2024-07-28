@@ -9,10 +9,10 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 {
     public sealed class BearingItem : ModItem
     {
-        public const int StatBonusInPercentage = 50;
+        public const int PercentageStatBonus = 50;
 
         public override string Texture => $"{nameof(SPYoyoMod)}/Assets/Items/Mod.Accessories/Bearing_Item";
-        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(StatBonusInPercentage);
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(PercentageStatBonus);
 
         public override void SetDefaults()
         {
@@ -55,7 +55,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             if (!proj.GetOwner().GetModPlayer<BearingPlayer>().Equipped)
                 return;
 
-            statModifiers.LifeTime += BearingItem.StatBonusInPercentage / 100.0f;
+            statModifiers.LifeTime += BearingItem.PercentageStatBonus / 100.0f;
         }
     }
 }
