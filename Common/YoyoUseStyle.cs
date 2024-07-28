@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
@@ -15,6 +16,7 @@ namespace SPYoyoMod.Common
 
         public override void Load()
         {
+            // Изменяем позицию, откуда нить йо-йо начинает отрисовываться
             IL_Main.DrawProj_Inner += (il) =>
             {
                 var c = new ILCursor(il);
@@ -46,6 +48,48 @@ namespace SPYoyoMod.Common
                 c.Emit(OpCodes.Ldarg_1);
                 c.Emit(OpCodes.Ldloca, mountedCenterIndex);
                 c.EmitDelegate<ModifyMountedCenterDelegate>(ModifyMountedCenter);
+            };
+
+            // Ну, по неизвестной мне причине, все снаряды йо-йо отрисовываются 2 раза...
+            // 1 - При отрисовке самого снаряда
+            // 2 - При отрисовки игрока (heldProj или тип того)
+            // proj.hide = true в свою очередь убирает 1-ую отрисовку.
+            // - Почему не на всех снарядах йо-йо?
+            // Не хочу портить внешний вид йо-йо из других модов...
+            // Они явно отрисованы так как им нужно.
+            On_Main.DrawProjectiles += (orig, main) =>
+            {
+                var heldYoyoProjs = new List<(int, bool)>(4);
+
+                foreach (var player in Main.ActivePlayers)
+                {
+                    if (player.heldProj < 0)
+                        continue;
+
+                    ref var proj = ref Main.projectile[player.heldProj];
+
+                    if (!proj.IsYoyo() || proj.IsCounterweight())
+                        continue;
+
+                    if (!proj.IsVanilla() && !(proj.ModProjectile is not null && proj.ModProjectile.Mod is SPYoyoMod))
+                        continue;
+
+                    heldYoyoProjs.Add((proj.whoAmI, proj.hide));
+                }
+
+                foreach (var (projIndex, _) in heldYoyoProjs)
+                {
+                    ref var proj = ref Main.projectile[projIndex];
+                    proj.hide = true;
+                }
+
+                orig(main);
+
+                foreach (var (projIndex, projHide) in heldYoyoProjs)
+                {
+                    ref var proj = ref Main.projectile[projIndex];
+                    proj.hide = projHide;
+                }
             };
         }
 

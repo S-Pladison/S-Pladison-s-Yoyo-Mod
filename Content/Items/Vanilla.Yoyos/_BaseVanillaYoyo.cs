@@ -117,20 +117,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 ProjectileID.Sets.YoyosTopSpeed[ProjType] = TopSpeed.Value;
         }
 
-        public override void SetDefaults(Projectile proj)
-        {
-            // - Почему?
-            // Ну, по неизвестной мне причине, все снаряды йо-йо отрисовываются 2 раза...
-            // 1 - При отрисовке самого снаряда
-            // 2 - При отрисовки игрока (heldProj или тип того)
-            // proj.hide = true в свою очередь убирает 1-ую отрисовку.
-            // - Почему не на всех снарядах йо-йо?
-            // Не хочу портить внешний вид йо-йо из других модов...
-            // Они явно отрисованы так как им нужно.
-            // Да, сама нить йо-йо менее прозрачна, но я не думаю что это критично.
-            proj.hide = true;
-        }
-
         /// <inheritdoc cref="IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile, ref YoyoStatModifiers)" />
         public virtual void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers) {}
 

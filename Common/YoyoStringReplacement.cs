@@ -37,12 +37,18 @@ namespace SPYoyoMod.Common
                     
                     renderer.SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
                     renderer.Render();
+                    
+                    if (proj.GetOwner().heldProj != proj.whoAmI)
+                        return;
 
-                    if (!proj.hide)
+                    // Отрисовка нити для ванильных йо-йо и йо-йо из этого мода отличается от отрисовки йо-йо из других модов.
+                    // - Почему?
+                    // В YoyoUseStyle.cs есть логика, которая убирает проблему второй отрисовки ванильных йо-йо и йо-йо из этого мода, но
+                    // для остальных все остается как прежде.
+                    // Поэтому, фигачим отрисовку для них еще раз :p
+                    if (!proj.IsVanilla() && !(proj.ModProjectile is not null && proj.ModProjectile.Mod is SPYoyoMod))
                         return;
                     
-                    // Хех... Для скрытых снарядов (для йо-йо из этого мода и измененных ванильных йо-йо)
-                    // нужно отрисовать нить еще раз, чтобы она соответствовала *старому* ванильному стилю и другим модовым йо-йо...
                     renderer.Render();
                 });
 
