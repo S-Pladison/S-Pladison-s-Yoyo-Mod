@@ -10,7 +10,7 @@ Items: {
 	}
 
 	BearingItem: {
-		Tooltip: ""
+		Tooltip: "{0}% increased yoyo duration"
 		DisplayName: Bearing
 	}
 }
