@@ -24,13 +24,13 @@ namespace SPYoyoMod.Utils
 
         static SpriteBatchSnapshot()
         {
-            _sortModeFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, SpriteSortMode>("sortMode");
-            _blendStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, BlendState>("blendState");
-            _samplerStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, SamplerState>("samplerState");
-            _depthStencilStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, DepthStencilState>("depthStencilState");
-            _rasterizerStateFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, RasterizerState>("rasterizerState");
-            _effectFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, Effect>("customEffect");
-            _matrixFieldAccessor = ModUtils.GetFieldAccessor<SpriteBatch, Matrix>("transformMatrix");
+            _sortModeFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, SpriteSortMode>("sortMode");
+            _blendStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, BlendState>("blendState");
+            _samplerStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, SamplerState>("samplerState");
+            _depthStencilStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, DepthStencilState>("depthStencilState");
+            _rasterizerStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, RasterizerState>("rasterizerState");
+            _effectFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, Effect>("customEffect");
+            _matrixFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, Matrix>("transformMatrix");
         }
 
         public SpriteBatchSnapshot(SpriteBatch spriteBatch)

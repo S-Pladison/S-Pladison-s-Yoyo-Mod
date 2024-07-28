@@ -42,20 +42,17 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static TooltipLine[] Split(this TooltipLine line, params char[] separator)
         {
-            if (!ModLoader.TryGetMod(line.Mod, out var mod))
-                throw new Exception($"Failed to find mod {line.Mod}...");
-
             var split = line.Text.Split(separator);
             var lines = new TooltipLine[split.Length];
 
             for (var i = 0; i < split.Length; i++)
             {
-                lines[i] = new(mod, line.Name + i.ToString(), split[i])
-                {
-                    IsModifier = line.IsModifier,
-                    IsModifierBad = line.IsModifierBad,
-                    OverrideColor = line.OverrideColor
-                };
+                ref var tooltipLine = ref lines[i];
+                tooltipLine = _tooltipLineConstructorAccessor(line.Mod, line.Name + i.ToString(), split[i]);
+
+                tooltipLine.IsModifier = line.IsModifier;
+                tooltipLine.IsModifierBad = line.IsModifierBad;
+                tooltipLine.OverrideColor = line.OverrideColor;
             }
 
             return lines;
@@ -88,6 +85,9 @@ namespace SPYoyoMod.Utils
                 return;
             }
         }
+
+        private static readonly Func<string, string, string, TooltipLine> _tooltipLineConstructorAccessor
+            = TypeUtils.ConstructorAccessor<TooltipLine, string, string, string>();
         
         private static readonly HashSet<string> _descriptionWhitelistSet =
         [
