@@ -55,7 +55,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
             if (!proj.GetOwner().yoyoString)
                 return;
             
-            statModifiers.MaxRange.Flat += ProjectileID.Sets.YoyosMaximumRange[proj.type] * 1.25f + 30f;
+            statModifiers.MaxRange.Flat += ProjectileID.Sets.YoyosMaximumRange[proj.type] * 1.25f + 30f - ProjectileID.Sets.YoyosMaximumRange[proj.type];
         }
 
         private static void RemoveYoyoStringBonus(ref float length)
