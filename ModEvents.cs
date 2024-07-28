@@ -12,9 +12,19 @@ namespace SPYoyoMod
         // Mod
 
         /// <summary>
+        /// Позволяет обрабатывать рецепты после их настройки. Не следует редактировать какой-либо рецепт.
+        /// </summary>
+        public static event Action<Recipe[]> OnPostSetupRecipes;
+
+        /// <summary>
         /// Позволяет загружать вещи после того, как мод подготовил весь свой контент.
         /// </summary>
         public static event Action OnPostSetupContent;
+
+        /// <summary>
+        /// Вызывается перед тем, как пыль будет обновлена.
+        /// </summary>
+        public static event Action OnPreUpdateDusts;
 
         /// <summary>
         /// Вызывается после обновления позиции камеры. Полезен для отрисовки на целях рендеринга.
@@ -47,7 +57,9 @@ namespace SPYoyoMod
 
         private static void LoadModEvents()
         {
+            OnPostSetupRecipes += ModUtils.EmptyAction;
             OnPostSetupContent += ModUtils.EmptyAction;
+            OnPreUpdateDusts += ModUtils.EmptyAction;
             OnPostUpdateCameraPosition += ModUtils.EmptyAction;
             OnResolutionChanged += ModUtils.EmptyAction;
 
@@ -62,7 +74,9 @@ namespace SPYoyoMod
         {
             OnResolutionChanged = null;
             OnPostUpdateCameraPosition = null;
+            OnPreUpdateDusts = null;
             OnPostSetupContent = null;
+            OnPostSetupRecipes = null;
         }
 
         private static void LoadVanillaEvents()
@@ -97,13 +111,17 @@ namespace SPYoyoMod
                 Main.OnResolutionChanged += ResolutionChangedHandler;
             }
 
+            public override void Unload()
+                => Main.OnResolutionChanged -= ResolutionChangedHandler;
+
+            public override void PostAddRecipes()
+                => ModEvents.OnPostSetupRecipes(Main.recipe);
+
             public override void PostSetupContent()
                 => ModEvents.OnPostSetupContent();
 
-            public override void Unload()
-            {
-                Main.OnResolutionChanged -= ResolutionChangedHandler;
-            }
+            public override void PreUpdateDusts()
+                => ModEvents.OnPreUpdateDusts();
 
             private void ResolutionChangedHandler(Vector2 screenSize)
             {
