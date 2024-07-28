@@ -14,6 +14,20 @@ namespace SPYoyoMod.Utils
             => proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
 
         /// <summary>
+        /// Является ли этот снаряд противовесом.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsCounterweight(this Projectile proj)
+            => proj.counterweight;
+
+        /// <summary>
+        /// Является ли этот снаряд снарядом ванильным.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVanilla(this Projectile proj)
+            => proj.type < ProjectileID.Count;
+
+        /// <summary>
         /// Получить владельца (игрока) снаряда.
         /// </summary>
         public static Player? GetOwner(this Projectile proj)

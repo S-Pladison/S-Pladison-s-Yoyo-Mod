@@ -71,7 +71,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     /// <summary>
     /// Базовый класс ванильного снаряда йо-йо.
     /// </summary>
-    public abstract class VanillaYoyoBaseProjectile : GlobalProjectile, IPostDrawYoyoStringProjectile
+    public abstract class VanillaYoyoBaseProjectile : GlobalProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
         /// <summary>
         /// Уникальный ID снаряда йо-йо, который будет реворкнут.
@@ -130,6 +130,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             // Да, сама нить йо-йо менее прозрачна, но я не думаю что это критично.
             proj.hide = true;
         }
+
+        /// <inheritdoc cref="IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile, ref YoyoStatModifiers)" />
+        public virtual void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers) {}
 
         /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
         public virtual void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter) { }

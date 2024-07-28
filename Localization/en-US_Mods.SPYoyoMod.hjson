@@ -8,6 +8,11 @@ Items: {
 		Tooltip: ""
 		DisplayName: Bellowing Thunder Item
 	}
+
+	BearingItem: {
+		Tooltip: "{0}% increased yoyo duration"
+		DisplayName: Bearing
+	}
 }
 
 VanillaItems.CascadeItem.Tooltip: ""
