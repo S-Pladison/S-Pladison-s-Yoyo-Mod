@@ -37,6 +37,13 @@ namespace SPYoyoMod.Common
                     
                     renderer.SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
                     renderer.Render();
+
+                    if (!proj.hide)
+                        return;
+                    
+                    // Хех... Для скрытых снарядов (для йо-йо из этого мода и измененных ванильных йо-йо)
+                    // нужно отрисовать нить еще раз, чтобы она соответствовала *старому* ванильному стилю и другим модовым йо-йо...
+                    renderer.Render();
                 });
 
                 cursor.Emit(OpCodes.Ret);
