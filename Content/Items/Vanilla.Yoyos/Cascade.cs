@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics;
-using SPYoyoMod.Common.Graphics.Particles;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
@@ -43,14 +42,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class CascadeItem : VanillaYoyoBaseItem
     {
         public override int ItemType => ItemID.Cascade;
-
-        public override void AddRecipes()
-        {
-            Recipe.Create(ItemID.Cascade)
-                .AddIngredient(ItemID.HellstoneBar, 15)
-                .AddTile(TileID.Anvils)
-                .Register();
-        }
     }
 
     public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
