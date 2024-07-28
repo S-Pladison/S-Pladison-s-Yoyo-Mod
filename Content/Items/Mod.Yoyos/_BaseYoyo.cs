@@ -45,7 +45,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     /// <summary>
     /// Базовый класс снаряда йо-йо. Пример использования предоставлен в Items.Yoyos.<see cref="ExampleYoyoProjectile"/>.
     /// </summary>
-    public abstract class YoyoBaseProjectile : ModProjectile, IPostDrawYoyoStringProjectile
+    public abstract class YoyoBaseProjectile : ModProjectile, IModifyYoyoStatsProjectile, IPostDrawYoyoStringProjectile
     {
         /// <summary>
         /// Как долго в секундах йо-йо будет 'оставаться в бою', прежде чем автоматически вернуться к игроку.<br/>
@@ -82,6 +82,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.penetrate = -1;
 
             Projectile.hide = true;
+        }
+
+        /// <inheritdoc cref="IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile, ref YoyoStatModifiers)" />
+        public virtual void ModifyYoyoStats(ref YoyoStatModifiers statModifiers) { }
+
+        void IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
+        {
+            ModifyYoyoStats(ref statModifiers);
         }
 
         /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
