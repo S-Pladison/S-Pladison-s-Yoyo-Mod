@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
@@ -42,6 +44,52 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
         public void Equip()
         {
             Equipped = true;
+        }
+    }
+
+    public sealed class BearingGlobalItem : GlobalItem
+    {
+        private static readonly HashSet<int> _itemTypeWithBearingEffectSet = [];
+
+        public override void Load()
+        {
+            // Ищем все предметы, в дереве рецептов которых присутствует подшипник
+            ModEvents.OnPostSetupRecipes += (recipes) =>
+            {
+                var tasks = new List<Task>();
+
+                void FindItems(int itemType)
+                {
+                    for (var i = recipes.Length - 1; i > 0; i--)
+                    {
+                        var recipe = recipes[i];
+
+                        if (recipe.TryGetIngredient(itemType, out var _) && !_itemTypeWithBearingEffectSet.Contains(recipe.createItem.type))
+                        {
+                            _itemTypeWithBearingEffectSet.Add(recipe.createItem.type);
+
+                            tasks.Add(Task.Run(() => FindItems(recipe.createItem.type)));
+                        }
+                    }
+                }
+
+                FindItems(ModContent.ItemType<BearingItem>());
+
+                Task.WaitAll(tasks.ToArray());
+            };
+        }
+
+        public override void Unload()
+        {
+            _itemTypeWithBearingEffectSet.Clear();
+        }
+
+        public override void UpdateAccessory(Item item, Player player, bool hideVisual)
+        {
+            if (!_itemTypeWithBearingEffectSet.Contains(item.type))
+                return;
+
+            player.GetModPlayer<BearingPlayer>().Equip();
         }
     }
 
