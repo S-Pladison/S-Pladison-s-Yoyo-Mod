@@ -11,6 +11,7 @@ using SPYoyoMod.Utils;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
 using System.Linq;
+using Terraria.ID;
 
 namespace SPYoyoMod.Common.Hooks
 {
@@ -97,18 +98,31 @@ namespace SPYoyoMod.Common.Hooks
             PostDrawProjectiles.ResetRenderFlag();
             PostDrawPlayers_AfterProjectiles.ResetRenderFlag();
 
+            var onscreenProjs = new HashSet<int>(Main.projectile.Length / 8);
+
+            foreach (var proj in Main.ActiveProjectiles)
+            {
+                var offscreenDistance = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
+                var visibleRectangle = new Rectangle((int)Main.Camera.ScaledPosition.X - offscreenDistance, (int)Main.Camera.ScaledPosition.Y - offscreenDistance, (int)Main.Camera.ScaledSize.X + offscreenDistance * 2, (int)Main.Camera.ScaledSize.Y + offscreenDistance * 2);
+
+                if (!visibleRectangle.Intersects(proj.Hitbox))
+                    continue;
+
+                onscreenProjs.Add(proj.whoAmI);
+            }
+
             var playerHeldProjs = new List<int>(Main.player.Length / 4);
-            var notHiddenProjs = new List<int>(Main.projectile.Length / 2);
+            var notHiddenProjs = new List<int>(Main.projectile.Length / 8);
 
             foreach (var player in Main.ActivePlayers)
             {
-                if (player.heldProj >= 0)
+                if (player.heldProj >= 0 && onscreenProjs.Contains(player.heldProj))
                     playerHeldProjs.Add(player.heldProj);
             }
 
             foreach (var proj in Main.ActiveProjectiles)
             {
-                if (!proj.hide)
+                if (!proj.hide && onscreenProjs.Contains(proj.whoAmI))
                     notHiddenProjs.Add(proj.whoAmI);
             }
 
