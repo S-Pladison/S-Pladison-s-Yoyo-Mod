@@ -16,7 +16,8 @@ namespace SPYoyoMod.Common.Graphics
         private short[] _indices;
 
         private bool _isDirty;
-        private int _maxPointCount;
+        private int _currentPointCapacity;
+        private int _innerPointCapacity;
         private int _innerPointCount;
         private float _innerRadius;
         private float _innerThickness;
@@ -29,6 +30,12 @@ namespace SPYoyoMod.Common.Graphics
         {
             get => _innerPointCount;
             set => SetPointCount(value);
+        }
+
+        public int PointCapacity
+        {
+            get => _innerPointCapacity;
+            set => SetPointCapacity(value);
         }
 
         public Vector2 Position
@@ -55,18 +62,17 @@ namespace SPYoyoMod.Common.Graphics
             private set;
         }
 
-        public RingRenderer(GraphicsDevice device)
+        public RingRenderer(GraphicsDevice device, int capacity = 8)
         {
             _device = device;
             _vertices = [];
             _indices = [];
 
+            SetPointCapacity(capacity);
             SetPointCount(MinPointCount);
             SetPosition(Vector2.Zero);
             SetThickness(8);
             SetRadius(64);
-
-            Recalculate();
         }
 
         public RingRenderer SetPointCount(int pointCount)
@@ -77,6 +83,17 @@ namespace SPYoyoMod.Common.Graphics
                 return this;
 
             _innerPointCount = pointCount;
+            _isDirty = true;
+
+            return this;
+        }
+
+        public RingRenderer SetPointCapacity(int value)
+        {
+            if (_innerPointCapacity == value)
+                return this;
+
+            _innerPointCapacity = value;
             _isDirty = true;
 
             return this;
@@ -156,33 +173,22 @@ namespace SPYoyoMod.Common.Graphics
                 _vertices[i].Position.Y += offset.Y;
             }
 
-            _vertexBuffer.SetData(0, _vertices, 0, _vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
+            _vertexBuffer?.SetData(0, _vertices, 0, _vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
         }
 
         private void Recalculate()
         {
-            if (_maxPointCount < PointCount)
+            while (PointCount > _innerPointCapacity)
+                _innerPointCapacity = (int)(_innerPointCapacity * 1.5f);
+
+            if (_currentPointCapacity < _innerPointCapacity)
             {
-                var oldMaxPointCount = _maxPointCount;
-
-                _maxPointCount = PointCount;
-
-                var maxVertices = 2 * (_maxPointCount + 1);
-                var maxIndices = 6 * _maxPointCount;
-
-                _vertexBuffer?.Dispose();
-                _vertexBuffer = new(Main.graphics.GraphicsDevice, typeof(Vertex2DPositionColorTexture), maxVertices, BufferUsage.WriteOnly);
-
-                _indexBuffer?.Dispose();
-                _indexBuffer = new(Main.graphics.GraphicsDevice, IndexElementSize.SixteenBits, maxIndices, BufferUsage.WriteOnly);
-
-                Array.Resize(ref _vertices, maxVertices);
-                Array.Resize(ref _indices, maxIndices);
-
-                CalculateVertexIndices(oldMaxPointCount, _maxPointCount);
-                CalculateVertexColors(oldMaxPointCount, _maxPointCount);
+                ResizeBuffers(vertices: 2 * (_innerPointCapacity + 1), indices: 6 * _innerPointCapacity);
+                CalculateVertexIndices(_currentPointCapacity, _innerPointCapacity);
+                CalculateVertexColors(_currentPointCapacity, _innerPointCapacity);
 
                 _indexBuffer.SetData(0, _indices, 0, _indices.Length, SetDataOptions.Discard);
+                _currentPointCapacity = _innerPointCapacity;
             }
 
             CalculateVertexPositions(out Vector2[] points);
@@ -190,6 +196,18 @@ namespace SPYoyoMod.Common.Graphics
             CalculateVertexUVs(factorsFromStartToEnd);
 
             _vertexBuffer.SetData(0, _vertices, 0, _vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
+        }
+
+        private void ResizeBuffers(int vertices, int indices)
+        {
+            _vertexBuffer?.Dispose();
+            _vertexBuffer = new(Main.graphics.GraphicsDevice, typeof(Vertex2DPositionColorTexture), vertices, BufferUsage.WriteOnly);
+
+            _indexBuffer?.Dispose();
+            _indexBuffer = new(Main.graphics.GraphicsDevice, IndexElementSize.SixteenBits, indices, BufferUsage.WriteOnly);
+
+            Array.Resize(ref _vertices, vertices);
+            Array.Resize(ref _indices, indices);
         }
 
         private void CalculateVertexIndices(int start, int end)
