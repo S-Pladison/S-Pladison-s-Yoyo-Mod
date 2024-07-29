@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
@@ -58,10 +59,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private StateMachine<AIStates> _aiStateMachine;
         private int _aiTimer;
         private YoyoStringRenderer _stringRenderer;
-        //private StripRenderer _trailRenderer;
+        private StripRenderer _trailRenderer;
 
         public override int ProjType => ProjectileID.Cascade;
         public override bool InstancePerEntity => true;
+
+        public override void SetStaticDefaults()
+        {
+            base.SetStaticDefaults();
+
+            ProjectileID.Sets.TrailCacheLength[ProjType] = 55;
+            ProjectileID.Sets.TrailingMode[ProjType] = 1;
+        }
 
         public void Initialize(Projectile proj)
         {
@@ -75,7 +84,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
             ));
 
-            //_trailRenderer = new StripRenderer();
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice)
+                .SetPointCapacity(ProjectileID.Sets.TrailCacheLength[ProjType])
+                //.SetLoop(true)
+                .SetStartEndWidth(32f, 32f);
         }
 
         private void InitAIStates(Projectile proj)
@@ -107,7 +119,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
-            //_trailRenderer?.Dispose();
+            _trailRenderer?.Dispose();
         }
 
         public override void AI(Projectile proj)
@@ -171,9 +183,30 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public void PreDrawPixelated(Projectile proj)
         {
-            /*_trailRenderer?
-                .SetPoints(proj.oldPos)
-                .Draw();*/
+            /*CascadeAssets.ExplosionRingEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
+                    parameters["UvRepeat"].SetValue(3f);
+                    parameters["Color0"].SetValue(Color.White.ToVector4());
+                    parameters["Color1"].SetValue(Color.White.ToVector4());
+                })
+                .Apply("CascadeExplosionRing");*/
+
+            var effect = new BasicEffect(Main.graphics.GraphicsDevice);
+            effect.View = GameMatrices.Effect;
+            effect.Projection = GameMatrices.Projection;
+            effect.VertexColorEnabled = true;
+
+            effect.CurrentTechnique.Passes.First().Apply();
+
+            Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
+
+            _trailRenderer?
+                .SetPoints(proj.oldPos.Where(x => x != default).Select(x => x - Main.screenPosition).ToArray())
+                .Render();
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
@@ -232,7 +265,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _ringRenderer = new RingRenderer();
+            _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice);
         }
 
         public override void OnKill(int timeLeft)

@@ -21,6 +21,7 @@ namespace SPYoyoMod.Common.Graphics
         private float _innerStartWidth;
         private float _innerEndWidth;
 
+        private readonly GraphicsDevice _device;
         private readonly FastList<Vector2> _innerPoints;
 
         public bool Loop
@@ -51,13 +52,14 @@ namespace SPYoyoMod.Common.Graphics
             private set;
         }
 
-        public StripRenderer()
+        public StripRenderer(GraphicsDevice device, int capacity = 8)
         {
+            _device = device;
             _vertices = [];
             _indices = [];
             _innerPoints = new();
 
-            SetPointCapacity(8);
+            SetPointCapacity(capacity);
             SetStartEndWidth(16f, 16f);
             SetLoop(false);
         }
@@ -142,12 +144,11 @@ namespace SPYoyoMod.Common.Graphics
             var segmentCount = PointCount + (Loop ? 0 : -1);
             var vertexCount = 2 * (segmentCount + 1);
             var indexCount = 6 * segmentCount;
-            var device = Main.graphics.GraphicsDevice;
 
-            device.SetVertexBuffer(_vertexBuffer);
-            device.Indices = _indexBuffer;
+            _device.SetVertexBuffer(_vertexBuffer);
+            _device.Indices = _indexBuffer;
 
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
+            _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
         }
         
         public void Dispose()

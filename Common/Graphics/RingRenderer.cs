@@ -23,6 +23,8 @@ namespace SPYoyoMod.Common.Graphics
         private float _halfThickness;
         private Vector2 _innerPosition;
 
+        private readonly GraphicsDevice _device;
+
         public int PointCount
         {
             get => _innerPointCount;
@@ -53,8 +55,9 @@ namespace SPYoyoMod.Common.Graphics
             private set;
         }
 
-        public RingRenderer()
+        public RingRenderer(GraphicsDevice device)
         {
+            _device = device;
             _vertices = [];
             _indices = [];
 
@@ -127,12 +130,11 @@ namespace SPYoyoMod.Common.Graphics
 
             var vertexCount = 2 * (PointCount + 1);
             var indexCount = 6 * PointCount;
-            var device = Main.graphics.GraphicsDevice;
 
-            device.SetVertexBuffer(_vertexBuffer);
-            device.Indices = _indexBuffer;
+            _device.SetVertexBuffer(_vertexBuffer);
+            _device.Indices = _indexBuffer;
 
-            device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
+            _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
         }
 
         public void Dispose()
