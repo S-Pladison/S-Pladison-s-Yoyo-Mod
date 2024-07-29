@@ -14,9 +14,9 @@ namespace SPYoyoMod.Common.Graphics
         private Vertex2DPositionColorTexture[] _vertices;
         private short[] _indices;
 
-        private bool _isDirty;
         private int _currentPointCapacity;
         private int _innerPointCapacity;
+        private bool _isDirty;
         private bool _innerLoop;
         private float _innerStartWidth;
         private float _innerEndWidth;
@@ -45,7 +45,7 @@ namespace SPYoyoMod.Common.Graphics
         {
             get => _innerPoints.Length;
         }
-        
+
         public bool IsDisposed
         {
             get;
@@ -114,20 +114,20 @@ namespace SPYoyoMod.Common.Graphics
         }
 
         public StripRenderer SetPoints(Vector2[] points)
-		{
-			_innerPoints.Reset();
-			_innerPoints.EnsureCapacity(points.Length);
+        {
+            _innerPoints.Reset();
+            _innerPoints.EnsureCapacity(points.Length);
 
-			for (var i = 0; i < points.Length; i++)
-			{
-				_innerPoints.Buffer[i] = points[i];
-				_innerPoints.Length++;
-			}
+            for (var i = 0; i < points.Length; i++)
+            {
+                _innerPoints.Buffer[i] = points[i];
+                _innerPoints.Length++;
+            }
 
-			_isDirty = true;
+            _isDirty = true;
 
-			return this;
-		}
+            return this;
+        }
 
         public void Render()
         {
@@ -150,7 +150,7 @@ namespace SPYoyoMod.Common.Graphics
 
             _device.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, vertexCount, 0, indexCount / 3);
         }
-        
+
         public void Dispose()
         {
             if (IsDisposed)
@@ -170,15 +170,13 @@ namespace SPYoyoMod.Common.Graphics
             if (_currentPointCapacity < _innerPointCapacity)
             {
                 ResizeBuffers(vertices: 2 * (_innerPointCapacity + 1), indices: 6 * _innerPointCapacity);
-                
                 CalculateVertexIndices(_currentPointCapacity, _innerPointCapacity);
                 CalculateVertexColors(_currentPointCapacity, _innerPointCapacity);
 
                 _indexBuffer.SetData(0, _indices, 0, _indices.Length, SetDataOptions.Discard);
-
                 _currentPointCapacity = _innerPointCapacity;
             }
-            
+
             CalculateFactorsFromStartToEnd(out float[] factorsFromStartToEnd);
             CalculateVertexPositions(factorsFromStartToEnd);
             CalculateVertexUVs(factorsFromStartToEnd);
