@@ -6,7 +6,7 @@ namespace SPYoyoMod.Utils
 {
 	// [ Code from the Nez GitHub Repository (https://github.com/prime31/Nez/tree/master/) ]
 
-    /// <summary>
+	/// <summary>
 	/// Very basic wrapper around an array that auto-expands it when it reaches capacity. Note that when iterating it should be done
 	/// like this accessing the buffer directly but using the FastList.length field:
 	/// 
@@ -14,7 +14,7 @@ namespace SPYoyoMod.Utils
 	/// 	var item = list.buffer[i];
 	/// </summary>
 	public class FastList<T>(int size)
-    {
+	{
 		/// <summary>
 		/// Direct access to the backing buffer. Do not use buffer.Length! Use FastList.length
 		/// </summary>
@@ -25,7 +25,7 @@ namespace SPYoyoMod.Utils
 		/// </summary>
 		public int Length = 0;
 
-        public FastList() : this(5)
+		public FastList() : this(5)
 		{
 			// ...
 		}
@@ -60,7 +60,7 @@ namespace SPYoyoMod.Utils
 		{
 			if (Length == Buffer.Length)
 				Array.Resize(ref Buffer, Math.Max(Buffer.Length << 1, 10));
-			
+
 			Buffer[Length++] = item;
 		}
 
@@ -94,7 +94,7 @@ namespace SPYoyoMod.Utils
 
 			if (index < Length)
 				Array.Copy(Buffer, index + 1, Buffer, index, Length - index);
-			
+
 			Buffer[Length] = default(T);
 		}
 
