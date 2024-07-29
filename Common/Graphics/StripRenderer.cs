@@ -33,6 +33,13 @@ namespace SPYoyoMod.Common.Graphics
         public float StartWidth
         {
             get => _innerStartWidth;
+            set => SetStartWidth(value);
+        }
+
+        public float EndtWidth
+        {
+            get => _innerEndWidth;
+            set => SetEndWidth(value);
         }
 
         public int PointCapacity
