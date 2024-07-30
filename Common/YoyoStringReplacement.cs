@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using SPYoyoMod.Common.Graphics;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;

@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.4.33205.214
+VisualStudioVersion = 17.10.35122.118
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SPYoyoMod", "SPYoyoMod.csproj", "{5A38FFA7-206A-401A-A241-10B7CDB7FAA6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SPYoyoMod", "SPYoyoMod.csproj", "{990919B6-05B4-4268-BD5F-C1B8CCB32CFB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +11,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5A38FFA7-206A-401A-A241-10B7CDB7FAA6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5A38FFA7-206A-401A-A241-10B7CDB7FAA6}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5A38FFA7-206A-401A-A241-10B7CDB7FAA6}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5A38FFA7-206A-401A-A241-10B7CDB7FAA6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{990919B6-05B4-4268-BD5F-C1B8CCB32CFB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{990919B6-05B4-4268-BD5F-C1B8CCB32CFB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{990919B6-05B4-4268-BD5F-C1B8CCB32CFB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{990919B6-05B4-4268-BD5F-C1B8CCB32CFB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {6FB3CD05-F580-4C74-8362-A7C87545A6D7}
+		SolutionGuid = {C5286573-2AD4-4F56-98F3-6E203825C3B1}
 	EndGlobalSection
 EndGlobal

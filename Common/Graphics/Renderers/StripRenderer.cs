@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Utils;
 using Terraria;
 
-namespace SPYoyoMod.Common.Graphics
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public sealed class StripRenderer : IRenderer, IDisposable
     {
@@ -274,7 +274,7 @@ namespace SPYoyoMod.Common.Graphics
             void AddVertexPosition(ref int vertexIndex, Vector2 position) => _vertices[vertexIndex++].Position = position;
 
             var vertexIndex = 0;
-            var normal = RotateClockwiseNinety((Loop ? (_innerPoints[0] - _innerPoints[_innerPoints.Length - 1]) : (_innerPoints[1] - _innerPoints[0])).SafeNormalize(Vector2.Zero));
+            var normal = RotateClockwiseNinety((Loop ? _innerPoints[0] - _innerPoints[_innerPoints.Length - 1] : _innerPoints[1] - _innerPoints[0]).SafeNormalize(Vector2.Zero));
             var halfWidth = GetWidth(0f) / 2f;
             var offset = normal * halfWidth;
 

@@ -1,4 +1,4 @@
-namespace SPYoyoMod.Common.Graphics
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public interface IRenderer
     {

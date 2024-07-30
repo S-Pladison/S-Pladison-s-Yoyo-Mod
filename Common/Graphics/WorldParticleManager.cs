@@ -9,12 +9,12 @@ using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.Graphics.Particles
+namespace SPYoyoMod.Common.Graphics
 {
     public interface IWorldParticle
     {
         bool IsPixelated { get; }
-        bool ShouldBeRemovedFromRenderer { get; }
+        bool ShouldBeRemoved { get; }
 
         void Update();
         void Draw(Vector2 screenPosition);
@@ -61,7 +61,7 @@ namespace SPYoyoMod.Common.Graphics.Particles
                 {
                     ref var particle = ref _particles.Buffer[i];
 
-                    if (particle.ShouldBeRemovedFromRenderer)
+                    if (particle.ShouldBeRemoved)
                     {
                         _mutex.WaitOne();
 

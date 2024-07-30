@@ -4,7 +4,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.Graphics;
+using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;

@@ -8,7 +8,7 @@ using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.GameContent;
 
-namespace SPYoyoMod.Common.Graphics
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public readonly struct YoyoStringSegment(Projectile proj, int index, Vector2 position, float rotation, float width)
     {
@@ -59,7 +59,7 @@ namespace SPYoyoMod.Common.Graphics
             public Texture2D Texture { get; init; }
             public ColorData Color { get; init; }
 
-            public Default(ColorData color) : this(null, color) {}
+            public Default(ColorData color) : this(null, color) { }
 
             public Default(Texture2D texture, ColorData color)
             {
@@ -82,7 +82,7 @@ namespace SPYoyoMod.Common.Graphics
             public Texture2D Texture { get; init; }
             public ColorData[] Colors { get; init; }
 
-            public Gradient(params ColorData[] colors) : this(null, colors) {}
+            public Gradient(params ColorData[] colors) : this(null, colors) { }
 
             public Gradient(Texture2D texture, params ColorData[] colors)
             {
@@ -93,7 +93,7 @@ namespace SPYoyoMod.Common.Graphics
             public void Draw(int segmentCount, YoyoStringSegment segment)
             {
                 var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
-                var origin = new Vector2(Texture.Width * 0.5f, 0f);      
+                var origin = new Vector2(Texture.Width * 0.5f, 0f);
                 var color = ColorUtils.MultipleLerp(segment.Index / (float)segmentCount, Colors.Select(x => x.Glow ? x.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), x.Value)).ToArray());
 
                 Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
@@ -147,7 +147,7 @@ namespace SPYoyoMod.Common.Graphics
 
             _isDirty = true;
             _startPosition = position;
-            
+
             return this;
         }
 
@@ -155,7 +155,7 @@ namespace SPYoyoMod.Common.Graphics
         {
             if (Projectile is null)
                 return;
-        
+
             if (_projVelocity != Projectile.velocity || _projHitbox != Projectile.Hitbox)
                 _isDirty = true;
 
@@ -177,7 +177,7 @@ namespace SPYoyoMod.Common.Graphics
 
             _segments.Clear();
 
-            var endPosition = Projectile.Center;   
+            var endPosition = Projectile.Center;
             var x = endPosition.X - _startPosition.X;
             var y = endPosition.Y - _startPosition.Y;
             var shouldAddNextSegment = true;
@@ -281,7 +281,7 @@ namespace SPYoyoMod.Common.Graphics
                             x *= 1f - num20;
                         }
                     }
-                    
+
                     var position = new Vector2(segmentStartPos.X, (float)(segmentStartPos.Y + _segmentRenderer.Texture.Height * 0.5f + (vanillaLineHeightValue - _segmentRenderer.Texture.Height) * 0.5f));
                     var rotation = (float)Math.Atan2((double)y, (double)x) - MathHelper.PiOver2;
 

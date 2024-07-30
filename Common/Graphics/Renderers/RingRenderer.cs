@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Terraria;
 
-namespace SPYoyoMod.Common.Graphics
+namespace SPYoyoMod.Common.Graphics.Renderers
 {
     public sealed class RingRenderer : IRenderer, IDisposable
     {

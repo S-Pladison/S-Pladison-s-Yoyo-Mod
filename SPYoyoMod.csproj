@@ -1,12 +1,13 @@
-
 <Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\tModLoader.targets" />
-  <PropertyGroup>
-    <AssemblyName>SPYoyoMod</AssemblyName>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-  <ItemGroup>
-    <None Remove="Assets\Items\Mod.Yoyos\BellowingThunder\BellowingThunder_Item.png" />
-    <None Remove="Assets\Items\Mod.Yoyos\BellowingThunder\BellowingThunder_Proj.png" />
-  </ItemGroup>
+
+	<!-- Import tModLoader mod properties -->
+	<Import Project="..\tModLoader.targets" />
+
+	<!-- General -->
+	<PropertyGroup>
+		
+	</PropertyGroup>
+
+	<!-- References -->
+
 </Project>
