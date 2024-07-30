@@ -44,18 +44,31 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
         /// </summary>
         public static GameDrawLayer DrawCachedProjs_OverPlayers { get; private set; }
 
+        /// <summary>
+        /// Расположение в коде:
+        /// <br/>- DrawRain()
+        /// <br/>- DrawGore()
+        /// <br/>=| DrawDust()
+        /// <br/>- Overlays.Scene.Draw(spriteBatch, RenderLayers.Entities)
+        /// <br/>- DrawWaters() или spriteBatch.Draw(waterTarget, sceneWaterPos - screenPosition, Color.White)
+        /// </summary>
+        public static GameDrawLayer DrawDust { get; private set; }
+
         void ILoadable.Load(Mod mod)
         {
             mod.AddContent(DrawProjectiles = new VanillaDrawLayer(nameof(DrawProjectiles)));
             mod.AddContent(DrawPlayers_AfterProjectiles = new VanillaDrawLayer(nameof(DrawPlayers_AfterProjectiles)));
             mod.AddContent(DrawCachedProjs_OverPlayers = new VanillaDrawLayer(nameof(DrawCachedProjs_OverPlayers)));
+            mod.AddContent(DrawDust = new VanillaDrawLayer(nameof(DrawDust)));
 
             LoadHooks();
         }
 
         void ILoadable.Unload()
         {
+            DrawDust = null;
             DrawCachedProjs_OverPlayers = null;
+            DrawPlayers_AfterProjectiles = null;
             DrawProjectiles = null;
         }
 
@@ -73,6 +86,13 @@ namespace SPYoyoMod.Common.Graphics.DrawLayers
                 DrawChildBefore(DrawPlayers_AfterProjectiles);
                 orig(main);
                 DrawChildAfter(DrawPlayers_AfterProjectiles);
+            };
+
+            On_Main.DrawDust += (orig, main) =>
+            {
+                DrawChildBefore(DrawDust);
+                orig(main);
+                DrawChildAfter(DrawDust);
             };
 
             // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
