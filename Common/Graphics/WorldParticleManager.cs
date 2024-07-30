@@ -1,10 +1,10 @@
-using System.Collections.Generic;
+using System;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Threading;
-using SPYoyoMod.Common.Graphics.DrawLayers;
+using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ModLoader;
@@ -27,6 +27,9 @@ namespace SPYoyoMod.Common.Graphics
 
         private static Mutex _mutex = new();
         private static FastList<IWorldParticle> _particles = new(MaxParticles);
+        private static FastList<IWorldParticle> _tempParticles = new(MaxParticles);
+        private static ScreenRenderTarget _pixelatedTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
+        private static bool _pixelatedTargetWasPrepared;
 
         public static int ParticleCount
         {
@@ -48,12 +51,36 @@ namespace SPYoyoMod.Common.Graphics
             return particle;
         }
 
+        void ILoadable.Load(Mod mod)
+        {
+            ModEvents.OnPreUpdateDusts += UpdateParticles;
+            ModEvents.OnPostUpdateCameraPosition += RenderPixelatedParticles;
+
+            On_Main.DrawDust += (orig, main) =>
+            {
+                DrawDefaultParticles();
+                DrawPixelatedParticles();
+
+                orig(main);
+            };
+        }
+
+        void ILoadable.Unload()
+        {
+            ModEvents.OnPreUpdateDusts -= UpdateParticles;
+
+            _pixelatedTarget = null;
+            _tempParticles = null;
+            _particles = null;
+            _mutex = null;
+        }
+
         private static void UpdateParticles()
         {
             if (ParticleCount <= 0)
                 return;
 
-            var shouldBeRemovedParticles = new List<int>(ParticleCount / 4);
+            var shouldBeRemovedParticles = _tempParticles;
 
             FastParallel.For(0, ParticleCount, (from, to, context) =>
             {
@@ -65,7 +92,8 @@ namespace SPYoyoMod.Common.Graphics
                     {
                         _mutex.WaitOne();
 
-                        shouldBeRemovedParticles.Add(i);
+                        shouldBeRemovedParticles.Buffer[shouldBeRemovedParticles.Length] = particle;
+                        shouldBeRemovedParticles.Length++;
 
                         _mutex.ReleaseMutex();
                     }
@@ -76,66 +104,84 @@ namespace SPYoyoMod.Common.Graphics
                 }
             });
 
-            foreach (var i in shouldBeRemovedParticles)
+            for (int i = 0; i < shouldBeRemovedParticles.Length; i++)
                 _particles.RemoveAt(i);
+
+            shouldBeRemovedParticles.Clear();
         }
 
-        void ILoadable.Load(Mod mod)
+        private static ref FastList<IWorldParticle> GetParticlesByCondition(Predicate<IWorldParticle> predicate)
         {
-            ModEvents.OnPreUpdateDusts += UpdateParticles;
-        }
+            _tempParticles.Clear();
 
-        void ILoadable.Unload()
-        {
-            ModEvents.OnPreUpdateDusts -= UpdateParticles;
-
-            _particles = null;
-            _mutex = null;
-        }
-
-        private sealed class WorldParticleDrawLayer : GameDrawLayer
-        {
-            private readonly FastList<IWorldParticle> _defaultParticles = new(MaxParticles);
-
-            public override void Unload()
-                => _defaultParticles.Clear();
-
-            public override Position GetDefaultPosition()
-                => new BeforeParent(VanillaDrawLayers.DrawDust);
-
-            public override bool GetDefaultVisibility()
-                => true;
-
-            protected override void Draw()
+            for (var i = 0; i < ParticleCount; i++)
             {
-                if (_defaultParticles.Length > 0)
-                    _defaultParticles.Clear();
+                ref var particle = ref _particles.Buffer[i];
 
-                for (var i = 0; i < ParticleCount; i++)
+                if (predicate(particle))
                 {
-                    ref var particle = ref _particles.Buffer[i];
-
-                    if (particle.IsPixelated)
-                        continue;
-
-                    _defaultParticles.Buffer[_defaultParticles.Length] = particle;
-                    _defaultParticles.Length++;
+                    _tempParticles.Buffer[_tempParticles.Length] = particle;
+                    _tempParticles.Length++;
                 }
+            }
 
-                if (_defaultParticles.Length <= 0)
-                    return;
+            return ref _tempParticles;
+        }
 
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GameMatrices.Transform);
+        private static void DrawDefaultParticles()
+        {
+            ref var defaultParticles = ref GetParticlesByCondition(p => !p.IsPixelated);
 
-                for (var i = 0; i < _defaultParticles.Length; i++)
+            if (defaultParticles.Length <= 0)
+                return;
+
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Transform);
+
+            for (var i = 0; i < defaultParticles.Length; i++)
+            {
+                defaultParticles.Buffer[i].Draw(Main.screenPosition);
+            }
+
+            Main.spriteBatch.End();
+        }
+
+        private static void RenderPixelatedParticles()
+        {
+            var device = Main.graphics.GraphicsDevice;
+            ref var pixelatedParticles = ref GetParticlesByCondition(p => p.IsPixelated);
+
+            if (pixelatedParticles.Length <= 0)
+                return;
+
+            _pixelatedTargetWasPrepared = false;
+
+            device.SetRenderTarget(_pixelatedTarget);
+            device.Clear(Color.Transparent);
+            {
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Effect * Matrix.CreateScale(0.5f));
+
+                for (var i = 0; i < pixelatedParticles.Length; i++)
                 {
-                    _defaultParticles.Buffer[i].Draw(Main.screenPosition);
+                    pixelatedParticles.Buffer[i].Draw(Main.screenPosition);
                 }
 
                 Main.spriteBatch.End();
             }
+            device.SetRenderTarget(null);
+
+            _pixelatedTargetWasPrepared = true;
         }
 
-        // TODO: private sealed class WorldParticlePixelatedDrawLayer : GameDrawLayer
+        private static void DrawPixelatedParticles()
+        {
+            if (!_pixelatedTargetWasPrepared)
+                return;
+
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GameMatrices.Zoom);
+            Main.spriteBatch.Draw(_pixelatedTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+
+            _pixelatedTargetWasPrepared = false;
+        }
     }
 }
