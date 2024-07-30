@@ -88,7 +88,7 @@ namespace SPYoyoMod.Utils
 
         private static readonly Func<string, string, string, TooltipLine> _tooltipLineConstructorAccessor
             = TypeUtils.ConstructorAccessor<TooltipLine, string, string, string>();
-        
+
         private static readonly HashSet<string> _descriptionWhitelistSet =
         [
             "Material", "Consumable", "Ammo", "Placeable", "UseMana", "HealMana",

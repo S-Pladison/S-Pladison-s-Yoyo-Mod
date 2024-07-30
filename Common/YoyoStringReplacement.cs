@@ -34,10 +34,10 @@ namespace SPYoyoMod.Common
                         return;
 
                     ref var renderer = ref globalProj._stringRenderer;
-                    
+
                     renderer.SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
                     renderer.Render();
-                    
+
                     if (proj.GetOwner().heldProj != proj.whoAmI)
                         return;
 
@@ -48,7 +48,7 @@ namespace SPYoyoMod.Common
                     // Поэтому, фигачим отрисовку для них еще раз :p
                     if (!proj.IsVanilla() && !(proj.ModProjectile is not null && proj.ModProjectile.Mod is SPYoyoMod))
                         return;
-                    
+
                     renderer.Render();
                 });
 

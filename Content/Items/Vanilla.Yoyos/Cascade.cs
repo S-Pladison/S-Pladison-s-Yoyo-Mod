@@ -1,12 +1,12 @@
-using System;
-using System.IO;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
+using System;
+using System.IO;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
@@ -37,7 +37,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             ExplosionRingEffect = null;
         }
 
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) {}
+        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
     }
 
     public sealed class CascadeItem : VanillaYoyoBaseItem
@@ -93,11 +93,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private void InitAIStates(Projectile proj)
         {
             _aiStateMachine = new StateMachine<AIStates>();
-            
+
             // Ждем некоторое время перед тем, как начать заряжаться
             _aiStateMachine.RegisterState(AIStates.NonActive)
               .Process(WaitingToStartCharge);
-            
+
             // 'Заряжаемся' перед взрывом, после чего в конце создаем снаряд взрыва
             _aiStateMachine.RegisterState(AIStates.Explodes)
               .OnEnter(() => SoundEngine.PlaySound(CascadeAssets.StartChargingSound, proj.Center))
@@ -169,7 +169,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             if (state != _aiStateMachine.CurrentState)
                 _aiStateMachine.SetState(state);
-            
+
             _aiTimer = binaryReader.ReadUInt16();
         }
 

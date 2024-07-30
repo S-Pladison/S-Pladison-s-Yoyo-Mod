@@ -36,7 +36,7 @@ namespace SPYoyoMod.Common.Hooks
 
         private sealed class ModifyYoyoStatsImplementation : GlobalProjectile, IInitializableProjectile
         {
-            private YoyoStatModifiers _statModifiers; 
+            private YoyoStatModifiers _statModifiers;
 
             public override bool InstancePerEntity => true;
 
@@ -61,7 +61,8 @@ namespace SPYoyoMod.Common.Hooks
                         i => i.MatchLdarg(0),
                         i => i.MatchLdfld<Projectile>("type"),
                         i => i.MatchLdelemR4(),
-                        i => i.MatchStloc(out num2Index))) {
+                        i => i.MatchStloc(out num2Index)))
+                    {
 
                         ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
                         return;
@@ -86,7 +87,8 @@ namespace SPYoyoMod.Common.Hooks
                         i => i.MatchLdarg(0),
                         i => i.MatchLdfld<Projectile>("type"),
                         i => i.MatchLdelemR4(),
-                        i => i.MatchStloc(out num10Index))) {
+                        i => i.MatchStloc(out num10Index)))
+                    {
 
                         ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
                         return;
@@ -129,7 +131,7 @@ namespace SPYoyoMod.Common.Hooks
             {
                 if (!proj.TryGetGlobalProjectile(out ModifyYoyoStatsImplementation globalProj))
                     return;
-                
+
                 maxRange = globalProj._statModifiers.MaxRange.ApplyTo(maxRange);
             }
 

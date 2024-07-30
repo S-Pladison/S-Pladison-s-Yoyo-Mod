@@ -1,7 +1,7 @@
-using System;
-using System.Runtime.CompilerServices;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using System;
+using System.Runtime.CompilerServices;
 using Terraria;
 
 namespace SPYoyoMod.Common.Graphics.Renderers

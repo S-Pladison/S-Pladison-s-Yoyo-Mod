@@ -1,7 +1,6 @@
-using System;
-using System.Linq;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using System;
 
 namespace SPYoyoMod.Utils
 {

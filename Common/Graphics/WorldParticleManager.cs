@@ -1,11 +1,10 @@
-using System;
-using System.Runtime.CompilerServices;
-using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Threading;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
+using System;
+using System.Threading;
 using Terraria;
 using Terraria.ModLoader;
 

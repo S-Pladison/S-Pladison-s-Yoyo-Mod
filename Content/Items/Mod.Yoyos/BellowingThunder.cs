@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using SPYoyoMod.Common.Graphics;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;

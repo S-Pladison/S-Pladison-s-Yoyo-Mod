@@ -1,19 +1,19 @@
-using System;
-using Terraria;
-using Terraria.ModLoader;
-using IPreHook = SPYoyoMod.Common.Hooks.IPreDrawPixelatedProjectile;
-using IPostHook = SPYoyoMod.Common.Hooks.IPostDrawPixelatedProjectile;
-using Terraria.ModLoader.Core;
-using SPYoyoMod.Common.Graphics.RenderTargets;
 using Microsoft.Xna.Framework;
-using SPYoyoMod.Utils;
 using Microsoft.Xna.Framework.Graphics;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using SPYoyoMod.Common.Graphics.RenderTargets;
+using SPYoyoMod.Utils;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Terraria.ID;
-using MonoMod.Cil;
 using System.Reflection;
-using Mono.Cecil.Cil;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.Core;
+using IPostHook = SPYoyoMod.Common.Hooks.IPostDrawPixelatedProjectile;
+using IPreHook = SPYoyoMod.Common.Hooks.IPreDrawPixelatedProjectile;
 
 namespace SPYoyoMod.Common.Hooks
 {

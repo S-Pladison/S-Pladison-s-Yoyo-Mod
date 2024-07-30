@@ -26,11 +26,11 @@ namespace SPYoyoMod.Utils
             return lambda.Compile();
         }
 
-        public static Func<P1, P2, P3, T> ConstructorAccessor<T, P1, P2, P3>() 
+        public static Func<P1, P2, P3, T> ConstructorAccessor<T, P1, P2, P3>()
         {
             var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
             var ctor = typeof(T).GetConstructor(flags, [typeof(P1), typeof(P2), typeof(P3)]);
-            
+
             var param1 = Expression.Parameter(typeof(P1), "param1");
             var param2 = Expression.Parameter(typeof(P2), "param2");
             var param3 = Expression.Parameter(typeof(P3), "param3");

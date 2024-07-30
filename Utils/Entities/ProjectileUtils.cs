@@ -34,7 +34,7 @@ namespace SPYoyoMod.Utils
         {
             if (!Main.player.IndexInRange(proj.owner))
                 return null;
-            
+
             var player = Main.player[proj.owner];
 
             if (player == null || !player.active)

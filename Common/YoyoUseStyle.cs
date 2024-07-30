@@ -1,8 +1,8 @@
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Utils;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -39,7 +39,8 @@ namespace SPYoyoMod.Common
                     i => i.MatchLdfld<Projectile>("owner"),
                     i => i.MatchLdelemRef(),
                     i => i.MatchCallvirt<Player>("get_MountedCenter"),
-                    i => i.MatchStloc(out mountedCenterIndex))) {
+                    i => i.MatchStloc(out mountedCenterIndex)))
+                {
 
                     ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(YoyoUseStyle)}..{nameof(IL_Main.DrawProj_Inner)}\" failed...");
                     return;

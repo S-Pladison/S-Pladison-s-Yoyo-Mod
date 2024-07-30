@@ -12,7 +12,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
     {
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
                 => lateInstantiation && proj.IsYoyo();
-        
+
         public override void Load()
         {
             IL_Projectile.AI_099_2 += (il) =>
@@ -39,7 +39,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchMul(),
                     i => i.MatchLdcR4(30f),
                     i => i.MatchAdd(),
-                    i => i.MatchStloc(num10Index))) {
+                    i => i.MatchStloc(num10Index)))
+                {
 
                     ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
                     return;
@@ -54,7 +55,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
         {
             if (!proj.GetOwner().yoyoString)
                 return;
-            
+
             statModifiers.MaxRange.Flat += ProjectileID.Sets.YoyosMaximumRange[proj.type] * 1.25f + 30f - ProjectileID.Sets.YoyosMaximumRange[proj.type];
         }
 

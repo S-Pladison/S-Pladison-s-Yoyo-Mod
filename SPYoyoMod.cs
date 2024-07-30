@@ -1,8 +1,8 @@
+using SPYoyoMod.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SPYoyoMod.Common;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 

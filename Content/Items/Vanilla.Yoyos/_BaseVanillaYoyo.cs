@@ -1,8 +1,8 @@
-using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
+using System;
+using System.Collections.Generic;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
@@ -111,14 +111,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 ProjectileID.Sets.YoyosLifeTimeMultiplier[ProjType] = LifeTime.Value;
 
             if (MaxRange.HasValue)
-                 ProjectileID.Sets.YoyosMaximumRange[ProjType] = MaxRange.Value;
+                ProjectileID.Sets.YoyosMaximumRange[ProjType] = MaxRange.Value;
 
             if (TopSpeed.HasValue)
                 ProjectileID.Sets.YoyosTopSpeed[ProjType] = TopSpeed.Value;
         }
 
         /// <inheritdoc cref="IModifyYoyoStatsProjectile.ModifyYoyoStats(Projectile, ref YoyoStatModifiers)" />
-        public virtual void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers) {}
+        public virtual void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers) { }
 
         /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString(Projectile, Vector2)" />
         public virtual void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter) { }

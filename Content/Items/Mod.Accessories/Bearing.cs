@@ -1,7 +1,7 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
