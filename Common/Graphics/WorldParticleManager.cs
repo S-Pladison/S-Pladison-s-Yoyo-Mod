@@ -41,6 +41,9 @@ namespace SPYoyoMod.Common.Graphics
 
         public static T SpawnParticle<T>(T particle) where T : IWorldParticle
         {
+            if (Main.dedServ)
+                return particle;
+
             if (ParticleCount >= MaxParticles)
                 return particle;
 
