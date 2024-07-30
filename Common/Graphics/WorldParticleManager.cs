@@ -36,7 +36,6 @@ namespace SPYoyoMod.Common.Graphics
             get => _particles.Length;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static T SpawnParticle<T>() where T : IWorldParticle, new()
             => SpawnParticle(new T());
 
