@@ -7,7 +7,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod
 {
-    public class ModEvents : ILoadable
+    public sealed class ModEvents : ILoadable
     {
         // Mod
 
