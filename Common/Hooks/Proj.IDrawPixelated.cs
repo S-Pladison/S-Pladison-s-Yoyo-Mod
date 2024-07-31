@@ -109,9 +109,9 @@ namespace SPYoyoMod.Common.Hooks
             }
         }
 
-        private static PixelatedLayer _preDrawProjectilesTarget = new(PreDrawPixelatedProjectiles);
-        private static PixelatedLayer _postDrawProjectilesTarget = new(PostDrawPixelatedProjectiles);
-        private static PixelatedLayer _postDrawPlayersAfterProjectilesTarget = new(PostDrawPixelatedProjectiles);
+        private static PixelatedLayer _preDrawProjectilesTarget;
+        private static PixelatedLayer _postDrawProjectilesTarget;
+        private static PixelatedLayer _postDrawPlayersAfterProjectilesTarget;
 
         private static void PreDrawPixelatedProjectiles(IEnumerable<int> projs)
         {
@@ -145,6 +145,10 @@ namespace SPYoyoMod.Common.Hooks
 
         public void Load(Mod mod)
         {
+            _preDrawProjectilesTarget = new(PreDrawPixelatedProjectiles);
+            _postDrawProjectilesTarget = new(PostDrawPixelatedProjectiles);
+            _postDrawPlayersAfterProjectilesTarget = new(PostDrawPixelatedProjectiles);
+
             ModEvents.OnPostUpdateCameraPosition += RenderLayers;
 
             On_Main.DrawProjectiles += (orig, main) =>
@@ -208,12 +212,8 @@ namespace SPYoyoMod.Common.Hooks
         {
             var onscreenProjs = FindOnscreenProjs();
 
-            /* Я хз почему, но если добавить данную проверку, отрисовка примитивов будет некорректной
-               (проблемы с зумом или тип того...)
-            
             if (onscreenProjs.Count == 0)
                 return;
-            */
 
             var onscreenProjSet = onscreenProjs.ToHashSet();
             var playerHeldProjs = new List<int>(Main.player.Length / 4);
