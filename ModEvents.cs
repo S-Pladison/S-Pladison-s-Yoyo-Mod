@@ -7,6 +7,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod
 {
+    [LoadPriority(sbyte.MaxValue)]
     public sealed class ModEvents : ILoadable
     {
         // Mod
@@ -94,7 +95,7 @@ namespace SPYoyoMod
         private static void ModOnPreDraw(GameTime _)
             => ModEvents.OnPreDraw();
 
-        [LoadPriority(sbyte.MinValue)]
+        [LoadPriority(sbyte.MaxValue)]
         private sealed class EventSystem : ModSystem
         {
             private Point _savedScreenSize;
@@ -116,6 +117,10 @@ namespace SPYoyoMod
 
             public override void PostAddRecipes()
                 => ModEvents.OnPostSetupRecipes(Main.recipe);
+
+            public override void OnWorldLoad()
+                // Костыль, но без него никак :p
+                => ModEvents.OnResolutionChanged(Main.ScreenSize);
 
             public override void PostSetupContent()
                 => ModEvents.OnPostSetupContent();
