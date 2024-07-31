@@ -55,12 +55,12 @@ namespace SPYoyoMod.Common.Hooks
         private sealed class PixelatedLayer(Action<IEnumerable<int>> drawAction)
         {
             private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
-            private readonly Action<IEnumerable<int>> _drawAction = drawAction;
+            private readonly Action<IList<int>> _drawAction = drawAction;
             private bool _targetWasPrepared = false;
 
-            public void Render(IEnumerable<int> projectiles)
+            public void Render(IList<int> projectiles)
             {
-                if (!projectiles.Any())
+                if (projectiles.Count == 0)
                     return;
 
                 _targetWasPrepared = false;
@@ -113,84 +113,6 @@ namespace SPYoyoMod.Common.Hooks
         private static PixelatedLayer _postDrawProjectilesTarget = new(PostDrawPixelatedProjectiles);
         private static PixelatedLayer _postDrawPlayersAfterProjectilesTarget = new(PostDrawPixelatedProjectiles);
 
-        public void Load(Mod mod)
-        {
-            ModEvents.OnPostUpdateCameraPosition += RenderLayers;
-
-            On_Main.DrawProjectiles += (orig, main) =>
-            {
-                _preDrawProjectilesTarget.Draw();
-                orig(main);
-                _postDrawProjectilesTarget.Draw();
-            };
-
-            // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
-            // Не хочу делать постоянные проверки/поиски нужного списка...
-            // Пример:
-            // void DrawCachedProjs(List<int> projs) {
-            //   if (projs == Main.instance.DrawCacheProjsBehindNPCs) {}
-            //   else (projs == Main.instance.DrawCacheProjsBehindNPCsAndTiles) {}
-            //   else (...) {}
-            //   ...
-            // }
-            // А текущим методом: просто вызовем наши функции без каких либо проверок
-            // Такая проблема есть у таких методов, как DrawCachedNPCs и DrawCachedProjs (а может и еще есть, хз)
-
-            IL_Main.DoDraw += (il) =>
-            {
-                Impl_PostDrawPlayersAfterProjectilesTarget(new ILCursor(il));
-            };
-
-            IL_Main.DrawCapture += (il) =>
-            {
-                Impl_PostDrawPlayersAfterProjectilesTarget(new ILCursor(il));
-            };
-        }
-
-        public void Unload()
-        {
-            ModEvents.OnPostUpdateCameraPosition -= RenderLayers;
-
-            _postDrawPlayersAfterProjectilesTarget = null;
-            _postDrawProjectilesTarget = null;
-            _preDrawProjectilesTarget = null;
-        }
-
-        private static void RenderLayers()
-        {
-            var onscreenProjs = new HashSet<int>(Main.projectile.Length / 8);
-
-            foreach (var proj in Main.ActiveProjectiles)
-            {
-                var offscreenDistance = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
-                var visibleRectangle = new Rectangle((int)Main.Camera.ScaledPosition.X - offscreenDistance, (int)Main.Camera.ScaledPosition.Y - offscreenDistance, (int)Main.Camera.ScaledSize.X + offscreenDistance * 2, (int)Main.Camera.ScaledSize.Y + offscreenDistance * 2);
-
-                if (!visibleRectangle.Intersects(proj.Hitbox))
-                    continue;
-
-                onscreenProjs.Add(proj.whoAmI);
-            }
-
-            var playerHeldProjs = new List<int>(Main.player.Length / 4);
-            var notHiddenProjs = new List<int>(Main.projectile.Length / 8);
-
-            foreach (var player in Main.ActivePlayers)
-            {
-                if (player.heldProj >= 0 && onscreenProjs.Contains(player.heldProj))
-                    playerHeldProjs.Add(player.heldProj);
-            }
-
-            foreach (var proj in Main.ActiveProjectiles)
-            {
-                if (!proj.hide && onscreenProjs.Contains(proj.whoAmI))
-                    notHiddenProjs.Add(proj.whoAmI);
-            }
-
-            _preDrawProjectilesTarget.Render(notHiddenProjs);
-            _postDrawProjectilesTarget.Render(notHiddenProjs.Except(playerHeldProjs));
-            _postDrawPlayersAfterProjectilesTarget.Render(playerHeldProjs);
-        }
-
         private static void PreDrawPixelatedProjectiles(IEnumerable<int> projs)
         {
             foreach (var projIndex in projs)
@@ -221,7 +143,102 @@ namespace SPYoyoMod.Common.Hooks
             }
         }
 
-        private static void Impl_PostDrawPlayersAfterProjectilesTarget(ILCursor cursor)
+        public void Load(Mod mod)
+        {
+            ModEvents.OnPostUpdateCameraPosition += RenderLayers;
+
+            On_Main.DrawProjectiles += (orig, main) =>
+            {
+                _preDrawProjectilesTarget.Draw();
+                orig(main);
+                _postDrawProjectilesTarget.Draw();
+            };
+
+            // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
+            // Не хочу делать постоянные проверки/поиски нужного списка...
+            // Пример:
+            // void DrawCachedProjs(List<int> projs) {
+            //   if (projs == Main.instance.DrawCacheProjsBehindNPCs) {}
+            //   else (projs == Main.instance.DrawCacheProjsBehindNPCsAndTiles) {}
+            //   else (...) {}
+            //   ...
+            // }
+            // А текущим методом: просто вызовем наши функции без каких либо проверок
+            // Такая проблема есть у таких методов, как DrawCachedNPCs и DrawCachedProjs (а может и еще есть, хз)
+
+            IL_Main.DoDraw += (il) =>
+            {
+                Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
+            };
+
+            IL_Main.DrawCapture += (il) =>
+            {
+                Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
+            };
+        }
+
+        public void Unload()
+        {
+            ModEvents.OnPostUpdateCameraPosition -= RenderLayers;
+
+            _postDrawPlayersAfterProjectilesTarget = null;
+            _postDrawProjectilesTarget = null;
+            _preDrawProjectilesTarget = null;
+        }
+
+        private static List<int> FindOnscreenProjs()
+        {
+            var onscreenProjs = new List<int>(Main.projectile.Length / 8);
+
+            foreach (var proj in Main.ActiveProjectiles)
+            {
+                var offscreenDistance = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
+                var visibleRectangle = new Rectangle((int)Main.Camera.ScaledPosition.X - offscreenDistance, (int)Main.Camera.ScaledPosition.Y - offscreenDistance, (int)Main.Camera.ScaledSize.X + offscreenDistance * 2, (int)Main.Camera.ScaledSize.Y + offscreenDistance * 2);
+
+                if (!visibleRectangle.Intersects(proj.Hitbox))
+                    continue;
+
+                onscreenProjs.Add(proj.whoAmI);
+            }
+
+            return onscreenProjs;
+        }
+
+        private static void RenderLayers()
+        {
+            var onscreenProjs = FindOnscreenProjs();
+
+            /* Я хз почему, но если добавить данную проверку, отрисовка примитивов будет некорректной
+               (проблемы с зумом или тип того...)
+            
+            if (onscreenProjs.Count == 0)
+                return;
+            */
+
+            var onscreenProjSet = onscreenProjs.ToHashSet();
+            var playerHeldProjs = new List<int>(Main.player.Length / 4);
+            var notHiddenProjs = new List<int>(Main.projectile.Length / 8);
+
+            foreach (var player in Main.ActivePlayers)
+            {
+                if (player.heldProj >= 0 && onscreenProjSet.Contains(player.heldProj))
+                    playerHeldProjs.Add(player.heldProj);
+            }
+
+            foreach (var projIndex in onscreenProjs)
+            {
+                ref var proj = ref Main.projectile[projIndex];
+
+                if (!proj.hide)
+                    notHiddenProjs.Add(proj.whoAmI);
+            }
+
+            _preDrawProjectilesTarget.Render(notHiddenProjs);
+            _postDrawProjectilesTarget.Render(notHiddenProjs.Except(playerHeldProjs).ToArray());
+            _postDrawPlayersAfterProjectilesTarget.Render(playerHeldProjs);
+        }
+
+        private static void Impl_DrawPlayers_AfterProjectiles(ILCursor cursor)
         {
             // DrawCachedProjs(DrawCacheProjsOverPlayers);
 
@@ -239,7 +256,7 @@ namespace SPYoyoMod.Common.Hooks
                 i => i.MatchLdcI4(1),
                 i => i.MatchCall(typeof(Main).GetMethod("DrawCachedProjs", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(List<int>), typeof(bool)]))))
             {
-                ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(Impl_PostDrawPlayersAfterProjectilesTarget)}\" failed...");
+                ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(Impl_DrawPlayers_AfterProjectiles)}\" failed...");
                 return;
             }
 
