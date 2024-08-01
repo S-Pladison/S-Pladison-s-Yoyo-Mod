@@ -123,7 +123,10 @@ namespace SPYoyoMod
                 => ModEvents.OnPostSetupContent();
 
             public override void OnWorldLoad()
-                => ModEvents.OnResolutionChanged(Main.ScreenSize);
+            {
+                // Костыль, без которого не обойтись...
+                ModEvents.OnResolutionChanged(Main.ScreenSize);
+            }
 
             public override void PreUpdateDusts()
                 => ModEvents.OnPreUpdateDusts();
