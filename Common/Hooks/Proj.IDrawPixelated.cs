@@ -128,10 +128,8 @@ namespace SPYoyoMod.Common.Hooks
                         g.PreDrawPixelated(proj);
                     }
                 }
-                catch (Exception e)
+                finally
                 {
-                    TimeLogger.DrawException(e);
-
                     proj.active = false;
                 }
             }
@@ -152,10 +150,8 @@ namespace SPYoyoMod.Common.Hooks
                         g.PostDrawPixelated(proj);
                     }
                 }
-                catch (Exception e)
+                finally
                 {
-                    TimeLogger.DrawException(e);
-
                     proj.active = false;
                 }
             }
