@@ -128,7 +128,7 @@ namespace SPYoyoMod.Common.Hooks
                         g.PreDrawPixelated(proj);
                     }
                 }
-                finally
+                catch (Exception)
                 {
                     proj.active = false;
                 }
@@ -150,7 +150,7 @@ namespace SPYoyoMod.Common.Hooks
                         g.PostDrawPixelated(proj);
                     }
                 }
-                finally
+                catch (Exception)
                 {
                     proj.active = false;
                 }
