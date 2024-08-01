@@ -125,7 +125,7 @@ namespace SPYoyoMod.Common.Graphics
 
         private static void RenderPixelatedParticles()
         {
-            if (ParticleCount < 0)
+            if (ParticleCount <= 0)
                 return;
 
             var device = Main.graphics.GraphicsDevice;
