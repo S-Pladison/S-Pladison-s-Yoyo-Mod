@@ -119,11 +119,20 @@ namespace SPYoyoMod.Common.Hooks
             {
                 ref var proj = ref Main.projectile[projIndex];
 
-                (proj.ModProjectile as IPreHook)?.PreDrawPixelated(proj);
-
-                foreach (IPreHook g in IPreHook._hook.Enumerate(proj))
+                try
                 {
-                    g.PreDrawPixelated(proj);
+                    (proj.ModProjectile as IPreHook)?.PreDrawPixelated(proj);
+
+                    foreach (IPreHook g in IPreHook._hook.Enumerate(proj))
+                    {
+                        g.PreDrawPixelated(proj);
+                    }
+                }
+                catch (Exception e)
+                {
+                    TimeLogger.DrawException(e);
+
+                    proj.active = false;
                 }
             }
         }
@@ -134,11 +143,20 @@ namespace SPYoyoMod.Common.Hooks
             {
                 ref var proj = ref Main.projectile[projIndex];
 
-                (proj.ModProjectile as IPostHook)?.PostDrawPixelated(proj);
-
-                foreach (IPostHook g in IPostHook._hook.Enumerate(proj))
+                try
                 {
-                    g.PostDrawPixelated(proj);
+                    (proj.ModProjectile as IPostHook)?.PostDrawPixelated(proj);
+
+                    foreach (IPostHook g in IPostHook._hook.Enumerate(proj))
+                    {
+                        g.PostDrawPixelated(proj);
+                    }
+                }
+                catch (Exception e)
+                {
+                    TimeLogger.DrawException(e);
+
+                    proj.active = false;
                 }
             }
         }
