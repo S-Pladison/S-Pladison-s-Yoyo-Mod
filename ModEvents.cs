@@ -99,6 +99,7 @@ namespace SPYoyoMod
         private sealed class EventSystem : ModSystem
         {
             private Point _savedScreenSize;
+            private bool _savedGameInactive;
 
             public override void Load()
             {
@@ -118,21 +119,22 @@ namespace SPYoyoMod
             public override void PostAddRecipes()
                 => ModEvents.OnPostSetupRecipes(Main.recipe);
 
-            public override void OnWorldLoad()
-                // Костыль, но без него никак :p
-                => ModEvents.OnResolutionChanged(Main.ScreenSize);
-
             public override void PostSetupContent()
                 => ModEvents.OnPostSetupContent();
+
+            public override void OnWorldLoad()
+                => ModEvents.OnResolutionChanged(Main.ScreenSize);
 
             public override void PreUpdateDusts()
                 => ModEvents.OnPreUpdateDusts();
 
             private void ResolutionChangedHandler(Vector2 screenSize)
             {
-                if (_savedScreenSize != Main.ScreenSize)
+                if (_savedScreenSize != Main.ScreenSize || _savedGameInactive != Main.gameInactive)
                 {
                     _savedScreenSize = Main.ScreenSize;
+                    _savedGameInactive = Main.gameInactive;
+
                     ModEvents.OnResolutionChanged(Main.ScreenSize);
                 }
             }
