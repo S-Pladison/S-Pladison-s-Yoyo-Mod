@@ -9,7 +9,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
-    public sealed class YoyoUseStyle : GlobalItem
+    public sealed class YoyoUseStyleGlobalItem : GlobalItem
     {
         public override bool AppliesToEntity(Item item, bool lateInstantiation)
             => lateInstantiation && item.IsYoyo();
@@ -42,7 +42,7 @@ namespace SPYoyoMod.Common
                     i => i.MatchStloc(out mountedCenterIndex)))
                 {
 
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(YoyoUseStyle)}..{nameof(IL_Main.DrawProj_Inner)}\" failed...");
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(YoyoUseStyleGlobalItem)}..{nameof(IL_Main.DrawProj_Inner)}\" failed...");
                     return;
                 }
 

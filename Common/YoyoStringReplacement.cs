@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Common
 {
     [Autoload(Side = ModSide.Client)]
-    public sealed class YoyoStringReplacement : GlobalProjectile, IInitializableProjectile
+    public sealed class YoyoStringReplacementGlobalProjectile : GlobalProjectile, IInitializableProjectile
     {
         private YoyoStringRenderer _stringRenderer;
 
@@ -30,7 +30,7 @@ namespace SPYoyoMod.Common
                 cursor.Emit(OpCodes.Ldarg_2);
                 cursor.EmitDelegate((Projectile proj, Vector2 mountedCenter) =>
                 {
-                    if (!proj.IsYoyo() || !proj.TryGetGlobalProjectile(out YoyoStringReplacement globalProj) || globalProj._stringRenderer is null)
+                    if (!proj.IsYoyo() || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj) || globalProj._stringRenderer is null)
                         return;
 
                     ref var renderer = ref globalProj._stringRenderer;
