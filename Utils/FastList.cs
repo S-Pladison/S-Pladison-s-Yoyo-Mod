@@ -87,7 +87,7 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public void RemoveAt(int index)
         {
-            if (index < 0 || index >= Length)
+            if (index < 0)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
             Length--;
@@ -104,7 +104,7 @@ namespace SPYoyoMod.Utils
         /// <param name="index">Index.</param>
         public void RemoveAtWithSwap(int index)
         {
-            if (index < 0 || index >= Length)
+            if (index < 0)
                 throw new ArgumentOutOfRangeException(nameof(index));
 
             Buffer[index] = Buffer[Length - 1];
