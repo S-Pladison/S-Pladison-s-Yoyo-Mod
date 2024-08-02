@@ -7,14 +7,14 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Particles
 {
-    public sealed class LightPoint(int lifeTime, bool pixelated, LightPoint.DrawData drawData) : BaseParticle(lifeTime, pixelated), ILoadable
+    public sealed class LightPointParticle(int lifeTime, bool pixelated, LightPointParticle.DrawData drawData) : BaseParticle(lifeTime, pixelated), ILoadable
     {
         private static Asset<Texture2D> _texture;
         private static EasingBuilder _scaleEasing;
 
         void ILoadable.Load(Mod mod)
         {
-            _texture = ModContent.Request<Texture2D>($"{nameof(SPYoyoMod)}/Assets/Particles/{nameof(LightPoint)}");
+            _texture = ModContent.Request<Texture2D>($"{nameof(SPYoyoMod)}/Assets/Particles/{nameof(LightPointParticle)}");
             _scaleEasing = new(
                 (EasingFunctions.InOutQuart, 0.1f, 0f, 1f),
                 (EasingFunctions.Linear, 0.9f, 1f, 0f)
@@ -44,7 +44,7 @@ namespace SPYoyoMod.Content.Particles
 
         private DrawData _drawData = drawData;
 
-        public LightPoint() : this(ModUtils.SecondsToTicks(1f), false, default) { }
+        public LightPointParticle() : this(ModUtils.SecondsToTicks(1f), false, default) { }
 
         protected override void OnUpdate()
         {
