@@ -76,7 +76,7 @@ namespace SPYoyoMod.Common.Graphics
 
         private static void UpdateParticles()
         {
-            if (ParticleCount <= 0 || Main.gameInactive)
+            if (ParticleCount <= 0)
                 return;
 
             var shouldBeRemovedParticles = new List<IWorldParticle>(MaxParticles / 10);
