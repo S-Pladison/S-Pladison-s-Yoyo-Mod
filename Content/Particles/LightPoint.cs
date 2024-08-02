@@ -24,6 +24,7 @@ namespace SPYoyoMod.Content.Particles
         void ILoadable.Unload()
         {
             _texture = null;
+            _scaleEasing = null;
         }
 
         // ...
