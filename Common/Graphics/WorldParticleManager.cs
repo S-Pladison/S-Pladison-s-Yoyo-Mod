@@ -102,10 +102,7 @@ namespace SPYoyoMod.Common.Graphics
                 }
             });
 
-            for (int i = 0; i < shouldBeRemovedParticles.Count; i++)
-                _particles.RemoveAt(i);
-
-            shouldBeRemovedParticles.Clear();
+            shouldBeRemovedParticles.ForEach(p => _particles.Remove(p));
         }
 
         private static void DrawDefaultParticles()
