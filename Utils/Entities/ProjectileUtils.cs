@@ -50,6 +50,13 @@ namespace SPYoyoMod.Utils
             => proj.type < ProjectileID.Count;
 
         /// <summary>
+        /// Является ли локальный игрок владельцем данного снаряда.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsLocalPlayerAsOwner(this Projectile proj)
+            => proj.owner == Main.myPlayer;
+
+        /// <summary>
         /// Получить владельца (игрока) снаряда.
         /// </summary>
         public static Player? GetOwner(this Projectile proj)
