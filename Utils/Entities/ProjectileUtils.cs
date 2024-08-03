@@ -14,6 +14,28 @@ namespace SPYoyoMod.Utils
             => proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
 
         /// <summary>
+        /// Является ли этот снаряд основным снарядом от йо-йо.
+        /// Основным является тот, которым управляет игрок, а не тот, который летает возле.
+        /// Учитывайте, что основной йо-йо не обязательно будет тем, что заспавнился первым.
+        /// </summary>
+        public static bool IsMainYoyo(this Projectile proj)
+        {
+            if (!proj.IsYoyo() || proj.IsCounterweight())
+                return false;
+
+            foreach (var otherProj in Main.ActiveProjectiles)
+            {
+                if (otherProj.whoAmI > proj.whoAmI)
+                    return false;
+
+                if (otherProj.type == proj.type && otherProj.owner == proj.owner)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Является ли этот снаряд противовесом.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
