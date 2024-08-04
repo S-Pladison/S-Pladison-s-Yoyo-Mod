@@ -40,7 +40,7 @@ namespace SPYoyoMod.Common.Graphics
             if (Main.dedServ)
                 return particle;
 
-            if (ParticleCount >= MaxParticles)
+            if (_particles.Count >= MaxParticles)
                 return particle;
 
             _particles.Add(particle);
@@ -52,17 +52,7 @@ namespace SPYoyoMod.Common.Graphics
         {
             ModEvents.OnPreUpdateDusts += UpdateParticles;
             ModEvents.OnPostUpdateCameraPosition += RenderPixelatedParticles;
-
-            On_Main.DrawDust += (orig, main) =>
-            {
-                if (ParticleCount > 0)
-                {
-                    DrawDefaultParticles();
-                    DrawPixelatedParticles();
-                }
-
-                orig(main);
-            };
+            On_Main.DrawDust += DrawDustLayer;
         }
 
         void ILoadable.Unload()
@@ -76,12 +66,12 @@ namespace SPYoyoMod.Common.Graphics
 
         private static void UpdateParticles()
         {
-            if (ParticleCount <= 0)
+            if (_particles.Count <= 0)
                 return;
 
             var shouldBeRemovedParticles = new List<IWorldParticle>(MaxParticles / 10);
 
-            FastParallel.For(0, ParticleCount, (from, to, context) =>
+            FastParallel.For(0, _particles.Count, (from, to, context) =>
             {
                 for (int i = from; i < to; i++)
                 {
@@ -105,6 +95,17 @@ namespace SPYoyoMod.Common.Graphics
             shouldBeRemovedParticles.ForEach(p => _particles.Remove(p));
         }
 
+        private static void DrawDustLayer(On_Main.orig_DrawDust orig, Main main)
+        {
+            if (_particles.Count > 0)
+            {
+                DrawDefaultParticles();
+                DrawPixelatedParticles();
+            }
+
+            orig(main);
+        }
+
         private static void DrawDefaultParticles()
         {
             var defaultParticles = _particles.Where(p => !p.IsPixelated);
@@ -122,7 +123,7 @@ namespace SPYoyoMod.Common.Graphics
 
         private static void RenderPixelatedParticles()
         {
-            if (ParticleCount <= 0)
+            if (_particles.Count <= 0)
                 return;
 
             var device = Main.graphics.GraphicsDevice;
