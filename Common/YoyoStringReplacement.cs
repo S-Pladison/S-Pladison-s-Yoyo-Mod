@@ -3,7 +3,10 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Common.Graphics.Renderers;
 using SPYoyoMod.Common.Hooks;
+using SPYoyoMod.Common.ModSupport;
 using SPYoyoMod.Utils;
+using System;
+using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -54,11 +57,34 @@ namespace SPYoyoMod.Common
 
                 cursor.Emit(OpCodes.Ret);
             };
+
+            // Thorium имеет собственную функцию отрисовки нитей для своих йо-йо...
+            // Так как рисуются одновременно обе нити, можно спокойно прекратить отрисовку одной из.
+            // Но из-за отсутствия в Thorium смещения (из YoyoUseStyle.cs), прекращаем отрисовку именно у них :p
+            if (ThoriumModSupport.IsModLoaded)
+            {
+                try
+                {
+                    var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+                    var methodInfo = ThoriumModSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("DrawString", flags) ?? throw new Exception();
+
+                    MonoModHooks.Add(methodInfo, (orig_ThoriumModDrawString orig, int index, Vector2 to, Vector2 from, int stringColor, bool actuallyYoyo) =>
+                    {
+                        // Просто не вызываем orig(...); и все :)
+                    });
+                }
+                catch (Exception)
+                {
+                    Mod.Logger.Warn($"Hook \"{nameof(YoyoStringReplacementGlobalProjectile)}..{nameof(ThoriumModSupport)}\" failed...");
+                }
+            }
         }
 
         public void Initialize(Projectile proj)
         {
             _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegment.Vanilla());
         }
+
+        private delegate void orig_ThoriumModDrawString(int index, Vector2 to, Vector2 from, int stringColor, bool actuallyYoyo);
     }
 }
