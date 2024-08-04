@@ -131,7 +131,9 @@ namespace SPYoyoMod.Utils
             return npc.IsChild(out NPC parent) && parent.whoAmI != npc.whoAmI && parent.IsMiniBoss();
         }
 
-        // Проверяет, привязан ли этот NPC к пулу здоровья другого NPC.
+        /// <summary>
+        /// Проверяет, привязан ли этот NPC к пулу здоровья другого NPC.
+        /// </summary>
         public static bool IsChild(this NPC npc, out NPC parent)
         {
             var child = npc.realLife >= 0 && npc.realLife <= Main.maxNPCs && npc.realLife != npc.whoAmI;
