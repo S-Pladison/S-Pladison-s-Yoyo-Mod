@@ -88,7 +88,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                             i => i.MatchAdd(),
                             i => i.MatchStloc(num3Index)))
                         {
-                            ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                            ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(ThoriumModSupport)}\" failed...");
                             return;
                         }
 
