@@ -1,7 +1,10 @@
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Common.Hooks;
+using SPYoyoMod.Common.ModSupport;
 using SPYoyoMod.Utils;
+using System;
+using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -49,6 +52,55 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 c.Emit(OpCodes.Ldloca, num10Index);
                 c.EmitDelegate(RemoveYoyoStringBonus);
             };
+
+            // Thorium имеет собственную AI-функцию для всех своих йо-йо...
+            // Чтобы убрать эффект нити, придется воспользоваться IL редактированием...
+            if (ThoriumModSupport.IsModLoaded)
+            {
+                try
+                {
+                    var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+                    var methodInfo = ThoriumModSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("YoyoAI", flags) ?? throw new Exception();
+
+                    MonoModHooks.Modify(methodInfo, (il) =>
+                    {
+                        var c = new ILCursor(il);
+
+                        // if (player.yoyoString)
+                        // {
+                        //     num3 = (float)((double)num3 * 1.25 + 30.0);
+                        // }
+
+                        // IL_01a5: ldloc.s 6
+                        // IL_01a7: ldc.r4 1.25
+                        // IL_01ac: mul
+                        // IL_01ad: ldc.r4 30
+                        // IL_01b2: add
+                        // IL_01b3: stloc.s 6
+
+                        var num3Index = -1;
+
+                        if (!c.TryGotoNext(MoveType.After,
+                            i => i.MatchLdloc(out num3Index),
+                            i => i.MatchLdcR4(1.25f),
+                            i => i.MatchMul(),
+                            i => i.MatchLdcR4(30f),
+                            i => i.MatchAdd(),
+                            i => i.MatchStloc(num3Index)))
+                        {
+                            ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                            return;
+                        }
+
+                        c.Emit(OpCodes.Ldloca, num3Index);
+                        c.EmitDelegate(RemoveYoyoStringBonus);
+                    });
+                }
+                catch (Exception)
+                {
+                    Mod.Logger.Warn($"Hook \"{nameof(StringProjectile)}..{nameof(ThoriumModSupport)}\" failed...");
+                }
+            }
         }
 
         public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
