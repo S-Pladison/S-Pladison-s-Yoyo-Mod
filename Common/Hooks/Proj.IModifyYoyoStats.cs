@@ -1,6 +1,9 @@
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
+using SPYoyoMod.Common.ModSupport;
 using SPYoyoMod.Utils;
+using System;
+using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -98,6 +101,34 @@ namespace SPYoyoMod.Common.Hooks
                     c.Emit(OpCodes.Ldloca, num10Index);
                     c.EmitDelegate(ModifyYoyoMaxRangeValue);
                 };
+
+                // Thorium имеет собственную AI-функцию для всех своих йо-йо...
+                // Хорошо, что IL в данном случае не пригодится.
+                if (ThoriumModSupport.IsModLoaded)
+                {
+                    try
+                    {
+                        var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
+                        var methodInfo = ThoriumModSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("YoyoAI", flags) ?? throw new Exception();
+
+                        MonoModHooks.Add(methodInfo, (orig_ThoriumModYoyoAI orig, int index, float seconds, float length, float acceleration, float rotationSpeed, object action, object initialize) =>
+                        {
+                            ref var proj = ref Main.projectile[index];
+                            var lifeTime = (float)ModUtils.SecondsToTicks(seconds);
+
+                            GetYoyoStats(proj, out var statModifiers);
+
+                            ModifyYoyoLifeTimeValue(proj, ref lifeTime);
+                            ModifyYoyoMaxRangeValue(proj, ref length);
+
+                            orig(index, ModUtils.TicksToSeconds(lifeTime), length, acceleration, rotationSpeed, action, initialize);
+                        });
+                    }
+                    catch (Exception)
+                    {
+                        Mod.Logger.Warn($"Hook \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(ThoriumModSupport)}\" failed...");
+                    }
+                }
             }
 
             private static void GetYoyoStats(Projectile proj, out YoyoStatModifiers statModifiers)
@@ -140,6 +171,8 @@ namespace SPYoyoMod.Common.Hooks
 
             public void Initialize(Projectile proj)
                 => GetYoyoStats(proj, out _statModifiers);
+
+            private delegate void orig_ThoriumModYoyoAI(int index, float seconds, float length, float acceleration, float rotationSpeed, object action, object initialize);
         }
     }
 }
