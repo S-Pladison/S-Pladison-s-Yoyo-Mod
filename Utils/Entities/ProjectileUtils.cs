@@ -23,16 +23,15 @@ namespace SPYoyoMod.Utils
             if (!proj.IsYoyo() || proj.IsCounterweight())
                 return false;
 
-            foreach (var otherProj in Main.ActiveProjectiles)
+            for (int i = 0; i < proj.whoAmI; i++)
             {
-                if (otherProj.whoAmI > proj.whoAmI)
-                    return false;
+                ref var otherProj = ref Main.projectile[i];
 
                 if (otherProj.type == proj.type && otherProj.owner == proj.owner)
-                    return true;
+                    return false;
             }
 
-            return false;
+            return true;
         }
 
         /// <summary>
