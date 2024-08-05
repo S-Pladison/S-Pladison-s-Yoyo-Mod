@@ -2,3 +2,15 @@ Projectiles: {
 	// BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
 	// CascadeExplosionProjectile.DisplayName: Cascade Explosion Projectile
 }
+
+Buffs: {
+	ValorDebuff: {
+		// DisplayName: Valor Debuff
+		// Description: Mods.SPYoyoMod.Buffs.ValorDebuff.Description
+	}
+
+	ValorBuff: {
+		// DisplayName: Valor Buff
+		// Description: Mods.SPYoyoMod.Buffs.ValorBuff.Description
+	}
+}

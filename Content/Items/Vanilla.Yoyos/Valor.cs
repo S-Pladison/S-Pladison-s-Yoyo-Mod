@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using SPYoyoMod.Common.Hooks;
+using SPYoyoMod.Common.ModSupport;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ID;
@@ -8,8 +10,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
     public sealed class ValorAssets : ILoadable
     {
+        // [ Текстуры ]
+        public const string InvisiblePath = $"{_assetPath}Invisible";
+        public const string BuffPath = $"{_valorPath}ValorBuff";
+
         // [ Общее ]
-        private const string _path = $"{nameof(SPYoyoMod)}/Assets/Items/Vanilla.Yoyos/Valor/";
+        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
+        private const string _valorPath = $"{_assetPath}Items/Vanilla.Yoyos/Valor/";
 
         void ILoadable.Unload() { }
 
@@ -27,33 +34,79 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!target.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC))
-                return;
+            target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(3f));
+        }
+    }
 
-            globalNPC.ChainToTile(target);
+    public sealed class ValorBuff : ModBuff, IAddedToNPCBuff, IDeletedFromNPCBuff
+    {
+        public override string Texture => ValorAssets.BuffPath;
+
+        public override void SetStaticDefaults()
+        {
+            Main.debuff[Type] = true;
+        }
+
+        void IAddedToNPCBuff.OnAddToNPC(int buffType, int buffIndex, NPC npc)
+        {
+            if (!npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC))
+            {
+                npc.DelBuff(buffIndex);
+                return;
+            }
+
+            if (!globalNPC.TryFindSuitableTile(npc, out var tileCoord))
+            {
+                npc.DelBuff(buffIndex);
+                return;
+            }
+
+            globalNPC.ChainToTile(npc, tileCoord);
+        }
+
+        void IDeletedFromNPCBuff.OnDeleteFromNPC(int buffType, int buffIndex, NPC npc)
+        {
+            npc.GetGlobalNPC<ValorGlobalNPC>().BreakChain(npc);
         }
     }
 
     public sealed class ValorGlobalNPC : GlobalNPC
     {
         public override bool InstancePerEntity => true;
+        public bool IsChained { get; private set; }
 
-        public void ChainToTile(NPC npc)
-        {
-            if (!npc.CanBeChasedBy() || npc.IsBossOrRelated())
-                return;
-
-            if (!TryFindSuitableTile(npc, out var tileCoord))
-                return;
-
-            // ...
-        }
-
-        private bool TryFindSuitableTile(NPC npc, out Point tileCoord)
+        public bool TryFindSuitableTile(NPC npc, out Point tileCoord)
         {
             tileCoord = default;
 
             return true;
         }
+
+        public void ChainToTile(NPC npc, Point tileCoord)
+        {
+            if (IsChained)
+                return;
+
+            // ...
+
+            IsChained = true;
+            npc.netUpdate = true;
+        }
+
+        public void BreakChain(NPC npc)
+        {
+            if (!IsChained)
+                return;
+
+            // ...
+
+            IsChained = false;
+            npc.netUpdate = true;
+        }
+    }
+
+    public sealed class ValorPlayer : ModPlayer
+    {
+        private int _chainedNPCIndex = -1;
     }
 }
