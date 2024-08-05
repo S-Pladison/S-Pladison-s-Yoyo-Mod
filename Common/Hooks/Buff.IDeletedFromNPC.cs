@@ -17,7 +17,6 @@ namespace SPYoyoMod.Common.Hooks
         void OnDeleteFromNPC(int buffType, int buffIndex, NPC npc);
     }
 
-    [Autoload(Side = ModSide.Client)]
     internal sealed class DeletedFromNPCBuffImplementation : ILoadable
     {
         private Action<int, int, NPC>[] _hook;

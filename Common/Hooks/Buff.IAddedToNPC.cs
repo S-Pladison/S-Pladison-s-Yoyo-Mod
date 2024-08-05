@@ -19,7 +19,6 @@ namespace SPYoyoMod.Common.Hooks
         void OnAddToNPC(int buffType, int buffIndex, NPC npc);
     }
 
-    [Autoload(Side = ModSide.Client)]
     internal sealed class AddedToNPCBuffImplementation : ILoadable
     {
         private Action<int, int, NPC>[] _hook;
