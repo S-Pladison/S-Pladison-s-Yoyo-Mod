@@ -122,17 +122,17 @@ namespace SPYoyoMod.Utils
                 }
             }
 
-            var tileInfo = tileInCircleList
+            var tileInfoList = tileInCircleList
                 .Select(p => new Tuple<Point, double>(p, Math.Sqrt(Math.Pow(p.X - centerCoord.X, 2) + Math.Pow(p.Y - centerCoord.Y, 2))))
                 .Where(t => WorldGen.InWorld(t.Item1.X, t.Item1.Y) && predicate(t.Item1));
 
-            if (!tileInfo.Any())
+            if (!tileInfoList.Any())
             {
                 tileCoord = default;
                 return false;
             }
 
-            tileCoord = tileInfo.Aggregate((min, next) => min.Item2 < next.Item2 ? min : next).Item1;
+            tileCoord = tileInfoList.Aggregate((min, next) => min.Item2 < next.Item2 ? min : next).Item1;
             return true;
         }
     }
