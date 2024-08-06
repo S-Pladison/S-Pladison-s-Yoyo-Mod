@@ -3,6 +3,7 @@ using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Common.ModSupport;
 using SPYoyoMod.Utils;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -74,6 +75,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public override bool InstancePerEntity => true;
         public bool IsChained { get; private set; }
+
+        public override void OnSpawn(NPC npc, IEntitySource source)
+        {
+            if (npc.IsBossOrRelated())
+            {
+                npc.buffImmune[ModContent.BuffType<ValorBuff>()] = true;
+            }
+        }
 
         public bool TryFindSuitableTile(NPC npc, out Point tileCoord)
         {
