@@ -7,6 +7,9 @@
 	<PropertyGroup>
 		
 	</PropertyGroup>
+	<ItemGroup>
+	  <None Remove="Localization\en-US\Mods.SPYoyoMod.Buffs.hjson" />
+	</ItemGroup>
 
 	<!-- References -->
 
