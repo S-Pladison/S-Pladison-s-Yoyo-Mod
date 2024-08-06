@@ -11,12 +11,12 @@ namespace SPYoyoMod.Utils
         public const int TileSizeInPixels = 16;
 
         /// <summary>
-        /// Производит поиск плитки по спирали изнутри наружу. Начальный путь с центра - вниз и налево и так по часовой.
+        /// РџСЂРѕРёР·РІРѕРґРёС‚ РїРѕРёСЃРє РїР»РёС‚РєРё РїРѕ СЃРїРёСЂР°Р»Рё РёР·РЅСѓС‚СЂРё РЅР°СЂСѓР¶Сѓ. РќР°С‡Р°Р»СЊРЅС‹Р№ РїСѓС‚СЊ СЃ С†РµРЅС‚СЂР° - РІРЅРёР· Рё РЅР°Р»РµРІРѕ Рё С‚Р°Рє РїРѕ С‡Р°СЃРѕРІРѕР№.
         /// </summary>
-        /// <param name="centerCoord">Координата плитки, откуда начинается поиск.</param>
-        /// <param name="tilesFromCenter">Расстояние проверки от центра.</param>
-        /// <param name="predicate">Условие поиска плитки.</param>
-        /// <param name="tileCoord">Резулат поиска. Является координатой плитки.</param>
+        /// <param name="centerCoord">РљРѕРѕСЂРґРёРЅР°С‚Р° РїР»РёС‚РєРё, РѕС‚РєСѓРґР° РЅР°С‡РёРЅР°РµС‚СЃСЏ РїРѕРёСЃРє.</param>
+        /// <param name="tilesFromCenter">Р Р°СЃСЃС‚РѕСЏРЅРёРµ РїСЂРѕРІРµСЂРєРё РѕС‚ С†РµРЅС‚СЂР°.</param>
+        /// <param name="predicate">РЈСЃР»РѕРІРёРµ РїРѕРёСЃРєР° РїР»РёС‚РєРё.</param>
+        /// <param name="tileCoord">Р РµР·СѓР»Р°С‚ РїРѕРёСЃРєР°. РЇРІР»СЏРµС‚СЃСЏ РєРѕРѕСЂРґРёРЅР°С‚РѕР№ РїР»РёС‚РєРё.</param>
         public static bool TryFindTileSpiralTraverse(Point centerCoord, int tilesFromCenter, Predicate<Point> predicate, out Point tileCoord)
         {
             tileCoord = default;
@@ -25,22 +25,22 @@ namespace SPYoyoMod.Utils
             int tileCheckCount = 0;
             int width = tilesFromCenter * 2 + 1;
 
-            // Направления движения
+            // РќР°РїСЂР°РІР»РµРЅРёСЏ РґРІРёР¶РµРЅРёСЏ
             int[] dirX = [0, 1, 0, -1];
             int[] dirY = [1, 0, -1, 0];
 
-            // Начальная позиция
+            // РќР°С‡Р°Р»СЊРЅР°СЏ РїРѕР·РёС†РёСЏ
             int tileX = centerCoord.X;
             int tileY = centerCoord.Y;
 
-            // Проверяем текущую плитку на позиции [tileX, tileY]
+            // РџСЂРѕРІРµСЂСЏРµРј С‚РµРєСѓС‰СѓСЋ РїР»РёС‚РєСѓ РЅР° РїРѕР·РёС†РёРё [tileX, tileY]
             bool CheckTile()
             {
                 tileCheckCount++;
                 return WorldGen.InWorld(tileX, tileY) && predicate(new(tileX, tileY));
             }
 
-            // Проверка центральной плитки
+            // РџСЂРѕРІРµСЂРєР° С†РµРЅС‚СЂР°Р»СЊРЅРѕР№ РїР»РёС‚РєРё
             if (CheckTile())
             {
                 tileCoord = new Point(tileX, tileY);
@@ -82,17 +82,17 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Производит поиск ближайшей плитки в определенном радиусе от центра.
+        /// РџСЂРѕРёР·РІРѕРґРёС‚ РїРѕРёСЃРє Р±Р»РёР¶Р°Р№С€РµР№ РїР»РёС‚РєРё РІ РѕРїСЂРµРґРµР»РµРЅРЅРѕРј СЂР°РґРёСѓСЃРµ РѕС‚ С†РµРЅС‚СЂР°.
         /// </summary>
-        /// <param name="centerCoord">Координата плитки, откуда начинается поиск.</param>
-        /// <param name="tilesFromCenter">Расстояние проверки от центра.</param>
-        /// <param name="predicate">Условие поиска плитки.</param>
-        /// <param name="tileCoord">Резулат поиска. Является координатой плитки.</param>
+        /// <param name="centerCoord">РљРѕРѕСЂРґРёРЅР°С‚Р° РїР»РёС‚РєРё, РѕС‚РєСѓРґР° РЅР°С‡РёРЅР°РµС‚СЃСЏ РїРѕРёСЃРє.</param>
+        /// <param name="tilesFromCenter">Р Р°СЃСЃС‚РѕСЏРЅРёРµ РїСЂРѕРІРµСЂРєРё РѕС‚ С†РµРЅС‚СЂР°.</param>
+        /// <param name="predicate">РЈСЃР»РѕРІРёРµ РїРѕРёСЃРєР° РїР»РёС‚РєРё.</param>
+        /// <param name="tileCoord">Р РµР·СѓР»Р°С‚ РїРѕРёСЃРєР°. РЇРІР»СЏРµС‚СЃСЏ РєРѕРѕСЂРґРёРЅР°С‚РѕР№ РїР»РёС‚РєРё.</param>
         public static bool TryFindClosestTile(Point centerCoord, int tilesFromCenter, Predicate<Point> predicate, out Point tileCoord)
         {
             var tileInCircleList = new List<Point>(tilesFromCenter * tilesFromCenter + 1);
 
-            // Работаем лишь с 1/4 круга (верхняя левая)
+            // Р Р°Р±РѕС‚Р°РµРј Р»РёС€СЊ СЃ 1/4 РєСЂСѓРіР° (РІРµСЂС…РЅСЏСЏ Р»РµРІР°СЏ)
             for (var x = -tilesFromCenter; x < 0; x++)
             {
                 for (var y = -tilesFromCenter; y < 0; y++)
@@ -113,7 +113,7 @@ namespace SPYoyoMod.Utils
                 }
             }
 
-            // Нужно добавить отдельные тайлы из 'креста' круга, т.к. ранее мы их не добавляли
+            // РќСѓР¶РЅРѕ РґРѕР±Р°РІРёС‚СЊ РѕС‚РґРµР»СЊРЅС‹Рµ С‚Р°Р№Р»С‹ РёР· 'РєСЂРµСЃС‚Р°' РєСЂСѓРіР°, С‚.Рє. СЂР°РЅРµРµ РјС‹ РёС… РЅРµ РґРѕР±Р°РІР»СЏР»Рё
             for (var x = centerCoord.X - tilesFromCenter; x <= centerCoord.X + tilesFromCenter; x++)
             {
                 for (var y = centerCoord.Y - tilesFromCenter; y <= centerCoord.Y + tilesFromCenter; y++)
