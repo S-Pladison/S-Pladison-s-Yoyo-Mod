@@ -1,4 +1,7 @@
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
@@ -14,6 +17,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         // [ Текстуры ]
         public const string InvisiblePath = $"{_assetPath}Invisible";
         public const string BuffPath = $"{_valorPath}ValorBuff";
+
+        // [ Эффекты ]
+        public static Asset<Effect> NPCOutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_valorPath}ValorNPCOutline");
 
         // [ Общее ]
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -59,10 +65,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void IAddedToNPCBuff.OnAddToNPC(int buffType, int buffIndex, NPC npc)
         {
             ValorGlobalNPC.ActivateEffect(npc);
+            ValorNPCOutlineHandler.AddNPC(npc);
         }
 
         void IDeletedFromNPCBuff.OnDeleteFromNPC(int buffType, int buffIndex, NPC npc)
         {
+            ValorNPCOutlineHandler.RemoveNPC(npc);
             ValorGlobalNPC.DeactivateEffect(npc);
         }
     }
@@ -80,7 +88,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnSpawn(NPC npc, IEntitySource source)
         {
-            if (!CheckCanBeChained(npc))
+            if (!CanBeChained(npc))
             {
                 npc.buffImmune[ModContent.BuffType<ValorBuff>()] = true;
             }
@@ -149,8 +157,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             return true;
         }
 
-        private static bool CheckCanBeChained(NPC npc)
-            => !npc.IsBossOrRelated();
+        private static bool CanBeChained(NPC npc)
+            => npc.CanBeChasedBy() && !npc.IsBossOrRelated();
 
         private static bool TryFindSuitableTile(NPC npc, out Point tileCoord)
             => TileUtils.TryFindTileSpiralTraverse(
@@ -160,8 +168,79 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 tileCoord: out tileCoord);
     }
 
-    public sealed class ValorPlayer : ModPlayer
+    public sealed class ValorNPCOutlineHandler : ILoadable
     {
-        private int _chainedNPCIndex = -1;
+        private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
+        private readonly NPCObserver _npcObserver = new(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.MustBeChained);
+
+        private bool _targetWasPrepared = false;
+
+        void ILoadable.Load(Terraria.ModLoader.Mod mod)
+        {
+            ModEvents.OnPostUpdateEverything += _npcObserver.Update;
+            ModEvents.OnPostUpdateCameraPosition += DrawToTarget;
+
+            On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
+            {
+                orig(main);
+                DrawToScreen();
+            };
+        }
+
+        void ILoadable.Unload()
+        {
+            ModEvents.OnPostUpdateCameraPosition -= DrawToTarget;
+            ModEvents.OnPostUpdateEverything -= _npcObserver.Update;
+        }
+
+        public static void AddNPC(NPC npc)
+            => ModContent.GetInstance<ValorNPCOutlineHandler>()._npcObserver.Add(npc);
+
+        public static void RemoveNPC(NPC npc)
+            => ModContent.GetInstance<ValorNPCOutlineHandler>()._npcObserver.Remove(npc);
+
+        private void DrawToTarget()
+        {
+            if (!_npcObserver.AnyEntity)
+                return;
+
+            _targetWasPrepared = false;
+
+            var device = Main.graphics.GraphicsDevice;
+            device.SetRenderTarget(_renderTarget);
+            device.Clear(Color.Transparent);
+            {
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+
+                foreach (var npc in _npcObserver.GetEntityInstances())
+                    NPCUtils.DrawNPC(npc);
+
+                Main.spriteBatch.End();
+            }
+            device.SetRenderTarget(null);
+
+            _targetWasPrepared = true;
+        }
+
+        private void DrawToScreen()
+        {
+            if (!_targetWasPrepared)
+                return;
+
+            var effect = ValorAssets.NPCOutlineEffect.Prepare(parameters =>
+            {
+                parameters["ScreenSize"].SetValue(_renderTarget.Size);
+                parameters["OutlineColor"].SetValue(new Color(35, 90, 255).ToVector4());
+                parameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
+            });
+
+            Main.spriteBatch.End(out var spriteBatchSnapshot);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Matrix.Identity);
+            Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(spriteBatchSnapshot);
+
+            _targetWasPrepared = false;
+        }
     }
 }
