@@ -314,7 +314,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
 
         private static bool CanBeChained(NPC npc)
-            => npc.CanBeChasedBy() && !npc.IsBossOrRelated();
+            => npc.CanBeChasedBy() && !npc.IsBossOrRelated() && npc.width <= TileUtils.TileSizeInPixels * 6f && npc.height <= TileUtils.TileSizeInPixels * 6f;
 
         private static bool TryFindSuitableTile(NPC npc, out Point tileCoord)
             => TileUtils.TryFindClosestTile(
