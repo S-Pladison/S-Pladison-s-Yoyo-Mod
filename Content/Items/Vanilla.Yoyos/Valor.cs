@@ -86,7 +86,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void Load()
         {
-            // Из-за мелких артифактов по типу тряски и т.п., решил что лучше решения не будет
+            // Из-за мелких артефактов по типу тряски и т.п., решил что лучше решения не будет
             IL_NPC.UpdateNPC_Inner += (il) =>
             {
                 var cursor = new ILCursor(il);
