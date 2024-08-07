@@ -140,5 +140,18 @@ namespace SPYoyoMod.Utils
             parent = (child ? Main.npc[npc.realLife] : null);
             return child;
         }
+
+        /// <summary>
+        /// Рисует NPC с учетом различных факторов по типу смещения в сетевой игре и т.д.
+        /// </summary>
+        public static void DrawNPC(NPC npc, bool? behindTiles = null)
+        {
+            var oldPosition = npc.position;
+            npc.position += npc.netOffset;
+
+            Main.instance.DrawNPC(npc.whoAmI, behindTiles ?? npc.behindTiles);
+
+            npc.position = oldPosition;
+        }
     }
 }
