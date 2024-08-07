@@ -327,6 +327,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 tileCoord: out tileCoord);
     }
 
+    [Autoload(Side = ModSide.Client)]
     public sealed class ValorNPCOutlineHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
@@ -353,10 +354,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
 
         public static void AddNPC(NPC npc)
-            => ModContent.GetInstance<ValorNPCOutlineHandler>()._npcObserver.Add(npc);
+            => ModContent.GetInstance<ValorNPCOutlineHandler>()?._npcObserver.Add(npc);
 
         public static void RemoveNPC(NPC npc)
-            => ModContent.GetInstance<ValorNPCOutlineHandler>()._npcObserver.Remove(npc);
+            => ModContent.GetInstance<ValorNPCOutlineHandler>()?._npcObserver.Remove(npc);
 
         private void DrawToTarget()
         {
