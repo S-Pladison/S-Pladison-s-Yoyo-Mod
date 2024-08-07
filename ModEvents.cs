@@ -28,6 +28,11 @@ namespace SPYoyoMod
         public static event Action OnPreUpdateDusts;
 
         /// <summary>
+        /// Вызывается после всего, что есть в этой игре.
+        /// </summary>
+        public static event Action OnPostUpdateEverything;
+
+        /// <summary>
         /// Вызывается после обновления позиции камеры. Полезен для отрисовки на целях рендеринга.
         /// </summary>
         public static event Action OnPostUpdateCameraPosition;
@@ -61,6 +66,7 @@ namespace SPYoyoMod
             OnPostSetupRecipes += ModUtils.EmptyAction;
             OnPostSetupContent += ModUtils.EmptyAction;
             OnPreUpdateDusts += ModUtils.EmptyAction;
+            OnPostUpdateEverything += ModUtils.EmptyAction;
             OnPostUpdateCameraPosition += ModUtils.EmptyAction;
             OnResolutionChanged += ModUtils.EmptyAction;
 
@@ -75,6 +81,7 @@ namespace SPYoyoMod
         {
             OnResolutionChanged = null;
             OnPostUpdateCameraPosition = null;
+            OnPostUpdateEverything = null;
             OnPreUpdateDusts = null;
             OnPostSetupContent = null;
             OnPostSetupRecipes = null;
@@ -130,6 +137,9 @@ namespace SPYoyoMod
 
             public override void PreUpdateDusts()
                 => ModEvents.OnPreUpdateDusts();
+
+            public override void PostUpdateEverything()
+                => ModEvents.OnPostUpdateEverything();
 
             private void ResolutionChangedHandler(Vector2 screenSize)
             {
