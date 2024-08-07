@@ -150,6 +150,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
         }
 
+        public override void OnKill(NPC npc)
+        {
+            BreakChain(npc);
+        }
+
         public override bool PreAI(NPC npc)
         {
             if (!MustBeChained)
