@@ -336,6 +336,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             ModEvents.OnPostUpdateEverything += _npcObserver.Update;
             ModEvents.OnPostUpdateCameraPosition += DrawToTarget;
+            ModEvents.OnPreDraw += EmitLight;
 
             On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
             {
@@ -355,6 +356,32 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public static void RemoveNPC(NPC npc)
             => ModContent.GetInstance<ValorNPCOutlineHandler>()?._npcObserver.Remove(npc);
+
+        private void EmitLight()
+        {
+            // - Почему в PreDraw, а не в Update или гдет еще?
+            // В паузе источники освещения из Update не появляются...
+            // Да, костыль, но надеюсь он ни на что не повлияет
+
+            if (!_npcObserver.AnyEntity)
+                return;
+
+            // Lighting.AddLight(...)
+            // {
+            //     if (!Main.gamePaused && Main.netMode != 2)
+            //     {
+            //         _activeEngine.AddLight(...);
+            //     }
+            // }
+
+            var origGamePaused = Main.gamePaused;
+            Main.gamePaused = false;
+
+            foreach (var npc in _npcObserver.GetEntityInstances())
+                Lighting.AddLight(npc.Center, new Color(35, 90, 255).ToVector3() * 0.3f);
+
+            Main.gamePaused = origGamePaused;
+        }
 
         private void DrawToTarget()
         {
@@ -387,7 +414,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             var effect = ValorAssets.NPCOutlineEffect.Prepare(parameters =>
             {
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
-                parameters["OutlineColor"].SetValue(new Color(35, 90, 255).ToVector4());
+                parameters["OutlineColor"].SetValue(new Color(18, 75, 210).ToVector4());
                 parameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
             });
 
