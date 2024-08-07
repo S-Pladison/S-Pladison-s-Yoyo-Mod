@@ -42,6 +42,14 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
+        /// Удаляет сущность из наблюдения.
+        /// </summary>
+        public void Remove(T entity)
+        {
+            _entities.Remove(new EntityData(entity.whoAmI, GetEntityType(entity)));
+        }
+
+        /// <summary>
         /// Удаляет не соответствующие условиям наблюдения сущности.
         /// </summary>
         public void Update()
