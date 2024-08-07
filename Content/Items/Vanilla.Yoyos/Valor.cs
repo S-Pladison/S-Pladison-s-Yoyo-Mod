@@ -1,14 +1,20 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
+using System;
+using System.IO;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -41,12 +47,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(3f));
+            target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
         }
 
         public override void PostDraw(Projectile proj, Color lightColor)
         {
-            if (TileUtils.TryFindClosestTile(proj.Center.ToTileCoordinates(), (int)(ValorGlobalNPC.ChainLengthMax / TileUtils.TileSizeInPixels), i => WorldGen.SolidOrSlopedTile(i.X, i.Y) || Main.tile[i.X, i.Y].IsHalfBlock || TileID.Sets.Platforms[Main.tile[i.X, i.Y].TileType], out var tileCoord))
+            if (TileUtils.TryFindClosestTile(proj.Center.ToTileCoordinates(), ValorGlobalNPC.TileCheckRadius, i => WorldGen.SolidOrSlopedTile(i.X, i.Y) || Main.tile[i.X, i.Y].IsHalfBlock || TileID.Sets.Platforms[Main.tile[i.X, i.Y].TileType], out var tileCoord))
             {
                 Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, tileCoord.ToWorldCoordinates(0, 0) - Main.screenPosition, new Rectangle(0, 0, 16, 16), Color.Red);
             }
@@ -65,26 +71,76 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void IAddedToNPCBuff.OnAddToNPC(int buffType, int buffIndex, NPC npc)
         {
             ValorGlobalNPC.ActivateEffect(npc);
-            ValorNPCOutlineHandler.AddNPC(npc);
         }
 
         void IDeletedFromNPCBuff.OnDeleteFromNPC(int buffType, int buffIndex, NPC npc)
         {
-            ValorNPCOutlineHandler.RemoveNPC(npc);
             ValorGlobalNPC.DeactivateEffect(npc);
         }
     }
 
     public sealed class ValorGlobalNPC : GlobalNPC
     {
-        public static readonly float ChainLengthMax = TileUtils.TileSizeInPixels * 7f;
         public static readonly int TileCheckFrequency = ModUtils.SecondsToTicks(1f);
+        public static readonly int TileCheckRadius = 7;
+        public static readonly float ChainAddLength = TileUtils.TileSizeInPixels * 2.5f;
+        public static readonly float ChainLengthToBreak = TileUtils.TileSizeInPixels * 12f;
 
         private int _timeSinceLastTileCheck;
+        private Point? _chainTileCoord;
+        private float _chainMaxLength;
 
         public override bool InstancePerEntity { get => true; }
-        public bool IsChained { get; private set; }
+        public bool IsChained { get => _chainTileCoord is not null; }
         public bool MustBeChained { get; private set; }
+
+        public override void Load()
+        {
+            // Из-за мелких артифактов по типу тряски и т.п., решил что лучше решения не будет
+            IL_NPC.UpdateNPC_Inner += (il) =>
+            {
+                var cursor = new ILCursor(il);
+
+                // Идем в конец функции
+                cursor.Index = cursor.Instrs.Count - 1;
+
+                // if (!noTileCollide)
+
+                // IL_0775: ldarg.0
+                // IL_0776: ldfld bool Terraria.NPC::noTileCollide
+                // IL_077b: brtrue.s IL_0788
+
+                if (!cursor.TryGotoPrev(
+                    MoveType.Before,
+                    i => i.MatchLdarg(0),
+                    i => i.MatchLdfld<NPC>("noTileCollide"),
+                    i => i.MatchBrtrue(out _)))
+                {
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(ValorGlobalNPC)}..{nameof(IL_NPC.UpdateNPC_Inner)}\" failed...");
+                    return;
+                }
+
+                cursor.Index--;
+
+                cursor.Emit(OpCodes.Ldarg_0);
+                cursor.EmitDelegate<Action<NPC>>(npc =>
+                {
+                    if (!npc.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.IsChained)
+                        return;
+
+                    valorNPC.UpdateCollision(npc);
+                });
+            };
+
+            // При любой телепортации НПС разрушаем ёё
+            On_NPC.Teleport += (orig, npc, position, style, extraInfo) =>
+            {
+                if (npc.TryGetGlobalNPC(out ValorGlobalNPC valorNPC))
+                    valorNPC.BreakChain(npc);
+
+                orig(npc, position, style, extraInfo);
+            };
+        }
 
         public override void OnSpawn(NPC npc, IEntitySource source)
         {
@@ -96,15 +152,84 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreAI(NPC npc)
         {
-            // Периодически пытаемся приципить врага к плитке, если он еще не закреплен
-            if (MustBeChained && !IsChained && _timeSinceLastTileCheck++ < TileCheckFrequency)
-            {
-                _timeSinceLastTileCheck = 0;
+            if (!MustBeChained)
+                return true;
 
-                ChainToTile(npc);
+            if (!IsChained)
+            {
+                // Периодически пытаемся приципить врага к плитке, если он еще не закреплен
+                if (_timeSinceLastTileCheck++ < TileCheckFrequency)
+                {
+                    _timeSinceLastTileCheck = 0;
+
+                    ChainToTile(npc);
+                }
+
+                return true;
+            }
+
+            // Разрушаем цепь, если НПС слишком далеко от тайла
+            if (Vector2.Distance(_chainTileCoord.Value.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
+            {
+                BreakChain(npc);
+                return true;
+            }
+
+            // Разрушаем цепь для Goblin Sorcerer, Tim, Dark Caster и других перед телепортацией
+            if (npc.aiStyle == NPCAIStyleID.Caster && npc.ai[2] != 0f && npc.ai[3] != 0f)
+            {
+                BreakChain(npc);
+                return true;
             }
 
             return true;
+        }
+
+        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
+        {
+            bitWriter.WriteBit(MustBeChained);
+
+            if (!MustBeChained)
+                return;
+
+            bitWriter.WriteBit(IsChained);
+
+            if (!IsChained)
+            {
+                binaryWriter.Write((short)_timeSinceLastTileCheck);
+                return;
+            }
+
+            binaryWriter.Write((short)_chainTileCoord.Value.X);
+            binaryWriter.Write((short)_chainTileCoord.Value.Y);
+            binaryWriter.Write(_chainMaxLength);
+        }
+
+        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
+        {
+            MustBeChained = bitReader.ReadBit();
+
+            if (!MustBeChained)
+                return;
+
+            var isChained = bitReader.ReadBit();
+
+            if (!isChained)
+            {
+                _timeSinceLastTileCheck = binaryReader.ReadInt16();
+                return;
+            }
+
+            _chainTileCoord = new Point(binaryReader.ReadInt16(), binaryReader.ReadInt16());
+            _chainMaxLength = binaryReader.ReadSingle();
+        }
+
+        public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
+        {
+            if (_chainTileCoord is null)
+                return;
+
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, _chainTileCoord.Value.ToWorldCoordinates(0, 0) - Main.screenPosition, new Rectangle(0, 0, 16, 16), Color.Blue);
         }
 
         public static void ActivateEffect(NPC npc)
@@ -115,7 +240,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             globalNPC.MustBeChained = true;
+            globalNPC.ChainToTile(npc);
             npc.netUpdate = true;
+
+            ValorNPCOutlineHandler.AddNPC(npc);
         }
 
         public static void DeactivateEffect(NPC npc)
@@ -128,6 +256,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             globalNPC.BreakChain(npc);
             globalNPC.MustBeChained = false;
             npc.netUpdate = true;
+
+            ValorNPCOutlineHandler.RemoveNPC(npc);
         }
 
         private bool ChainToTile(NPC npc)
@@ -138,9 +268,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!TryFindSuitableTile(npc, out var tileCoord))
                 return false;
 
-            // ...
+            var distFromNPCToTile = Vector2.Distance(tileCoord.ToWorldCoordinates(), npc.Center);
 
-            IsChained = true;
+            if (distFromNPCToTile >= ChainLengthToBreak)
+                return false;
+
+            _chainTileCoord = tileCoord;
+            _chainMaxLength = distFromNPCToTile + ChainAddLength;
             npc.netUpdate = true;
             return true;
         }
@@ -150,21 +284,41 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!IsChained)
                 return false;
 
-            // ...
-
-            IsChained = false;
+            _chainMaxLength = 0;
+            _chainTileCoord = null;
             npc.netUpdate = true;
+
+            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+
             return true;
+        }
+
+        private void UpdateCollision(NPC npc)
+        {
+            var chainPosition = _chainTileCoord.Value.ToWorldCoordinates();
+
+            var nextPosition = npc.Center + npc.velocity;
+            var vectorFromChainToNPC = nextPosition - chainPosition;
+            var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
+
+            if (vectorFromChainToNPCLength <= _chainMaxLength)
+                return;
+
+            var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
+            var newPosition = chainPosition + normalizedVectorFromChainToNPC * _chainMaxLength;
+            var velocityCorrection = newPosition - nextPosition;
+
+            npc.velocity += velocityCorrection;
         }
 
         private static bool CanBeChained(NPC npc)
             => npc.CanBeChasedBy() && !npc.IsBossOrRelated();
 
         private static bool TryFindSuitableTile(NPC npc, out Point tileCoord)
-            => TileUtils.TryFindTileSpiralTraverse(
+            => TileUtils.TryFindClosestTile(
                 centerCoord: npc.Center.ToTileCoordinates(),
-                tilesFromCenter: (int)(ChainLengthMax / TileUtils.TileSizeInPixels),
-                predicate: tileCoord => true,
+                tilesFromCenter: TileCheckRadius,
+                predicate: t => WorldGen.SolidOrSlopedTile(t.X, t.Y) || Main.tile[t.X, t.Y].IsHalfBlock || TileID.Sets.Platforms[Main.tile[t.X, t.Y].TileType],
                 tileCoord: out tileCoord);
     }
 
