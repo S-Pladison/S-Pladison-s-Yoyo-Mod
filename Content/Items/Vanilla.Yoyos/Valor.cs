@@ -4,7 +4,6 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.RenderTargets;
-using SPYoyoMod.Common.Hooks;
 using SPYoyoMod.Utils;
 using System;
 using System.IO;
@@ -59,23 +58,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorBuff : ModBuff, IAddedToNPCBuff, IDeletedFromNPCBuff
+    public sealed class ValorBuff : ModBuff
     {
         public override string Texture => ValorAssets.BuffPath;
 
         public override void SetStaticDefaults()
         {
             Main.debuff[Type] = true;
-        }
-
-        void IAddedToNPCBuff.OnAddToNPC(int buffType, int buffIndex, NPC npc)
-        {
-            ValorGlobalNPC.ActivateEffect(npc);
-        }
-
-        void IDeletedFromNPCBuff.OnDeleteFromNPC(int buffType, int buffIndex, NPC npc)
-        {
-            ValorGlobalNPC.DeactivateEffect(npc);
         }
     }
 
@@ -86,6 +75,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly float ChainAddLength = TileUtils.TileSizeInPixels * 2.5f;
         public static readonly float ChainLengthToBreak = TileUtils.TileSizeInPixels * 12f;
 
+        private bool _oldMustBeChained;
         private int _timeSinceLastTileCheck;
         private Point? _chainTileCoord;
         private float _chainMaxLength;
@@ -157,9 +147,41 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreAI(NPC npc)
         {
+            // Обновляем информацию о баффе
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                var hasBuff = npc.HasBuff<ValorBuff>();
+
+                if (MustBeChained != hasBuff)
+                {
+                    MustBeChained = hasBuff;
+                    npc.netUpdate = true;
+                }
+            }
+
+            // Меняем состояние эффекта от баффа
+            if (_oldMustBeChained != MustBeChained)
+            {
+                if (MustBeChained)
+                {
+                    ValorNPCOutlineHandler.AddNPC(npc);
+                    ChainToTile(npc);
+                }
+                else
+                {
+                    ValorNPCOutlineHandler.RemoveNPC(npc);
+                    BreakChain(npc);
+                }
+
+                _oldMustBeChained = MustBeChained;
+            }
+
+            // Если эффект отсутствует, прекращаем функцию
             if (!MustBeChained)
                 return true;
+            // Иначе, если эффект есть ...
 
+            // ... но НПС не зацеплен, то:
             if (!IsChained)
             {
                 // Периодически пытаемся приципить врага к плитке, если он еще не закреплен
@@ -173,14 +195,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return true;
             }
 
-            // Разрушаем цепь, если НПС слишком далеко от тайла
+            // ... и НПС зацеплен, то ...
+
+            // ... разрушаем цепь, если НПС слишком далеко от тайла
             if (Vector2.Distance(_chainTileCoord.Value.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
             {
                 BreakChain(npc);
                 return true;
             }
 
-            // Разрушаем цепь для Goblin Sorcerer, Tim, Dark Caster и других перед телепортацией
+            // ... разрушаем цепь для Goblin Sorcerer, Tim, Dark Caster и других перед телепортацией
             if (npc.aiStyle == NPCAIStyleID.Caster && npc.ai[2] != 0f && npc.ai[3] != 0f)
             {
                 BreakChain(npc);
@@ -237,34 +261,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, _chainTileCoord.Value.ToWorldCoordinates(0, 0) - Main.screenPosition, new Rectangle(0, 0, 16, 16), Color.Blue);
         }
 
-        public static void ActivateEffect(NPC npc)
-        {
-            var globalNPC = npc.GetGlobalNPC<ValorGlobalNPC>();
-
-            if (globalNPC.MustBeChained)
-                return;
-
-            globalNPC.MustBeChained = true;
-            globalNPC.ChainToTile(npc);
-            npc.netUpdate = true;
-
-            ValorNPCOutlineHandler.AddNPC(npc);
-        }
-
-        public static void DeactivateEffect(NPC npc)
-        {
-            var globalNPC = npc.GetGlobalNPC<ValorGlobalNPC>();
-
-            if (!globalNPC.MustBeChained)
-                return;
-
-            globalNPC.BreakChain(npc);
-            globalNPC.MustBeChained = false;
-            npc.netUpdate = true;
-
-            ValorNPCOutlineHandler.RemoveNPC(npc);
-        }
-
         private bool ChainToTile(NPC npc)
         {
             if (IsChained)
@@ -281,6 +277,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _chainTileCoord = tileCoord;
             _chainMaxLength = distFromNPCToTile + ChainAddLength;
             npc.netUpdate = true;
+
             return true;
         }
 
@@ -289,11 +286,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!IsChained)
                 return false;
 
+            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+
             _chainMaxLength = 0;
             _chainTileCoord = null;
             npc.netUpdate = true;
-
-            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
 
             return true;
         }
