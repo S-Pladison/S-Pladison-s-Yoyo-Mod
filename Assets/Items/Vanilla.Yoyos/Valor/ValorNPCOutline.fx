@@ -8,7 +8,6 @@ sampler TextureSampler0 = sampler_state
 float2 ScreenSize;
 float4 OutlineColor;
 float2 Zoom;
-float Time;
 
 float Outline(sampler smp, float2 coords, float2 size)
 {
