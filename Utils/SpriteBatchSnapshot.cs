@@ -1,19 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
+using System.Runtime.CompilerServices;
 
 namespace SPYoyoMod.Utils
 {
     public struct SpriteBatchSnapshot
     {
-        private static readonly Func<SpriteBatch, SpriteSortMode> _sortModeFieldAccessor;
-        private static readonly Func<SpriteBatch, BlendState> _blendStateFieldAccessor;
-        private static readonly Func<SpriteBatch, SamplerState> _samplerStateFieldAccessor;
-        private static readonly Func<SpriteBatch, DepthStencilState> _depthStencilStateFieldAccessor;
-        private static readonly Func<SpriteBatch, RasterizerState> _rasterizerStateFieldAccessor;
-        private static readonly Func<SpriteBatch, Effect> _effectFieldAccessor;
-        private static readonly Func<SpriteBatch, Matrix> _matrixFieldAccessor;
-
         public SpriteSortMode SortMode;
         public BlendState BlendState;
         public SamplerState SamplerState;
@@ -22,29 +15,44 @@ namespace SPYoyoMod.Utils
         public Effect Effect;
         public Matrix Matrix;
 
-        static SpriteBatchSnapshot()
-        {
-            _sortModeFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, SpriteSortMode>("sortMode");
-            _blendStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, BlendState>("blendState");
-            _samplerStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, SamplerState>("samplerState");
-            _depthStencilStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, DepthStencilState>("depthStencilState");
-            _rasterizerStateFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, RasterizerState>("rasterizerState");
-            _effectFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, Effect>("customEffect");
-            _matrixFieldAccessor = TypeUtils.GetFieldAccessor<SpriteBatch, Matrix>("transformMatrix");
-        }
-
         public SpriteBatchSnapshot(SpriteBatch spriteBatch)
         {
-            if (spriteBatch is null)
-                throw new ArgumentNullException(nameof(spriteBatch));
+            ArgumentNullException.ThrowIfNull(spriteBatch, nameof(spriteBatch));
 
-            SortMode = _sortModeFieldAccessor(spriteBatch);
-            BlendState = _blendStateFieldAccessor(spriteBatch);
-            SamplerState = _samplerStateFieldAccessor(spriteBatch);
-            DepthStencilState = _depthStencilStateFieldAccessor(spriteBatch);
-            RasterizerState = _rasterizerStateFieldAccessor(spriteBatch);
-            Effect = _effectFieldAccessor(spriteBatch);
-            Matrix = _matrixFieldAccessor(spriteBatch);
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "sortMode")]
+            extern static ref SpriteSortMode GetSetSortMode(SpriteBatch sbInstance);
+
+            SortMode = GetSetSortMode(spriteBatch);
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "blendState")]
+            extern static ref BlendState GetSetBlendState(SpriteBatch sbInstance);
+
+            BlendState = GetSetBlendState(spriteBatch);
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "samplerState")]
+            extern static ref SamplerState GetSetSamplerState(SpriteBatch sbInstance);
+
+            SamplerState = GetSetSamplerState(spriteBatch);
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "depthStencilState")]
+            extern static ref DepthStencilState GetSetDepthStencilState(SpriteBatch sbInstance);
+
+            DepthStencilState = GetSetDepthStencilState(spriteBatch);
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "rasterizerState")]
+            extern static ref RasterizerState GetSetRasterizerState(SpriteBatch sbInstance);
+
+            RasterizerState = GetSetRasterizerState(spriteBatch);
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "customEffect")]
+            extern static ref Effect GetSetEffect(SpriteBatch sbInstance);
+
+            Effect = GetSetEffect(spriteBatch);
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "transformMatrix")]
+            extern static ref Matrix GetSetMatrix(SpriteBatch sbInstance);
+
+            Matrix = GetSetMatrix(spriteBatch);
         }
     }
 
