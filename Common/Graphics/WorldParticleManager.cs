@@ -69,30 +69,13 @@ namespace SPYoyoMod.Common.Graphics
             if (_particles.Count <= 0)
                 return;
 
-            var shouldBeRemovedParticles = new List<IWorldParticle>(MaxParticles / 10);
-
             FastParallel.For(0, _particles.Count, (from, to, context) =>
             {
                 for (int i = from; i < to; i++)
-                {
-                    var particle = _particles[i];
-
-                    if (particle.ShouldBeRemoved)
-                    {
-                        _mutex.WaitOne();
-
-                        shouldBeRemovedParticles.Add(particle);
-
-                        _mutex.ReleaseMutex();
-                    }
-                    else
-                    {
-                        particle.Update();
-                    }
-                }
+                    _particles[i].Update();
             });
 
-            shouldBeRemovedParticles.ForEach(p => _particles.Remove(p));
+            _particles.RemoveAll(p => p.ShouldBeRemoved);
         }
 
         private static void DrawDustLayer(On_Main.orig_DrawDust orig, Main main)
