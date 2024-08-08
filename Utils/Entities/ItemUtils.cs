@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
@@ -42,13 +41,16 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static TooltipLine[] Split(this TooltipLine line, params char[] separator)
         {
+            [UnsafeAccessor(UnsafeAccessorKind.Constructor)]
+            extern static TooltipLine TooltipLineCtor(string mod, string name, string text);
+
             var split = line.Text.Split(separator);
             var lines = new TooltipLine[split.Length];
 
             for (var i = 0; i < split.Length; i++)
             {
                 ref var tooltipLine = ref lines[i];
-                tooltipLine = _tooltipLineConstructorAccessor(line.Mod, line.Name + i.ToString(), split[i]);
+                tooltipLine = TooltipLineCtor(line.Mod, line.Name + i.ToString(), split[i]);
 
                 tooltipLine.IsModifier = line.IsModifier;
                 tooltipLine.IsModifierBad = line.IsModifierBad;
@@ -85,9 +87,6 @@ namespace SPYoyoMod.Utils
                 return;
             }
         }
-
-        private static readonly Func<string, string, string, TooltipLine> _tooltipLineConstructorAccessor
-            = TypeUtils.ConstructorAccessor<TooltipLine, string, string, string>();
 
         private static readonly HashSet<string> _descriptionWhitelistSet =
         [
