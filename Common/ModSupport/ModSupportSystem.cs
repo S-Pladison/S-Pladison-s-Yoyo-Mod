@@ -9,9 +9,6 @@ namespace SPYoyoMod.Common.ModSupport
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
     public sealed class ModInternalNameAttribute(string value) : Attribute
     {
-        /// <summary>
-        /// Значение приоритета. Чем больше значение, тем раньше загрузится тип.
-        /// </summary>
         public readonly string Value = value;
 
         public static bool TryGetValue(Type type, out string value)
