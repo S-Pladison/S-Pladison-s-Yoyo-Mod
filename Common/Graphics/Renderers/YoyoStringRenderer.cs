@@ -4,7 +4,7 @@ using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.GameContent;
 
@@ -30,42 +30,32 @@ namespace SPYoyoMod.Common.Graphics.Renderers
                 => new(tuple.Value, tuple.Glow);
         }
 
-        public class Vanilla : IDrawYoyoStringSegment
+        public sealed class Vanilla : IDrawYoyoStringSegment
         {
             public Texture2D Texture { get => TextureAssets.FishingLine.Value; }
 
             public void Draw(int segmentCount, YoyoStringSegment segment)
             {
+                [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryApplyingPlayerStringColor")]
+                extern static Color TryApplyingPlayerStringColor(Main _, int playerStringColor, Color defaultColor);
+
                 var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
                 var origin = new Vector2(Texture.Width * 0.5f, 0f);
-                var color = _tryApplyingPlayerStringColorFunc(segment.Proj.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
+                var color = TryApplyingPlayerStringColor(null, segment.Proj.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
 
                 color = Lighting.GetColor(segment.Position.ToTileCoordinates(), color);
                 color = new Color((byte)(color.R * 0.5f), (byte)(color.G * 0.5f), (byte)(color.B * 0.5f), (byte)(color.A * 0.5f));
 
                 Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
             }
-
-            private static readonly TryApplyingPlayerStringColorDelegate _tryApplyingPlayerStringColorFunc = typeof(Main)
-                ?.GetMethod("TryApplyingPlayerStringColor", BindingFlags.NonPublic | BindingFlags.Static)
-                ?.CreateDelegate<TryApplyingPlayerStringColorDelegate>()
-                ?? throw new InvalidOperationException($"Failed to init {nameof(TryApplyingPlayerStringColorDelegate)}");
-
-            private delegate Color TryApplyingPlayerStringColorDelegate(int playerStringColor, Color defaultColor);
         }
 
-        public class Default : IDrawYoyoStringSegment
+        public sealed class Default(Texture2D texture, IDrawYoyoStringSegment.ColorData color) : IDrawYoyoStringSegment
         {
-            public Texture2D Texture { get; init; }
-            public ColorData Color { get; init; }
+            public Texture2D Texture { get; init; } = texture ?? TextureAssets.FishingLine.Value;
+            public ColorData Color { get; init; } = color;
 
             public Default(ColorData color) : this(null, color) { }
-
-            public Default(Texture2D texture, ColorData color)
-            {
-                Texture = texture ?? TextureAssets.FishingLine.Value;
-                Color = color;
-            }
 
             public void Draw(int _, YoyoStringSegment segment)
             {
@@ -77,18 +67,12 @@ namespace SPYoyoMod.Common.Graphics.Renderers
             }
         }
 
-        public class Gradient : IDrawYoyoStringSegment
+        public sealed class Gradient(Texture2D texture, params IDrawYoyoStringSegment.ColorData[] colors) : IDrawYoyoStringSegment
         {
-            public Texture2D Texture { get; init; }
-            public ColorData[] Colors { get; init; }
+            public Texture2D Texture { get; init; } = texture ?? TextureAssets.FishingLine.Value;
+            public ColorData[] Colors { get; init; } = colors;
 
             public Gradient(params ColorData[] colors) : this(null, colors) { }
-
-            public Gradient(Texture2D texture, params ColorData[] colors)
-            {
-                Texture = texture ?? TextureAssets.FishingLine.Value;
-                Colors = colors;
-            }
 
             public void Draw(int segmentCount, YoyoStringSegment segment)
             {
