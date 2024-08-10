@@ -36,7 +36,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
             set => SetStartWidth(value);
         }
 
-        public float EndtWidth
+        public float EndWidth
         {
             get => _innerEndWidth;
             set => SetEndWidth(value);
