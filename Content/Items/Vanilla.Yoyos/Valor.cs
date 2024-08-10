@@ -46,6 +46,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            // Ясное дело, требуется добавить шанс нанесения на врага этого баффа
+            // + для баланса/красоты (цепей оч много, месиво какое-то), понижать вероятность нанесения баффа если рядом уже есть враги с этим же баффом...
             target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
         }
 
@@ -83,6 +85,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override bool InstancePerEntity { get => true; }
         public bool IsChained { get => _chainTileCoord is not null; }
         public bool MustBeChained { get; private set; }
+        public Point? ChainTileCoordinate { get => _chainTileCoord; }
 
         public override void Load()
         {
@@ -164,12 +167,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             {
                 if (MustBeChained)
                 {
-                    ValorNPCOutlineHandler.AddNPC(npc);
+                    ValorNPCVisualEffectHandler.AddNPC(npc);
                     ChainToTile(npc);
                 }
                 else
                 {
-                    ValorNPCOutlineHandler.RemoveNPC(npc);
+                    ValorNPCVisualEffectHandler.RemoveNPC(npc);
                     BreakChain(npc);
                 }
 
@@ -314,7 +317,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
 
         private static bool CanBeChained(NPC npc)
-            => npc.CanBeChasedBy() && !npc.IsBossOrRelated() && npc.width <= TileUtils.TileSizeInPixels * 6f && npc.height <= TileUtils.TileSizeInPixels * 6f;
+            => npc.CanBeChasedBy() &&
+                !npc.IsBossOrRelated() &&
+                // Площадь хитбокса не должна быть слишком большой
+                (npc.width * npc.height) <= MathF.Pow(TileUtils.TileSizeInPixels * 6f, 2f) &&
+                // При этом очень высокие и очень широкие враги тоже в пролете
+                npc.width <= TileUtils.TileSizeInPixels * 9f &&
+                npc.height <= TileUtils.TileSizeInPixels * 9f;
 
         private static bool TryFindSuitableTile(NPC npc, out Point tileCoord)
             => TileUtils.TryFindClosestTile(
@@ -325,7 +334,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     }
 
     [Autoload(Side = ModSide.Client)]
-    public sealed class ValorNPCOutlineHandler : ILoadable
+    public sealed class ValorNPCVisualEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
         private readonly NPCObserver _npcObserver = new(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.MustBeChained);
@@ -335,27 +344,37 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
             ModEvents.OnPostUpdateEverything += _npcObserver.Update;
-            ModEvents.OnPostUpdateCameraPosition += DrawToTarget;
+            ModEvents.OnPostUpdateCameraPosition += DrawNPCsToTarget;
             ModEvents.OnPreDraw += EmitLight;
 
             On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
             {
                 orig(main);
-                DrawToScreen();
+                DrawOutlineToScreen();
+            };
+
+            On_Main.DrawNPCs += (orig, main, behindTiles) =>
+            {
+                orig(main, behindTiles);
+
+                if (behindTiles)
+                    return;
+
+                DrawChains();
             };
         }
 
         void ILoadable.Unload()
         {
-            ModEvents.OnPostUpdateCameraPosition -= DrawToTarget;
+            ModEvents.OnPostUpdateCameraPosition -= DrawNPCsToTarget;
             ModEvents.OnPostUpdateEverything -= _npcObserver.Update;
         }
 
         public static void AddNPC(NPC npc)
-            => ModContent.GetInstance<ValorNPCOutlineHandler>()?._npcObserver.Add(npc);
+            => ModContent.GetInstance<ValorNPCVisualEffectHandler>()?._npcObserver.Add(npc);
 
         public static void RemoveNPC(NPC npc)
-            => ModContent.GetInstance<ValorNPCOutlineHandler>()?._npcObserver.Remove(npc);
+            => ModContent.GetInstance<ValorNPCVisualEffectHandler>()?._npcObserver.Remove(npc);
 
         private void EmitLight()
         {
@@ -383,7 +402,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.gamePaused = origGamePaused;
         }
 
-        private void DrawToTarget()
+        private void DrawNPCsToTarget()
         {
             if (!_npcObserver.AnyEntity)
                 return;
@@ -406,7 +425,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _targetWasPrepared = true;
         }
 
-        private void DrawToScreen()
+        private void DrawOutlineToScreen()
         {
             if (!_targetWasPrepared)
                 return;
@@ -425,6 +444,42 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.Begin(spriteBatchSnapshot);
 
             _targetWasPrepared = false;
+        }
+
+        private void DrawChains()
+        {
+            if (!_npcObserver.AnyEntity)
+                return;
+
+            Main.spriteBatch.End(out var spriteBatchSnapshot);
+            Main.spriteBatch.Begin(spriteBatchSnapshot with { Effect = null });
+            {
+                var texture = TextureAssets.Chain22;
+
+                foreach (var npc in _npcObserver.GetEntityInstances())
+                {
+                    var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+
+                    // При телепортации тех же шаманов гоблинов вылазит null ошибка, так что над продумать это
+                    var startPosition = npc.GetGlobalNPC<ValorGlobalNPC>().ChainTileCoordinate.Value.ToWorldCoordinates() - Main.screenPosition;
+                    var vectorFromChainToNPC = endPosition - startPosition;
+                    var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
+
+                    var segmentRotation = vectorFromChainToNPC.ToRotation() + MathHelper.PiOver2;
+                    var segmentOrigin = texture.Size() * 0.5f;
+                    var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
+                    var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();
+
+                    for (var i = 0; i < segmentCount; i++)
+                    {
+                        var position = startPosition + segmentVector * i;
+                        var color = Lighting.GetColor((position + Main.screenPosition).ToTileCoordinates());
+                        Main.spriteBatch.Draw(texture.Value, position, null, color, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                    }
+                }
+            }
+            Main.spriteBatch.End();
+            Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
     }
 }
