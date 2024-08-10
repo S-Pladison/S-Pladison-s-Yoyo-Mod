@@ -7,7 +7,7 @@ namespace SPYoyoMod.Utils
     /// <summary>
     /// Класс-наблюдателя за сущностями.
     /// </summary>
-    public abstract class EntityObserver<T> where T : Entity
+    public abstract class EntityObserver<T>(T[] sourse, Predicate<T> entityShouldBeRemovedPredicate) where T : Entity
     {
         protected readonly struct EntityData(int whoAmI, int type)
         {
@@ -20,37 +20,32 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public bool AnyEntity { get => _entities.Count > 0; }
 
-        protected readonly List<EntityData> _entities;
-        protected readonly T[] _sourseArray;
-        protected readonly Predicate<T> _entityShouldBeRemovedPredicate;
+        protected readonly List<EntityData> _entities = [];
+        protected readonly T[] _sourseArray = sourse;
+        protected readonly Predicate<T> _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
 
         public EntityObserver(T[] sourse) : this(sourse, null) { }
-
-        public EntityObserver(T[] sourse, Predicate<T> entityShouldBeRemovedPredicate)
-        {
-            _entities = new List<EntityData>();
-            _sourseArray = sourse;
-            _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
-        }
 
         /// <summary>
         /// Добавить для наблюдение новую сущность.
         /// </summary>
+        /// <param name="entity">Объект сущности для последующего наблюдения.</param>
         public void Add(T entity)
         {
             _entities.Add(new EntityData(entity.whoAmI, GetEntityType(entity)));
         }
 
         /// <summary>
-        /// Удаляет сущность из наблюдения.
+        /// Удаляет сущность из наблюдения. Если сущность ранее не была под наблюдением, ничего не произойдет.
         /// </summary>
+        /// <param name="entity">Объект сущности, за которым нужно прекратить наблюдение.</param>
         public void Remove(T entity)
         {
             _entities.Remove(new EntityData(entity.whoAmI, GetEntityType(entity)));
         }
 
         /// <summary>
-        /// Удаляет не соответствующие условиям наблюдения сущности.
+        /// Наблюдает за добавленными сущностями и удаляет всех, кто не соответствует условиям наблюдения.
         /// </summary>
         public void Update()
         {
@@ -67,21 +62,17 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Получить список наблюдаемых сущностей.
+        /// Получить данные обо всех наблюдаемых сущностей.
         /// </summary>
-        public IList<T> GetEntityInstances()
+        public IEnumerable<T> GetEntityInstances()
         {
-            var result = new List<T>(_entities.Count);
-
             foreach (var entityData in _entities)
-            {
-                result.Add(_sourseArray[entityData.WhoAmI]);
-            }
-
-            return result;
+                yield return _sourseArray[entityData.WhoAmI];
         }
 
-        // Очистить список наблюдаемых сущностей.
+        /// <summary>
+        /// Очистить список наблюдаемых сущностей.
+        /// </summary>
         public void Clear()
         {
             _entities.Clear();
@@ -93,11 +84,9 @@ namespace SPYoyoMod.Utils
     /// <summary>
     /// Класс-наблюдателя за снарядами.
     /// </summary>
-    public class ProjectileObserver : EntityObserver<Projectile>
+    public sealed class ProjectileObserver(Predicate<Projectile> entityShouldBeRemovedPredicate) : EntityObserver<Projectile>(Main.projectile, entityShouldBeRemovedPredicate)
     {
         public ProjectileObserver() : this(null) { }
-
-        public ProjectileObserver(Predicate<Projectile> entityShouldBeRemovedPredicate) : base(Main.projectile, entityShouldBeRemovedPredicate) { }
 
         protected override int GetEntityType(Projectile proj) => proj.type;
     }
@@ -105,11 +94,9 @@ namespace SPYoyoMod.Utils
     /// <summary>
     /// Класс-наблюдателя за НПС.
     /// </summary>
-    public class NPCObserver : EntityObserver<NPC>
+    public sealed class NPCObserver(Predicate<NPC> entityShouldBeRemovedPredicate) : EntityObserver<NPC>(Main.npc, entityShouldBeRemovedPredicate)
     {
         public NPCObserver() : this(null) { }
-
-        public NPCObserver(Predicate<NPC> entityShouldBeRemovedPredicate) : base(Main.npc, entityShouldBeRemovedPredicate) { }
 
         protected override int GetEntityType(NPC npc) => npc.type;
     }
