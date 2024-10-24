@@ -51,14 +51,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             // + для баланса/красоты (цепей оч много, месиво какое-то), понижать вероятность нанесения баффа если рядом уже есть враги с этим же баффом...
             target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
         }
-
-        public override void PostDraw(Projectile proj, Color lightColor)
-        {
-            if (TileUtils.TryFindClosestTile(proj.Center.ToTileCoordinates(), ValorGlobalNPC.TileCheckRadius, i => WorldGen.SolidOrSlopedTile(i.X, i.Y) || Main.tile[i.X, i.Y].IsHalfBlock || TileID.Sets.Platforms[Main.tile[i.X, i.Y].TileType], out var tileCoord))
-            {
-                Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, tileCoord.ToWorldCoordinates(0, 0) - Main.screenPosition, new Rectangle(0, 0, 16, 16), Color.Red);
-            }
-        }
     }
 
     public sealed class ValorBuff : ModBuff
@@ -106,6 +98,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly int TileCheckRadius = 7;
         public static readonly float ChainAddLength = TileUtils.TileSizeInPixels * 2.5f;
         public static readonly float ChainLengthToBreak = TileUtils.TileSizeInPixels * 12f;
+        public static readonly float KnockbackPower = 4f;
 
         private bool _oldMustBeChained;
         private int _timeSinceLastTileCheck;
@@ -310,12 +303,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!TryFindSuitableTile(npc, out var tileCoord))
                 return false;
 
-            var distFromNPCToTile = Vector2.Distance(tileCoord.ToWorldCoordinates(), npc.Center);
+            var tilePos = tileCoord.ToWorldCoordinates();
+            var distFromNPCToTile = Vector2.Distance(tilePos, npc.Center);
 
             if (distFromNPCToTile >= ChainLengthToBreak)
                 return false;
 
-            Data = new ChainData(tileCoord, npc.Center, distFromNPCToTile + ChainAddLength);
+            SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+
+            npc.velocity += Vector2.Normalize(npc.Center - tilePos) * KnockbackPower;
+
+            Data = new ChainData(tileCoord, npc.Center, MathF.Min(distFromNPCToTile + ChainAddLength, TileCheckRadius * TileUtils.TileSizeInPixels));
             npc.netUpdate = true;
 
             return true;
