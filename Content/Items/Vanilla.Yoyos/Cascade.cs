@@ -79,7 +79,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegment.Gradient(
+            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegments.Gradient(
                 ModContent.Request<Texture2D>(CascadeAssets.StringPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value,
                 (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
             ));
