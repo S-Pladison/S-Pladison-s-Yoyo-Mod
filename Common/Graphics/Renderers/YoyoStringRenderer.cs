@@ -10,19 +10,18 @@ using Terraria.GameContent;
 
 namespace SPYoyoMod.Common.Graphics.Renderers
 {
-    public readonly struct YoyoStringSegment(Projectile proj, int index, Vector2 position, float rotation, float width)
+    public readonly struct YoyoStringSegment(int index, Vector2 position, float rotation, float width)
     {
-        public readonly Projectile Proj = proj;
         public readonly int Index = index;
         public readonly Vector2 Position = position;
         public readonly float Rotation = rotation;
         public readonly float Width = width;
     }
 
-    public interface IDrawYoyoStringSegment
+    public interface IDrawYoyoStringSegments
     {
         Texture2D Texture { get; }
-        void Draw(int segmentCount, YoyoStringSegment segment);
+        void Draw(Projectile proj, IReadOnlyList<YoyoStringSegment> segments);
 
         public record struct ColorData(Color Value, bool Glow)
         {
@@ -30,64 +29,73 @@ namespace SPYoyoMod.Common.Graphics.Renderers
                 => new(tuple.Value, tuple.Glow);
         }
 
-        public sealed class Vanilla : IDrawYoyoStringSegment
+        public sealed class Vanilla : IDrawYoyoStringSegments
         {
             public Texture2D Texture { get => TextureAssets.FishingLine.Value; }
 
-            public void Draw(int segmentCount, YoyoStringSegment segment)
+            public void Draw(Projectile proj, IReadOnlyList<YoyoStringSegment> segments)
             {
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryApplyingPlayerStringColor")]
                 extern static Color TryApplyingPlayerStringColor(Main _, int playerStringColor, Color defaultColor);
 
-                var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
-                var origin = new Vector2(Texture.Width * 0.5f, 0f);
-                var color = TryApplyingPlayerStringColor(null, segment.Proj.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
+                foreach (var segment in segments)
+                {
+                    var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
+                    var origin = new Vector2(Texture.Width * 0.5f, 0f);
+                    var color = TryApplyingPlayerStringColor(null, proj.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
 
-                color = Lighting.GetColor(segment.Position.ToTileCoordinates(), color);
-                color = new Color((byte)(color.R * 0.5f), (byte)(color.G * 0.5f), (byte)(color.B * 0.5f), (byte)(color.A * 0.5f));
+                    color = Lighting.GetColor(segment.Position.ToTileCoordinates(), color);
+                    color = new Color((byte)(color.R * 0.5f), (byte)(color.G * 0.5f), (byte)(color.B * 0.5f), (byte)(color.A * 0.5f));
 
-                Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                }
             }
         }
 
-        public sealed class Default(Texture2D texture, IDrawYoyoStringSegment.ColorData color) : IDrawYoyoStringSegment
+        public sealed class Default(Texture2D texture, IDrawYoyoStringSegments.ColorData color) : IDrawYoyoStringSegments
         {
             public Texture2D Texture { get; init; } = texture ?? TextureAssets.FishingLine.Value;
             public ColorData Color { get; init; } = color;
 
             public Default(ColorData color) : this(null, color) { }
 
-            public void Draw(int _, YoyoStringSegment segment)
+            public void Draw(Projectile proj, IReadOnlyList<YoyoStringSegment> segments)
             {
-                var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
-                var origin = new Vector2(Texture.Width * 0.5f, 0f);
-                var color = Color.Glow ? Color.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), Color.Value);
+                foreach (var segment in segments)
+                {
+                    var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
+                    var origin = new Vector2(Texture.Width * 0.5f, 0f);
+                    var color = Color.Glow ? Color.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), Color.Value);
 
-                Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                }
             }
         }
 
-        public sealed class Gradient(Texture2D texture, params IDrawYoyoStringSegment.ColorData[] colors) : IDrawYoyoStringSegment
+        public sealed class Gradient(Texture2D texture, params IDrawYoyoStringSegments.ColorData[] colors) : IDrawYoyoStringSegments
         {
             public Texture2D Texture { get; init; } = texture ?? TextureAssets.FishingLine.Value;
             public ColorData[] Colors { get; init; } = colors;
 
             public Gradient(params ColorData[] colors) : this(null, colors) { }
 
-            public void Draw(int segmentCount, YoyoStringSegment segment)
+            public void Draw(Projectile proj, IReadOnlyList<YoyoStringSegment> segments)
             {
-                var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
-                var origin = new Vector2(Texture.Width * 0.5f, 0f);
-                var color = ColorUtils.MultipleLerp(segment.Index / (float)segmentCount, Colors.Select(x => x.Glow ? x.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), x.Value)).ToArray());
+                foreach (var segment in segments)
+                {
+                    var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Width);
+                    var origin = new Vector2(Texture.Width * 0.5f, 0f);
+                    var color = ColorUtils.MultipleLerp(segment.Index / (float)segments.Count, Colors.Select(x => x.Glow ? x.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), x.Value)).ToArray());
 
-                Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(Texture, segment.Position - Main.screenPosition, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                }
             }
         }
     }
 
     public sealed class YoyoStringRenderer : IRenderer
     {
-        private readonly IDrawYoyoStringSegment _segmentRenderer;
+        private readonly IDrawYoyoStringSegments _segmentRenderer;
         private readonly List<YoyoStringSegment> _segments;
 
         private bool _isDirty;
@@ -107,7 +115,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
             init;
         }
 
-        public YoyoStringRenderer(Projectile proj, IDrawYoyoStringSegment segmentRenderer)
+        public YoyoStringRenderer(Projectile proj, IDrawYoyoStringSegments segmentRenderer)
         {
             _segmentRenderer = segmentRenderer;
             _segments = [];
@@ -151,8 +159,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
                 PrepareSegments();
             }
 
-            foreach (var segment in _segments)
-                _segmentRenderer.Draw(_segments.Count, segment);
+            _segmentRenderer.Draw(Projectile, _segments);
         }
 
         private void PrepareSegments()
@@ -269,7 +276,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
                     var position = new Vector2(segmentStartPos.X, (float)(segmentStartPos.Y + _segmentRenderer.Texture.Height * 0.5f + (vanillaLineHeightValue - _segmentRenderer.Texture.Height) * 0.5f));
                     var rotation = (float)Math.Atan2((double)y, (double)x) - MathHelper.PiOver2;
 
-                    _segments.Add(new YoyoStringSegment(Projectile, _segments.Count, position, rotation, width));
+                    _segments.Add(new YoyoStringSegment(_segments.Count, position, rotation, width));
                 }
             }
         }

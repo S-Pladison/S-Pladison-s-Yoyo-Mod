@@ -82,7 +82,7 @@ namespace SPYoyoMod.Common
 
         public void Initialize(Projectile proj)
         {
-            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegment.Vanilla());
+            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegments.Vanilla());
         }
 
         private delegate void orig_ThoriumModDrawString(int index, Vector2 to, Vector2 from, int stringColor, bool actuallyYoyo);

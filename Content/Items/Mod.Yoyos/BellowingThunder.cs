@@ -47,7 +47,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public void Initialize(Projectile _)
         {
-            /*_stringRenderer = new YoyoStringRenderer(Projectile, new IDrawYoyoStringSegment.Gradient(
+            /*_stringRenderer = new YoyoStringRenderer(Projectile, new IDrawYoyoStringSegments.Gradient(
                 (Color.Transparent, true), (Color.Transparent, true), (Color.Cyan, true)
             ));*/
         }
