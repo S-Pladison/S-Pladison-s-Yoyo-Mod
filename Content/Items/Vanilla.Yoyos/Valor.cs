@@ -6,6 +6,7 @@ using ReLogic.Content;
 using SPYoyoMod.Common.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
@@ -72,6 +73,35 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorGlobalNPC : GlobalNPC
     {
+        public sealed class ChainData
+        {
+            public Point TileCoord { get; init; }
+            public float MaxLength { get; init; }
+            public PhysicalChain Physics { get; init; }
+
+            public ChainData(Point tileCoord, Vector2 npcPos, float maxLength)
+            {
+                TileCoord = tileCoord;
+                MaxLength = maxLength;
+
+                var nodes = new List<PhysicalChain.Node>();
+                var tilePos = tileCoord.ToWorldCoordinates();
+                var dirToNPC = Vector2.Normalize(npcPos - tilePos);
+                var nodeCount = Math.Max(maxLength / 10f, 2);
+
+                for (int i = 0; i < nodeCount; i++)
+                {
+                    nodes.Add(new PhysicalChain.Node(tilePos + dirToNPC * i * 9f, false));
+                }
+
+                Physics = new(nodes)
+                {
+                    DistanceBetweenNodes = 8f,
+                    Gravity = Vector2.UnitY * 3f
+                };
+            }
+        }
+
         public static readonly int TileCheckFrequency = ModUtils.SecondsToTicks(1f);
         public static readonly int TileCheckRadius = 7;
         public static readonly float ChainAddLength = TileUtils.TileSizeInPixels * 2.5f;
@@ -79,13 +109,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private bool _oldMustBeChained;
         private int _timeSinceLastTileCheck;
-        private Point? _chainTileCoord;
-        private float _chainMaxLength;
+        private ChainData _chainData;
 
         public override bool InstancePerEntity { get => true; }
-        public bool IsChained { get => _chainTileCoord is not null; }
+        public bool IsChained { get => _chainData is not null; }
         public bool MustBeChained { get; private set; }
-        public Point? ChainTileCoordinate { get => _chainTileCoord; }
+        public ChainData Data { get => _chainData; private set => _chainData = value; }
 
         public override void Load()
         {
@@ -200,8 +229,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             // ... и НПС зацеплен, то ...
 
+            // ... обновляем физику цепи, ...
+            if ((npc.whoAmI + Main.GameUpdateCount) % 2 == 0)
+                Data.Physics.Simulate(Data.TileCoord.ToWorldCoordinates(), npc.Center, 10);
+
             // ... разрушаем цепь, если НПС слишком далеко от тайла
-            if (Vector2.Distance(_chainTileCoord.Value.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
+            if (Vector2.Distance(Data.TileCoord.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
             {
                 BreakChain(npc);
                 return true;
@@ -232,9 +265,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
             }
 
-            binaryWriter.Write((short)_chainTileCoord.Value.X);
-            binaryWriter.Write((short)_chainTileCoord.Value.Y);
-            binaryWriter.Write(_chainMaxLength);
+            binaryWriter.Write((short)Data.TileCoord.X);
+            binaryWriter.Write((short)Data.TileCoord.Y);
+            binaryWriter.Write(Data.MaxLength);
         }
 
         public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
@@ -252,16 +285,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
             }
 
-            _chainTileCoord = new Point(binaryReader.ReadInt16(), binaryReader.ReadInt16());
-            _chainMaxLength = binaryReader.ReadSingle();
+            var tileCoord = new Point(binaryReader.ReadInt16(), binaryReader.ReadInt16());
+            var maxLength = binaryReader.ReadSingle();
+
+            if (Data is not null && Data.TileCoord == tileCoord && Data.MaxLength == maxLength)
+                return;
+
+            Data = new ChainData(tileCoord, npc.Center, maxLength);
         }
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (_chainTileCoord is null)
+            if (Data is null)
                 return;
 
-            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, _chainTileCoord.Value.ToWorldCoordinates(0, 0) - Main.screenPosition, new Rectangle(0, 0, 16, 16), Color.Blue);
+            Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Data.TileCoord.ToWorldCoordinates(0, 0) - Main.screenPosition, new Rectangle(0, 0, 16, 16), Color.Blue);
         }
 
         private bool ChainToTile(NPC npc)
@@ -277,8 +315,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (distFromNPCToTile >= ChainLengthToBreak)
                 return false;
 
-            _chainTileCoord = tileCoord;
-            _chainMaxLength = distFromNPCToTile + ChainAddLength;
+            Data = new ChainData(tileCoord, npc.Center, distFromNPCToTile + ChainAddLength);
             npc.netUpdate = true;
 
             return true;
@@ -291,8 +328,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
 
-            _chainMaxLength = 0;
-            _chainTileCoord = null;
+            Data = null;
             npc.netUpdate = true;
 
             return true;
@@ -300,17 +336,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private void UpdateCollision(NPC npc)
         {
-            var chainPosition = _chainTileCoord.Value.ToWorldCoordinates();
+            var chainPosition = Data.TileCoord.ToWorldCoordinates();
 
             var nextPosition = npc.Center + npc.velocity;
             var vectorFromChainToNPC = nextPosition - chainPosition;
             var vectorFromChainToNPCLength = vectorFromChainToNPC.Length();
 
-            if (vectorFromChainToNPCLength <= _chainMaxLength)
+            if (vectorFromChainToNPCLength <= Data.MaxLength)
                 return;
 
             var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
-            var newPosition = chainPosition + normalizedVectorFromChainToNPC * _chainMaxLength;
+            var newPosition = chainPosition + normalizedVectorFromChainToNPC * Data.MaxLength;
             var velocityCorrection = newPosition - nextPosition;
 
             npc.velocity += velocityCorrection;
@@ -459,9 +495,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 foreach (var npc in _npcObserver.GetEntityInstances())
                 {
                     var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
+                    var chainData = npc.GetGlobalNPC<ValorGlobalNPC>().Data;
+
+                    if (chainData is null)
+                        continue;
 
                     // При телепортации тех же шаманов гоблинов вылазит null ошибка, так что над продумать это
-                    var startPosition = npc.GetGlobalNPC<ValorGlobalNPC>().ChainTileCoordinate.Value.ToWorldCoordinates() - Main.screenPosition;
+                    var startPosition = chainData.TileCoord.ToWorldCoordinates() - Main.screenPosition;
                     var vectorFromChainToNPC = endPosition - startPosition;
                     var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
 
@@ -470,11 +510,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
                     var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();
 
-                    for (var i = 0; i < segmentCount; i++)
+                    /*for (var i = 0; i < segmentCount; i++)
                     {
                         var position = startPosition + segmentVector * i;
                         var color = Lighting.GetColor((position + Main.screenPosition).ToTileCoordinates());
                         Main.spriteBatch.Draw(texture.Value, position, null, color, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                    }*/
+
+                    foreach (var nodePosition in chainData.Physics.GetPositions())
+                    {
+                        Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, nodePosition - Main.screenPosition, new Rectangle(-1, -1, 1, 1), Color.Lime);
                     }
                 }
             }
