@@ -59,7 +59,7 @@ namespace SPYoyoMod.Common.ModSupport
             if (ModInternalNameAttribute.TryGetValue(type, out var internalName))
                 modNameList.Add(internalName);
 
-            const string postfix = "Support";
+            const string postfix = "Mod";
 
             if (type.Name.EndsWith(postfix))
                 modNameList.Add(type.Name.Substring(0, type.Name.Length - postfix.Length));
