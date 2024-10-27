@@ -5,6 +5,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
+    [Autoload(false)]
     public sealed class YoyoLocalIFrameGlobalProjectile : GlobalProjectile
     {
         public const int DefaultLocalIFrameValue = 10;
