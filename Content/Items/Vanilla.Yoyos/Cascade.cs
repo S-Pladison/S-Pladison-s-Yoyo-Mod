@@ -79,7 +79,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegments.Gradient(
+            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
                 ModContent.Request<Texture2D>(CascadeAssets.StringPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value,
                 (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
             ));
@@ -211,9 +211,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            _stringRenderer?
+            /*_stringRenderer?
                 .SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero)
-                .Render();
+                .Render();*/
         }
     }
 

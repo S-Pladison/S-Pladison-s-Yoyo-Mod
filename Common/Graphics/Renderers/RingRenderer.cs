@@ -6,7 +6,7 @@ using Terraria;
 
 namespace SPYoyoMod.Common.Graphics.Renderers
 {
-    public sealed class RingRenderer : IRenderer, IDisposable
+    public sealed class RingRenderer : IDisposable
     {
         public const int MinPointCount = 3;
 
@@ -163,14 +163,16 @@ namespace SPYoyoMod.Common.Graphics.Renderers
 
             _vertexBuffer?.Dispose();
             _indexBuffer?.Dispose();
+
+            GC.SuppressFinalize(this);
         }
 
-        private void Offset(Vector2 offset)
+        private void Offset(Vector2 value)
         {
             for (var i = 0; i < _vertices.Length; i++)
             {
-                _vertices[i].Position.X += offset.X;
-                _vertices[i].Position.Y += offset.Y;
+                _vertices[i].Position.X += value.X;
+                _vertices[i].Position.Y += value.Y;
             }
 
             _vertexBuffer?.SetData(0, _vertices, 0, _vertices.Length, Vertex2DPositionColorTexture.StaticVertexDeclaration.VertexStride, SetDataOptions.Discard);
@@ -184,10 +186,12 @@ namespace SPYoyoMod.Common.Graphics.Renderers
             if (_currentPointCapacity < _innerPointCapacity)
             {
                 ResizeBuffers(vertices: 2 * (_innerPointCapacity + 1), indices: 6 * _innerPointCapacity);
+
                 CalculateVertexIndices(_currentPointCapacity, _innerPointCapacity);
                 CalculateVertexColors(_currentPointCapacity, _innerPointCapacity);
 
                 _indexBuffer.SetData(0, _indices, 0, _indices.Length, SetDataOptions.Discard);
+
                 _currentPointCapacity = _innerPointCapacity;
             }
 
@@ -201,10 +205,10 @@ namespace SPYoyoMod.Common.Graphics.Renderers
         private void ResizeBuffers(int vertices, int indices)
         {
             _vertexBuffer?.Dispose();
-            _vertexBuffer = new(Main.graphics.GraphicsDevice, typeof(Vertex2DPositionColorTexture), vertices, BufferUsage.WriteOnly);
+            _vertexBuffer = new(_device, typeof(Vertex2DPositionColorTexture), vertices, BufferUsage.WriteOnly);
 
             _indexBuffer?.Dispose();
-            _indexBuffer = new(Main.graphics.GraphicsDevice, IndexElementSize.SixteenBits, indices, BufferUsage.WriteOnly);
+            _indexBuffer = new(_device, IndexElementSize.SixteenBits, indices, BufferUsage.WriteOnly);
 
             Array.Resize(ref _vertices, vertices);
             Array.Resize(ref _indices, indices);

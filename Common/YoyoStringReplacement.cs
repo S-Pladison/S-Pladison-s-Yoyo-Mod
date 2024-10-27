@@ -38,8 +38,13 @@ namespace SPYoyoMod.Common
 
                     ref var renderer = ref globalProj._stringRenderer;
 
-                    renderer.SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
-                    renderer.Render();
+                    var settings = new YoyoStringRendererSettings(
+                        proj: proj,
+                        start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                        offset: -Main.screenPosition
+                    );
+
+                    renderer.Render(Main.spriteBatch, settings);
 
                     if (proj.GetOwner().heldProj != proj.whoAmI)
                         return;
@@ -52,7 +57,7 @@ namespace SPYoyoMod.Common
                     if (!proj.IsVanilla() && !(proj.ModProjectile is not null && proj.ModProjectile.Mod is SPYoyoMod))
                         return;
 
-                    renderer.Render();
+                    renderer.Render(Main.spriteBatch, settings);
                 });
 
                 cursor.Emit(OpCodes.Ret);
@@ -82,7 +87,7 @@ namespace SPYoyoMod.Common
 
         public void Initialize(Projectile proj)
         {
-            _stringRenderer = new YoyoStringRenderer(proj, new IDrawYoyoStringSegments.Vanilla());
+            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Vanilla());
         }
 
         private delegate void orig_ThoriumModDrawString(int index, Vector2 to, Vector2 from, int stringColor, bool actuallyYoyo);
