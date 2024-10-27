@@ -83,13 +83,13 @@ namespace SPYoyoMod.Common.Graphics.Renderers
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryApplyingPlayerStringColor")]
                 extern static Color TryApplyingPlayerStringColor(Main _, int playerStringColor, Color defaultColor);
 
+                var stringColor = TryApplyingPlayerStringColor(null, settings.Projectile.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
+                var origin = new Vector2(Texture.Width * 0.5f, 0f);
+
                 foreach (var segment in segments)
                 {
                     var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Length);
-                    var origin = new Vector2(Texture.Width * 0.5f, 0f);
-                    var color = TryApplyingPlayerStringColor(null, settings.Projectile.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
-
-                    color = Lighting.GetColor(segment.Position.ToTileCoordinates(), color);
+                    var color = Lighting.GetColor(segment.Position.ToTileCoordinates(), stringColor);
                     color = new Color((byte)(color.R * 0.5f), (byte)(color.G * 0.5f), (byte)(color.B * 0.5f), (byte)(color.A * 0.5f));
 
                     spriteBatch.Draw(Texture, segment.Position + settings.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
@@ -109,10 +109,11 @@ namespace SPYoyoMod.Common.Graphics.Renderers
 
             public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings, IReadOnlyList<YoyoStringSegment> segments)
             {
+                var origin = new Vector2(Texture.Width * 0.5f, 0f);
+
                 foreach (var segment in segments)
                 {
                     var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Length);
-                    var origin = new Vector2(Texture.Width * 0.5f, 0f);
                     var color = Color.Glow ? Color.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), Color.Value);
 
                     spriteBatch.Draw(Texture, segment.Position + settings.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
@@ -132,10 +133,11 @@ namespace SPYoyoMod.Common.Graphics.Renderers
 
             public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings, IReadOnlyList<YoyoStringSegment> segments)
             {
+                var origin = new Vector2(Texture.Width * 0.5f, 0f);
+
                 foreach (var segment in segments)
                 {
                     var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Length);
-                    var origin = new Vector2(Texture.Width * 0.5f, 0f);
                     var color = ColorUtils.MultipleLerp(segment.Index / (float)segments.Count, Colors.Select(x => x.Glow ? x.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), x.Value)).ToArray());
 
                     spriteBatch.Draw(Texture, segment.Position + settings.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
