@@ -16,12 +16,12 @@ namespace SPYoyoMod.Common.Graphics.Renderers
     public struct YoyoStringRendererSettings(Projectile proj, Vector2 start, Vector2 offset = default)
     {
         /// <summary>
-        /// Снаряд, до которого будет рисоваться нить от старта. Если значения равно null, то нить рисоваться не будет.
+        /// Снаряд, до которого будет отрисоваться нить (начиная со старта до самого снаряда). Если значения равно null, то нить рисоваться не будет.
         /// </summary>
         public Projectile Projectile = proj;
 
         /// <summary>
-        /// Позиция старта(начала отрисовки нити).
+        /// Позиция старта (начало отрисовки нити).
         /// </summary>
         public Vector2 Start = start;
 
