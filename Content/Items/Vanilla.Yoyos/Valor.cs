@@ -47,6 +47,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override int ItemType => ItemID.Valor;
         public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(Math.Ceiling(1.0f / DebuffApplyChanceDenominator * 100.0f));
+
+        public override void SetDefaults(Item item)
+        {
+            item.knockBack = 4.5f;
+        }
     }
 
     public sealed class ValorProjectile : VanillaYoyoBaseProjectile
@@ -61,6 +66,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             foreach (var npc in Main.ActiveNPCs)
             {
                 if (!npc.HasBuff<ValorBuff>())
+                    continue;
+
+                if (npc.whoAmI == target.whoAmI)
                     continue;
 
                 if (Vector2.DistanceSquared(npc.Center, target.Center) <= ValorItem.DebuffChanceReductionDistance)
