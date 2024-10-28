@@ -313,6 +313,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
             }
 
+            // Если всетки не удалось приципить к плитке...
+            if (Data is null)
+                return;
+
             // Разрушаем цепь, если НПС слишком далеко от тайла (обычно, это будет происходить при телепортации)
             if (Vector2.Distance(Data.Tile.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
             {
