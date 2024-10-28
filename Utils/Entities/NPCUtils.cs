@@ -109,8 +109,14 @@ namespace SPYoyoMod.Utils
                 case NPCID.DD2DarkMageT3:
                 case NPCID.DD2OgreT2:
                 case NPCID.DD2OgreT3:
-                // Misc
+                // Wyvern
                 case NPCID.WyvernHead:
+                case NPCID.WyvernBody:
+                case NPCID.WyvernBody2:
+                case NPCID.WyvernBody3:
+                case NPCID.WyvernLegs:
+                case NPCID.WyvernTail:
+                // Misc
                 case NPCID.GoblinSummoner:
                 case NPCID.PirateCaptain:
                 case NPCID.HeadlessHorseman:
