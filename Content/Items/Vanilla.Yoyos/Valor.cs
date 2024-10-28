@@ -46,12 +46,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorProjectile : VanillaYoyoBaseProjectile
     {
+        public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
+
         public override int ProjType => ProjectileID.Valor;
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // Ясное дело, требуется добавить шанс нанесения на врага этого баффа
-            // + для баланса/красоты (цепей оч много, месиво какое-то), понижать вероятность нанесения баффа если рядом уже есть враги с этим же баффом...
+            foreach (var npc in Main.ActiveNPCs)
+            {
+                if (!npc.HasBuff<ValorBuff>())
+                    continue;
+
+                if (Vector2.DistanceSquared(npc.Center, target.Center) <= DebuffChanceReductionDistance)
+                    return;
+            }
+
             target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
         }
     }
@@ -68,12 +77,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorGlobalNPC : GlobalNPC
     {
-        public enum ChainState
-        {
-            BladeShot,
-            ChainedToTile
-        }
-
         public sealed class ChainData
         {
             public Point Tile;
@@ -214,6 +217,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Data.Tile = tile;
             Data.Length = length;
             Data.LifeTime = lifeTime;
+        }
+
+        public override void DrawEffects(NPC npc, ref Color drawColor)
+        {
+            if (HasDebuff)
+                drawColor = NPC.buffColor(drawColor, 0.35f, 0.65f, 1.0f, 1.0f);
         }
 
         public override void OnSpawn(NPC npc, IEntitySource source)
