@@ -42,11 +42,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorItem : VanillaYoyoBaseItem
     {
-        public static readonly int DebuffApplyChanceDenominator = 10;
+        public static readonly int DebuffApplyChanceDenominator = 9;
         public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
 
         public override int ItemType => ItemID.Valor;
-        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(DebuffApplyChanceDenominator);
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(Math.Ceiling(1.0f / DebuffApplyChanceDenominator * 100.0f));
     }
 
     public sealed class ValorProjectile : VanillaYoyoBaseProjectile
