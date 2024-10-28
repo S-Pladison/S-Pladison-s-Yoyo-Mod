@@ -298,7 +298,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             // Если НПС все еще не прикреплен к плитке (в случаех, если он слишком далеко или телепортировался)
-            if (Data is null && _timeSinceLastTileCheck++ < TileCheckFrequency)
+            if (Data is null && _timeSinceLastTileCheck++ >= TileCheckFrequency)
             {
                 ChainToTile(npc);
                 _timeSinceLastTileCheck = 0;
