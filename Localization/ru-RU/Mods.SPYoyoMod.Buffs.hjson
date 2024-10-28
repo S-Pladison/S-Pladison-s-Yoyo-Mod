@@ -1,4 +1,8 @@
 ValorBuff: {
-	// Description: Mods.SPYoyoMod.Buffs.ValorBuff.Description
-	// DisplayName: Valor Buff
+	Description:
+		'''
+		Приковывает цепью к ближайшему блоку
+		Получение урона вызывает проклятый циркулярный диск
+		'''
+	DisplayName: Проклятие заключения
 }

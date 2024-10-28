@@ -13,6 +13,7 @@ using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
@@ -41,23 +42,28 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorItem : VanillaYoyoBaseItem
     {
+        public static readonly int DebuffApplyChanceDenominator = 10;
+        public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
+
         public override int ItemType => ItemID.Valor;
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(DebuffApplyChanceDenominator);
     }
 
     public sealed class ValorProjectile : VanillaYoyoBaseProjectile
     {
-        public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
-
         public override int ProjType => ProjectileID.Valor;
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
+                return;
+
             foreach (var npc in Main.ActiveNPCs)
             {
                 if (!npc.HasBuff<ValorBuff>())
                     continue;
 
-                if (Vector2.DistanceSquared(npc.Center, target.Center) <= DebuffChanceReductionDistance)
+                if (Vector2.DistanceSquared(npc.Center, target.Center) <= ValorItem.DebuffChanceReductionDistance)
                     return;
             }
 

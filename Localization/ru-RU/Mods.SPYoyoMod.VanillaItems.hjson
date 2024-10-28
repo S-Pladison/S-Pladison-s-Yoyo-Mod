@@ -1,2 +1,6 @@
 // CascadeItem.Tooltip: ""
-// ValorItem.Tooltip: ""
+ValorItem.Tooltip:
+	'''
+	С {0}%-ым шансом накладывает на врага дебафф «{$Buffs.ValorBuff.DisplayName}»
+	Если рядом есть враг с этим же дебаффом, шанс будет значительно понижен
+	'''
