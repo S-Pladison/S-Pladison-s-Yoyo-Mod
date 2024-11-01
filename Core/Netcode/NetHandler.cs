@@ -9,11 +9,16 @@ namespace SPYoyoMod.Core.Netcode
     public sealed class NetHandler : ILoadable
     {
         private static Mod _mod;
-        private static List<NetPacket> _packets = [];
+        private static List<NetPacket> _packets;
 
         public static void Receive(BinaryReader reader, int sender)
         {
-            var packet = _packets[reader.ReadByte()];
+            var id = reader.ReadByte();
+
+            if (id == 0)
+                return;
+
+            var packet = _packets[id];
             packet.Receive(reader, sender);
         }
 
@@ -22,8 +27,12 @@ namespace SPYoyoMod.Core.Netcode
             if (Main.netMode == NetmodeID.SinglePlayer)
                 return;
 
+            var packet = ModContent.GetInstance<T>();
+
+            if (packet.ID == 0)
+                return;
+
             var modPacket = _mod.GetPacket();
-            var packet = _packets[ModContent.GetInstance<T>().ID];
 
             modPacket.Write(packet.ID);
             packet.Send(modPacket, context);
@@ -40,6 +49,7 @@ namespace SPYoyoMod.Core.Netcode
         void ILoadable.Load(Mod mod)
         {
             _mod = mod;
+            _packets = [];
 
             ModEvents.OnPostSetupContent += RegisterPackets;
         }

@@ -7,14 +7,14 @@ namespace SPYoyoMod.Core.Netcode
     {
         private static byte _idGenerator;
 
-        public byte ID { get; private set; }
+        public byte ID { get; private set; } = 0;
 
         public abstract void Send(BinaryWriter writer, params object[] context);
         public abstract void Receive(BinaryReader reader, int sender);
 
         void ILoadable.Load(Mod mod)
         {
-            ID = _idGenerator++;
+            ID = ++_idGenerator;
         }
 
         void ILoadable.Unload()
