@@ -3,6 +3,7 @@ using Terraria.ID;
 using Terraria;
 using Terraria.ModLoader;
 using System.Collections.Generic;
+using System;
 
 namespace SPYoyoMod.Core.Netcode
 {
@@ -16,9 +17,9 @@ namespace SPYoyoMod.Core.Netcode
             var id = reader.ReadByte();
 
             if (id == 0)
-                return;
+                throw new NotImplementedException();
 
-            var packet = _packets[id];
+            var packet = _packets[id - 1];
             packet.Receive(reader, sender);
         }
 
@@ -30,7 +31,7 @@ namespace SPYoyoMod.Core.Netcode
             var packet = ModContent.GetInstance<T>();
 
             if (packet.ID == 0)
-                return;
+                throw new NotImplementedException();
 
             var modPacket = _mod.GetPacket();
 
