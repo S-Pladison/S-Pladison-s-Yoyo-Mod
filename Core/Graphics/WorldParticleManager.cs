@@ -151,14 +151,12 @@ namespace SPYoyoMod.Core.Graphics
             ModEvents.OnPreUpdateDusts += UpdateParticles;
             ModEvents.OnPostUpdateCameraPosition += RenderPixelatedLayers;
 
-            // TODO: Проверить, действительно ли частицы рисуются за сущностями (UPD: НЕ РИСУЕТ, ТВАРЬ...)
-            // TODO2: Starlight вызывает DoDraw_DrawNPCsOverTiles для отражений; есть ли метод получше?
             On_Main.DoDraw_DrawNPCsOverTiles += (orig, main) =>
             {
-                orig(main);
-
                 DrawSpecificParticles(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
                 DrawSpecificParticles(WorldParticleFlags.Behind);
+
+                orig(main);
             };
 
             On_Main.DrawDust += (orig, main) =>
