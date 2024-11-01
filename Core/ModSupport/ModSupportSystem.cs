@@ -2,9 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using SPYoyoMod.Common;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.ModSupport
+namespace SPYoyoMod.Core.ModSupport
 {
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
     public sealed class ModInternalNameAttribute(string value) : Attribute

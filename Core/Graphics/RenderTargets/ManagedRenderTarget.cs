@@ -6,7 +6,7 @@ using Terraria;
 using Terraria.ModLoader;
 using static SPYoyoMod.Utils.ModUtils;
 
-namespace SPYoyoMod.Common.Graphics.RenderTargets
+namespace SPYoyoMod.Core.Graphics.RenderTargets
 {
     // [ Based on code from the Calamity Mod GitHub Repository (https://github.com/CalamityTeam/CalamityModPublic/) ]
 

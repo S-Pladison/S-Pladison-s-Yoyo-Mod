@@ -1,16 +1,16 @@
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using SPYoyoMod.Common.Graphics.Renderers;
-using SPYoyoMod.Common.Hooks;
-using SPYoyoMod.Common.ModSupport;
+using SPYoyoMod.Core.Graphics.Renderers;
+using SPYoyoMod.Core.Hooks;
+using SPYoyoMod.Core.ModSupport;
 using SPYoyoMod.Utils;
 using System;
 using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Reworks
 {
     [Autoload(Side = ModSide.Client)]
     public sealed class YoyoStringReplacementGlobalProjectile : GlobalProjectile, IInitializableProjectile

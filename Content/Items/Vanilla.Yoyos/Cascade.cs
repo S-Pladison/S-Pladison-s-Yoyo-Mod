@@ -1,8 +1,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Common.Graphics.Renderers;
-using SPYoyoMod.Common.Hooks;
+using SPYoyoMod.Content.Particles;
+using SPYoyoMod.Core.Graphics;
+using SPYoyoMod.Core.Graphics.Renderers;
+using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System;
 using System.IO;
@@ -127,6 +129,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _aiStateMachine.Process();
 
             Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.25f);
+
+            var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
+            particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
+            particle.Position = proj.Center;
+            particle.Scale = 1.0f;
         }
 
         private void WaitingToStartCharge(StateMachine<AIStates> aiStateMachine)

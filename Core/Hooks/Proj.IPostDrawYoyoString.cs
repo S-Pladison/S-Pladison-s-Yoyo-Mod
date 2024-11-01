@@ -3,9 +3,9 @@ using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
-using IHook = SPYoyoMod.Common.Hooks.IPostDrawYoyoStringProjectile;
+using IHook = SPYoyoMod.Core.Hooks.IPostDrawYoyoStringProjectile;
 
-namespace SPYoyoMod.Common.Hooks
+namespace SPYoyoMod.Core.Hooks
 {
     /// <summary>
     /// Позволяет рисовать поверх ниток всех снарядов йо-йо (включая противовесы).<br/>

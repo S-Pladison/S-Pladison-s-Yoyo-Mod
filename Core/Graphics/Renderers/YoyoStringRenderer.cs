@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.GameContent;
 
-namespace SPYoyoMod.Common.Graphics.Renderers
+namespace SPYoyoMod.Core.Graphics.Renderers
 {
     /// <summary>
     /// Настройки для отрисовки нити снарядов йо-йо.
@@ -100,7 +100,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
         /// <summary> 
         /// Класс, отрисовывающий примитивную нить йо-йо.
         /// </summary>
-        public sealed class Default(Texture2D texture, IDrawYoyoStringSegments.ColorData color) : IDrawYoyoStringSegments
+        public sealed class Default(Texture2D texture, ColorData color) : IDrawYoyoStringSegments
         {
             public Texture2D Texture { get; init; } = texture ?? TextureAssets.FishingLine.Value;
             public ColorData Color { get; init; } = color;
@@ -124,7 +124,7 @@ namespace SPYoyoMod.Common.Graphics.Renderers
         /// <summary> 
         /// Класс, отрисовывающий градиентную нить йо-йо (с учетом нескольких цветов).
         /// </summary>
-        public sealed class Gradient(Texture2D texture, params IDrawYoyoStringSegments.ColorData[] colors) : IDrawYoyoStringSegments
+        public sealed class Gradient(Texture2D texture, params ColorData[] colors) : IDrawYoyoStringSegments
         {
             public Texture2D Texture { get; init; } = texture ?? TextureAssets.FishingLine.Value;
             public ColorData[] Colors { get; init; } = colors;

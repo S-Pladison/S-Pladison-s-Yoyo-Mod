@@ -7,7 +7,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Reworks
 {
     public sealed class YoyoUseStyleGlobalItem : GlobalItem
     {
