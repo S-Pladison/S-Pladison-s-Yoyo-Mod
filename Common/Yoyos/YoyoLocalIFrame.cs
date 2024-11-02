@@ -12,7 +12,7 @@ namespace SPYoyoMod.Common.Reworks
         public const float DefaultTopSpeedValue = 10;
 
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
-            => lateInstantiation && proj.IsYoyo() && !proj.IsCounterweight();
+            => lateInstantiation && proj.IsYoyo();
 
         public override void SetDefaults(Projectile proj)
         {

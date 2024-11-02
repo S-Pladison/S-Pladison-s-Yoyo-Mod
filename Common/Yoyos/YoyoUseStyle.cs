@@ -69,7 +69,7 @@ namespace SPYoyoMod.Common.Reworks
 
                     ref var proj = ref Main.projectile[player.heldProj];
 
-                    if (!proj.IsYoyo() || proj.IsCounterweight())
+                    if (!proj.IsYoyo())
                         continue;
 
                     if (!proj.IsVanilla() && !(proj.ModProjectile is not null && proj.ModProjectile.Mod is SPYoyoMod))
@@ -142,7 +142,7 @@ namespace SPYoyoMod.Common.Reworks
 
         private static void ModifyMountedCenter(Projectile proj, ref Vector2 mountedCenter)
         {
-            if (!proj.IsYoyo())
+            if (!proj.IsYoyo() && !proj.IsCounterweight())
                 return;
 
             mountedCenter += GetMountedCenterOffset(proj.GetOwner());

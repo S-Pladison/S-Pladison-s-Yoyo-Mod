@@ -20,7 +20,7 @@ namespace SPYoyoMod.Common.Reworks
         public override bool InstancePerEntity => true;
 
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
-            => lateInstantiation && proj.IsYoyo();
+            => lateInstantiation && (proj.IsYoyo() || proj.IsCounterweight());
 
         public override void Load()
         {

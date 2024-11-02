@@ -1,6 +1,10 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO;
+using System.Runtime.CompilerServices;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
+using Terraria.ModLoader.IO;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
 {
@@ -11,7 +15,26 @@ namespace SPYoyoMod.Utils
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsYoyo(this Projectile proj)
-            => proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
+            => proj.aiStyle.Equals(ProjAIStyleID.Yoyo) && !proj.counterweight;
+
+        /// <summary>
+        /// Является ли этот снаряд противовесом.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsCounterweight(this Projectile proj)
+            => proj.counterweight;
+
+        /// <summary>
+        /// Связан ли этот снаряд хоть как-то с йо-йо. Проще говоря, является ли он йо-йо, его противовесом или вовсе поражден от другого снаряда, порожденного другим снарядом, порожденным йо-йо.
+        /// Не советую использовать данную функцию при загрузке мода, т.к. флаг, указывающий на то, связан ли снаряд с йо-йо, устанавливается лишь при спавне самого снаряда.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsYoyoOrRelated(this Projectile proj)
+        {
+            return proj.IsYoyo()
+                || proj.IsCounterweight()
+                || proj.TryGetGlobalProjectile(out RelatedToYoyoGlobalProjectile globalProj) && globalProj.RelatedToYoyo;
+        }
 
         /// <summary>
         /// Является ли этот снаряд основным снарядом от йо-йо.
@@ -33,13 +56,6 @@ namespace SPYoyoMod.Utils
 
             return true;
         }
-
-        /// <summary>
-        /// Является ли этот снаряд противовесом.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCounterweight(this Projectile proj)
-            => proj.counterweight;
 
         /// <summary>
         /// Является ли этот снаряд снарядом ванильным.
@@ -69,6 +85,39 @@ namespace SPYoyoMod.Utils
                 return null;
 
             return player;
+        }
+
+        private sealed class RelatedToYoyoGlobalProjectile : GlobalProjectile
+        {
+            public bool RelatedToYoyo { get; private set; }
+            public override bool InstancePerEntity { get => true; }
+
+            public override void OnSpawn(Projectile proj, IEntitySource source)
+            {
+                if (source is not EntitySource_Parent parentSource || parentSource.Entity is not Projectile parentProj)
+                    return;
+
+                if (parentProj.IsYoyo() || parentProj.IsCounterweight())
+                {
+                    RelatedToYoyo = true;
+                    return;
+                }
+
+                if (!parentProj.TryGetGlobalProjectile(out RelatedToYoyoGlobalProjectile parentGlobal))
+                    return;
+
+                RelatedToYoyo = parentGlobal.RelatedToYoyo;
+            }
+
+            public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
+            {
+                bitWriter.WriteBit(RelatedToYoyo);
+            }
+
+            public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
+            {
+                RelatedToYoyo = bitReader.ReadBit();
+            }
         }
     }
 }
