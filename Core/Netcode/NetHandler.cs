@@ -1,26 +1,23 @@
-﻿using System.IO;
-using Terraria.ID;
+﻿using Terraria.ID;
 using Terraria;
 using Terraria.ModLoader;
 using System.Collections.Generic;
 using System;
+using Terraria.ModLoader.Core;
+using System.Linq;
+using System.IO;
 
 namespace SPYoyoMod.Core.Netcode
 {
     public sealed class NetHandler : ILoadable
     {
         private static Mod _mod;
-        private static List<NetPacket> _packets;
+        private static List<NetPacket> _packetList;
+        private static Dictionary<Type, byte> _packetIdByTypeDict;
 
         public static void Receive(BinaryReader reader, int sender)
         {
-            var id = reader.ReadByte();
-
-            if (id == 0)
-                throw new NotImplementedException();
-
-            var packet = _packets[id - 1];
-            packet.Receive(reader, sender);
+            GetPacketById(reader.ReadByte()).Receive(reader, sender);
         }
 
         public static void Send<T>(int? toClient, int? ignoreClient, params object[] context) where T : NetPacket
@@ -28,14 +25,12 @@ namespace SPYoyoMod.Core.Netcode
             if (Main.netMode == NetmodeID.SinglePlayer)
                 return;
 
-            var packet = ModContent.GetInstance<T>();
-
-            if (packet.ID == 0)
-                throw new NotImplementedException();
-
+            var type = typeof(T);
+            var id = _packetIdByTypeDict[type];
+            var packet = GetPacketById(id);
             var modPacket = _mod.GetPacket();
 
-            modPacket.Write(packet.ID);
+            modPacket.Write(id);
             packet.Send(modPacket, context);
 
             modPacket.Send(toClient ?? -1, ignoreClient ?? -1);
@@ -43,23 +38,46 @@ namespace SPYoyoMod.Core.Netcode
 
         private static void RegisterPackets()
         {
-            foreach (var type in _mod.GetContent<NetPacket>())
-                _packets.Add(type);
+            _packetList.Clear();
+            _packetIdByTypeDict.Clear();
+
+            foreach (var type in AssemblyManager.GetLoadableTypes(_mod.Code).Where(
+                t => !t.IsAbstract &&
+                t.IsSubclassOf(typeof(NetPacket)) &&
+                t.GetConstructors().Any(c => c.GetParameters().Length == 0)
+            ).OrderBy(t => t.Name))
+            {
+                var packet = Activator.CreateInstance(type) as NetPacket;
+                var id = (byte)(_packetList.Count + 1);
+
+                _packetList.Add(packet);
+                _packetIdByTypeDict[type] = id;
+
+                _mod.Logger.Debug($"Registered NetPacket::{type.Name} with ID::{id}");
+            }
+        }
+
+        private static NetPacket GetPacketById(byte id)
+        {
+            if (id == 0 || id > _packetList.Count)
+                throw new NotImplementedException();
+
+            return _packetList[id - 1];
         }
 
         void ILoadable.Load(Mod mod)
         {
             _mod = mod;
-            _packets = [];
+            _packetList = [];
+            _packetIdByTypeDict = [];
 
-            ModEvents.OnPostSetupContent += RegisterPackets;
+            RegisterPackets();
         }
 
         void ILoadable.Unload()
         {
-            ModEvents.OnPostSetupContent -= RegisterPackets;
-
-            _packets = null;
+            _packetIdByTypeDict = null;
+            _packetList = null;
             _mod = null;
         }
     }

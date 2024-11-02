@@ -1,25 +1,10 @@
 ﻿using System.IO;
-using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.Netcode
 {
-    public abstract class NetPacket : ILoadable
+    public abstract class NetPacket
     {
-        private static byte _idGenerator;
-
-        public byte ID { get; private set; } = 0;
-
         public abstract void Send(BinaryWriter writer, params object[] context);
         public abstract void Receive(BinaryReader reader, int sender);
-
-        void ILoadable.Load(Mod mod)
-        {
-            ID = ++_idGenerator;
-        }
-
-        void ILoadable.Unload()
-        {
-            _idGenerator = 0;
-        }
     }
 }
