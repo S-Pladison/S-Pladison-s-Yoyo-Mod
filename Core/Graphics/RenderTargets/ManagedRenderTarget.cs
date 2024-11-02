@@ -1,10 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
-using static SPYoyoMod.Utils.ModUtils;
 
 namespace SPYoyoMod.Core.Graphics.RenderTargets
 {
@@ -156,9 +156,9 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
         [Autoload(Side = ModSide.Client)]
         private class ManagedRenderTargetSystem : ModSystem
         {
-            public static readonly int TimeBeforeAutoDispose = SecondsToTicks(60);
-            public static List<ManagedRenderTarget> ManagedTargets = new();
-            public static HashSet<ManagedRenderTarget> ActiveManagedTargets = new();
+            public static readonly int TimeBeforeAutoDispose = ModUtils.SecondsToTicks(60);
+            public static List<ManagedRenderTarget> ManagedTargets = [];
+            public static HashSet<ManagedRenderTarget> ActiveManagedTargets = [];
 
             public override void OnModLoad()
             {
