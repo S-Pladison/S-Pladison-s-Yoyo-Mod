@@ -46,7 +46,7 @@ namespace SPYoyoMod.Content.Particles
         public void Update()
         {
             OnUpdate();
-             
+
             Position += Velocity;
 
             if (ElapsedTime++ >= LifeTime)

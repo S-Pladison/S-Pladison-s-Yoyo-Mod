@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using SPYoyoMod.Common;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.ModSupport

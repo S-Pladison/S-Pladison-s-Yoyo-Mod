@@ -1,5 +1,4 @@
 ﻿using System.Reflection;
-using SPYoyoMod.Common;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;

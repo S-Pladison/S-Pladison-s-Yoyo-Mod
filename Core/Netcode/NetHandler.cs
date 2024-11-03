@@ -1,11 +1,11 @@
-﻿using Terraria.ID;
-using Terraria;
-using Terraria.ModLoader;
+﻿using System;
 using System.Collections.Generic;
-using System;
-using Terraria.ModLoader.Core;
-using System.Linq;
 using System.IO;
+using System.Linq;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+using Terraria.ModLoader.Core;
 
 namespace SPYoyoMod.Core.Netcode
 {
