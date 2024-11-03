@@ -176,18 +176,7 @@ namespace SPYoyoMod.Utils
             }
         }
 
-        private sealed class RequestTotalDamageFromYoyosPacket : NetPacket
-        {
-            public override void Send(BinaryWriter writer, params object[] context) { }
-
-            public override void Receive(BinaryReader reader, int sender)
-            {
-                if (Main.netMode == NetmodeID.Server)
-                    NetHandler.Send<GetTotalDamageFromYoyosPacket>(sender, null);
-            }
-        }
-
-        private sealed class GetTotalDamageFromYoyosPacket : NetPacket
+        private sealed class TotalDamageFromYoyosPacket : NetPacket
         {
             public override void Send(BinaryWriter writer, params object[] context)
             {
@@ -256,6 +245,13 @@ namespace SPYoyoMod.Utils
                     c.Emit(OpCodes.Ldloc, 39); // strike (hit)
                     c.EmitDelegate(BeforeStrikeNPCByProjectile);
                 };
+
+                // Отправляем с сервера подключенному игроку информацию обо всех NPC с их общим полученным уроном
+                ModEvents.OnPlayerConnect += (Player player) =>
+                {
+                    if (Main.netMode == NetmodeID.Server)
+                        NetHandler.Send<TotalDamageFromYoyosPacket>(player.whoAmI, null);
+                };
             }
 
             private static void BeforeStrikeNPCByProjectile(Projectile proj, NPC npc, NPC.HitInfo hit)
@@ -270,14 +266,6 @@ namespace SPYoyoMod.Utils
 
                 if (Main.netMode != NetmodeID.SinglePlayer)
                     NetHandler.Send<TakeDamageFromYoyoPacket>(null, null, (byte)npc.whoAmI, (uint)hit.Damage);
-            }
-        }
-
-        private sealed class TotalDamageFromYoyosPlayer : ModPlayer
-        {
-            public override void PlayerConnect()
-            {
-                NetHandler.Send<RequestTotalDamageFromYoyosPacket>(null, null);
             }
         }
     }

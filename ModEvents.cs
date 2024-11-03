@@ -1,8 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Core;
+using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
 using System;
+using System.IO;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod
@@ -21,6 +24,11 @@ namespace SPYoyoMod
         /// Позволяет загружать вещи после того, как мод подготовил весь свой контент.
         /// </summary>
         public static event Action OnPostSetupContent;
+
+        /// <summary>
+        /// Вызывается всякий раз, как игрок подключается к игре; Вызов происходит для всех, как для клиентов, так и для сервера.
+        /// </summary>
+        public static event Action<Player> OnPlayerConnect;
 
         /// <summary>
         /// Вызывается при выгрузке мира.
@@ -160,6 +168,37 @@ namespace SPYoyoMod
 
                     ModEvents.OnResolutionChanged(Main.ScreenSize);
                 }
+            }
+        }
+
+        private sealed class PlayerConnectPacket : NetPacket
+        {
+            public override void Send(BinaryWriter writer, params object[] context)
+            {
+                writer.Write((byte)context[0]); //< connectedPlayerIndex
+            }
+
+            public override void Receive(BinaryReader reader, int sender)
+            {
+                var connectedPlayerIndex = reader.ReadByte();
+
+                ModEvents.OnPlayerConnect(Main.player[connectedPlayerIndex]);
+
+                if (Main.netMode == NetmodeID.Server)
+                    NetHandler.Send<PlayerConnectPacket>(null, sender, connectedPlayerIndex);
+            }
+        }
+
+        [LoadPriority(sbyte.MaxValue)]
+        private sealed class EventPlayer : ModPlayer
+        {
+            public override void PlayerConnect()
+            {
+                var connectedPlayerIndex = (byte)Main.myPlayer;
+
+                ModEvents.OnPlayerConnect(Main.player[connectedPlayerIndex]);
+
+                NetHandler.Send<PlayerConnectPacket>(null, null, connectedPlayerIndex);
             }
         }
     }
