@@ -16,12 +16,18 @@ namespace SPYoyoMod.Utils
             return effect;
         }
 
-        public static void Apply(this Asset<Effect> effect, string passName)
+        public static void Apply(this Asset<Effect> effect, string passName = null)
         {
             if (!effect.IsLoaded)
                 return;
 
-            effect.Value.CurrentTechnique.Passes[passName].Apply();
+            if (passName is not null)
+            {
+                effect.Value.CurrentTechnique.Passes[passName].Apply();
+                return;
+            }
+
+            effect.Value.CurrentTechnique.Passes[0].Apply();
         }
     }
 }
