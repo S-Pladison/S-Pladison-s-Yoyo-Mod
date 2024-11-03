@@ -104,7 +104,9 @@ namespace SPYoyoMod.Core.Graphics.Renderers
             if (_innerPosition == position)
                 return this;
 
-            Offset(position - _innerPosition);
+            if (!_isDirty)
+                Offset(position - _innerPosition);
+
             _innerPosition = position;
 
             return this;
