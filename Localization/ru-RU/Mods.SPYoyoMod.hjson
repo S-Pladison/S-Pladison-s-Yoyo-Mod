@@ -1,4 +1,4 @@
 Projectiles: {
-	// BellowingThunderProjectile.DisplayName: Bellowing Thunder Projectile
+	// BellowingThunderProjectile.DisplayName: "{$Items.BellowingThunderItem.DisplayName}"
 	// CascadeExplosionProjectile.DisplayName: Cascade Explosion Projectile
 }
