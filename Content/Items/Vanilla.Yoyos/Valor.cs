@@ -78,6 +78,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void AI(Projectile proj)
         {
+            if (Main.rand.NextBool(3))
+            {
+                var dust = Main.dust[Dust.NewDust(proj.position, proj.width, proj.height, Main.rand.NextBool() ? DustID.DungeonWater : DustID.WaterCandle)];
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+            }
+
             Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
@@ -610,7 +617,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             device.SetRenderTarget(_renderTarget);
             device.Clear(Color.Transparent);
             {
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
 
                 foreach (var npc in _npcObserver.GetEntityInstances())
                     NPCUtils.DrawNPC(npc);
@@ -656,7 +663,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             var effect = ValorAssets.OutlineEffect.Prepare(parameters =>
             {
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
-                parameters["OutlineColor"].SetValue(new Color(18, 75, 210).ToVector4());
+                parameters["OutlineColor"].SetValue(ValorProjectile.GlowColor.ToVector4());
                 parameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
             });
 

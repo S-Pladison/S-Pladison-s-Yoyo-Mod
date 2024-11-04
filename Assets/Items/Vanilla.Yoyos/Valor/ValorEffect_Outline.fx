@@ -3,6 +3,12 @@ texture Texture0 : register(s0);
 sampler TextureSampler0 = sampler_state
 {
     texture = <Texture0>;
+    AddressU = Clamp;
+    AddressV = Clamp;
+    AddressW = Clamp;
+    MagFilter = Point;
+    MinFilter = Point;
+    Mipfilter = Point;
 };
 
 float2 ScreenSize;
@@ -26,25 +32,22 @@ float Outline(sampler smp, float2 coords, float2 size)
 float4 ValorOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float4 npcColor = tex2D(TextureSampler0, coords);
-    float2 coordScreen = coords / ScreenSize * Zoom;
+    float2 pixelSize = float2(2, 2) / ScreenSize * Zoom;
     
-    float3 color = OutlineColor.rgb;
-    float outline = Outline(TextureSampler0, coords, coordScreen * 4);
-    float4 result = lerp(npcColor, float4(color, 0), outline);
-    
-    if (any(result))
-        return result;
-    
-    color = OutlineColor * 0.15;
-    outline = Outline(TextureSampler0, coords, coordScreen * 10);
-    result = lerp(npcColor, float4(color, 0), outline);
+    float outline = Outline(TextureSampler0, coords, pixelSize);
+    float4 result = lerp(npcColor, float4(OutlineColor.rgb, 1), outline);
     
     if (any(result))
         return result;
     
-    color = OutlineColor * 0.05;
-    outline = Outline(TextureSampler0, coords, coordScreen * 20);
-    result = lerp(npcColor, float4(color, 0), outline);
+    outline = Outline(TextureSampler0, coords, pixelSize * 2);
+    result = lerp(npcColor, float4(0, 0, 0, 0.1), outline);
+    
+    if (any(result))
+        return result;
+    
+    outline = Outline(TextureSampler0, coords, pixelSize * 4);
+    result = lerp(npcColor, float4(0, 0, 0, 0.025), outline);
     
     return result;
 }
