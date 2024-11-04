@@ -4,6 +4,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
 using SPYoyoMod.Core.Graphics.RenderTargets;
+using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,6 @@ using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -119,12 +119,126 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
         }
 
+        // Отравляем с сервера клиентам в случаях, когда зацепили/отцепили NPC
+        private sealed class NPCValorSyncPacket : NetPacket
+        {
+            public override void Send(BinaryWriter writer, params object[] context)
+            {
+                // Данные об NPC
+                writer.Write((byte)context[0]); //< npcWhoAmI
+                writer.Write((ushort)context[1]); //< npcType
+
+                var chainData = context[2] as ChainData;
+
+                // Данные о цепи
+                writer.Write(chainData is not null);
+                if (chainData is not null)
+                {
+                    writer.Write((ushort)chainData.Tile.X);
+                    writer.Write((ushort)chainData.Tile.Y);
+                    writer.Write(chainData.Length);
+                    writer.Write(chainData.LifeTime);
+                }
+            }
+
+            public override void Receive(BinaryReader reader, int sender)
+            {
+                var npcWhoImA = reader.ReadByte();
+                var npcType = reader.ReadUInt16();
+                var hasChainData = reader.ReadBoolean();
+                var npc = Main.npc[npcWhoImA];
+
+                if (npc is null || npc.type != npcType || !npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC))
+                    return;
+
+                if (!hasChainData)
+                {
+                    globalNPC.SetChainData(npc, null);
+                    return;
+                }
+
+                var chainTile = new Point(reader.ReadUInt16(), reader.ReadUInt16());
+                var chainLength = reader.ReadSingle();
+                var chainLifeTime = reader.ReadUInt16();
+
+                globalNPC.SetChainData(npc, new ChainData(chainTile, npc, chainLength, chainLifeTime));
+            }
+        }
+
+        // Отправляем с сервера только что подключившемуся клиенту для синхронизации данных обо всех подцепленных NPC
+        private sealed class NPCValorSyncAllPacket : NetPacket
+        {
+            public override void Send(BinaryWriter writer, params object[] context)
+            {
+                var valorNPCs = new List<(NPC npc, ChainData data)>();
+
+                foreach (var npc in Main.ActiveNPCs)
+                {
+                    if (!npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC) || !npc.HasBuff<ValorBuff>())
+                        continue;
+
+                    valorNPCs.Add((npc, globalNPC.Data));
+                }
+
+                writer.Write((byte)valorNPCs.Count);
+
+                // Чаще всего таких NPC будет 0... Ну, к максимум 1-2...
+                foreach (var (npc, chainData) in valorNPCs)
+                {
+                    // Данные об NPC
+                    writer.Write((byte)npc.whoAmI);
+                    writer.Write((ushort)npc.type);
+                    writer.Write((ushort)npc.buffTime[npc.FindBuffIndex<ValorBuff>()]);
+
+                    // Данные о цепи
+                    writer.Write(chainData is not null);
+                    if (chainData is not null)
+                    {
+                        writer.Write((ushort)chainData.Tile.X);
+                        writer.Write((ushort)chainData.Tile.Y);
+                        writer.Write(chainData.Length);
+                        writer.Write(chainData.LifeTime);
+                    }
+                }
+            }
+
+            public override void Receive(BinaryReader reader, int sender)
+            {
+                var valorNPCCount = reader.ReadByte();
+
+                // Чаще всего таких NPC будет 0... Ну, к максимум 1-2...
+                for (var index = 0; index < valorNPCCount; index++)
+                {
+                    var npcWhoAmI = reader.ReadByte();
+                    var npcType = reader.ReadUInt16();
+                    var npcDebuffTime = reader.ReadUInt16();
+                    var hasChainData = reader.ReadBoolean();
+                    var npc = Main.npc[npcWhoAmI];
+
+                    if (npc is null || npc.type != npcType || !npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC))
+                        continue;
+
+                    // При подключении игрок не знает о дебаффах врагов
+                    npc.AddBuff<ValorBuff>(npcDebuffTime);
+                    globalNPC.HasDebuff = true;
+
+                    if (!hasChainData)
+                        continue;
+
+                    var chainTile = new Point(reader.ReadUInt16(), reader.ReadUInt16());
+                    var chainLength = reader.ReadSingle();
+                    var chainLifeTime = reader.ReadUInt16();
+
+                    globalNPC.SetChainData(npc, new ChainData(chainTile, npc, chainLength, chainLifeTime));
+                }
+            }
+        }
+
         public static readonly int TileCheckFrequency = ModUtils.SecondsToTicks(1f);
         public static readonly int TileCheckRadius = 7;
         public static readonly float ChainAdditionalLength = TileUtils.TileSizeInPixels * 2.5f;
         public static readonly float ChainLengthToBreak = TileUtils.TileSizeInPixels * 12f;
 
-        private bool _prevHasDebuff;
         private int _timeSinceLastTileCheck;
 
         public override bool InstancePerEntity { get => true; }
@@ -178,56 +292,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
                 orig(npc, position, style, extraInfo);
             };
-        }
 
-        public override void SendExtraAI(NPC npc, BitWriter bitWriter, BinaryWriter binaryWriter)
-        {
-            bitWriter.WriteBit(HasDebuff);
-
-            if (!HasDebuff)
-                return;
-
-            bitWriter.WriteBit(Data is null);
-
-            if (Data is null)
-                return;
-
-            binaryWriter.Write((short)Data.Tile.X);
-            binaryWriter.Write((short)Data.Tile.Y);
-            binaryWriter.Write(Data.Length);
-            binaryWriter.Write(Data.LifeTime);
-        }
-
-        public override void ReceiveExtraAI(NPC npc, BitReader bitReader, BinaryReader binaryReader)
-        {
-            HasDebuff = bitReader.ReadBit();
-
-            if (!HasDebuff)
+            // Отправляем информацию подключившемуся игроку обо всех прицепленных врагах
+            ModEvents.OnPlayerConnect += (Player player) =>
             {
-                // Я бы хотел это убрать, но не могу...
-                SetChainData(npc, null);
-                return;
-            }
-
-            if (bitReader.ReadBit())
-            {
-                SetChainData(npc, null);
-                return;
-            }
-
-            var tile = new Point(binaryReader.ReadInt16(), binaryReader.ReadInt16());
-            var length = binaryReader.ReadSingle();
-            var lifeTime = binaryReader.ReadUInt16();
-
-            if (Data is null)
-            {
-                SetChainData(npc, new ChainData(tile, npc, length, lifeTime));
-                return;
-            }
-
-            Data.Tile = tile;
-            Data.Length = length;
-            Data.LifeTime = lifeTime;
+                if (Main.netMode == NetmodeID.Server)
+                    NetHandler.Send<NPCValorSyncAllPacket>(player.whoAmI, null);
+            };
         }
 
         public override void OnSpawn(NPC npc, IEntitySource source)
@@ -249,6 +320,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreAI(NPC npc)
         {
+            UpdateDebuffState(npc, npc.HasBuff<ValorBuff>());
+
+            if (!HasDebuff)
+                return true;
+
             // Обновляем физику цепи и счетчик жизни
             if (Data is not null)
             {
@@ -260,40 +336,32 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             HandleChain(npc);
 
-            // Ведем учет нпс с дебаффом для дальнейшей отрисовки
-            if (_prevHasDebuff != HasDebuff)
-            {
-                if (HasDebuff)
-                    ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
-                else
-                    ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
+            return true;
+        }
 
-                _prevHasDebuff = HasDebuff;
+        private void UpdateDebuffState(NPC npc, bool state)
+        {
+            if (HasDebuff == state)
+                return;
+
+            if (state)
+            {
+                ChainToTile(npc);
+                ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
+            }
+            else
+            {
+                BreakChain(npc);
+                ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Remove(npc);
             }
 
-            return true;
+            HasDebuff = state;
         }
 
         private void HandleChain(NPC npc)
         {
             // Вся основная логика должна происходить только в сингле на клиенте (что логично) и на сервере в мультиплеере
             if (Main.netMode == NetmodeID.MultiplayerClient)
-                return;
-
-            var hasBuff = npc.HasBuff<ValorBuff>();
-
-            if (HasDebuff != hasBuff)
-            {
-                if (hasBuff)
-                    ChainToTile(npc);
-                else
-                    BreakChain(npc);
-
-                HasDebuff = hasBuff;
-                npc.netUpdate = true;
-            }
-
-            if (!HasDebuff)
                 return;
 
             // Если НПС все еще не прикреплен к плитке (в случаех, если он слишком далеко или телепортировался)
@@ -323,14 +391,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
         }
 
-        private void SetChainData(NPC npc, ChainData data)
+        private void SetChainData(NPC npc, ChainData updatedData)
         {
-            if (data is not null)
+            if (updatedData is not null)
             {
                 if (Data is null)
+                {
                     SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+                    Data = updatedData;
+                    return;
+                }
 
-                Data = data;
+                Data.Tile = updatedData.Tile;
+                Data.Length = updatedData.Length;
+                Data.LifeTime = updatedData.LifeTime;
                 return;
             }
 
@@ -342,6 +416,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private bool ChainToTile(NPC npc)
         {
+            // Вся основная логика должна происходить только в сингле на клиенте (что логично) и на сервере в мультиплеере
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return false;
 
@@ -357,7 +432,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (distFromNPCToTile >= ChainLengthToBreak)
                 return false;
 
-            SetChainData(npc, new ChainData(tileCoord, npc, MathF.Min(distFromNPCToTile + ChainAdditionalLength, TileCheckRadius * TileUtils.TileSizeInPixels)));
+            var chainData = new ChainData(tileCoord, npc, MathF.Min(distFromNPCToTile + ChainAdditionalLength, TileCheckRadius * TileUtils.TileSizeInPixels));
+
+            SetChainData(npc, chainData);
+
+            if (Main.netMode == NetmodeID.Server)
+                NetHandler.Send<NPCValorSyncPacket>(null, null, (byte)npc.whoAmI, (ushort)npc.type, chainData);
 
             npc.netUpdate = true;
             return true;
@@ -365,6 +445,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private bool BreakChain(NPC npc)
         {
+            // Вся основная логика должна происходить только в сингле на клиенте (что логично) и на сервере в мультиплеере
             if (Main.netMode == NetmodeID.MultiplayerClient)
                 return false;
 
@@ -372,6 +453,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return false;
 
             SetChainData(npc, null);
+
+            if (Main.netMode == NetmodeID.Server)
+                NetHandler.Send<NPCValorSyncPacket>(null, null, (byte)npc.whoAmI, (ushort)npc.type, null);
 
             npc.netUpdate = true;
             return true;

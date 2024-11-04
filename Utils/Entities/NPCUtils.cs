@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
 {
@@ -18,6 +19,19 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static uint TotalDamageTakenFromYoyos(this NPC npc)
             => npc.TryGetGlobalNPC<TotalDamageFromYoyosGlobalNPC>(out var globalProj) ? globalProj.TotalDamage : 0;
+
+        /// <summary>
+        /// Накладывает на NPC соответствующий бафф.
+        /// Если у NPC уже есть этот бафф, то произойдет повторное применение.
+        /// </summary>
+        public static void AddBuff<T>(this NPC npc, int time) where T : ModBuff
+            => npc.AddBuff(ModContent.BuffType<T>(), time, false);
+
+        /// <summary>
+        /// Производит поиск индекса соответствующего баффа. Если отсутствует, то возвращает -1.
+        /// </summary>
+        public static int FindBuffIndex<T>(this NPC npc) where T : ModBuff
+            => npc.FindBuffIndex(ModContent.BuffType<T>());
 
         /// <summary>
         /// Связан ли этот НПС как то с боссом или мини-боссом. Этом может быть и сам босс, в случае Скелетрона - рука и т.д.
