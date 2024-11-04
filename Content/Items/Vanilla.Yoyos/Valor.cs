@@ -230,12 +230,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Data.LifeTime = lifeTime;
         }
 
-        public override void DrawEffects(NPC npc, ref Color drawColor)
-        {
-            if (HasDebuff)
-                drawColor = NPC.buffColor(drawColor, 0.35f, 0.65f, 1.0f, 1.0f);
-        }
-
         public override void OnSpawn(NPC npc, IEntitySource source)
         {
             if (!CanBeChained(npc))
