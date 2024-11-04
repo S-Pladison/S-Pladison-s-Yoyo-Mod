@@ -2,17 +2,28 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Utils;
-using Terraria;
+using System;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Particles
 {
-    public sealed class LightPointParticle(int lifeTime, bool pixelated, LightPointParticle.DrawData drawData) : BaseParticle(lifeTime, pixelated), ILoadable
+    public sealed class LightPointParticle : BaseParticle
     {
         private static Asset<Texture2D> _texture;
         private static EasingBuilder _scaleEasing;
 
-        void ILoadable.Load(Mod mod)
+        private static Rectangle _firstFrameRect = new(1, 1, 32, 32);
+        private static Rectangle _secondFrameRect = new(35, 1, 32, 32);
+        private static Vector2 _origin = new(16, 16);
+
+        public Color StartColor = Color.White;
+        public Color EndColor = Color.White;
+
+        private float _innerScale = 1.0f;
+
+        public float Scale { get => _innerScale; set => _innerScale = Math.Max(value, 0.0f); }
+
+        public override void Load(Mod mod)
         {
             _texture = ModContent.Request<Texture2D>($"{nameof(SPYoyoMod)}/Assets/Particles/{nameof(LightPointParticle)}");
             _scaleEasing = new(
@@ -21,47 +32,26 @@ namespace SPYoyoMod.Content.Particles
             );
         }
 
-        void ILoadable.Unload()
+        public override void Unload()
         {
             _texture = null;
             _scaleEasing = null;
         }
-
-        // ...
-
-        public struct DrawData(float scale, Color startColor, Color endColor)
-        {
-            public float Scale = scale;
-            public Color StartColor = startColor;
-            public Color EndColor = endColor;
-
-            public DrawData(float scale, Color color) : this(scale, color, color) { }
-            public DrawData(Color color) : this(1f, color, color) { }
-            public DrawData() : this(1f, Color.White, Color.White) { }
-        }
-
-        // ...
-
-        private DrawData _drawData = drawData;
-
-        public LightPointParticle() : this(ModUtils.SecondsToTicks(1f), false, default) { }
 
         protected override void OnUpdate()
         {
             Velocity *= 0.96f;
         }
 
-        public override void Draw(Vector2 screenPosition)
+        public override void Draw(SpriteBatch spriteBatch, in Vector2 screenPosition)
         {
-            var lifeProgress = 1f - TimeLeft / (float)LifeTime;
-            var position = Position - Main.screenPosition;
-            var color = Color.Lerp(_drawData.StartColor, _drawData.EndColor, lifeProgress);
-            var scale = _drawData.Scale * _scaleEasing.Evaluate(lifeProgress) * 0.8f;
-            var origin = new Vector2(16, 16);
+            var position = Position - screenPosition;
+            var color = Color.Lerp(StartColor, EndColor, LifeTimeRatio);
+            var scale = Scale * _scaleEasing.Evaluate(LifeTimeRatio) * 0.8f;
 
-            Main.spriteBatch.Draw(_texture.Value, position, new Rectangle(35, 1, 32, 32), Color.Black * 0.5f, 0f, origin, scale * 1.2f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(_texture.Value, position, new Rectangle(1, 1, 32, 32), color with { A = 0 }, 0f, origin, scale, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(_texture.Value, position, new Rectangle(1, 1, 32, 32), Color.White with { A = 0 } * 0.75f, 0f, origin, scale * 0.33f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(_texture.Value, position, _secondFrameRect, Color.Black * 0.5f, 0f, _origin, scale * 1.2f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(_texture.Value, position, _firstFrameRect, color with { A = 0 }, 0f, _origin, scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(_texture.Value, position, _firstFrameRect, Color.White with { A = 0 } * 0.75f, 0f, _origin, scale * 0.33f, SpriteEffects.None, 0f);
         }
     }
 }

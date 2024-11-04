@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using SPYoyoMod.Common;
+using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
 
@@ -7,11 +8,30 @@ namespace SPYoyoMod.Utils
     public static class ProjectileUtils
     {
         /// <summary>
-        /// Является ли этот снаряд снарядом от йо-йо. Снаряды противовесов также относятся к йо-йо.
+        /// Является ли этот снаряд йо-йом.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsYoyo(this Projectile proj)
-            => proj.aiStyle.Equals(ProjAIStyleID.Yoyo);
+            => proj.aiStyle.Equals(ProjAIStyleID.Yoyo) && !proj.counterweight;
+
+        /// <summary>
+        /// Является ли этот снаряд противовесом.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsCounterweight(this Projectile proj)
+            => proj.counterweight;
+
+        /// <summary>
+        /// Связан ли этот снаряд хоть как-то с йо-йо. Проще говоря, является ли он йо-йо, его противовесом или вовсе поражден от другого снаряда, порожденного другим снарядом, порожденным йо-йо.
+        /// Не советую использовать данную функцию при загрузке мода, т.к. флаг, указывающий на то, связан ли снаряд с йо-йо, устанавливается лишь при спавне самого снаряда.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsYoyoOrRelated(this Projectile proj)
+        {
+            return proj.IsYoyo()
+                || proj.IsCounterweight()
+                || proj.TryGetGlobalProjectile(out RelatedToYoyoGlobalProjectile globalProj) && globalProj.RelatedToYoyo;
+        }
 
         /// <summary>
         /// Является ли этот снаряд основным снарядом от йо-йо.
@@ -33,13 +53,6 @@ namespace SPYoyoMod.Utils
 
             return true;
         }
-
-        /// <summary>
-        /// Является ли этот снаряд противовесом.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsCounterweight(this Projectile proj)
-            => proj.counterweight;
 
         /// <summary>
         /// Является ли этот снаряд снарядом ванильным.

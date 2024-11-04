@@ -1,6 +1,6 @@
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using SPYoyoMod.Common.ModSupport;
+using SPYoyoMod.Core.ModSupport;
 using SPYoyoMod.Utils;
 using System;
 using System.Reflection;
@@ -8,9 +8,9 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
-using IHook = SPYoyoMod.Common.Hooks.IModifyYoyoStatsProjectile;
+using IHook = SPYoyoMod.Core.Hooks.IModifyYoyoStatsProjectile;
 
-namespace SPYoyoMod.Common.Hooks
+namespace SPYoyoMod.Core.Hooks
 {
     public struct YoyoStatModifiers()
     {

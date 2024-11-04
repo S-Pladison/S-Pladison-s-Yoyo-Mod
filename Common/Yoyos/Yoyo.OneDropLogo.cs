@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Reworks
 {
     [Autoload(Side = ModSide.Client)]
     public sealed class YoyoOneDropLogoGlobalItem : GlobalItem

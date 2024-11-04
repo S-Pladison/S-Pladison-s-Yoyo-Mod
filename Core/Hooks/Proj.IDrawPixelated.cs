@@ -2,7 +2,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using SPYoyoMod.Common.Graphics.RenderTargets;
+using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -12,10 +12,10 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
-using IPostHook = SPYoyoMod.Common.Hooks.IPostDrawPixelatedProjectile;
-using IPreHook = SPYoyoMod.Common.Hooks.IPreDrawPixelatedProjectile;
+using IPostHook = SPYoyoMod.Core.Hooks.IPostDrawPixelatedProjectile;
+using IPreHook = SPYoyoMod.Core.Hooks.IPreDrawPixelatedProjectile;
 
-namespace SPYoyoMod.Common.Hooks
+namespace SPYoyoMod.Core.Hooks
 {
     /// <summary>
     /// Позволяет снаряду отрисовывать пикселизированные эффекты.

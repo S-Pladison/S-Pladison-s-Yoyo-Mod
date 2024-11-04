@@ -1,4 +1,5 @@
-﻿using System.Runtime.CompilerServices;
+﻿using SPYoyoMod.Common;
+using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
 
@@ -12,6 +13,12 @@ namespace SPYoyoMod.Utils
 
     public static class NPCUtils
     {
+        /// <summary>
+        /// Кол-во полученного урона от йо-йо и всего, что с ним связано.
+        /// </summary>
+        public static uint TotalDamageTakenFromYoyos(this NPC npc)
+            => npc.TryGetGlobalNPC<TotalDamageFromYoyosGlobalNPC>(out var globalProj) ? globalProj.TotalDamage : 0;
+
         /// <summary>
         /// Связан ли этот НПС как то с боссом или мини-боссом. Этом может быть и сам босс, в случае Скелетрона - рука и т.д.
         /// </summary>

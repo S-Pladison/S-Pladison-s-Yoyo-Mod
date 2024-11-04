@@ -1,7 +1,7 @@
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using SPYoyoMod.Common.Hooks;
-using SPYoyoMod.Common.ModSupport;
+using SPYoyoMod.Core.Hooks;
+using SPYoyoMod.Core.ModSupport;
 using SPYoyoMod.Utils;
 using System;
 using System.Reflection;

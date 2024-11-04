@@ -1,4 +1,4 @@
-using SPYoyoMod.Common.Hooks;
+using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System.Collections.Generic;
 using System.Threading.Tasks;

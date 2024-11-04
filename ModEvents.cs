@@ -1,8 +1,11 @@
 ﻿using Microsoft.Xna.Framework;
-using SPYoyoMod.Common;
+using SPYoyoMod.Core;
+using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
 using System;
+using System.IO;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod
@@ -23,12 +26,22 @@ namespace SPYoyoMod
         public static event Action OnPostSetupContent;
 
         /// <summary>
+        /// Вызывается всякий раз, как игрок подключается к игре; Вызов происходит для всех, как для клиентов, так и для сервера.
+        /// </summary>
+        public static event Action<Player> OnPlayerConnect;
+
+        /// <summary>
+        /// Вызывается при выгрузке мира.
+        /// </summary>
+        public static event Action OnWorldUnload;
+
+        /// <summary>
         /// Вызывается перед тем, как пыль будет обновлена.
         /// </summary>
         public static event Action OnPreUpdateDusts;
 
         /// <summary>
-        /// Вызывается после всего, что есть в этой игре.
+        /// Вызывается после того, как Network был обновлен. Это событие является последним из всех, что вызываются при обновлении игры.
         /// </summary>
         public static event Action OnPostUpdateEverything;
 
@@ -65,6 +78,7 @@ namespace SPYoyoMod
         {
             OnPostSetupRecipes += ModUtils.EmptyAction;
             OnPostSetupContent += ModUtils.EmptyAction;
+            OnWorldUnload += ModUtils.EmptyAction;
             OnPreUpdateDusts += ModUtils.EmptyAction;
             OnPostUpdateEverything += ModUtils.EmptyAction;
             OnPostUpdateCameraPosition += ModUtils.EmptyAction;
@@ -83,6 +97,7 @@ namespace SPYoyoMod
             OnPostUpdateCameraPosition = null;
             OnPostUpdateEverything = null;
             OnPreUpdateDusts = null;
+            OnWorldUnload = null;
             OnPostSetupContent = null;
             OnPostSetupRecipes = null;
         }
@@ -135,6 +150,9 @@ namespace SPYoyoMod
                 ModEvents.OnResolutionChanged(Main.ScreenSize);
             }
 
+            public override void OnWorldUnload()
+                => ModEvents.OnWorldUnload();
+
             public override void PreUpdateDusts()
                 => ModEvents.OnPreUpdateDusts();
 
@@ -150,6 +168,37 @@ namespace SPYoyoMod
 
                     ModEvents.OnResolutionChanged(Main.ScreenSize);
                 }
+            }
+        }
+
+        private sealed class PlayerConnectPacket : NetPacket
+        {
+            public override void Send(BinaryWriter writer, params object[] context)
+            {
+                writer.Write((byte)context[0]); //< connectedPlayerIndex
+            }
+
+            public override void Receive(BinaryReader reader, int sender)
+            {
+                var connectedPlayerIndex = reader.ReadByte();
+
+                ModEvents.OnPlayerConnect(Main.player[connectedPlayerIndex]);
+
+                if (Main.netMode == NetmodeID.Server)
+                    NetHandler.Send<PlayerConnectPacket>(null, sender, connectedPlayerIndex);
+            }
+        }
+
+        [LoadPriority(sbyte.MaxValue)]
+        private sealed class EventPlayer : ModPlayer
+        {
+            public override void PlayerConnect()
+            {
+                var connectedPlayerIndex = (byte)Main.myPlayer;
+
+                ModEvents.OnPlayerConnect(Main.player[connectedPlayerIndex]);
+
+                NetHandler.Send<PlayerConnectPacket>(null, null, connectedPlayerIndex);
             }
         }
     }

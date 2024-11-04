@@ -1,16 +1,16 @@
 using Microsoft.Xna.Framework;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
-using SPYoyoMod.Common.Graphics.Renderers;
-using SPYoyoMod.Common.Hooks;
-using SPYoyoMod.Common.ModSupport;
+using SPYoyoMod.Core.Graphics.Renderers;
+using SPYoyoMod.Core.Hooks;
+using SPYoyoMod.Core.ModSupport;
 using SPYoyoMod.Utils;
 using System;
 using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Reworks
 {
     [Autoload(Side = ModSide.Client)]
     public sealed class YoyoStringReplacementGlobalProjectile : GlobalProjectile, IInitializableProjectile
@@ -20,7 +20,7 @@ namespace SPYoyoMod.Common
         public override bool InstancePerEntity => true;
 
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
-            => lateInstantiation && proj.IsYoyo();
+            => lateInstantiation && (proj.IsYoyo() || proj.IsCounterweight());
 
         public override void Load()
         {
@@ -33,7 +33,7 @@ namespace SPYoyoMod.Common
                 cursor.Emit(OpCodes.Ldarg_2);
                 cursor.EmitDelegate((Projectile proj, Vector2 mountedCenter) =>
                 {
-                    if (!proj.IsYoyo() || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj) || globalProj._stringRenderer is null)
+                    if (!(proj.IsYoyo() || proj.IsCounterweight()) || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj) || globalProj._stringRenderer is null)
                         return;
 
                     ref var renderer = ref globalProj._stringRenderer;

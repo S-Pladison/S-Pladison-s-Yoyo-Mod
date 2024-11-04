@@ -2,9 +2,9 @@
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
-using IHook = SPYoyoMod.Common.Hooks.IInitializableProjectile;
+using IHook = SPYoyoMod.Core.Hooks.IInitializableProjectile;
 
-namespace SPYoyoMod.Common.Hooks
+namespace SPYoyoMod.Core.Hooks
 {
     /// <summary>
     /// Позволяет проинициализировать данные/объекты для снаряда.

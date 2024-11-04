@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Core
 {
     /// <summary>
     /// Позволяет установить приоритет автоматической загрузки типов.

@@ -5,7 +5,7 @@ using System;
 using System.Runtime.CompilerServices;
 using Terraria;
 
-namespace SPYoyoMod.Common.Graphics.Renderers
+namespace SPYoyoMod.Core.Graphics.Renderers
 {
     public sealed class StripRenderer : IDisposable
     {

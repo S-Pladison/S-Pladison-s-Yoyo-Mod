@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.Graphics.RenderTargets
+namespace SPYoyoMod.Core.Graphics.RenderTargets
 {
     public enum ScreenRenderTargetScale
     {

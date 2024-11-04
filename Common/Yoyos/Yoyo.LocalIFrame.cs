@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Reworks
 {
     [Autoload(false)]
     public sealed class YoyoLocalIFrameGlobalProjectile : GlobalProjectile
@@ -12,7 +12,7 @@ namespace SPYoyoMod.Common
         public const float DefaultTopSpeedValue = 10;
 
         public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
-            => lateInstantiation && proj.IsYoyo() && !proj.IsCounterweight();
+            => lateInstantiation && proj.IsYoyo();
 
         public override void SetDefaults(Projectile proj)
         {
