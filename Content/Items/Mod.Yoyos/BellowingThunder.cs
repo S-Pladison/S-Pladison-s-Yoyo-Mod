@@ -1,19 +1,31 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using ReLogic.Content;
+using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
-    public sealed class BellowingThunderAssets
+    public sealed class BellowingThunderAssets : ILoadable
     {
         public const string ItemPath = $"{_path}BellowingThunder_Item";
         public const string ProjPath = $"{_path}BellowingThunder_Proj";
+        public const string StringPath = $"{nameof(SPYoyoMod)}/Assets/FishingLine_WithShadow";
+
+        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{nameof(SPYoyoMod)}/Assets/YoyoGlow_WithShadow");
 
         private const string _path = $"{nameof(SPYoyoMod)}/Assets/Items/Mod.Yoyos/BellowingThunder/";
+
+        void ILoadable.Unload()
+        {
+            GlowTexture = null;
+        }
+
+        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
     }
 
     public sealed class BellowingThunderItem : YoyoBaseItem
@@ -36,9 +48,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
+    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile
     {
-        //private YoyoStringRenderer _stringRenderer;
+        public static readonly Color GlowColor = new(208, 99, 219);
+
+        private YoyoStringRenderer _stringRenderer;
 
         public override string Texture => BellowingThunderAssets.ProjPath;
         public override float LifeTime => -1f;
@@ -47,19 +61,44 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public void Initialize(Projectile _)
         {
-            /*_stringRenderer = new YoyoStringRenderer(Projectile, new IDrawYoyoStringSegments.Gradient(
-                (Color.Transparent, true), (Color.Transparent, true), (Color.Cyan, true)
-            ));*/
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
+                ModContent.Request<Texture2D>(BellowingThunderAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
+                (Color.Transparent, true), (Color.Transparent, true), (GlowColor, true)
+            ));
+        }
+
+        public override void AI()
+        {
+            Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            var glowPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var glowTexture = BellowingThunderAssets.GlowTexture.Value;
+            var glowOrigin = glowTexture.Size() * 0.5f;
+            var glowScale = Projectile.scale * 1.2f;
+
+            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, Projectile.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
+
+            return true;
         }
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            //_stringRenderer.Draw(mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero);
-        }
+            if (_stringRenderer is null)
+                return;
 
-        public void PostDrawPixelated(Projectile _)
-        {
-            Main.spriteBatch.Draw(TextureAssets.Item[ModContent.ItemType<BellowingThunderItem>()].Value, Projectile.Center - Main.screenPosition - new Vector2(10, 10), null, Color.White, MathHelper.PiOver4, Vector2.Zero, 1f, Microsoft.Xna.Framework.Graphics.SpriteEffects.None, 0);
+            var settings = new YoyoStringRendererSettings(
+                proj: Projectile,
+                start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                offset: -Main.screenPosition
+            );
+
+            _stringRenderer.Render(Main.spriteBatch, settings);
         }
     }
 }
