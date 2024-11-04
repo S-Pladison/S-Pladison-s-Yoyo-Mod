@@ -3,7 +3,9 @@ using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
+using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
+using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
 using System;
@@ -23,7 +25,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public const string InvisiblePath = $"{_assetPath}Invisible";
         public const string BuffPath = $"{_yoyoPath}ValorBuff";
+        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
+        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
         public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -31,6 +35,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void ILoadable.Unload()
         {
+            GlowTexture = null;
             OutlineEffect = null;
         }
 
@@ -51,9 +56,30 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorProjectile : VanillaYoyoBaseProjectile
+    public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
     {
+        public static readonly Color GlowColor = new(35, 90, 255);
+
+        private YoyoStringRenderer _stringRenderer;
+
         public override int ProjType => ProjectileID.Valor;
+        public override bool InstancePerEntity => true;
+
+        void IInitializableProjectile.Initialize(Projectile _)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
+               ModContent.Request<Texture2D>(ValorAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
+               (Color.Transparent, true), (GlowColor, true)
+           ));
+        }
+
+        public override void AI(Projectile proj)
+        {
+            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
+        }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -73,6 +99,32 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
+        }
+
+        public override bool PreDraw(Projectile proj, ref Color lightColor)
+        {
+            var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var glowTexture = ValorAssets.GlowTexture.Value;
+            var glowOrigin = glowTexture.Size() * 0.5f;
+            var glowScale = proj.scale * 1.2f;
+
+            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, proj.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
+
+            return true;
+        }
+
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
+        {
+            if (_stringRenderer is null)
+                return;
+
+            var settings = new YoyoStringRendererSettings(
+                proj: proj,
+                start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                offset: -Main.screenPosition
+            );
+
+            _stringRenderer.Render(Main.spriteBatch, settings);
         }
     }
 
