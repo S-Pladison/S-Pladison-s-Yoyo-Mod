@@ -1,4 +1,5 @@
 using SPYoyoMod.Content.Items.Mod.Accessories;
+using SPYoyoMod.Content.Items.Mod.Yoyos;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -9,11 +10,36 @@ namespace SPYoyoMod.Common
     {
         public override void AddRecipes()
         {
+            AddYoyoRecipes();
+            AddAccessoryRecipes();
+        }
+
+        private static void AddYoyoRecipes()
+        {
             Recipe.Create(ItemID.Cascade)
                 .AddIngredient(ItemID.HellstoneBar, 15)
                 .AddTile(TileID.Anvils)
                 .Register();
 
+            Recipe.Create(ModContent.ItemType<BellowingThunderItem>())
+                .AddIngredient(ItemID.CorruptYoyo)
+                .AddIngredient(ItemID.Valor)
+                .AddIngredient(ItemID.JungleYoyo)
+                .AddIngredient(ItemID.Cascade)
+                .AddTile(TileID.DemonAltar)
+                .Register();
+
+            Recipe.Create(ModContent.ItemType<BellowingThunderItem>())
+                .AddIngredient(ItemID.CrimsonYoyo)
+                .AddIngredient(ItemID.Valor)
+                .AddIngredient(ItemID.JungleYoyo)
+                .AddIngredient(ItemID.Cascade)
+                .AddTile(TileID.DemonAltar)
+                .Register();
+        }
+
+        private static void AddAccessoryRecipes()
+        {
             Recipe.Create(ModContent.ItemType<BearingItem>())
                 .AddRecipeGroup(RecipeGroupID.IronBar, 7)
                 .AddTile(TileID.Anvils)
