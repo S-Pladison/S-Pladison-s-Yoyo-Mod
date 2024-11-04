@@ -23,7 +23,7 @@ float Outline(sampler smp, float2 coords, float2 size)
     return clamp(outline.a, 0, 1);
 }
 
-float4 ValorNPCOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
+float4 ValorOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float4 npcColor = tex2D(TextureSampler0, coords);
     float2 coordScreen = coords / ScreenSize * Zoom;
@@ -51,8 +51,8 @@ float4 ValorNPCOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) :
 
 technique Technique1
 {
-    pass ValorNPCOutline
+    pass ValorOutline
     {
-        PixelShader = compile ps_3_0 ValorNPCOutline();
+        PixelShader = compile ps_3_0 ValorOutline();
     }
 }

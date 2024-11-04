@@ -21,20 +21,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
     public sealed class ValorAssets : ILoadable
     {
-        // [ Текстуры ]
         public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string BuffPath = $"{_valorPath}ValorBuff";
+        public const string BuffPath = $"{_yoyoPath}ValorBuff";
 
-        // [ Эффекты ]
-        public static Asset<Effect> NPCOutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_valorPath}ValorNPCOutline");
+        public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
 
-        // [ Общее ]
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _valorPath = $"{_assetPath}Items/Vanilla.Yoyos/Valor/";
+        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Valor/";
 
         void ILoadable.Unload()
         {
-            NPCOutlineEffect = null;
+            OutlineEffect = null;
         }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
@@ -273,9 +270,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (_prevHasDebuff != HasDebuff)
             {
                 if (HasDebuff)
-                    ValorNPCVisualEffectHandler.AddNPC(npc);
+                    ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
                 else
-                    ValorNPCVisualEffectHandler.RemoveNPC(npc);
+                    ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
 
                 _prevHasDebuff = HasDebuff;
             }
@@ -425,18 +422,22 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     }
 
     [Autoload(Side = ModSide.Client)]
-    public sealed class ValorNPCVisualEffectHandler : ILoadable
+    public sealed class ValorNPCOutlineEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
         private readonly NPCObserver _npcObserver = new(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.HasDebuff);
 
         private bool _targetWasPrepared = false;
 
-        public static void AddNPC(NPC npc)
-            => ModContent.GetInstance<ValorNPCVisualEffectHandler>()?._npcObserver.Add(npc);
+        public void Add(NPC npc)
+        {
+            _npcObserver.Add(npc);
+        }
 
-        public static void RemoveNPC(NPC npc)
-            => ModContent.GetInstance<ValorNPCVisualEffectHandler>()?._npcObserver.Remove(npc);
+        public void Remove(NPC npc)
+        {
+            _npcObserver.Remove(npc);
+        }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
@@ -522,7 +523,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!_targetWasPrepared)
                 return;
 
-            var effect = ValorAssets.NPCOutlineEffect.Prepare(parameters =>
+            var effect = ValorAssets.OutlineEffect.Prepare(parameters =>
             {
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
                 parameters["OutlineColor"].SetValue(new Color(18, 75, 210).ToVector4());
