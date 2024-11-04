@@ -3,7 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
-using SPYoyoMod.Common.Graphics.RenderTargets;
+using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
