@@ -11,6 +11,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
+    [Autoload(Side = ModSide.Client)]
     public sealed class BellowingThunderAssets : ILoadable
     {
         public const string ItemPath = $"{_yoyoPath}BellowingThunder_Item";
@@ -88,6 +89,13 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
+            if (Main.rand.NextBool(7))
+            {
+                var dust = Main.dust[Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.VenomStaff)];
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+            }
+
             Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
         }
 
