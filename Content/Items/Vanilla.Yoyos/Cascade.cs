@@ -7,10 +7,12 @@ using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -19,24 +21,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
     public sealed class CascadeAssets : ILoadable
     {
-        // [ Текстуры ]
-        public const string InvisiblePath = $"{nameof(SPYoyoMod)}/Assets/Invisible";
-        public const string StringPath = $"{nameof(SPYoyoMod)}/Assets/FishingLine_WithShadow";
-        public static Asset<Texture2D> ExplosionRingTexture { get; private set; } = ModContent.Request<Texture2D>($"{_path}CascadeExplosion");
+        public const string InvisiblePath = $"{_assetPath}Invisible";
+        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
-        // [ Эффекты ]
-        public static Asset<Effect> ExplosionRingEffect { get; private set; } = ModContent.Request<Effect>($"{_path}CascadeExplosionShader");
+        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Trail");
+        public static SoundStyle StartChargingSound { get; private set; } = new($"{_yoyoPath}CascadeSound_StartCharging");
 
-        // [ Звуки ]
-        public static readonly SoundStyle StartChargingSound = new($"{_path}CascadeSound_StartCharging");
-
-        // [ Общее ]
-        private const string _path = $"{nameof(SPYoyoMod)}/Assets/Items/Vanilla.Yoyos/Cascade/";
+        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
+        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Cascade/";
 
         void ILoadable.Unload()
         {
-            ExplosionRingTexture = null;
-            ExplosionRingEffect = null;
+            GlowTexture = null;
+            TrailEffect = null;
         }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
@@ -47,166 +45,98 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override int ItemType => ItemID.Cascade;
     }
 
-    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile
+    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
     {
+        public static readonly Color GlowColor = new(255, 180, 95);
+        public static readonly int TrailPointCount = 12;
+
+        private YoyoStringRenderer _stringRenderer;
+        private StripRenderer _trailRenderer;
+        private LinkedList<Vector2> _oldPositions;
+
         public override int ProjType => ProjectileID.Cascade;
         public override bool InstancePerEntity => true;
 
-        public override void SetStaticDefaults()
+        void IInitializableProjectile.Initialize(Projectile _)
         {
-            base.SetStaticDefaults();
-
-            ProjectileID.Sets.TrailCacheLength[ProjType] = 55;
-            ProjectileID.Sets.TrailingMode[ProjType] = 1;
-        }
-
-        public void Initialize(Projectile proj)
-        {
-            InitAIStates(proj);
-
-            if (Main.dedServ)
+            if (Main.netMode == NetmodeID.Server)
                 return;
 
-            /*_stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
-                ModContent.Request<Texture2D>(CascadeAssets.StringPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value,
-                (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
+            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
+               ModContent.Request<Texture2D>(ValorAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
+               (Color.Transparent, true), (Color.Transparent, true), (GlowColor, true)
             ));
 
-            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice)
-                .SetPointCapacity(ProjectileID.Sets.TrailCacheLength[ProjType])
-                //.SetLoop(true)
-                .SetStartEndWidth(32f, 32f);*/
-        }
-
-        private void InitAIStates(Projectile proj)
-        {
-            /*_aiStateMachine = new StateMachine<AIStates>();
-
-            // Ждем некоторое время перед тем, как начать заряжаться
-            _aiStateMachine.RegisterState(AIStates.NonActive)
-              .Process(WaitingToStartCharge);
-
-            // 'Заряжаемся' перед взрывом, после чего в конце создаем снаряд взрыва
-            _aiStateMachine.RegisterState(AIStates.Explodes)
-              .OnEnter(() => SoundEngine.PlaySound(CascadeAssets.StartChargingSound, proj.Center))
-              .Process(ChargeBeforeExplosion)
-              .OnExit(() => OnExplosion(proj));
-
-            // Увеличиваем таймер для всех состояний
-            _aiStateMachine.OnPreProcess += () => { _aiTimer++; };
-
-            // Сбрасываем таймер и синхронизируем снаряд с другими клиентами
-            _aiStateMachine.OnStateChanged += () =>
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
             {
-                _aiTimer = 0;
-                proj.netUpdate = true;
+                StartWidth = 30,
+                EndWidth = 25
             };
 
-            _aiStateMachine.SetState(AIStates.NonActive);*/
+            _oldPositions = [];
         }
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
-            //_trailRenderer?.Dispose();
+            _trailRenderer?.Dispose();
         }
 
         public override void AI(Projectile proj)
         {
-            /*_aiStateMachine.Process();
+            if (_trailRenderer is not null)
+            {
+                _oldPositions.AddFirst(proj.Center + proj.velocity);
 
-            Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.25f);
+                while (_oldPositions.Count > TrailPointCount)
+                    _oldPositions.RemoveLast();
 
-            var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
-            particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
-            particle.Position = proj.Center;
-            particle.Scale = 1.0f;*/
+                _trailRenderer.SetPoints(_oldPositions);
+            }
+
+            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
-        /*private void WaitingToStartCharge(StateMachine<AIStates> aiStateMachine)
+        public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            if (_aiTimer > StartToChargeTime)
-                aiStateMachine.SetState(AIStates.Explodes);
-        }
+            if (_trailRenderer is not null)
+            {
+                CascadeAssets.TrailEffect
+                    .Prepare(parameters =>
+                    {
+                        parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
+                    })
+                    .Apply();
 
-        private void ChargeBeforeExplosion(StateMachine<AIStates> aiStateMachine)
-        {
-            if (_aiTimer > ChargeTime)
-                aiStateMachine.SetState(AIStates.NonActive);
-        }*/
+                _trailRenderer.Render();
 
-        private void OnExplosion(Projectile proj)
-        {
-            if (Main.myPlayer == proj.owner)
-                Projectile.NewProjectile(proj.GetSource_FromAI(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
+                // Исправление отрисовки руки
+                Main.spriteBatch.End(out var spriteBatchSnapshot);
+                Main.spriteBatch.Begin(spriteBatchSnapshot);
+            }
 
-            SoundEngine.PlaySound(SoundID.Item14, proj.Center);
-        }
+            var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var glowTexture = CascadeAssets.GlowTexture.Value;
+            var glowOrigin = glowTexture.Size() * 0.5f;
+            var glowScale = proj.scale * 1.2f;
 
-        public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
-        {
-            /*bitWriter.WriteBit(_aiStateMachine is not null);
+            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, proj.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
 
-            if (_aiStateMachine is null)
-                return;
-
-            binaryWriter.Write((byte)_aiStateMachine.CurrentState);
-            binaryWriter.Write((ushort)_aiTimer);*/
-        }
-
-        public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
-        {
-            /*if (!bitReader.ReadBit())
-                return;
-
-            var state = (AIStates)binaryReader.ReadByte();
-
-            if (state != _aiStateMachine.CurrentState)
-                _aiStateMachine.SetState(state);
-
-            _aiTimer = binaryReader.ReadUInt16();*/
-        }
-
-        public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
-        {
-            /*if (_aiStateMachine.CurrentState != AIStates.NonActive)
-                return;
-
-            _aiTimer += 5;*/
-        }
-
-        public void PreDrawPixelated(Projectile proj)
-        {
-            /*CascadeAssets.ExplosionRingEffect
-                .Prepare(parameters =>
-                {
-                    parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
-                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
-                    parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
-                    parameters["UvRepeat"].SetValue(3f);
-                    parameters["Color0"].SetValue(Color.White.ToVector4());
-                    parameters["Color1"].SetValue(Color.White.ToVector4());
-                })
-                .Apply("CascadeExplosionRing");*/
-
-            var effect = new BasicEffect(Main.graphics.GraphicsDevice);
-            effect.View = GameMatrices.Effect;
-            effect.Projection = GameMatrices.Projection;
-            effect.VertexColorEnabled = true;
-
-            effect.CurrentTechnique.Passes.First().Apply();
-
-            Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
-
-            /*_trailRenderer?
-                .SetPoints(proj.oldPos.Where(x => x != default).Select(x => x - Main.screenPosition).ToArray())
-                .Render();*/
+            return true;
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            /*_stringRenderer?
-                .SetStartPosition(mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero)
-                .Render();*/
+            if (_stringRenderer is null)
+                return;
+
+            var settings = new YoyoStringRendererSettings(
+                proj: proj,
+                start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                offset: -Main.screenPosition
+            );
+
+            _stringRenderer.Render(Main.spriteBatch, settings);
         }
     }
 
@@ -300,7 +230,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 .SetRadius(radius)
                 .SetPosition(Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition);
 
-            CascadeAssets.ExplosionRingEffect
+            /*CascadeAssets.ExplosionRingEffect
                 .Prepare(parameters =>
                 {
                     parameters["Texture0"].SetValue(CascadeAssets.ExplosionRingTexture.Value);
@@ -310,7 +240,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     parameters["Color0"].SetValue(new Color(255, 180, 100).ToVector4());
                     parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
                 })
-                .Apply("CascadeExplosionRing");
+                .Apply("CascadeExplosionRing");*/
 
             _ringRenderer?.Render();
         }
