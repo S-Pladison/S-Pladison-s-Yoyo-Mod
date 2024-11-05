@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
-using SPYoyoMod.Core;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
@@ -12,6 +11,7 @@ using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -30,6 +30,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
         public static Asset<Texture2D> NoiseTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}CloudNoise");
+        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Trail");
         public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -39,6 +40,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             GlowTexture = null;
             NoiseTexture = null;
+            TrailEffect = null;
             OutlineEffect = null;
         }
 
@@ -59,14 +61,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
+    public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
         public static readonly Color GlowColor = new(35, 90, 255);
 
         private YoyoStringRenderer _stringRenderer;
+        private StripRenderer _trailRenderer;
 
         public override int ProjType => ProjectileID.Valor;
         public override bool InstancePerEntity => true;
+
+        public override void SetStaticDefaults()
+        {
+            base.SetStaticDefaults();
+
+            ProjectileID.Sets.TrailCacheLength[ProjType] = 7;
+            ProjectileID.Sets.TrailingMode[ProjType] = 1;
+        }
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
@@ -76,7 +87,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
                ModContent.Request<Texture2D>(ValorAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
                (Color.Transparent, true), (GlowColor, true)
-           ));
+            ));
+
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice)
+            {
+                StartWidth = 16,
+                EndWidth = 8
+            };
         }
 
         public override void AI(Projectile proj)
@@ -117,6 +134,26 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
+        }
+
+        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
+        {
+            if (_trailRenderer is null)
+                return;
+
+            ValorAssets.TrailEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Color"].SetValue(GlowColor.ToVector4());
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                })
+                .Apply();
+
+            _trailRenderer
+                .SetPoints(proj.oldPos.Where(x => x != default).Select(x => x + proj.Size * 0.5f - Main.screenPosition).ToArray())
+                .Render();
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
@@ -582,7 +619,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     }
 
     [Autoload(Side = ModSide.Client)]
-    [LoadPriority(sbyte.MaxValue)] //< Из-за отрисовки мировых частиц
     public sealed class ValorNPCOutlineEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
