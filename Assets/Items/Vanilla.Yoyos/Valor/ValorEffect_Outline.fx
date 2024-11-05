@@ -76,7 +76,7 @@ float4 ValorOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : CO
     float noise = Noise(coords + float2(Time * 0.025, Time * 0.05));
     float4 outlineColor = float4(lerp(OutlineColor.rgb, OutlineColor.rgb * 0.25, noise), 1);
     
-    // Основная обводка
+    // РћСЃРЅРѕРІРЅР°СЏ РѕР±РІРѕРґРєР°
     {
         float outline = Outline(TextureSampler0, coords, pixelSize);
         float4 result = lerp(screenColor, outlineColor, outline);
@@ -85,7 +85,7 @@ float4 ValorOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : CO
             return result;
     }
     
-    // Обводка-пламя
+    // РћР±РІРѕРґРєР°-РїР»Р°РјСЏ
     {
         float outline = FlameOutline(TextureSampler0, coords, pixelSize * 6 * noise);
         float4 result = lerp(screenColor, outlineColor, outline);
@@ -94,7 +94,7 @@ float4 ValorOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : CO
             return result;
     }
     
-    // Теневая обводка
+    // РўРµРЅРµРІР°СЏ РѕР±РІРѕРґРєР°
     {
         float outline = Outline(TextureSampler0, coords, pixelSize * 2);
         float4 result = lerp(screenColor, float4(0, 0, 0, 0.1), outline);
