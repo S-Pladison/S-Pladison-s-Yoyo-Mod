@@ -11,7 +11,6 @@ using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -64,20 +63,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
         public static readonly Color GlowColor = new(35, 90, 255);
+        public static readonly int TrailPointCount = 7;
 
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
+        private LinkedList<Vector2> _oldPositions;
 
         public override int ProjType => ProjectileID.Valor;
         public override bool InstancePerEntity => true;
-
-        public override void SetStaticDefaults()
-        {
-            base.SetStaticDefaults();
-
-            ProjectileID.Sets.TrailCacheLength[ProjType] = 7;
-            ProjectileID.Sets.TrailingMode[ProjType] = 1;
-        }
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
@@ -89,15 +82,29 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                (Color.Transparent, true), (GlowColor, true)
             ));
 
-            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice)
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
             {
                 StartWidth = 16,
-                EndWidth = 8
+                EndWidth = 8,
+                StartColor = GlowColor,
+                EndColor = Color.Transparent
             };
+
+            _oldPositions = [];
         }
 
         public override void AI(Projectile proj)
         {
+            if (_trailRenderer is not null)
+            {
+                _oldPositions.AddFirst(proj.Center + proj.velocity);
+
+                while (_oldPositions.Count > TrailPointCount)
+                    _oldPositions.RemoveLast();
+
+                _trailRenderer.SetPoints(_oldPositions);
+            }
+
             if (Main.rand.NextBool(3))
             {
                 var dust = Main.dust[Dust.NewDust(proj.position, proj.width, proj.height, Main.rand.NextBool() ? DustID.DungeonWater : DustID.WaterCandle)];
@@ -145,15 +152,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 .Prepare(parameters =>
                 {
                     parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
-                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
-                    parameters["Color"].SetValue(GlowColor.ToVector4());
-                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
                 })
                 .Apply();
 
-            _trailRenderer
-                .SetPoints(proj.oldPos.Where(x => x != default).Select(x => x + proj.Size * 0.5f - Main.screenPosition).ToArray())
-                .Render();
+            _trailRenderer.Render();
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)

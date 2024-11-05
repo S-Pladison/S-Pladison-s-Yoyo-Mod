@@ -12,8 +12,6 @@ sampler TextureSampler0 = sampler_state
 };
 
 matrix TransformMatrix;
-float4 Color;
-float Time;
 
 struct VertexShaderInput
 {
@@ -40,9 +38,7 @@ VertexShaderOutput MainVertexShader(in VertexShaderInput input)
 
 float4 ValorTrail(VertexShaderOutput input) : COLOR
 {
-    float4 color = tex2D(TextureSampler0, input.coord + float2(Time, 0));
-    color *= 1 - input.coord.x;
-    return Color * color * input.color;
+    return tex2D(TextureSampler0, input.coord) * input.color;
 }
 
 technique Technique1
