@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
+using SPYoyoMod.Core;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
@@ -92,8 +93,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            /*if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
-                return;*/
+            for (int i = 0; i < 5; i++)
+            {
+                var dust = Main.dust[Dust.NewDust(proj.position, proj.width, proj.height, Main.rand.NextBool() ? DustID.DungeonWater : DustID.WaterCandle)];
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+                dust.velocity = Vector2.Normalize(proj.Center - target.Center).RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1.5f, 4.0f);
+            }
+
+            if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
+                return;
 
             foreach (var npc in Main.ActiveNPCs)
             {
@@ -386,6 +395,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!HasDebuff)
                 return true;
 
+            if (Main.rand.NextBool(4))
+            {
+                var dust = Main.dust[Dust.NewDust(npc.position, npc.width, npc.height, Main.rand.NextBool() ? DustID.DungeonWater : DustID.WaterCandle)];
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+            }
+
             // Обновляем физику цепи и счетчик жизни
             if (Data is not null)
             {
@@ -470,7 +486,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             if (Data is not null)
+            {
                 SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+                _timeSinceLastTileCheck = TileCheckFrequency;
+                Data = null;
+                return;
+            }
 
             Data = null;
         }
@@ -561,6 +582,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     }
 
     [Autoload(Side = ModSide.Client)]
+    [LoadPriority(sbyte.MaxValue)] //< Из-за отрисовки мировых частиц
     public sealed class ValorNPCOutlineEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
@@ -584,10 +606,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             ModEvents.OnPostUpdateCameraPosition += DrawNPCsToTarget;
             ModEvents.OnPreDraw += EmitLight;
 
-            On_Main.DoDraw_Tiles_NonSolid += (orig, main) =>
+            On_Main.DoDraw_DrawNPCsOverTiles += (orig, main) =>
             {
-                orig(main);
                 DrawOutlineToScreen();
+                orig(main);
             };
 
             On_Main.DrawNPCs += (orig, main, behindTiles) =>
@@ -672,11 +694,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
             });
 
-            Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
             Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
-            Main.spriteBatch.Begin(spriteBatchSnapshot);
 
             _targetWasPrepared = false;
         }
