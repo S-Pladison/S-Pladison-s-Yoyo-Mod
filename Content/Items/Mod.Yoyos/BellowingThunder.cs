@@ -5,7 +5,10 @@ using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -20,6 +23,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public static Asset<Texture2D> LightningTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Lightning");
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Trail");
         public static Asset<Effect> LightningEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Lightning");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -29,6 +33,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             LightningTexture = null;
             GlowTexture = null;
+            TrailEffect = null;
             LightningEffect = null;
         }
 
@@ -55,11 +60,16 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
+    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IDrawPixelatedProjectile
     {
         public static readonly Color GlowColor = new(208, 99, 219);
+        public static readonly int TrailPointCount = 5;
+        public static readonly int ShadowTrailPointCount = TrailPointCount + 3;
 
         private YoyoStringRenderer _stringRenderer;
+        private StripRenderer _trailRenderer;
+        private StripRenderer _shadowTrailRenderer;
+        private LinkedList<Vector2> _oldPositions;
 
         public override string Texture => BellowingThunderAssets.ProjPath;
         public override float LifeTime => -1f;
@@ -76,6 +86,24 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 (Color.Transparent, true), (Color.Transparent, true), (GlowColor, true)
             ));
 
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
+            {
+                StartWidth = 4.25f,
+                EndWidth = 0,
+                StartColor = GlowColor,
+                EndColor = GlowColor
+            };
+
+            _shadowTrailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: ShadowTrailPointCount)
+            {
+                StartWidth = 6.5f,
+                EndWidth = 0,
+                StartColor = Color.Black * 0.25f,
+                EndColor = Color.Black * 0.15f
+            };
+
+            _oldPositions = [];
+
             ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Add(Projectile);
         }
 
@@ -84,11 +112,25 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (Main.netMode == NetmodeID.Server)
                 return;
 
+            _trailRenderer?.Dispose();
+            _shadowTrailRenderer?.Dispose();
+
             ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Remove(Projectile);
         }
 
         public override void AI()
         {
+            if (_trailRenderer is not null) //< Если он не null, то и _shadowTrailRenderer тоже
+            {
+                _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
+
+                while (_oldPositions.Count > ShadowTrailPointCount)
+                    _oldPositions.RemoveLast();
+
+                _trailRenderer.SetPoints(_oldPositions.Take(TrailPointCount).ToArray());
+                _shadowTrailRenderer.SetPoints(_oldPositions);
+            }
+
             if (Main.rand.NextBool(7))
             {
                 var dust = Main.dust[Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.VenomStaff)];
@@ -97,6 +139,23 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             }
 
             Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
+        }
+
+        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
+        {
+            if (_trailRenderer is null || _shadowTrailRenderer is null)
+                return;
+
+            BellowingThunderAssets.TrailEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
+                })
+                .Apply();
+
+            _shadowTrailRenderer.Render();
+            _trailRenderer.Render();
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -125,7 +184,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _stringRenderer.Render(Main.spriteBatch, settings);
         }
 
-        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile proj)
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
         {
             var timeForVisualEffects = (float)Main.timeForVisualEffects + Projectile.whoAmI * 111f;
 
