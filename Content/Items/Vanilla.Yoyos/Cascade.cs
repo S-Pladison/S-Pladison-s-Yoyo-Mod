@@ -67,7 +67,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
+            /*_stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
                 ModContent.Request<Texture2D>(CascadeAssets.StringPath, ReLogic.Content.AssetRequestMode.ImmediateLoad).Value,
                 (Color.Transparent, true), (Color.Transparent, true), (new Color(255, 180, 95), true)
             ));
@@ -75,12 +75,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice)
                 .SetPointCapacity(ProjectileID.Sets.TrailCacheLength[ProjType])
                 //.SetLoop(true)
-                .SetStartEndWidth(32f, 32f);
+                .SetStartEndWidth(32f, 32f);*/
         }
 
         private void InitAIStates(Projectile proj)
         {
-            _aiStateMachine = new StateMachine<AIStates>();
+            /*_aiStateMachine = new StateMachine<AIStates>();
 
             // Ждем некоторое время перед тем, как начать заряжаться
             _aiStateMachine.RegisterState(AIStates.NonActive)
@@ -102,27 +102,27 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 proj.netUpdate = true;
             };
 
-            _aiStateMachine.SetState(AIStates.NonActive);
+            _aiStateMachine.SetState(AIStates.NonActive);*/
         }
 
         public override void OnKill(Projectile proj, int timeLeft)
         {
-            _trailRenderer?.Dispose();
+            //_trailRenderer?.Dispose();
         }
 
         public override void AI(Projectile proj)
         {
-            _aiStateMachine.Process();
+            /*_aiStateMachine.Process();
 
             Lighting.AddLight(proj.Center, new Color(255, 180, 95).ToVector3() * 0.25f);
 
             var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
             particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
             particle.Position = proj.Center;
-            particle.Scale = 1.0f;
+            particle.Scale = 1.0f;*/
         }
 
-        private void WaitingToStartCharge(StateMachine<AIStates> aiStateMachine)
+        /*private void WaitingToStartCharge(StateMachine<AIStates> aiStateMachine)
         {
             if (_aiTimer > StartToChargeTime)
                 aiStateMachine.SetState(AIStates.Explodes);
@@ -132,7 +132,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             if (_aiTimer > ChargeTime)
                 aiStateMachine.SetState(AIStates.NonActive);
-        }
+        }*/
 
         private void OnExplosion(Projectile proj)
         {
@@ -144,18 +144,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
-            bitWriter.WriteBit(_aiStateMachine is not null);
+            /*bitWriter.WriteBit(_aiStateMachine is not null);
 
             if (_aiStateMachine is null)
                 return;
 
             binaryWriter.Write((byte)_aiStateMachine.CurrentState);
-            binaryWriter.Write((ushort)_aiTimer);
+            binaryWriter.Write((ushort)_aiTimer);*/
         }
 
         public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
         {
-            if (!bitReader.ReadBit())
+            /*if (!bitReader.ReadBit())
                 return;
 
             var state = (AIStates)binaryReader.ReadByte();
@@ -163,15 +163,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (state != _aiStateMachine.CurrentState)
                 _aiStateMachine.SetState(state);
 
-            _aiTimer = binaryReader.ReadUInt16();
+            _aiTimer = binaryReader.ReadUInt16();*/
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (_aiStateMachine.CurrentState != AIStates.NonActive)
+            /*if (_aiStateMachine.CurrentState != AIStates.NonActive)
                 return;
 
-            _aiTimer += 5;
+            _aiTimer += 5;*/
         }
 
         public void PreDrawPixelated(Projectile proj)
@@ -197,9 +197,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             Main.graphics.GraphicsDevice.RasterizerState = RasterizerState.CullNone;
 
-            _trailRenderer?
+            /*_trailRenderer?
                 .SetPoints(proj.oldPos.Where(x => x != default).Select(x => x - Main.screenPosition).ToArray())
-                .Render();
+                .Render();*/
         }
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
