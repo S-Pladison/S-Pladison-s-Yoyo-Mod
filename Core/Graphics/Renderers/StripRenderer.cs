@@ -9,7 +9,7 @@ using Terraria;
 namespace SPYoyoMod.Core.Graphics.Renderers
 {
     /// <summary>
-    /// Класс для создания и управления рендерингом ленты (трейла), основанной на последовательности точек.
+    /// РљР»Р°СЃСЃ РґР»СЏ СЃРѕР·РґР°РЅРёСЏ Рё СѓРїСЂР°РІР»РµРЅРёСЏ СЂРµРЅРґРµСЂРёРЅРіРѕРј Р»РµРЅС‚С‹ (С‚СЂРµР№Р»Р°), РѕСЃРЅРѕРІР°РЅРЅРѕР№ РЅР° РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚Рё С‚РѕС‡РµРє.
     /// </summary>
     public sealed class StripRenderer : IDisposable
     {
@@ -32,7 +32,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         private int _currentPointCapacity;
 
         /// <summary>
-        /// Зациклена ли лента. По умолчанию установлено false.
+        /// Р—Р°С†РёРєР»РµРЅР° Р»Рё Р»РµРЅС‚Р°. РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ false.
         /// </summary>
         public bool Loop
         {
@@ -41,7 +41,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Следует ли игнорировать стандартные точки при построении ленты. По умолчанию false.
+        /// РЎР»РµРґСѓРµС‚ Р»Рё РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ С‚РѕС‡РєРё РїСЂРё РїРѕСЃС‚СЂРѕРµРЅРёРё Р»РµРЅС‚С‹. РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ false.
         /// </summary>
         public bool IgnoreDefaultPoints
         {
@@ -50,7 +50,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Стартовая ширина ленты.
+        /// РЎС‚Р°СЂС‚РѕРІР°СЏ С€РёСЂРёРЅР° Р»РµРЅС‚С‹.
         /// </summary>
         public float StartWidth
         {
@@ -59,7 +59,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Конечная ширина ленты.
+        /// РљРѕРЅРµС‡РЅР°СЏ С€РёСЂРёРЅР° Р»РµРЅС‚С‹.
         /// </summary>
         public float EndWidth
         {
@@ -68,7 +68,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Начальный цвет ленты.
+        /// РќР°С‡Р°Р»СЊРЅС‹Р№ С†РІРµС‚ Р»РµРЅС‚С‹.
         /// </summary>
         public Color StartColor
         {
@@ -77,7 +77,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Конечный цвет ленты.
+        /// РљРѕРЅРµС‡РЅС‹Р№ С†РІРµС‚ Р»РµРЅС‚С‹.
         /// </summary>
         public Color EndColor
         {
@@ -86,8 +86,8 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Максимальное количество точек, которые может хранить отрисовщик ленты.
-        /// При изменении/превышении значения, все хранящиеся точки будут стерты, а максимальное кол-во точек будет увеличено.
+        /// РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕС‡РµРє, РєРѕС‚РѕСЂС‹Рµ РјРѕР¶РµС‚ С…СЂР°РЅРёС‚СЊ РѕС‚СЂРёСЃРѕРІС‰РёРє Р»РµРЅС‚С‹.
+        /// РџСЂРё РёР·РјРµРЅРµРЅРёРё/РїСЂРµРІС‹С€РµРЅРёРё Р·РЅР°С‡РµРЅРёСЏ, РІСЃРµ С…СЂР°РЅСЏС‰РёРµСЃСЏ С‚РѕС‡РєРё Р±СѓРґСѓС‚ СЃС‚РµСЂС‚С‹, Р° РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»-РІРѕ С‚РѕС‡РµРє Р±СѓРґРµС‚ СѓРІРµР»РёС‡РµРЅРѕ.
         /// </summary>
         public int PointCapacity
         {
@@ -96,7 +96,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Точки, используемые для построения ленты. Каждая точка определяет положение, через которое проходит полоса, создавая её итоговую форму.
+        /// РўРѕС‡РєРё, РёСЃРїРѕР»СЊР·СѓРµРјС‹Рµ РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ Р»РµРЅС‚С‹. РљР°Р¶РґР°СЏ С‚РѕС‡РєР° РѕРїСЂРµРґРµР»СЏРµС‚ РїРѕР»РѕР¶РµРЅРёРµ, С‡РµСЂРµР· РєРѕС‚РѕСЂРѕРµ РїСЂРѕС…РѕРґРёС‚ РїРѕР»РѕСЃР°, СЃРѕР·РґР°РІР°СЏ РµС‘ РёС‚РѕРіРѕРІСѓСЋ С„РѕСЂРјСѓ.
         /// </summary>
         public IReadOnlyList<Vector2> Points
         {
@@ -105,7 +105,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Количество точек, содержащихся в рендерере ленты.
+        /// РљРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕС‡РµРє, СЃРѕРґРµСЂР¶Р°С‰РёС…СЃСЏ РІ СЂРµРЅРґРµСЂРµСЂРµ Р»РµРЅС‚С‹.
         /// </summary>
         public int PointCount
         {
@@ -113,7 +113,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Показывает, был ли освобожден объект и очищены его ресурсы.
+        /// РџРѕРєР°Р·С‹РІР°РµС‚, Р±С‹Р» Р»Рё РѕСЃРІРѕР±РѕР¶РґРµРЅ РѕР±СЉРµРєС‚ Рё РѕС‡РёС‰РµРЅС‹ РµРіРѕ СЂРµСЃСѓСЂСЃС‹.
         /// </summary>
         public bool IsDisposed
         {
@@ -136,7 +136,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить значение зацикленности. По умолчанию установлено false.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р·РЅР°С‡РµРЅРёРµ Р·Р°С†РёРєР»РµРЅРЅРѕСЃС‚Рё. РџРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СѓСЃС‚Р°РЅРѕРІР»РµРЅРѕ false.
         /// </summary>
         public StripRenderer SetLoop(bool value)
         {
@@ -150,7 +150,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Устанавить параметр, указывающий, следует ли игнорировать стандартные точки при построении ленты.
+        /// РЈСЃС‚Р°РЅР°РІРёС‚СЊ РїР°СЂР°РјРµС‚СЂ, СѓРєР°Р·С‹РІР°СЋС‰РёР№, СЃР»РµРґСѓРµС‚ Р»Рё РёРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ СЃС‚Р°РЅРґР°СЂС‚РЅС‹Рµ С‚РѕС‡РєРё РїСЂРё РїРѕСЃС‚СЂРѕРµРЅРёРё Р»РµРЅС‚С‹.
         /// </summary>
         public StripRenderer SetIgnoreDefaultPoints(bool value)
         {
@@ -162,21 +162,21 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить общее значение ширины ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РѕР±С‰РµРµ Р·РЅР°С‡РµРЅРёРµ С€РёСЂРёРЅС‹ Р»РµРЅС‚С‹.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StripRenderer SetWidth(float value)
             => SetStartWidth(value).SetEndWidth(value);
 
         /// <summary>
-        /// Установить значения ширины ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р·РЅР°С‡РµРЅРёСЏ С€РёСЂРёРЅС‹ Р»РµРЅС‚С‹.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StripRenderer SetStartEndWidth(float start, float end)
             => SetStartWidth(start).SetEndWidth(end);
 
         /// <summary>
-        /// Установить стартовое значение ширины ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЃС‚Р°СЂС‚РѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ С€РёСЂРёРЅС‹ Р»РµРЅС‚С‹.
         /// </summary>
         public StripRenderer SetStartWidth(float value)
         {
@@ -190,7 +190,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить конечное значение ширины ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РєРѕРЅРµС‡РЅРѕРµ Р·РЅР°С‡РµРЅРёРµ С€РёСЂРёРЅС‹ Р»РµРЅС‚С‹.
         /// </summary>
         public StripRenderer SetEndWidth(float value)
         {
@@ -204,21 +204,21 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить общее значение цвета ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РѕР±С‰РµРµ Р·РЅР°С‡РµРЅРёРµ С†РІРµС‚Р° Р»РµРЅС‚С‹.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StripRenderer SetColor(Color value)
             => SetStartColor(value).SetEndColor(value);
 
         /// <summary>
-        /// Установить значения цвета ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ Р·РЅР°С‡РµРЅРёСЏ С†РІРµС‚Р° Р»РµРЅС‚С‹.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public StripRenderer SetStartEndColor(Color start, Color end)
             => SetStartColor(start).SetEndColor(end);
 
         /// <summary>
-        /// Установить начальный цвет ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РЅР°С‡Р°Р»СЊРЅС‹Р№ С†РІРµС‚ Р»РµРЅС‚С‹.
         /// </summary>
         public StripRenderer SetStartColor(Color value)
         {
@@ -230,7 +230,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить конечный цвет ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РєРѕРЅРµС‡РЅС‹Р№ С†РІРµС‚ Р»РµРЅС‚С‹.
         /// </summary>
         public StripRenderer SetEndColor(Color value)
         {
@@ -242,8 +242,8 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить максимальное количество точек, которые может хранить отрисовщик ленты.
-        /// При изменении/превышении значения, все хранящиеся точки будут стерты, а максимальное кол-во точек будет увеличено.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»РёС‡РµСЃС‚РІРѕ С‚РѕС‡РµРє, РєРѕС‚РѕСЂС‹Рµ РјРѕР¶РµС‚ С…СЂР°РЅРёС‚СЊ РѕС‚СЂРёСЃРѕРІС‰РёРє Р»РµРЅС‚С‹.
+        /// РџСЂРё РёР·РјРµРЅРµРЅРёРё/РїСЂРµРІС‹С€РµРЅРёРё Р·РЅР°С‡РµРЅРёСЏ, РІСЃРµ С…СЂР°РЅСЏС‰РёРµСЃСЏ С‚РѕС‡РєРё Р±СѓРґСѓС‚ СЃС‚РµСЂС‚С‹, Р° РјР°РєСЃРёРјР°Р»СЊРЅРѕРµ РєРѕР»-РІРѕ С‚РѕС‡РµРє Р±СѓРґРµС‚ СѓРІРµР»РёС‡РµРЅРѕ.
         /// </summary>
         public StripRenderer SetPointCapacity(int value)
         {
@@ -258,7 +258,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Установить последовательность точек, используемых для построения ленты.
+        /// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ РїРѕСЃР»РµРґРѕРІР°С‚РµР»СЊРЅРѕСЃС‚СЊ С‚РѕС‡РµРє, РёСЃРїРѕР»СЊР·СѓРµРјС‹С… РґР»СЏ РїРѕСЃС‚СЂРѕРµРЅРёСЏ Р»РµРЅС‚С‹.
         /// </summary>
         public StripRenderer SetPoints(IReadOnlyCollection<Vector2> points)
         {
@@ -291,7 +291,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Выполняет отрисовку ленты с использованием текущего набора точек.
+        /// Р’С‹РїРѕР»РЅСЏРµС‚ РѕС‚СЂРёСЃРѕРІРєСѓ Р»РµРЅС‚С‹ СЃ РёСЃРїРѕР»СЊР·РѕРІР°РЅРёРµРј С‚РµРєСѓС‰РµРіРѕ РЅР°Р±РѕСЂР° С‚РѕС‡РµРє.
         /// </summary>
         public void Render()
         {
@@ -315,7 +315,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         }
 
         /// <summary>
-        /// Освобождение всех используемых ресурсов.
+        /// РћСЃРІРѕР±РѕР¶РґРµРЅРёРµ РІСЃРµС… РёСЃРїРѕР»СЊР·СѓРµРјС‹С… СЂРµСЃСѓСЂСЃРѕРІ.
         /// </summary>
         public void Dispose()
         {
