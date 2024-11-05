@@ -93,6 +93,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _oldPositions = [];
         }
 
+        public override void OnKill(Projectile projectile, int timeLeft)
+        {
+            _trailRenderer?.Dispose();
+        }
+
         public override void AI(Projectile proj)
         {
             if (_trailRenderer is not null)
