@@ -28,6 +28,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> NoiseTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}CloudNoise");
         public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -36,6 +37,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             GlowTexture = null;
+            NoiseTexture = null;
             OutlineEffect = null;
         }
 
@@ -90,8 +92,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
-                return;
+            /*if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
+                return;*/
 
             foreach (var npc in Main.ActiveNPCs)
             {
@@ -617,7 +619,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             device.SetRenderTarget(_renderTarget);
             device.Clear(Color.Transparent);
             {
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.EffectMatrix);
 
                 foreach (var npc in _npcObserver.GetEntityInstances())
                     NPCUtils.DrawNPC(npc);
@@ -662,13 +664,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             var effect = ValorAssets.OutlineEffect.Prepare(parameters =>
             {
+                parameters["Texture1"].SetValue(ValorAssets.NoiseTexture.Value);
+                parameters["EffectMatrix"].SetValue(Main.GameViewMatrix.EffectMatrix);
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
+                parameters["ScreenPosition"].SetValue(Main.screenPosition);
                 parameters["OutlineColor"].SetValue(ValorProjectile.GlowColor.ToVector4());
-                parameters["Zoom"].SetValue(new Vector2(Main.GameZoomTarget));
+                parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
             });
 
             Main.spriteBatch.End(out var spriteBatchSnapshot);
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Matrix.Identity);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
             Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
