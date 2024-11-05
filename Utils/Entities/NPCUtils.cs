@@ -1,0 +1,184 @@
+﻿using SPYoyoMod.Common;
+using System.Runtime.CompilerServices;
+using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
+
+namespace SPYoyoMod.Utils
+{
+    // [
+    //   IsBossOrRelated, IsBoss, IsBossLimb, IsMiniBoss and IsChild taken from:
+    //   https://github.com/SamsonAllen13/ClickerClass/blob/master/Utilities/NPCHelper.cs
+    //   https://github.com/SamsonAllen13/ClickerClass/blob/master/Utilities/NPCHelper_Bosses.cs
+    // ]
+
+    public static class NPCUtils
+    {
+        /// <summary>
+        /// Кол-во полученного урона от йо-йо и всего, что с ним связано.
+        /// </summary>
+        public static uint TotalDamageTakenFromYoyos(this NPC npc)
+            => npc.TryGetGlobalNPC<TotalDamageFromYoyosGlobalNPC>(out var globalProj) ? globalProj.TotalDamage : 0;
+
+        /// <summary>
+        /// Накладывает на NPC соответствующий бафф.
+        /// Если у NPC уже есть этот бафф, то произойдет повторное применение.
+        /// </summary>
+        public static void AddBuff<T>(this NPC npc, int time) where T : ModBuff
+            => npc.AddBuff(ModContent.BuffType<T>(), time, false);
+
+        /// <summary>
+        /// Производит поиск индекса соответствующего баффа. Если отсутствует, то возвращает -1.
+        /// </summary>
+        public static int FindBuffIndex<T>(this NPC npc) where T : ModBuff
+            => npc.FindBuffIndex(ModContent.BuffType<T>());
+
+        /// <summary>
+        /// Связан ли этот НПС как то с боссом или мини-боссом. Этом может быть и сам босс, в случае Скелетрона - рука и т.д.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsBossOrRelated(this NPC npc)
+            => npc.IsBoss() || npc.IsBossLimb() || npc.IsMiniBoss();
+
+        /// <summary>
+        /// Является ли этот NPC боссом. В большинстве случаем, на это влияет значение поля npc.boss или NPCID.Sets.ShouldBeCountedAsBoss[npc.type],
+        /// но есть исключения.
+        /// </summary>
+        public static bool IsBoss(this NPC npc)
+        {
+            var type = npc.type;
+
+            if (npc.boss || NPCID.Sets.ShouldBeCountedAsBoss[type])
+                return true;
+
+            switch (type)
+            {
+                // Eater of Worlds
+                case NPCID.EaterofWorldsHead:
+                case NPCID.EaterofWorldsBody:
+                case NPCID.EaterofWorldsTail:
+                // Misc
+                case NPCID.DungeonGuardian:
+                    return true;
+                default:
+                    break;
+            }
+
+            return npc.IsChild(out NPC parent) && parent.whoAmI != npc.whoAmI && parent.IsBoss();
+        }
+
+        /// <summary>
+        /// Является ли этот NPC частью/конечностью босса.
+        /// </summary>
+        public static bool IsBossLimb(this NPC npc)
+        {
+            switch (npc.type)
+            {
+                // Eater of Worlds
+                case NPCID.EaterofWorldsHead:
+                case NPCID.EaterofWorldsBody:
+                case NPCID.EaterofWorldsTail:
+                // Skeletron
+                case NPCID.SkeletronHand:
+                // Skeletron Prime
+                case NPCID.PrimeCannon:
+                case NPCID.PrimeLaser:
+                case NPCID.PrimeSaw:
+                case NPCID.PrimeVice:
+                // Golem
+                case NPCID.GolemHead:
+                case NPCID.GolemHeadFree:
+                case NPCID.GolemFistLeft:
+                case NPCID.GolemFistRight:
+                // Pirate Ship
+                case NPCID.PirateShipCannon:
+                // Martian Saucer
+                case NPCID.MartianSaucerCannon:
+                case NPCID.MartianSaucerTurret:
+                case NPCID.MartianSaucer:
+                // Moon Lord
+                case NPCID.MoonLordHead:
+                case NPCID.MoonLordHand:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Является ли этот NPC мини-боссом.
+        /// </summary>
+        public static bool IsMiniBoss(this NPC npc)
+        {
+            switch (npc.type)
+            {
+                // Biomes
+                case NPCID.SandElemental:
+                case NPCID.IceGolem:
+                case NPCID.Paladin:
+                case NPCID.Mothron:
+                case NPCID.MartianSaucerCore:
+                // Events
+                case NPCID.PirateShip:
+                case NPCID.IceQueen:
+                case NPCID.SantaNK1:
+                case NPCID.Everscream:
+                case NPCID.Pumpking:
+                case NPCID.MourningWood:
+                case NPCID.DD2Betsy:
+                case NPCID.DD2DarkMageT1:
+                case NPCID.DD2DarkMageT3:
+                case NPCID.DD2OgreT2:
+                case NPCID.DD2OgreT3:
+                // Wyvern
+                case NPCID.WyvernHead:
+                case NPCID.WyvernBody:
+                case NPCID.WyvernBody2:
+                case NPCID.WyvernBody3:
+                case NPCID.WyvernLegs:
+                case NPCID.WyvernTail:
+                // Misc
+                case NPCID.GoblinSummoner:
+                case NPCID.PirateCaptain:
+                case NPCID.HeadlessHorseman:
+                case NPCID.Nailhead:
+                    return true;
+                default:
+                    break;
+            }
+
+            switch (npc.aiStyle)
+            {
+                case NPCAIStyleID.BiomeMimic:
+                    return true;
+                default:
+                    break;
+            }
+
+            return npc.IsChild(out NPC parent) && parent.whoAmI != npc.whoAmI && parent.IsMiniBoss();
+        }
+
+        /// <summary>
+        /// Проверяет, привязан ли этот NPC к пулу здоровья другого NPC.
+        /// </summary>
+        public static bool IsChild(this NPC npc, out NPC parent)
+        {
+            var child = npc.realLife >= 0 && npc.realLife <= Main.maxNPCs && npc.realLife != npc.whoAmI;
+            parent = (child ? Main.npc[npc.realLife] : null);
+            return child;
+        }
+
+        /// <summary>
+        /// Рисует NPC с учетом различных факторов по типу смещения в сетевой игре и т.д.
+        /// </summary>
+        public static void DrawNPC(NPC npc, bool? behindTiles = null)
+        {
+            var oldPosition = npc.position;
+            npc.position += npc.netOffset;
+
+            Main.instance.DrawNPC(npc.whoAmI, behindTiles ?? npc.behindTiles);
+
+            npc.position = oldPosition;
+        }
+    }
+}
