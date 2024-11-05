@@ -2,6 +2,7 @@
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
 {
@@ -18,6 +19,19 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static uint TotalDamageTakenFromYoyos(this NPC npc)
             => npc.TryGetGlobalNPC<TotalDamageFromYoyosGlobalNPC>(out var globalProj) ? globalProj.TotalDamage : 0;
+
+        /// <summary>
+        /// Накладывает на NPC соответствующий бафф.
+        /// Если у NPC уже есть этот бафф, то произойдет повторное применение.
+        /// </summary>
+        public static void AddBuff<T>(this NPC npc, int time) where T : ModBuff
+            => npc.AddBuff(ModContent.BuffType<T>(), time, false);
+
+        /// <summary>
+        /// Производит поиск индекса соответствующего баффа. Если отсутствует, то возвращает -1.
+        /// </summary>
+        public static int FindBuffIndex<T>(this NPC npc) where T : ModBuff
+            => npc.FindBuffIndex(ModContent.BuffType<T>());
 
         /// <summary>
         /// Связан ли этот НПС как то с боссом или мини-боссом. Этом может быть и сам босс, в случае Скелетрона - рука и т.д.
@@ -116,8 +130,14 @@ namespace SPYoyoMod.Utils
                 case NPCID.DD2DarkMageT3:
                 case NPCID.DD2OgreT2:
                 case NPCID.DD2OgreT3:
-                // Misc
+                // Wyvern
                 case NPCID.WyvernHead:
+                case NPCID.WyvernBody:
+                case NPCID.WyvernBody2:
+                case NPCID.WyvernBody3:
+                case NPCID.WyvernLegs:
+                case NPCID.WyvernTail:
+                // Misc
                 case NPCID.GoblinSummoner:
                 case NPCID.PirateCaptain:
                 case NPCID.HeadlessHorseman:
@@ -146,6 +166,19 @@ namespace SPYoyoMod.Utils
             var child = npc.realLife >= 0 && npc.realLife <= Main.maxNPCs && npc.realLife != npc.whoAmI;
             parent = (child ? Main.npc[npc.realLife] : null);
             return child;
+        }
+
+        /// <summary>
+        /// Рисует NPC с учетом различных факторов по типу смещения в сетевой игре и т.д.
+        /// </summary>
+        public static void DrawNPC(NPC npc, bool? behindTiles = null)
+        {
+            var oldPosition = npc.position;
+            npc.position += npc.netOffset;
+
+            Main.instance.DrawNPC(npc.whoAmI, behindTiles ?? npc.behindTiles);
+
+            npc.position = oldPosition;
         }
     }
 }
