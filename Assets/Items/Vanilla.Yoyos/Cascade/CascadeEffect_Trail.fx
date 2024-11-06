@@ -12,6 +12,12 @@ sampler TextureSampler0 = sampler_state
 };
 
 matrix TransformMatrix;
+float4 Color0;
+float4 Color1;
+float4 Color2;
+float4 Color3;
+float Repeats; 
+float Time;
 
 struct VertexShaderInput
 {
@@ -38,7 +44,13 @@ VertexShaderOutput MainVertexShader(in VertexShaderInput input)
 
 float4 CascadeTrail(VertexShaderOutput input) : COLOR
 {
-    return tex2D(TextureSampler0, input.coord) * input.color;
+    float4 color = tex2D(TextureSampler0, input.coord * float2(Repeats, 1) + float2(-Time * 2.5, 0));
+    
+    color *= color.r;
+    color.rgb *= lerp(lerp(Color1.rgb, Color3.rgb, input.coord.x), lerp(Color0.rgb, Color2.rgb, input.coord.x), color.r) * 2;
+    color *= 1 - pow(input.coord.x, 2);
+    
+    return color * input.color;
 }
 
 technique Technique1

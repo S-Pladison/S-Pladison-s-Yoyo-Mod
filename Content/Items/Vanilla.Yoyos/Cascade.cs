@@ -1,21 +1,16 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Content.Particles;
-using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Terraria;
 using Terraria.Audio;
-using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
-using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -25,6 +20,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> TrailTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Trail");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Trail");
         public static SoundStyle StartChargingSound { get; private set; } = new($"{_yoyoPath}CascadeSound_StartCharging");
 
@@ -34,6 +30,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             GlowTexture = null;
+            TrailTexture = null;
             TrailEffect = null;
         }
 
@@ -48,7 +45,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
     {
         public static readonly Color GlowColor = new(255, 180, 95);
-        public static readonly int TrailPointCount = 12;
+        public static readonly int TrailPointCount = 10;
 
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
@@ -69,7 +66,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
             {
-                StartWidth = 30,
+                StartWidth = 35,
                 EndWidth = 25
             };
 
@@ -103,8 +100,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 CascadeAssets.TrailEffect
                     .Prepare(parameters =>
                     {
-                        parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
+                        parameters["Texture0"].SetValue(CascadeAssets.TrailTexture.Value);
                         parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
+                        parameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
+                        parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+                        parameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
+                        parameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.TrailTexture.Width() / 128.0f / 3.0f);
+                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
 
