@@ -250,7 +250,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             _ringRenderer
                 .SetThickness(thickness)
-                .SetPointCount(20) // Можно сделать ее динамической в зависимости от того же радиуса
+                .SetPointCount((int)MathHelper.Lerp(15, 20, LifeTimeRatio))
                 .SetRadius(radius)
                 .SetPosition(Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition);
 
