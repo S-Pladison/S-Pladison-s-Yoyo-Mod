@@ -13,6 +13,11 @@ namespace SPYoyoMod.Core.Graphics.Renderers
     /// </summary>
     public sealed class StripRenderer : IDisposable
     {
+        /// <summary>
+        /// Минимальное количество точек, необходимых для построения ленты.
+        /// </summary>
+        public const int MinPointCount = 2;
+
         private readonly GraphicsDevice _device;
         private readonly FastList<Vector2> _innerPoints;
 
@@ -226,6 +231,8 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                 return this;
 
             _innerStartColor = value;
+            _isDirty = true;
+
             return this;
         }
 
@@ -238,6 +245,8 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                 return this;
 
             _innerEndColor = value;
+            _isDirty = true;
+
             return this;
         }
 
@@ -295,7 +304,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         /// </summary>
         public void Render()
         {
-            if (IsDisposed || PointCount < 2)
+            if (IsDisposed || PointCount < MinPointCount)
                 return;
 
             if (_isDirty)
@@ -338,6 +347,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
             if (_currentPointCapacity < _innerPointCapacity)
             {
                 ResizeBuffers(vertices: 2 * (_innerPointCapacity + 1), indices: 6 * _innerPointCapacity);
+
                 PrepareVertexIndices(_currentPointCapacity, _innerPointCapacity);
 
                 _indexBuffer.SetData(0, _indices, 0, _indices.Length, SetDataOptions.Discard);
