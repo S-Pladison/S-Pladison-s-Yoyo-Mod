@@ -32,7 +32,8 @@ namespace SPYoyoMod.Utils
         /// <param name="entity">Объект сущности для последующего наблюдения.</param>
         public void Add(T entity)
         {
-            _entities.Add(new EntityData(entity.whoAmI, GetEntityType(entity)));
+            if (!_entityShouldBeRemovedPredicate?.Invoke(entity) ?? true)
+                _entities.Add(new EntityData(entity.whoAmI, GetEntityType(entity)));
         }
 
         /// <summary>
