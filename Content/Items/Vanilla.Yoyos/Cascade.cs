@@ -48,9 +48,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
     {
+        public static readonly float TimeToStartCharging = ModUtils.SecondsToTicks(2f);
+        public static readonly float TimeToCharge = ModUtils.SecondsToTicks(0.7f);
+        public static readonly int AddTimeForHit = ModUtils.SecondsToTicks(0.2f);
         public static readonly Color GlowColor = new(255, 180, 95);
         public static readonly int TrailPointCount = 10;
 
+        private int _aiTimer;
+        private bool _charging;
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
@@ -84,6 +89,44 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void AI(Projectile proj)
         {
+            UpdateVisual(proj);
+
+            // Если йо-йо возвращается к игроку, прекращаем обработку всей логики
+            if (proj.ai[0] == -1)
+                return;
+
+            _aiTimer++;
+
+            switch (_charging)
+            {
+                case false:
+                    {
+                        if (_aiTimer < TimeToStartCharging)
+                            break;
+
+                        SoundEngine.PlaySound(CascadeAssets.StartChargingSound, proj.Center);
+
+                        _aiTimer = 0;
+                        _charging = true;
+                    }
+                    break;
+                case true:
+                    {
+                        if (_aiTimer < TimeToCharge)
+                            break;
+
+                        if (proj.IsLocalPlayerAsOwner())
+                            Projectile.NewProjectile(proj.GetSource_FromAI(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
+
+                        _aiTimer = 0;
+                        _charging = false;
+                    }
+                    break;
+            }
+        }
+
+        private void UpdateVisual(Projectile proj)
+        {
             if (_trailRenderer is not null)
             {
                 _oldPositions.AddFirst(proj.Center + proj.velocity);
@@ -110,7 +153,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Projectile.NewProjectile(proj.GetSource_FromAI(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
+            if (_charging)
+                return;
+
+            _aiTimer += AddTimeForHit;
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
@@ -218,6 +264,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 Frames = 15,
                 DistanceFalloff = 16f * 25f
             });
+
+            SoundEngine.PlaySound(SoundID.Item14, proj.Center);
         }
 
         public override void OnKill(int timeLeft)
