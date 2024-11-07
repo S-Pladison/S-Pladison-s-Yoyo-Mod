@@ -466,6 +466,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (HasDebuff == state)
                 return;
 
+            HasDebuff = state;
+
             if (state)
             {
                 ChainToTile(npc);
@@ -476,8 +478,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 BreakChain(npc);
                 ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Remove(npc);
             }
-
-            HasDebuff = state;
         }
 
         private void HandleChain(NPC npc)
