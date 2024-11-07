@@ -21,7 +21,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
-        public static Asset<Texture2D> TrailTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Trail");
+        public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Flame");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Trail");
         public static Asset<Effect> RingEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Ring");
         public static SoundStyle StartChargingSound { get; private set; } = new($"{_yoyoPath}CascadeSound_StartCharging");
@@ -32,7 +32,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             GlowTexture = null;
-            TrailTexture = null;
+            FlameTexture = null;
             TrailEffect = null;
             RingEffect = null;
         }
@@ -108,13 +108,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 CascadeAssets.TrailEffect
                     .Prepare(parameters =>
                     {
-                        parameters["Texture0"].SetValue(CascadeAssets.TrailTexture.Value);
+                        parameters["Texture0"].SetValue(CascadeAssets.FlameTexture.Value);
                         parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
                         parameters["Color0"].SetValue(new Color(255, 255, 105).ToVector4());
                         parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
                         parameters["Color2"].SetValue(new Color(250, 0, 50).ToVector4());
                         parameters["Color3"].SetValue(new Color(145, 25, 85).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.TrailTexture.Width() / 128.0f / 3.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Width() / 128.0f / 3.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
@@ -239,7 +239,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             CascadeAssets.RingEffect
                 .Prepare(parameters =>
                 {
-                    parameters["Texture0"].SetValue(CascadeAssets.TrailTexture.Value);
+                    parameters["Texture0"].SetValue(CascadeAssets.FlameTexture.Value);
                     parameters["TransformMatrix"].SetValue(GameMatrices.Transform * GameMatrices.Projection);
                     parameters["Color0"].SetValue(Color.Lerp(new Color(255, 255, 105), new Color(250, 0, 50), LifeTimeRatio).ToVector4());
                     parameters["Color1"].SetValue(Color.Lerp(new Color(250, 135, 0), new Color(145, 25, 85), LifeTimeRatio).ToVector4());
