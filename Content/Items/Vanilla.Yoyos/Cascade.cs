@@ -22,6 +22,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Star");
         public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Flame");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Trail");
         public static Asset<Effect> RingEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Ring");
@@ -33,6 +34,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             GlowTexture = null;
+            StarTexture = null;
             FlameTexture = null;
             TrailEffect = null;
             RingEffect = null;
@@ -46,10 +48,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override int ItemType => ItemID.Cascade;
     }
 
-    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
+    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
     {
-        public static readonly float TimeToStartCharging = ModUtils.SecondsToTicks(2f);
-        public static readonly float TimeToCharge = ModUtils.SecondsToTicks(0.7f);
+        public static readonly int TimeToStartCharging = ModUtils.SecondsToTicks(2f);
+        public static readonly int TimeToCharge = ModUtils.SecondsToTicks(0.7f);
         public static readonly int AddTimeForHit = ModUtils.SecondsToTicks(0.2f);
         public static readonly Color GlowColor = new(255, 180, 95);
         public static readonly int TrailPointCount = 10;
@@ -206,6 +208,38 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             );
 
             _stringRenderer.Render(Main.spriteBatch, settings);
+        }
+
+        public override void PostDraw(Projectile proj, Color lightColor)
+        {
+            if (!_charging)
+                return;
+
+            var chargeProgress = _aiTimer / (float)TimeToCharge;
+            var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
+
+            var glowTexture = CascadeAssets.GlowTexture.Value;
+            var glowOrigin = glowTexture.Size() * 0.5f;
+            var glowColor = Color.White with { A = 0 } * chargeProgress;
+
+            Main.spriteBatch.Draw(glowTexture, position, null, glowColor, proj.rotation, glowOrigin, proj.scale, SpriteEffects.None, 0f);
+        }
+
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile proj)
+        {
+            if (!_charging)
+                return;
+
+            var chargeProgress = _aiTimer / (float)TimeToCharge;
+            var position = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
+
+            var starTexture = CascadeAssets.StarTexture.Value;
+            var starOrigin = starTexture.Size() * 0.5f;
+            var starColor = Color.White with { A = 0 } * EasingFunctions.InOutQuad(chargeProgress);
+            var starRotation = EasingFunctions.InOutQuad(chargeProgress) * MathHelper.PiOver2;
+            var starScale = EasingFunctions.InOutQuad(1f - chargeProgress) * proj.scale * 2.5f;
+
+            Main.spriteBatch.Draw(starTexture, position, null, starColor, starRotation, starOrigin, starScale, SpriteEffects.None, 0f);
         }
     }
 
