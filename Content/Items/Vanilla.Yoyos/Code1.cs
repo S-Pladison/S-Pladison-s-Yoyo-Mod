@@ -3,6 +3,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
+    [Autoload(Side = ModSide.Client)]
     public sealed class Code1Assets : ILoadable
     {
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
