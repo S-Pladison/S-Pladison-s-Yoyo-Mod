@@ -202,11 +202,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
 
                 particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
-                particle.Position = Projectile.Center + vector * Main.rand.NextFloat(ExplosionRadius);
-                particle.Velocity = vector * Main.rand.NextFloat(0.2f, 1f);
-                particle.StartColor = new(new Color(50, 50, 50), false);
-                particle.EndColor = new(new Color(10, 10, 10), false);
-                particle.Scale = 2.25f;
+                particle.Position = Projectile.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels, ExplosionRadius * 0.85f);
+                particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f);
+                particle.StartColor = new(new Color(50, 50, 50, 255), false);
+                particle.EndColor = new(new Color(0, 0, 0, 0), false);
+                particle.Scale = 3f;
             }
 
             ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
