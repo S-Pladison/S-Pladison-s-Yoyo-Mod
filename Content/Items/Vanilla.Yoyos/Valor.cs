@@ -21,6 +21,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
+    [Autoload(Side = ModSide.Client)]
     public sealed class ValorAssets : ILoadable
     {
         public const string InvisiblePath = $"{_assetPath}Invisible";
