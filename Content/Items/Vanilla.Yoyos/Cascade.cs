@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
@@ -22,6 +23,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
         public static Asset<Texture2D> TrailTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Trail");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Trail");
+        public static Asset<Effect> RingEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Ring");
         public static SoundStyle StartChargingSound { get; private set; } = new($"{_yoyoPath}CascadeSound_StartCharging");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -32,6 +34,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             GlowTexture = null;
             TrailTexture = null;
             TrailEffect = null;
+            RingEffect = null;
         }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
@@ -93,6 +96,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
+        public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Projectile.NewProjectile(proj.GetSource_FromAI(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
+        }
+
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
             if (_trailRenderer is not null)
@@ -102,10 +110,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     {
                         parameters["Texture0"].SetValue(CascadeAssets.TrailTexture.Value);
                         parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
-                        parameters["Color0"].SetValue(new Color(255, 255, 160).ToVector4());
+                        parameters["Color0"].SetValue(new Color(255, 255, 105).ToVector4());
                         parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
-                        parameters["Color2"].SetValue(new Color(250, 50, 100).ToVector4());
-                        parameters["Color3"].SetValue(new Color(70, 30, 150).ToVector4());
+                        parameters["Color2"].SetValue(new Color(250, 0, 50).ToVector4());
+                        parameters["Color3"].SetValue(new Color(145, 25, 85).ToVector4());
                         parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.TrailTexture.Width() / 128.0f / 3.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
@@ -143,7 +151,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
+    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile
     {
         public static readonly int ExplosionRadius = TileUtils.TileSizeInPixels * 6;
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(0.33f);
@@ -151,7 +159,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private RingRenderer _ringRenderer;
 
         public override string Texture => CascadeAssets.InvisiblePath;
-        public float TimeLeftProgress => 1f - Projectile.timeLeft / (float)InitTimeLeft;
+        public float LifeTimeRatio => 1f - Projectile.timeLeft / (float)InitTimeLeft;
 
         public override void SetDefaults()
         {
@@ -169,29 +177,22 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.localNPCHitCooldown = -1;
         }
 
-        public void Initialize(Projectile proj)
+        void IInitializableProjectile.Initialize(Projectile proj)
         {
-            for (int i = 0; i < 15; i++)
-            {
-                /*var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                var position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
-                var velocity = vector * Main.rand.NextFloat(1f, 3f);
-                var dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
-                dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(50, 50, 50), false);
-
-                vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                position = Projectile.Center + vector * Main.rand.NextFloat(MaxRadius * 0.75f);
-                velocity = vector * Main.rand.NextFloat(1f, 3f);
-                dust = Dust.NewDustPerfect(position, dustType, velocity, Main.rand.Next(50, 100), Color.White, Main.rand.NextFloat(0.2f, 0.3f));
-                dust.customData = new SmokeDust.CustomData(new Color(255, 140, 20), true, new Color(25, 25, 25), false);*/
-
-                //ParticleSystem.NewParticle<CircleGlowParticleRenderer>(new Particle(Projectile.Center, 0f));
-            }
-
-            if (Main.dedServ)
+            if (Main.netMode == NetmodeID.Server)
                 return;
 
-            _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice);
+            _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 20);
+
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
+            {
+                Position = Projectile.Center,
+                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
+                Strength = 7f,
+                VibrationCyclesPerSecond = 6f,
+                Frames = 15,
+                DistanceFalloff = 16f * 25f
+            });
         }
 
         public override void OnKill(int timeLeft)
@@ -199,11 +200,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _ringRenderer?.Dispose();
         }
 
+        public override void AI()
+        {
+            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - LifeTimeRatio) * 0.4f);
+        }
+
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
         {
             var projCenter = projHitbox.Center.ToVector2();
             var vectorToTarget = Vector2.Normalize(targetHitbox.Center.ToVector2() - projCenter);
-            var radius = ExplosionRadius * EasingFunctions.OutExpo(TimeLeftProgress);
+            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
 
             return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projCenter, projCenter + vectorToTarget * radius);
         }
@@ -222,30 +228,33 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }
 
-        public void PostDrawPixelated(Projectile proj)
+        public override void PostDraw(Color lightColor)
         {
-            var thickness = MathHelper.Clamp(1f - TimeLeftProgress, 0f, 1f) * TileUtils.TileSizeInPixels * 5f;
-            var radius = ExplosionRadius * EasingFunctions.OutExpo(TimeLeftProgress) - thickness * TimeLeftProgress * 0.5f;
+            if (_ringRenderer is null)
+                return;
 
-            _ringRenderer?
+            var thickness = MathHelper.Clamp(1f - LifeTimeRatio, 0f, 1f) * TileUtils.TileSizeInPixels * 5f;
+            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio) - thickness * LifeTimeRatio * 0.5f;
+
+            CascadeAssets.RingEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(CascadeAssets.TrailTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.Transform * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(Color.Lerp(new Color(255, 255, 105), new Color(250, 0, 50), LifeTimeRatio).ToVector4());
+                    parameters["Color1"].SetValue(Color.Lerp(new Color(250, 135, 0), new Color(145, 25, 85), LifeTimeRatio).ToVector4());
+                    parameters["Repeats"].SetValue(3.0f);
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                })
+                .Apply();
+
+            _ringRenderer
                 .SetThickness(thickness)
                 .SetPointCount(20) // Можно сделать ее динамической в зависимости от того же радиуса
                 .SetRadius(radius)
                 .SetPosition(Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition);
 
-            /*CascadeAssets.ExplosionRingEffect
-                .Prepare(parameters =>
-                {
-                    parameters["Texture0"].SetValue(CascadeAssets.ExplosionRingTexture.Value);
-                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
-                    parameters["Time"].SetValue(-(float)Main.timeForVisualEffects * 0.05f);
-                    parameters["UvRepeat"].SetValue(3f);
-                    parameters["Color0"].SetValue(new Color(255, 180, 100).ToVector4());
-                    parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
-                })
-                .Apply("CascadeExplosionRing");*/
-
-            _ringRenderer?.Render();
+            _ringRenderer.Render();
         }
     }
 }
