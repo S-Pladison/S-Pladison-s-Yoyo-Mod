@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
@@ -91,6 +92,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     _oldPositions.RemoveLast();
 
                 _trailRenderer.SetPoints(_oldPositions);
+            }
+
+            if (proj.velocity.Length() >= 3f && Main.rand.NextBool(4))
+            {
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                particle.Position = proj.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * proj.width * Main.rand.NextFloat();
+                particle.StartColor = new Color(255, 135, 90);
+                particle.EndColor = new Color(255, 135, 90);
+                particle.Scale = Main.rand.NextFloat(0.35f, 0.5f);
             }
 
             Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
@@ -184,6 +196,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 20);
 
+            for (int i = 0; i < 25; i++)
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
+
+                particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
+                particle.Position = Projectile.Center + vector * Main.rand.NextFloat(ExplosionRadius);
+                particle.Velocity = vector * Main.rand.NextFloat(0.2f, 1f);
+                particle.StartColor = new(new Color(50, 50, 50), false);
+                particle.EndColor = new(new Color(10, 10, 10), false);
+                particle.Scale = 2.25f;
+            }
+
             ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
             {
                 Position = Projectile.Center,
@@ -202,6 +227,32 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void AI()
         {
+            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
+            var quantity = 5 * (radius / ExplosionRadius);
+
+            for (int k = 0; k < quantity; k++)
+            {
+                var angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(angle) * radius * 0.95f;
+                particle.Velocity = Vector2.UnitX.RotatedBy(angle) * 0.5f;
+                particle.StartColor = new Color(255, 135, 90);
+                particle.EndColor = new Color(255, 135, 90);
+                particle.Scale = Main.rand.NextFloat(0.35f, 0.5f);
+            }
+
+            for (int k = 0; k < quantity; k++)
+            {
+                var angle = Main.rand.NextFloat(MathHelper.TwoPi);
+                var vector = Vector2.UnitX.RotatedBy(angle);
+                var position = Projectile.Center + vector * radius * 0.9f;
+
+                var dust = Dust.NewDustPerfect(position, DustID.Torch, vector, 0, default, Main.rand.NextFloat(1.2f, 2.0f));
+                dust.noGravity = true;
+            }
+
             Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - LifeTimeRatio) * 0.4f);
         }
 
