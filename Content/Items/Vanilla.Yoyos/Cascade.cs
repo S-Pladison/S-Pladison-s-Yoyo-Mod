@@ -233,8 +233,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (_ringRenderer is null)
                 return;
 
-            var thickness = MathHelper.Clamp(1f - LifeTimeRatio, 0f, 1f) * TileUtils.TileSizeInPixels * 5f;
-            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio) - thickness * LifeTimeRatio * 0.5f;
+            var thickness = (1f - LifeTimeRatio) * TileUtils.TileSizeInPixels * 5f;
+            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
 
             CascadeAssets.RingEffect
                 .Prepare(parameters =>
