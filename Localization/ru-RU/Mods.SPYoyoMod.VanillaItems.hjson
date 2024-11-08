@@ -1,6 +1,26 @@
-// CascadeItem.Tooltip: ""
+// AmarokItem.Tooltip: ""
+// AmazonItem.Tooltip: ""
+// ArteryItem.Tooltip: ""
+CascadeItem.Tooltip:
+	'''
+	Удары имеют шанс поджечь врага
+	Периодически взрывается, нанося при этом урон по области
+	'''
+// ChikItem.Tooltip: ""
+// Code1Item.Tooltip: ""
+// Code2Item.Tooltip: ""
+// FormatCItem.Tooltip: ""
+// GradientItem.Tooltip: ""
+// HelFireItem.Tooltip: ""
+// HiveFiveItem.Tooltip: ""
+// KrakenItem.Tooltip: ""
+// MalaiseItem.Tooltip: ""
+// RallyItem.Tooltip: ""
+// TerrarianItem.Tooltip: ""
+// TheEyeOfCthulhuItem.Tooltip: ""
 ValorItem.Tooltip:
 	'''
 	С {0}%-ым шансом накладывает на врага дебафф «{$Buffs.ValorBuff.DisplayName}»
 	Если рядом есть враг с этим же дебаффом, шанс будет значительно понижен
 	'''
+// YeletsItem.Tooltip: ""

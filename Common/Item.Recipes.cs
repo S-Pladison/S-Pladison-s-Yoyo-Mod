@@ -1,11 +1,13 @@
 using SPYoyoMod.Content.Items.Mod.Accessories;
 using SPYoyoMod.Content.Items.Mod.Yoyos;
+using SPYoyoMod.Core;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
+    [LoadPriority(sbyte.MaxValue)]
     public sealed class ItemRecipes : ModSystem
     {
         public override void AddRecipes()
