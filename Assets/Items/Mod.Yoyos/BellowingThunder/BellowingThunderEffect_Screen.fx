@@ -10,7 +10,7 @@ float4 Color;
 
 float4 BellowingThunderScreen(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
-	float2 offset = coords / ScreenSize * 2; //< Ñìåùåíèå íà 2 ïèêñåëÿ
+	float2 offset = coords / ScreenSize * 2; //< Ð¡Ð¼ÐµÑ‰ÐµÐ½Ð¸Ðµ Ð½Ð° 2 Ð¿Ð¸ÐºÑÐµÐ»Ñ
 
 	float4 redOffset = tex2D(TextureSampler0, coords + offset);
 	float4 blueOffset = tex2D(TextureSampler0, coords - offset);

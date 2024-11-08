@@ -290,7 +290,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
 
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 25);
-            _ringRenderer.SetThickness(TileUtils.TileSizeInPixels * 2);
 
             ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Add(Projectile);
         }
@@ -337,20 +336,39 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 return;
 
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var ringThickness = TileUtils.TileSizeInPixels * 5f * _ringRadiusEasing.Evaluate(LifeTimeRatio);
 
-            var effect = BellowingThunderAssets.LightningEffect.Prepare(parameters =>
-            {
-                parameters["Texture0"].SetValue(BellowingThunderAssets.LightningTexture.Value);
-                parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Projection);
-                parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
-                parameters["UvRepeat"].SetValue(3f);
-                parameters["Fade"].SetValue(false);
-            });
+            BellowingThunderAssets.LightningEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(BellowingThunderAssets.LightningTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    parameters["Repeats"].SetValue(3f);
+                    parameters["Fade"].SetValue(false);
+                })
+                .Apply();
 
             _ringRenderer
-                .SetRadius(MaxRadius * _ringRadiusEasing.Evaluate(LifeTimeRatio) + TileUtils.TileSizeInPixels * 5)
+                .SetThickness(ringThickness)
+                .SetRadius(MaxRadius * _ringRadiusEasing.Evaluate(LifeTimeRatio) + ringThickness * 0.5f)
                 .SetPointCount((int)MathHelper.Lerp(5, 25, _ringRadiusEasing.Evaluate(LifeTimeRatio)))
                 .SetPosition(position)
+                .Render();
+
+            var lightningStartPosition = position - Vector2.UnitY * Main.screenHeight;
+            var lightningEndPosition = position;
+
+            BellowingThunderAssets.LightningEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Repeats"].SetValue(2f);
+                    parameters["Fade"].SetValue(true);
+                });
+
+            _stripRenderer
+                .SetWidth(TileUtils.TileSizeInPixels * 16 * _lightningStrikeWidthEasing.Evaluate(LifeTimeRatio))
+                .SetPoints([lightningStartPosition, lightningEndPosition])
                 .Render();
 
             var starTexture = BellowingThunderAssets.StarTexture;
