@@ -3,6 +3,7 @@ CascadeItem.Tooltip:
 	Удары имеют шанс поджечь врага
 	Периодически взрывается, нанося при этом урон по области
 	'''
+// Code1Item.Tooltip: ""
 ValorItem.Tooltip:
 	'''
 	С {0}%-ым шансом накладывает на врага дебафф «{$Buffs.ValorBuff.DisplayName}»
