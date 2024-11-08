@@ -19,22 +19,29 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     {
         public const string ItemPath = $"{_yoyoPath}BellowingThunder_Item";
         public const string ProjPath = $"{_yoyoPath}BellowingThunder_Proj";
+        public const string InvisiblePath = $"{_assetPath}Invisible";
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
-        public static Asset<Texture2D> LightningTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Lightning");
+        public static Asset<Texture2D> ElectricityTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Electricity");
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Star");
+        public static Asset<Texture2D> LightningTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Lightning");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Trail");
         public static Asset<Effect> LightningEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Lightning");
+        public static Asset<Effect> ScreenEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Screen");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
         private const string _yoyoPath = $"{_assetPath}Items/Mod.Yoyos/BellowingThunder/";
 
         void ILoadable.Unload()
         {
-            LightningTexture = null;
+            ElectricityTexture = null;
             GlowTexture = null;
+            StarTexture = null;
+            LightningTexture = null;
             TrailEffect = null;
             LightningEffect = null;
+            ScreenEffect = null;
         }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
@@ -66,6 +73,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly int TrailPointCount = 5;
         public static readonly int ShadowTrailPointCount = TrailPointCount + 3;
 
+        private int _ringProjIndex;
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private StripRenderer _shadowTrailRenderer;
@@ -120,6 +128,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
+            if (_ringProjIndex >= 0)
+            {
+                var ringProj = Main.projectile[_ringProjIndex];
+
+                if (ringProj is null || ringProj.type != ModContent.ProjectileType<BellowingThunderRingProjectile>() || !ringProj.active)
+                    _ringProjIndex = -1;
+            }
+
             if (_trailRenderer is not null) //< Если он не null, то и _shadowTrailRenderer тоже
             {
                 _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
@@ -139,6 +155,17 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             }
 
             Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (!hit.Crit || _ringProjIndex >= 0 || Projectile.ai[0] == -1) //< Последняя проверка - возвращается ли йо-йо к игроку
+                return;
+
+            var source = Projectile.GetSource_OnHit(target);
+            var projType = ModContent.ProjectileType<BellowingThunderRingProjectile>();
+
+            _ringProjIndex = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner, Projectile.identity);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
@@ -188,20 +215,150 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             var timeForVisualEffects = (float)Main.timeForVisualEffects + Projectile.whoAmI * 111f;
 
-            var lightningPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var lightningTexture = BellowingThunderAssets.LightningTexture.Value;
-            var lightningOrigin = new Vector2(48, 48);
-            var lightningFrameIndex = (int)((timeForVisualEffects * 0.2f) % 16);
-            var lightningFrame = new Rectangle(96 * (lightningFrameIndex / 4), 96 * (lightningFrameIndex % 4), 96, 96);
-            var lightninRotation = ((int)(timeForVisualEffects * 0.2f) / 16) * MathHelper.PiOver2;
+            var electricityPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var electricityTexture = BellowingThunderAssets.ElectricityTexture.Value;
+            var electricityOrigin = new Vector2(48, 48);
+            var electricityFrameIndex = (int)((timeForVisualEffects * 0.2f) % 16);
+            var electricityFrame = new Rectangle(96 * (electricityFrameIndex / 4), 96 * (electricityFrameIndex % 4), 96, 96);
+            var electricityRotation = ((int)(timeForVisualEffects * 0.2f) / 16) * MathHelper.PiOver2;
 
-            Main.spriteBatch.Draw(lightningTexture, lightningPosition, lightningFrame, Color.White with { A = 0 }, lightninRotation, lightningOrigin, 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(electricityTexture, electricityPosition, electricityFrame, Color.White with { A = 0 }, electricityRotation, electricityOrigin, 0.4f, SpriteEffects.None, 0f);
         }
     }
 
     public interface IDrawBellowingThunderLightning
     {
         void DrawLightning();
+    }
+
+    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile, IDrawBellowingThunderLightning
+    {
+        public static readonly int MaxRadius = TileUtils.TileSizeInPixels * 4;
+        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
+
+        private static readonly EasingBuilder _lightningStrikeWidthEasing = new(
+            (EasingFunctions.InOutCubic, 0.05f, 0f, 1f),
+            (EasingFunctions.Linear, 0.05f, 1f, 1f),
+            (EasingFunctions.InOutCubic, 0.05f, 1f, 0f),
+            (EasingFunctions.Linear, 0.85f, 0f, 0f)
+        );
+
+        private static readonly EasingBuilder _starEasing = new(
+            (EasingFunctions.InOutCubic, 0.05f, 0f, 1f),
+            (EasingFunctions.Linear, 0.75f, 1f, 1f),
+            (EasingFunctions.InOutCubic, 0.2f, 1f, 0f)
+        );
+
+        private static readonly EasingBuilder _ringRadiusEasing = new(
+            (EasingFunctions.OutBack, 0.05f, 0f, 1f),
+            (EasingFunctions.InExpo, 0.80f, 1f, 0.8f),
+            (EasingFunctions.Linear, 0.15f, 0.8f, 0f)
+        );
+
+        private int _yoyoProjIndex;
+        private StripRenderer _stripRenderer;
+        private RingRenderer _ringRenderer;
+
+        public override string Texture => BellowingThunderAssets.InvisiblePath;
+        public float LifeTimeRatio => 1f - Projectile.timeLeft / (float)InitTimeLeft;
+
+        public override void SetDefaults()
+        {
+            Projectile.DamageType = DamageClass.MeleeNoSpeed;
+
+            Projectile.width = MaxRadius * 2;
+            Projectile.height = MaxRadius * 2;
+
+            Projectile.timeLeft = InitTimeLeft;
+            Projectile.friendly = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = 15;
+
+            Projectile.netImportant = true;
+        }
+
+        void IInitializableProjectile.Initialize(Projectile _)
+        {
+            _yoyoProjIndex = Main.projectile.FirstOrDefault(p => p.identity == Projectile.ai[0] && p.type == ModContent.ProjectileType<BellowingThunderProjectile>())?.whoAmI ?? -1;
+
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
+
+            _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 25);
+            _ringRenderer.SetThickness(TileUtils.TileSizeInPixels * 2);
+
+            ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Add(Projectile);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            _stripRenderer?.Dispose();
+            _ringRenderer?.Dispose();
+
+            ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Remove(Projectile);
+        }
+
+        public override void AI()
+        {
+            if (_yoyoProjIndex < 0 || Main.projectile[_yoyoProjIndex].type != ModContent.ProjectileType<BellowingThunderProjectile>() || !Main.projectile[_yoyoProjIndex].active)
+            {
+                Projectile.Kill();
+                return;
+            }
+
+            Projectile.Center = Main.projectile[_yoyoProjIndex].Center;
+
+            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f * _ringRadiusEasing.Evaluate(LifeTimeRatio));
+        }
+
+        public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
+        {
+            var radius = MaxRadius * _ringRadiusEasing.Evaluate(LifeTimeRatio);
+
+            return CollisionUtils.CheckRectanglevCircle(targetHitbox, projHitbox.Center.ToVector2(), radius);
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
+        void IDrawBellowingThunderLightning.DrawLightning()
+        {
+            if (_stripRenderer is null) //< Если он не null, то и _ringRenderer тоже
+                return;
+
+            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+
+            var effect = BellowingThunderAssets.LightningEffect.Prepare(parameters =>
+            {
+                parameters["Texture0"].SetValue(BellowingThunderAssets.LightningTexture.Value);
+                parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Projection);
+                parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                parameters["UvRepeat"].SetValue(3f);
+                parameters["Fade"].SetValue(false);
+            });
+
+            _ringRenderer
+                .SetRadius(MaxRadius * _ringRadiusEasing.Evaluate(LifeTimeRatio) + TileUtils.TileSizeInPixels * 5)
+                .SetPointCount((int)MathHelper.Lerp(5, 25, _ringRadiusEasing.Evaluate(LifeTimeRatio)))
+                .SetPosition(position)
+                .Render();
+
+            var starTexture = BellowingThunderAssets.StarTexture;
+            var starRotation = EasingFunctions.InOutSine(LifeTimeRatio) * MathHelper.PiOver2;
+            var starScale = _starEasing.Evaluate(LifeTimeRatio) * 2f;
+
+            Main.spriteBatch.Draw(starTexture.Value, position, null, Color.White, EasingFunctions.InOutSine(starRotation) * MathHelper.PiOver2, starTexture.Size() * 0.5f, starScale, SpriteEffects.None, 0f);
+        }
     }
 
     [Autoload(Side = ModSide.Client)]
@@ -257,7 +414,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 DepthStencilState = DepthStencilState.None,
                 RasterizerState = Main.Rasterizer,
                 Effect = null,
-                Matrix = Matrix.CreateScale(0.5f) * Main.GameViewMatrix.EffectMatrix
+                Matrix = GameMatrices.Effect * Matrix.CreateScale(0.5f)
             };
 
             var device = Main.graphics.GraphicsDevice;
@@ -286,17 +443,17 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (!_targetWasPrepared)
                 return;
 
-            var effect = BellowingThunderAssets.LightningEffect;
-
-            effect.Prepare(parameters =>
+            var effect = BellowingThunderAssets.ScreenEffect.Prepare(parameters =>
             {
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
                 parameters["Color"].SetValue(new Color(145, 60, 195).ToVector4());
             });
 
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, Main.GameViewMatrix.ZoomMatrix);
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, GameMatrices.Zoom);
             Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
+
+            _targetWasPrepared = false;
         }
     }
 }

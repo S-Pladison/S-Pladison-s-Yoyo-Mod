@@ -2,33 +2,60 @@ texture Texture0 : register(s0);
 
 sampler TextureSampler0 = sampler_state
 {
-	texture = <Texture0>;
+    texture = <Texture0>;
+    AddressU = Wrap;
+    AddressV = Wrap;
+    AddressW = Wrap;
+    MagFilter = Linear;
+    MinFilter = Linear;
+    Mipfilter = Linear;
 };
 
-float2 ScreenSize;
-float4 Color;
+matrix TransformMatrix;
+float UvRepeat;
+float Time;
+bool Fade;
 
-float4 BellowingThunderLightning(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
+struct VertexShaderInput
 {
-	float2 offset = coords / ScreenSize * 2; //< Смещение на 2 пикселя
+    float2 coord : TEXCOORD0;
+    float4 color : COLOR0;
+    float4 position : POSITION0;
+};
 
-	float4 redOffset = tex2D(TextureSampler0, coords + offset);
-	float4 blueOffset = tex2D(TextureSampler0, coords - offset);
+struct VertexShaderOutput
+{
+    float2 coord : TEXCOORD0;
+    float4 color : COLOR0;
+    float4 position : SV_POSITION;
+};
 
-	float4 colorOffset = float4(redOffset.r, (redOffset.r + blueOffset.b) / 4.0f, blueOffset.b, 1.0f);
-	colorOffset.a = (colorOffset.r + colorOffset.g + colorOffset.b) / 3.0f;
+VertexShaderOutput MainVertexShader(in VertexShaderInput input)
+{
+    VertexShaderOutput output = (VertexShaderOutput)0;
+    output.coord = input.coord;
+    output.color = input.color;
+    output.position = mul(input.position, TransformMatrix);
+    return output;
+}
 
-	float4 color = tex2D(TextureSampler0, coords);
-	color.a = color.r;
-	color.rgb *= lerp(Color.rgb, float3(1, 1, 1), color.r);
+float4 BellowingThunderLightning(VertexShaderOutput input) : COLOR
+{
+    float4 color = tex2D(TextureSampler0, (input.coord * float2(UvRepeat, 1) + float2(Time, 0)));
+    color.a = color.r;
 
-	return (color + colorOffset) * sampleColor;
+    if (!Fade)
+        return color * input.color;
+
+    color.a *= (1 - pow(1 - input.coord.x, 5));
+    return color * input.color;
 }
 
 technique Technique1
 {
     pass BellowingThunderLightning
     {
-        PixelShader = compile ps_3_0 BellowingThunderLightning();
+        VertexShader = compile vs_2_0 MainVertexShader();
+        PixelShader = compile ps_2_0 BellowingThunderLightning();
     }
 }
