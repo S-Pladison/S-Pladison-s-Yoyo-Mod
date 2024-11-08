@@ -170,7 +170,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
             bitWriter.WriteBit(_charging);
-            binaryWriter.Write((ushort) _aiTimer);
+            binaryWriter.Write((ushort)_aiTimer);
         }
 
         public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
