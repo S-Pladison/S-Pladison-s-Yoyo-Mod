@@ -99,7 +99,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             // Если йо-йо возвращается к игроку, прекращаем обработку всей логики
             if (proj.ai[0] == -1)
             {
-                _aiTimer = 0;
+                _aiTimer = Math.Max(_aiTimer - 2, 0);
                 return;
             }
 
