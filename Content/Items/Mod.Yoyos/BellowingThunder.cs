@@ -24,6 +24,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public static Asset<Texture2D> ElectricityTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Electricity");
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> CircleTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Circle");
         public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Star");
         public static Asset<Texture2D> LightningTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Lightning");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Trail");
@@ -37,6 +38,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             ElectricityTexture = null;
             GlowTexture = null;
+            CircleTexture = null;
             StarTexture = null;
             LightningTexture = null;
             TrailEffect = null;
@@ -328,6 +330,18 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
+        public override bool PreDraw(ref Color lightColor)
+        {
+            var circlePosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var circleTexture = BellowingThunderAssets.CircleTexture;
+            var circleColor = new Color(145, 60, 195) with { A = 0 } * EasingFunctions.InOutCubic(LifeTimeRatio) * 0.2f;
+            var circleScale = MathHelper.Lerp(4f, 0f, EasingFunctions.InCubic(LifeTimeRatio));
+
+            Main.spriteBatch.Draw(circleTexture.Value, circlePosition, null, circleColor, 0f, circleTexture.Size() * 0.5f, circleScale, SpriteEffects.None, 0f);
+
+            return true;
         }
 
         void IDrawBellowingThunderLightning.DrawLightning()

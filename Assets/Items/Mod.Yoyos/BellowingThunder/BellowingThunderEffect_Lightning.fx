@@ -41,7 +41,7 @@ VertexShaderOutput MainVertexShader(in VertexShaderInput input)
 
 float4 BellowingThunderLightning(VertexShaderOutput input) : COLOR
 {
-    float4 color = tex2D(TextureSampler0, (input.coord * float2(Repeats, 1) + float2(Time * 2.5, 0)));
+    float4 color = tex2D(TextureSampler0, (input.coord * float2(Repeats, 1) + float2(-Time * 3, 0)));
     color.a = color.r;
 
     if (!Fade)
