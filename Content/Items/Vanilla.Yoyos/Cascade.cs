@@ -9,10 +9,12 @@ using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.ID;
 using Terraria.ModLoader;
+using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -96,7 +98,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             // Если йо-йо возвращается к игроку, прекращаем обработку всей логики
             if (proj.ai[0] == -1)
+            {
+                _aiTimer = 0;
                 return;
+            }
 
             _aiTimer++;
 
@@ -160,6 +165,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             _aiTimer += AddTimeForHit;
+        }
+
+        public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
+        {
+            bitWriter.WriteBit(_charging);
+            binaryWriter.Write((ushort) _aiTimer);
+        }
+
+        public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
+        {
+            _charging = bitReader.ReadBit();
+            _aiTimer = binaryReader.ReadUInt16();
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
