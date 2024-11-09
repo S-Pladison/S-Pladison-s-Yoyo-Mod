@@ -1,7 +1,9 @@
 ﻿using SPYoyoMod.Common;
+using System;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Utils
 {
@@ -83,5 +85,36 @@ namespace SPYoyoMod.Utils
 
             return player;
         }
+
+        /// <summary>
+        /// Возвращает первый снаряд, удовлетворяющий заданному условию, или null, если снаряд не найден.
+        /// </summary>
+        public static Projectile FirstOrDefault(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
+        {
+            foreach (var proj in projectiles)
+            {
+                if (predicate(proj))
+                    return proj;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Содержит ли коллекция снарядов хотя бы один снаряд.
+        /// </summary>
+        public static bool Any(this ActiveEntityIterator<Projectile> projectiles)
+        {
+            foreach (var _ in projectiles)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Содержит ли коллекция хотя бы один снаряд, удовлетворяющий заданному условию.
+        /// </summary>
+        public static bool Any(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
+            => FirstOrDefault(projectiles, predicate) != null;
     }
 }
