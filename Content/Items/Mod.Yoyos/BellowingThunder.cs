@@ -1,13 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Entities;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -30,6 +33,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Trail");
         public static Asset<Effect> LightningEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Lightning");
         public static Asset<Effect> ScreenEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Screen");
+        public static SoundStyle LightningStrikeSound { get; private set; } = new($"{_yoyoPath}BellowingThunderSound_LightningStrike");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
         private const string _yoyoPath = $"{_assetPath}Items/Mod.Yoyos/BellowingThunder/";
@@ -75,7 +79,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly int TrailPointCount = 5;
         public static readonly int ShadowTrailPointCount = TrailPointCount + 3;
 
-        private int _ringProjIndex;
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private StripRenderer _shadowTrailRenderer;
@@ -130,14 +133,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
-            if (_ringProjIndex >= 0)
-            {
-                var ringProj = Main.projectile[_ringProjIndex];
-
-                if (ringProj is null || ringProj.type != ModContent.ProjectileType<BellowingThunderRingProjectile>() || !ringProj.active)
-                    _ringProjIndex = -1;
-            }
-
             if (_trailRenderer is not null) //< Если он не null, то и _shadowTrailRenderer тоже
             {
                 _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
@@ -161,13 +156,13 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!hit.Crit || _ringProjIndex >= 0 || Projectile.ai[0] == -1) //< Последняя проверка - возвращается ли йо-йо к игроку
+            if (!hit.Crit || Projectile.ai[0] == -1 || Projectile.GetOwner().OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0) //< Вторая проверка - возвращается ли йо-йо к игроку
                 return;
 
             var source = Projectile.GetSource_OnHit(target);
             var projType = ModContent.ProjectileType<BellowingThunderRingProjectile>();
 
-            _ringProjIndex = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner, Projectile.identity);
+            Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
@@ -257,7 +252,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             (EasingFunctions.Linear, 0.15f, 0.8f, 0f)
         );
 
-        private int _yoyoProjIndex;
         private StripRenderer _stripRenderer;
         private RingRenderer _ringRenderer;
 
@@ -284,8 +278,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
-            _yoyoProjIndex = Main.projectile.FirstOrDefault(p => p.identity == Projectile.ai[0] && p.type == ModContent.ProjectileType<BellowingThunderProjectile>())?.whoAmI ?? -1;
-
             if (Main.netMode == NetmodeID.Server)
                 return;
 
@@ -294,6 +286,18 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 25);
 
             ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Add(Projectile);
+
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
+            {
+                Position = Projectile.Center,
+                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
+                Strength = 7f,
+                VibrationCyclesPerSecond = 6f,
+                Frames = 15,
+                DistanceFalloff = 16f * 25f
+            });
+
+            // SoundEngine.PlaySound(BellowingThunderAssets.LightningStrikeSound, Projectile.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -309,13 +313,15 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
-            if (_yoyoProjIndex < 0 || Main.projectile[_yoyoProjIndex].type != ModContent.ProjectileType<BellowingThunderProjectile>() || !Main.projectile[_yoyoProjIndex].active)
+            var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsMainYoyo());
+
+            if (yoyoProj is null)
             {
                 Projectile.Kill();
                 return;
             }
 
-            Projectile.Center = Main.projectile[_yoyoProjIndex].Center;
+            Projectile.Center = yoyoProj.Center;
 
             Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f * _ringRadiusEasing.Evaluate(LifeTimeRatio));
         }
