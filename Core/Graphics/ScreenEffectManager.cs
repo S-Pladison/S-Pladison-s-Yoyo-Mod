@@ -1,7 +1,10 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using System;
 using Terraria;
 using Terraria.Graphics.CameraModifiers;
+using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.Graphics
@@ -93,6 +96,8 @@ namespace SPYoyoMod.Core.Graphics
         [Autoload(Side = ModSide.Client)]
         private sealed class ScreenFlashManager : ILoadable
         {
+            public const string FilterName = $"{nameof(SPYoyoMod)}:Flash";
+
             private int _flashInitTime;
             private int _flashTime;
             private float _flashStrength;
@@ -100,6 +105,10 @@ namespace SPYoyoMod.Core.Graphics
 
             void ILoadable.Load(Mod mod)
             {
+                Filters.Scene[FilterName] = new Filter(
+                    new ScreenShaderData(ModContent.Request<Effect>($"{nameof(SPYoyoMod)}/Assets/ScreenEffect_Flash"), $"ScreenFlash"), EffectPriority.VeryHigh
+                );
+
                 ModEvents.OnPostUpdateEverything += Update;
             }
 
@@ -110,9 +119,6 @@ namespace SPYoyoMod.Core.Graphics
 
             public void Flash(in FlashSettings settings)
             {
-                /*if (!ModContent.GetInstance<ClientSideConfig>().FlashingLights)
-                    return;*/
-
                 _flashStrength = MathHelper.Clamp(settings.Strength, 0, 1);
                 _flashInitTime = (int)MathHelper.Max(settings.Frames, 0);
                 _flashTime = _flashInitTime;
@@ -121,7 +127,21 @@ namespace SPYoyoMod.Core.Graphics
 
             private void Update()
             {
+                if (_flashTime > 0f)
+                {
+                    Filters.Scene.Activate(FilterName);
+                    Filters.Scene[FilterName]
+                        .GetShader()
+                        .UseIntensity(_flashTime / (float)_flashInitTime * _flashStrength)
+                        .UseTargetPosition(_flashPosition ?? (Main.screenPosition + Main.ScreenSize.ToVector2() * 0.5f));
 
+                    _flashTime--;
+                }
+                else if (Filters.Scene[FilterName].IsActive())
+                {
+                    Filters.Scene[FilterName].GetShader().UseIntensity(0f);
+                    Filters.Scene[FilterName].Deactivate();
+                }
             }
         }
 
