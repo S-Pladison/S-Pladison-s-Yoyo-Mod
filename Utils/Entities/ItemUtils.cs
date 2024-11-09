@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
@@ -85,6 +87,49 @@ namespace SPYoyoMod.Utils
                     tooltips.Insert(i + j + 1, lines[j]);
 
                 return;
+            }
+        }
+
+        /// <summary>
+        /// Находит строку в подсказке оружия, которая отображает шанс критического удара, и изменяет указанное числовое значение с помощью заданной функции.
+        /// </summary>
+        public static void ModifyWeaponCritLine(this List<TooltipLine> tooltips, Func<int, int> func)
+        {
+            var critLine = tooltips.FirstOrDefault(x => x.Mod == "Terraria" && x.Name == "CritChance");
+
+            if (critLine is null)
+                return;
+
+            ModifyFirstIntegerInLine(critLine, func);
+        }
+
+        /// <summary>
+        /// Изменяет первое целочисленное значение, найденное в строке.
+        /// </summary>
+        public static void ModifyFirstIntegerInLine(TooltipLine line, Func<int, int> func)
+        {
+            var split = line.Text.Split(' ');
+
+            if (split.Length == 0)
+                return;
+
+            for (int i = 0; i < split.Length; i++)
+            {
+                ref var str = ref split[i];
+
+                if (int.TryParse(str, out int @int))
+                {
+                    str = $"{func(@int)}";
+                    line.Text = string.Join(' ', split);
+                    return;
+                }
+
+                if (str.EndsWith("%") && int.TryParse(str.Replace("%", ""), out @int))
+                {
+                    str = $"{func(@int)}%";
+                    line.Text = string.Join(' ', split);
+                    return;
+                }
             }
         }
 
