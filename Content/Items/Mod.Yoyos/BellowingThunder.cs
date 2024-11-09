@@ -243,12 +243,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public interface IDrawBellowingThunderLightning
-    {
-        void DrawLightning();
-    }
-
-    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile, IDrawBellowingThunderLightning
+    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile
     {
         public static readonly int MaxRadius = TileUtils.TileSizeInPixels * 4;
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
@@ -320,7 +315,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 DistanceFalloff = 16f * 25f
             });
 
-            // SoundEngine.PlaySound(BellowingThunderAssets.LightningStrikeSound, Projectile.Center);
+            SoundEngine.PlaySound(BellowingThunderAssets.LightningStrikeSound, Projectile.Center);
 
             if (!Projectile.IsLocalPlayerAsOwner())
                 return;
@@ -328,7 +323,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             ScreenEffectManager.Flash(new ScreenEffectManager.FlashSettings() with
             {
                 Strength = 0.15f,
-                Frames = 20,
+                Frames = 25,
                 Position = Projectile.Center
             });
 
@@ -387,7 +382,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             return true;
         }
 
-        void IDrawBellowingThunderLightning.DrawLightning()
+        public void DrawLightning()
         {
             if (_stripRenderer is null) //< Если он не null, то и _ringRenderer тоже
                 return;
@@ -440,7 +435,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     public sealed class BellowingThunderScreenEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
-        private readonly ProjectileObserver _projObserver = new(p => p.ModProjectile is not IDrawBellowingThunderLightning);
+        private readonly ProjectileObserver _projObserver = new(p => p.ModProjectile is not BellowingThunderRingProjectile);
 
         public RenderTarget2D Target => _renderTarget;
 
@@ -502,7 +497,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
                 foreach (var proj in _projObserver.GetEntityInstances())
                 {
-                    (proj.ModProjectile as IDrawBellowingThunderLightning).DrawLightning();
+                    (proj.ModProjectile as BellowingThunderRingProjectile).DrawLightning();
                 }
                 Main.spriteBatch.End();
             }
