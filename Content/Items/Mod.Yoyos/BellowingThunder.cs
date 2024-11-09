@@ -316,6 +316,16 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             });
 
             // SoundEngine.PlaySound(BellowingThunderAssets.LightningStrikeSound, Projectile.Center);
+
+            if (!Projectile.IsLocalPlayerAsOwner())
+                return;
+
+            ScreenEffectManager.Flash(new ScreenEffectManager.FlashSettings() with
+            {
+                Strength = 0.15f,
+                Frames = 20,
+                Position = Projectile.Center
+            });
         }
 
         public override void OnKill(int timeLeft)
