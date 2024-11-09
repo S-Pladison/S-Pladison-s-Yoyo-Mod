@@ -1,17 +1,21 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Core;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.Entities;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
+using Terraria.Graphics.Effects;
+using Terraria.Graphics.Shaders;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -34,6 +38,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Trail");
         public static Asset<Effect> LightningEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Lightning");
         public static Asset<Effect> ScreenEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Screen");
+        public static Asset<Effect> SilhouetteEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Silhouette");
         public static SoundStyle LightningStrikeSound { get; private set; } = new($"{_yoyoPath}BellowingThunderSound_LightningStrike");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -129,7 +134,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             _oldPositions = [];
 
-            ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Add(Projectile);
+            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
         }
 
         public override void OnKill(int timeLeft)
@@ -140,7 +145,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _trailRenderer?.Dispose();
             _shadowTrailRenderer?.Dispose();
 
-            ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Remove(Projectile);
+            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Remove(Projectile);
         }
 
         public override void AI()
@@ -303,7 +308,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 25);
 
-            ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Add(Projectile);
+            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
 
             ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
             {
@@ -326,6 +331,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 Frames = 20,
                 Position = Projectile.Center
             });
+
+            ModContent.GetInstance<BellowingThunderSilhouetteEffectHandler>().Activate();
         }
 
         public override void OnKill(int timeLeft)
@@ -336,7 +343,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _stripRenderer?.Dispose();
             _ringRenderer?.Dispose();
 
-            ModContent.GetInstance<BellowingThunderLightningEffectHandler>().Remove(Projectile);
+            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Remove(Projectile);
         }
 
         public override void AI()
@@ -430,12 +437,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     }
 
     [Autoload(Side = ModSide.Client)]
-    public sealed class BellowingThunderLightningEffectHandler : ILoadable
+    public sealed class BellowingThunderScreenEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
         private readonly ProjectileObserver _projObserver = new(p => p.ModProjectile is not IDrawBellowingThunderLightning);
 
-        private bool _targetWasPrepared = false;
+        public RenderTarget2D Target => _renderTarget;
 
         public void Add(Projectile proj)
         {
@@ -472,8 +479,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (!_projObserver.AnyEntity)
                 return;
 
-            _targetWasPrepared = false;
-
             var spriteBatchSpanshot = new SpriteBatchSnapshot
             {
                 SortMode = SpriteSortMode.Deferred,
@@ -502,13 +507,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 Main.spriteBatch.End();
             }
             device.SetRenderTarget(null);
-
-            _targetWasPrepared = true;
         }
 
         private void DrawTargetToScreen()
         {
-            if (!_targetWasPrepared)
+            if (!_projObserver.AnyEntity)
                 return;
 
             var effect = BellowingThunderAssets.ScreenEffect.Prepare(parameters =>
@@ -520,8 +523,135 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, RasterizerState.CullNone, effect.Value, GameMatrices.Zoom);
             Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
             Main.spriteBatch.End();
+        }
+    }
 
-            _targetWasPrepared = false;
+    [Autoload(Side = ModSide.Client)]
+    [LoadPriority(sbyte.MinValue)]
+    public sealed class BellowingThunderSilhouetteEffectHandler : ILoadable
+    {
+        public static readonly string FilterName = $"{nameof(SPYoyoMod)}:BellowingThunderSilhouette";
+        public static readonly int FilterActiveTime = ModUtils.SecondsToTicks(0.2f);
+
+        private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
+
+        private int _filterTime;
+        private Player _visualPlayer;
+
+        public void Activate()
+        {
+            _filterTime = FilterActiveTime;
+        }
+
+        void ILoadable.Load(Terraria.ModLoader.Mod mod)
+        {
+            Filters.Scene[FilterName] = new Filter(
+                new ScreenShaderData(BellowingThunderAssets.SilhouetteEffect, "BellowingThunderSilhouette"), EffectPriority.VeryHigh
+            );
+
+            ModEvents.OnPostUpdateEverything += UpdateFilterTimer;
+            ModEvents.OnPostUpdateCameraPosition += UpdateFilterState;
+        }
+
+        void ILoadable.Unload()
+        {
+            ModEvents.OnPostUpdateCameraPosition -= UpdateFilterState;
+            ModEvents.OnPostUpdateEverything -= UpdateFilterTimer;
+        }
+
+        private void UpdateFilterTimer()
+        {
+            _filterTime = Math.Max(_filterTime - 1, 0);
+        }
+
+        private void UpdateFilterState()
+        {
+            var filter = Filters.Scene[FilterName];
+
+            if (_filterTime <= 0)
+            {
+                if (!filter.IsActive())
+                    return;
+
+                filter.GetShader().UseIntensity(0f);
+                filter.Deactivate();
+
+                return;
+            }
+
+            DrawToTarget();
+
+            var shader = filter.GetShader();
+
+            if (!filter.IsActive())
+            {
+                Filters.Scene.Activate(FilterName);
+                shader.UseIntensity(1f);
+            }
+
+            shader.UseImage(_renderTarget);
+
+            if (_filterTime < FilterActiveTime / 2)
+            {
+                shader.UseColor(Color.White);
+                shader.UseSecondaryColor(Color.Black);
+                return;
+            }
+
+            shader.UseColor(Color.Black);
+            shader.UseSecondaryColor(Color.White);
+        }
+
+        private void DrawLocalPlayer()
+        {
+            var player = Main.LocalPlayer;
+
+            _visualPlayer ??= new Player();
+            _visualPlayer.CopyVisuals(player);
+            _visualPlayer.isFirstFractalAfterImage = true;
+            _visualPlayer.firstFractalAfterImageOpacity = 1f;
+            _visualPlayer.ResetEffects();
+            _visualPlayer.ResetVisibleAccessories();
+            _visualPlayer.DisplayDollUpdate();
+            _visualPlayer.itemRotation = player.itemRotation;
+            _visualPlayer.gravDir = player.gravDir;
+            _visualPlayer.heldProj = player.heldProj;
+            _visualPlayer.Center = player.Center;
+            _visualPlayer.wingFrame = player.wingFrame;
+            _visualPlayer.velocity.Y = player.velocity.Y;
+            _visualPlayer.socialIgnoreLight = true;
+
+            var armRotation = player.itemRotation * player.gravDir - MathHelper.PiOver2 * player.direction;
+
+            _visualPlayer.SetCompositeArmFront(true, Player.CompositeArmStretchAmount.Full, armRotation);
+            _visualPlayer.SetCompositeArmBack(true, Player.CompositeArmStretchAmount.Quarter, armRotation);
+            _visualPlayer.PlayerFrame();
+
+            Main.PlayerRenderer.DrawPlayer(Main.Camera, _visualPlayer, _visualPlayer.position, 0f, _visualPlayer.fullRotationOrigin, 0f);
+        }
+
+        private void DrawToTarget()
+        {
+            var lightningScreenTarget = ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Target;
+
+            if (lightningScreenTarget is null || lightningScreenTarget.IsDisposed)
+                return;
+
+            var device = Main.graphics.GraphicsDevice;
+            device.SetRenderTarget(_renderTarget);
+            device.Clear(Color.Transparent);
+            {
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, Main.GameViewMatrix.TransformationMatrix);
+                Main.spriteBatch.Draw(lightningScreenTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
+                Main.spriteBatch.End();
+
+                var playerRasterizerState = Main.GameViewMatrix.Effects.HasFlag(SpriteEffects.FlipHorizontally) ? RasterizerState.CullClockwise : RasterizerState.CullCounterClockwise;
+
+                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, playerRasterizerState, null, Main.GameViewMatrix.ZoomMatrix);
+                DrawLocalPlayer();
+                Main.spriteBatch.End();
+            }
+            device.SetRenderTarget(null);
         }
     }
 }
