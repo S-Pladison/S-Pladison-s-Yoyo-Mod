@@ -13,6 +13,7 @@ using Terraria;
 using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
@@ -55,7 +56,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class BellowingThunderItem : YoyoBaseItem
     {
+        public const int StormCritBonus = 6;
+
         public override string Texture => BellowingThunderAssets.ItemPath;
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(StormCritBonus);
         public override int GamepadExtraRange => 10;
 
         public override void SetDefaults()
@@ -71,6 +75,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Item.rare = ItemRarityID.Orange;
             Item.value = ItemUtils.SellPrice(platinum: 0, gold: 4, silver: 0, copper: 0);
         }
+
+        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        {
+            tooltips.ModifyWeaponCritLine(crit => crit + (Main.IsItStorming ? StormCritBonus : 0));
+        }
     }
 
     public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IDrawPixelatedProjectile
@@ -79,6 +88,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly int TrailPointCount = 5;
         public static readonly int ShadowTrailPointCount = TrailPointCount + 3;
 
+        private int _initCritChance;
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private StripRenderer _shadowTrailRenderer;
@@ -91,6 +101,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public void Initialize(Projectile _)
         {
+            _initCritChance = Projectile.CritChance;
+
             if (Main.netMode == NetmodeID.Server)
                 return;
 
@@ -133,6 +145,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
+            Projectile.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
+
             if (_trailRenderer is not null) //< Если он не null, то и _shadowTrailRenderer тоже
             {
                 _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
@@ -161,8 +175,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             var source = Projectile.GetSource_OnHit(target);
             var projType = ModContent.ProjectileType<BellowingThunderRingProjectile>();
+            var ringProjIndex = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner);
 
-            Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner);
+            Main.projectile[ringProjIndex].CritChance = _initCritChance;
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
@@ -252,6 +267,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             (EasingFunctions.Linear, 0.15f, 0.8f, 0f)
         );
 
+        private int _initCritChance;
         private StripRenderer _stripRenderer;
         private RingRenderer _ringRenderer;
 
@@ -278,6 +294,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
+            _initCritChance = Projectile.CritChance;
+
             if (Main.netMode == NetmodeID.Server)
                 return;
 
@@ -313,6 +331,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
+            Projectile.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
+
             var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsMainYoyo());
 
             if (yoyoProj is null)

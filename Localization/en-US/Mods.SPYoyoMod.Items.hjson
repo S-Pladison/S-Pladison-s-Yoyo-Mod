@@ -1,6 +1,6 @@
 BellowingThunderItem: {
 	DisplayName: Bellowing Thunder
-	Tooltip: ""
+	Tooltip: ... {0} ...
 }
 
 BearingItem: {
