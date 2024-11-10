@@ -486,6 +486,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             };
 
             var device = Main.graphics.GraphicsDevice;
+
             device.BlendState = spriteBatchSpanshot.BlendState;
             device.SamplerStates[0] = spriteBatchSpanshot.SamplerState;
             device.DepthStencilState = spriteBatchSpanshot.DepthStencilState;
@@ -502,6 +503,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 Main.spriteBatch.End();
             }
             device.SetRenderTarget(null);
+
+            // Костыль, исправляющий проблему с отрисовкой трейлов Зенита, Радужного жезла, да и скорее всего других модовых трейлов, если они рисуют их как ванилка...
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Transform);
+            Main.spriteBatch.End();
         }
 
         private void DrawTargetToScreen()
