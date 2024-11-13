@@ -4,9 +4,10 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.ModSupport
 {
-    public sealed class ThoriumModSupport : ModSupportSystem<ThoriumModSupport>
+    [ModInternalName("ThoriumMod")]
+    public sealed class ThoriumSupport : ModSupportSystem<ThoriumSupport>
     {
-        private ThoriumModSupport() { }
+        private ThoriumSupport() { }
 
         public override void PostSetupContent()
         {

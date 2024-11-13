@@ -66,12 +66,12 @@ namespace SPYoyoMod.Common.Yoyos
             // Thorium имеет собственную функцию отрисовки нитей для своих йо-йо...
             // Так как рисуются одновременно обе нити, можно спокойно прекратить отрисовку одной из.
             // Но из-за отсутствия в Thorium смещения (из YoyoUseStyle.cs), прекращаем отрисовку именно у них :p
-            if (ThoriumModSupport.IsModLoaded)
+            if (ThoriumSupport.IsModLoaded)
             {
                 try
                 {
                     var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-                    var methodInfo = ThoriumModSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("DrawString", flags) ?? throw new Exception();
+                    var methodInfo = ThoriumSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("DrawString", flags) ?? throw new Exception();
 
                     MonoModHooks.Add(methodInfo, (orig_ThoriumModDrawString orig, int index, Vector2 to, Vector2 from, int stringColor, bool actuallyYoyo) =>
                     {
@@ -80,7 +80,7 @@ namespace SPYoyoMod.Common.Yoyos
                 }
                 catch (Exception)
                 {
-                    Mod.Logger.Warn($"Hook \"{nameof(YoyoStringReplacementGlobalProjectile)}..{nameof(ThoriumModSupport)}\" failed...");
+                    Mod.Logger.Warn($"Hook \"{nameof(YoyoStringReplacementGlobalProjectile)}..{nameof(ThoriumSupport)}\" failed...");
                 }
             }
         }

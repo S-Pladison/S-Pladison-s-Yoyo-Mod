@@ -104,12 +104,12 @@ namespace SPYoyoMod.Core.Hooks
 
                 // Thorium имеет собственную AI-функцию для всех своих йо-йо...
                 // Хорошо, что IL в данном случае не пригодится.
-                if (ThoriumModSupport.IsModLoaded)
+                if (ThoriumSupport.IsModLoaded)
                 {
                     try
                     {
                         var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-                        var methodInfo = ThoriumModSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("YoyoAI", flags) ?? throw new Exception();
+                        var methodInfo = ThoriumSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("YoyoAI", flags) ?? throw new Exception();
 
                         MonoModHooks.Add(methodInfo, (orig_ThoriumModYoyoAI orig, int index, float seconds, float length, float acceleration, float rotationSpeed, object action, object initialize) =>
                         {
@@ -126,7 +126,7 @@ namespace SPYoyoMod.Core.Hooks
                     }
                     catch (Exception)
                     {
-                        Mod.Logger.Warn($"Hook \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(ThoriumModSupport)}\" failed...");
+                        Mod.Logger.Warn($"Hook \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(ThoriumSupport)}\" failed...");
                     }
                 }
             }

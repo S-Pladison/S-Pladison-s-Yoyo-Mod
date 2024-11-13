@@ -55,12 +55,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
             // Thorium имеет собственную AI-функцию для всех своих йо-йо...
             // Да, в данном случае можно обойтись и обычным хуком, но на всякий случай сделал именно так...
-            if (ThoriumModSupport.IsModLoaded)
+            if (ThoriumSupport.IsModLoaded)
             {
                 try
                 {
                     var flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.Instance;
-                    var methodInfo = ThoriumModSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("YoyoAI", flags) ?? throw new Exception();
+                    var methodInfo = ThoriumSupport.Code.GetType("ThoriumMod.Projectiles.ProjectileExtras").GetMethod("YoyoAI", flags) ?? throw new Exception();
 
                     MonoModHooks.Modify(methodInfo, (il) =>
                     {
@@ -88,7 +88,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                             i => i.MatchAdd(),
                             i => i.MatchStloc(num3Index)))
                         {
-                            ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(ThoriumModSupport)}\" failed...");
+                            ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(ThoriumSupport)}\" failed...");
                             return;
                         }
 
@@ -98,7 +98,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 }
                 catch (Exception)
                 {
-                    Mod.Logger.Warn($"Hook \"{nameof(StringProjectile)}..{nameof(ThoriumModSupport)}\" failed...");
+                    Mod.Logger.Warn($"Hook \"{nameof(StringProjectile)}..{nameof(ThoriumSupport)}\" failed...");
                 }
             }
         }
