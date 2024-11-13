@@ -6,26 +6,6 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.ModSupport
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
-    public sealed class ModInternalNameAttribute(string value) : Attribute
-    {
-        public readonly string Value = value;
-
-        public static bool TryGetValue(Type type, out string value)
-        {
-            var all = type.GetCustomAttributes(typeof(ModInternalNameAttribute), true);
-
-            if (all.FirstOrDefault() is not ModInternalNameAttribute mostDerived)
-            {
-                value = string.Empty;
-                return false;
-            }
-
-            value = mostDerived.Value;
-            return true;
-        }
-    }
-
     [LoadPriority(sbyte.MaxValue)]
     public abstract class ModSupportSystem<TMe> : ModSystem where TMe : ModSupportSystem<TMe>
     {
@@ -56,8 +36,11 @@ namespace SPYoyoMod.Core.ModSupport
             var type = typeof(T);
             var modNameList = new List<string>(3);
 
-            if (ModInternalNameAttribute.TryGetValue(type, out var internalName))
-                modNameList.Add(internalName);
+            if (ModInternalNameAttribute.TryGetValues(type, out var internalNames))
+            {
+                foreach (var internalName in internalNames)
+                    modNameList.Add(internalName);
+            }
 
             const string postfix = "Support";
 
