@@ -7,13 +7,15 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Core.ModSupport
 {
     [LoadPriority(sbyte.MaxValue)]
-    public abstract class ModSupportSystem<TMe> : ModSystem where TMe : ModSupportSystem<TMe>
+    public abstract class ModSupportSystem<TMe>(string internalName = default) : ModSystem where TMe : ModSupportSystem<TMe>
     {
         public class SupportedModData(Mod instance, string internalName)
         {
             public readonly Mod Instance = instance;
             public readonly string InternalName = internalName;
         }
+
+        private readonly string _potentialInternalName = internalName;
 
         public static SupportedModData Data { get; private set; }
         public static Assembly Code { get => Data?.Instance.Code ?? null; }
@@ -31,22 +33,22 @@ namespace SPYoyoMod.Core.ModSupport
             return false;
         }
 
-        private static List<string> GetSupportedModNames<T>() where T : ModSupportSystem<T>
+        private List<string> GetSupportedModNames<T>() where T : ModSupportSystem<T>
         {
             var type = typeof(T);
             var modNameList = new List<string>(3);
 
-            if (ModInternalNameAttribute.TryGetValues(type, out var internalNames))
-            {
-                foreach (var internalName in internalNames)
-                    modNameList.Add(internalName);
-            }
+            // Точное внутреннее имя мода, которое мы ввели в конструкторе
+            if (!String.IsNullOrEmpty(_potentialInternalName))
+                modNameList.Add(_potentialInternalName);
 
             const string postfix = "Support";
 
+            // Потенциальное имя мода на основе имени типа, но без постфикса
             if (type.Name.EndsWith(postfix))
-                modNameList.Add(type.Name.Substring(0, type.Name.Length - postfix.Length));
+                modNameList.Add(type.Name[..^postfix.Length]);
 
+            // Потенциальное имя мода на основе имени типа
             modNameList.Add(type.Name);
 
             return modNameList;
