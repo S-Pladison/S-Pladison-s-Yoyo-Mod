@@ -10,7 +10,7 @@ using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.Reworks
+namespace SPYoyoMod.Common.Yoyos
 {
     [Autoload(Side = ModSide.Client)]
     public sealed class YoyoStringReplacementGlobalProjectile : GlobalProjectile, IInitializableProjectile
