@@ -11,7 +11,7 @@ namespace SPYoyoMod.Core.ModSupport
         public override void PostSetupContent()
         {
             // Делаем так, чтобы их йо-йо действительно были йо-йо в ванильном понимании...
-            foreach (var modItem in Data.Instance.GetContent<ModItem>())
+            foreach (var modItem in Instance.GetContent<ModItem>())
             {
                 var itemType = modItem.Type;
 

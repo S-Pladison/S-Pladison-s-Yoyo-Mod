@@ -104,7 +104,7 @@ namespace SPYoyoMod.Core.Hooks
 
                 // Thorium имеет собственную AI-функцию для всех своих йо-йо...
                 // Хорошо, что IL в данном случае не пригодится.
-                if (ThoriumSupport.IsModLoaded)
+                if (ThoriumSupport.IsLoaded)
                 {
                     try
                     {

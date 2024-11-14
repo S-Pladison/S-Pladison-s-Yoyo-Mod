@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using Terraria.ModLoader;
 
@@ -9,33 +9,27 @@ namespace SPYoyoMod.Core.ModSupport
     [LoadPriority(sbyte.MaxValue)]
     public abstract class ModSupportSystem<TMe>(string internalName = default) : ModSystem where TMe : ModSupportSystem<TMe>
     {
-        public class SupportedModData(Mod instance, string internalName)
-        {
-            public readonly Mod Instance = instance;
-            public readonly string InternalName = internalName;
-        }
-
         private readonly string _potentialInternalName = internalName;
 
-        public static SupportedModData Data { get; private set; }
-        public static Assembly Code { get => Data?.Instance.Code ?? null; }
-        public static bool IsModLoaded { get => Data != null; }
+        public static Mod Instance { get; private set; }
+        public static Assembly Code { get => Instance?.Code ?? null; }
+        public static bool IsLoaded { get => Instance != null; }
 
         public sealed override bool IsLoadingEnabled(Mod mod)
         {
-            if (TryGetSupportedMod(GetSupportedModNames<TMe>(), out var data))
+            if (TryGetSupportedMod(GetSupportedModNames(), out var supportedMod))
             {
-                Data = data;
+                Instance = supportedMod;
                 return true;
             }
 
-            Data = null;
+            Instance = null;
             return false;
         }
 
-        private List<string> GetSupportedModNames<T>() where T : ModSupportSystem<T>
+        private ReadOnlyCollection<string> GetSupportedModNames()
         {
-            var type = typeof(T);
+            var type = typeof(TMe);
             var modNameList = new List<string>(3);
 
             // Точное внутреннее имя мода, которое мы ввели в конструкторе
@@ -51,32 +45,44 @@ namespace SPYoyoMod.Core.ModSupport
             // Потенциальное имя мода на основе имени типа
             modNameList.Add(type.Name);
 
-            return modNameList;
+            return modNameList.AsReadOnly();
         }
 
-        private static bool TryGetSupportedMod(IList<string> internalModNames, out SupportedModData data)
+        private static bool TryGetSupportedMod(ReadOnlyCollection<string> internalModNames, out Mod mod)
         {
             foreach (var internalName in internalModNames)
             {
-                if (ModLoader.TryGetMod(internalName, out Mod mod))
-                {
-                    data = new SupportedModData(mod, internalName);
+                if (ModLoader.TryGetMod(internalName, out mod))
                     return true;
-                }
             }
 
-            data = new SupportedModData(null, internalModNames.First());
+            mod = null;
             return false;
         }
 
+        public sealed override void Load()
+        {
+            OnLoad();
+        }
+
+        public sealed override void Unload()
+        {
+            OnUnload();
+
+            Instance = null;
+        }
+
+        protected virtual void OnLoad() { }
+        protected virtual void OnUnload() { }
+
         public static object Call(params object[] args)
         {
-            if (!IsModLoaded)
+            if (!IsLoaded)
                 return null;
 
             try
             {
-                var value = Data.Instance.Call(args);
+                var value = Instance.Call(args);
 
                 if (value is Exception ex)
                 {

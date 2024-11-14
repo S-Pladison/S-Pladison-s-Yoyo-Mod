@@ -55,7 +55,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
             // Thorium имеет собственную AI-функцию для всех своих йо-йо...
             // Да, в данном случае можно обойтись и обычным хуком, но на всякий случай сделал именно так...
-            if (ThoriumSupport.IsModLoaded)
+            if (ThoriumSupport.IsLoaded)
             {
                 try
                 {

@@ -66,7 +66,7 @@ namespace SPYoyoMod.Common.Yoyos
             // Thorium имеет собственную функцию отрисовки нитей для своих йо-йо...
             // Так как рисуются одновременно обе нити, можно спокойно прекратить отрисовку одной из.
             // Но из-за отсутствия в Thorium смещения (из YoyoUseStyle.cs), прекращаем отрисовку именно у них :p
-            if (ThoriumSupport.IsModLoaded)
+            if (ThoriumSupport.IsLoaded)
             {
                 try
                 {
