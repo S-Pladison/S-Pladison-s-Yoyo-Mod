@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Common;
+﻿using SPYoyoMod.Common.Yoyos;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;

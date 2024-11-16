@@ -10,7 +10,7 @@ using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Yoyos
 {
     public sealed class TotalDamageFromYoyosGlobalNPC : GlobalNPC
     {
