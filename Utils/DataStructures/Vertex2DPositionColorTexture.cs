@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace SPYoyoMod.Utils.DataStructures
+namespace SPYoyoMod.Utils
 {
     public struct Vertex2DPositionColorTexture(Vector2 position, Color color, Vector2 textureCoordinate) : IVertexType
     {

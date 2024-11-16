@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using System.Collections.Generic;
 
-namespace SPYoyoMod.Utils.DataStructures
+namespace SPYoyoMod.Utils
 {
     public static class Vector2Utils
     {
