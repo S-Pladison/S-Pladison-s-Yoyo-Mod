@@ -10,23 +10,23 @@ namespace SPYoyoMod.Common
 {
     public sealed class LoolFromChestsSystem : ModSystem
     {
-        private class ChestLootInfo(int itemType, ChestStyle chestStyle, float chance)
+        private class ChestItemInfo(int itemType, ChestStyle chestStyle, float chance)
         {
             public readonly int ItemType = itemType;
             public readonly ChestStyle ChestStyle = chestStyle;
             public readonly float Chance = Math.Clamp(chance, 0f, 1f);
         }
 
-        private static List<ChestLootInfo> LootCollection =>
+        private static List<ChestItemInfo> LootFromChests =>
         [
             new(ItemID.Terrarian, ChestStyle.Skyware, 0.15f) //< TODO: Заменить на Звездный бросок
         ];
 
-        private Dictionary<ChestStyle, List<ChestLootInfo>> _lootCollectionByChestStyle;
+        private Dictionary<ChestStyle, List<ChestItemInfo>> _lootFromChestsByChestStyle;
 
         public override void PostSetupContent()
         {
-            _lootCollectionByChestStyle = LootCollection
+            _lootFromChestsByChestStyle = LootFromChests
                 .GroupBy(loot => loot.ChestStyle)
                 .ToDictionary(
                     group => group.Key,
@@ -36,13 +36,13 @@ namespace SPYoyoMod.Common
 
         public override void Unload()
         {
-            _lootCollectionByChestStyle.Clear();
+            _lootFromChestsByChestStyle.Clear();
         }
 
         public override void PostWorldGen()
         {
             // Набор лута, который хотя бы раз был помещен в сундук
-            var successfulLootSet = new HashSet<ChestLootInfo>();
+            var successfulItemSet = new HashSet<ChestItemInfo>();
 
             // Получаем список сундуков, расположенных в случайном порядке
             var chests = Main.chest
@@ -53,20 +53,20 @@ namespace SPYoyoMod.Common
             {
                 var style = (ChestStyle)(Main.tile[chest.x, chest.y].TileFrameX / 36);
 
-                if (!_lootCollectionByChestStyle.ContainsKey(style))
+                if (!_lootFromChestsByChestStyle.ContainsKey(style))
                     continue;
 
-                var lootCollection = _lootCollectionByChestStyle[style];
+                var lootCollection = _lootFromChestsByChestStyle[style];
 
                 foreach (var loot in lootCollection)
                 {
-                    if (successfulLootSet.Contains(loot) && WorldGen.genRand.NextFloat() > loot.Chance)
+                    if (successfulItemSet.Contains(loot) && WorldGen.genRand.NextFloat() > loot.Chance)
                         continue;
 
                     if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
                         continue;
 
-                    successfulLootSet.Add(loot);
+                    successfulItemSet.Add(loot);
                 }
             }
         }
