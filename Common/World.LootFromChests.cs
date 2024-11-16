@@ -1,29 +1,107 @@
 ﻿using SPYoyoMod.Utils;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
     public sealed class LoolFromChestsSystem : ModSystem
     {
+        private class ChestLootInfo(int itemType, ChestStyle chestStyle, float chance)
+        {
+            public readonly int ItemType = itemType;
+            public readonly ChestStyle ChestStyle = chestStyle;
+            public readonly float Chance = Math.Clamp(chance, 0f, 1f);
+        }
+
+        private static List<ChestLootInfo> LootCollection =>
+        [
+            new(ItemID.Terrarian, ChestStyle.Skyware, 0.15f) //< TODO: Заменить на Звездный бросок
+        ];
+
+        private Dictionary<ChestStyle, List<ChestLootInfo>> _lootCollectionByChestStyle;
+
+        public override void PostSetupContent()
+        {
+            _lootCollectionByChestStyle = LootCollection
+                .GroupBy(loot => loot.ChestStyle)
+                .ToDictionary(
+                    group => group.Key,
+                    group => group.ToList()
+                );
+        }
+
+        public override void Unload()
+        {
+            _lootCollectionByChestStyle.Clear();
+        }
+
         public override void PostWorldGen()
         {
-            for (int chestIndex = 0; chestIndex < 1000; chestIndex++)
-            {
-                var chest = Main.chest[chestIndex];
+            // Набор лута, который хотя бы раз был помещен в сундук
+            var successfulLootSet = new HashSet<ChestLootInfo>();
 
-                if (!(chest is not null && Framing.GetTileSafely(chest.x, chest.y) is Tile tile && tile.HasTile))
+            // Получаем список сундуков, расположенных в случайном порядке
+            var chests = Main.chest
+                .Where(c => c is not null && Framing.GetTileSafely(c.x, c.y) is Tile tile && tile.HasTile)
+                .OrderBy(_ => WorldGen.genRand.Next());
+
+            foreach (var chest in chests)
+            {
+                var style = (ChestStyle)(Main.tile[chest.x, chest.y].TileFrameX / 36);
+
+                if (!_lootCollectionByChestStyle.ContainsKey(style))
                     continue;
 
-                var style = (ChestStyle)(tile.TileFrameX / 36);
+                var lootCollection = _lootCollectionByChestStyle[style];
 
-                AddLootToChest(chest, style);
+                foreach (var loot in lootCollection)
+                {
+                    if (successfulLootSet.Contains(loot) && WorldGen.genRand.NextFloat() > loot.Chance)
+                        continue;
+
+                    if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
+                        continue;
+
+                    successfulLootSet.Add(loot);
+                }
             }
         }
 
-        private static void AddLootToChest(Chest chest, ChestStyle style)
+        private static bool TryInsertItemToFirstChestSlot(Chest chest, int itemType, out Item item)
         {
-            // TODO: Реализовать всё так, чтобы была возможность гарантированно помещать 1 предмет в мире
+            item = null;
+
+            ref var inventory = ref chest.item;
+            var slot = -1;
+
+            // Ищем свободный слот
+            for (var i = 0; i < inventory.Length; i++)
+            {
+                if (inventory[i].IsAir)
+                {
+                    slot = i;
+                    break;
+                }
+            }
+
+            // Свободных слотов под наш предмет нет, завершаем функцию...
+            if (slot == -1)
+                return false;
+
+            // Перемещаем все предметы вправо, чтобы освободить место под наш предмет
+            for (var i = slot; i > 0; i--)
+                (inventory[i - 1], inventory[i]) = (inventory[i], inventory[i - 1]);
+
+            // Освободившийся первый слот теперь является нашим предметом
+            item = inventory[0];
+            item.SetDefaults(itemType);
+            item.Prefix(-1);
+
+            return true;
         }
     }
 }
