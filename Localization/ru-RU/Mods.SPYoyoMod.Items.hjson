@@ -11,3 +11,8 @@ BearingItem: {
 	DisplayName: Подшипник
 	Tooltip: Увеличивает время полета йо-йо на {0}%
 }
+
+TheStellarThrowItem: {
+	DisplayName: Звездный бросок
+	Tooltip: Звезды периодически падают с небес на врагов, находящийся рядом с йо-йо
+}

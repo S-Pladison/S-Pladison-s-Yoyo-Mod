@@ -1,9 +1,9 @@
-﻿using SPYoyoMod.Utils;
+﻿using SPYoyoMod.Content.Items.Mod.Yoyos;
+using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
-using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
@@ -19,7 +19,7 @@ namespace SPYoyoMod.Common
 
         private static List<ChestItemInfo> LootFromChests =>
         [
-            new(ItemID.Terrarian, ChestStyle.Skyware, 0.15f) //< TODO: Заменить на Звездный бросок
+            new(ModContent.ItemType<TheStellarThrowItem>(), ChestStyle.Skyware, 0.15f)
         ];
 
         private Dictionary<ChestStyle, List<ChestItemInfo>> _lootFromChestsByChestStyle;

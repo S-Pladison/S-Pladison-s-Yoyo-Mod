@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using SPYoyoMod.Content.Items.Mod.Yoyos;
+using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -13,7 +14,7 @@ namespace SPYoyoMod.Common
             {
                 case ItemID.FloatingIslandFishingCrate:
                 case ItemID.FloatingIslandFishingCrateHard:
-                    itemLoot.Add(ItemDropRule.NotScalingWithLuck(ItemID.Terrarian, 5)); //< TODO: Заменить на Звездный бросок
+                    itemLoot.Add(ItemDropRule.NotScalingWithLuck(ModContent.ItemType<TheStellarThrowItem>(), 5));
                     break;
                 default:
                     break;
