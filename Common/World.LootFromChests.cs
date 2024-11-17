@@ -36,7 +36,7 @@ namespace SPYoyoMod.Common
 
         public override void Unload()
         {
-            _lootFromChestsByChestStyle.Clear();
+            _lootFromChestsByChestStyle?.Clear();
         }
 
         public override void PostWorldGen()
