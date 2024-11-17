@@ -7,6 +7,7 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
@@ -143,7 +144,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             var target = nearbyNPCs[Main.rand.Next(nearbyNPCs.Count)];
             var starPosition = target.Center - new Vector2((Main.rand.NextBool() ? 1 : -1) * Main.rand.NextFloat(20f, 60f), 50f) * TileUtils.TileSizeInPixels;
-            var starSpeed = 26f;
+            var starSpeed = 32f;
             var starDirection = ProjectileUtils.PredictiveAimToTarget(starPosition, target.Center, target.velocity, starSpeed);
 
             var starIndex = Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, target.whoAmI);
@@ -265,17 +266,28 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
+        private static readonly Tuple<Color, Color, Color>[] _colors =
+        [
+            new(new Color(160, 30, 120), new Color(255, 240, 185), new Color(255, 0, 80)),
+            new(new Color(85, 30, 160), new Color(185, 240, 255), new Color(0, 135, 255)),
+            new(new Color(165, 35, 35), new Color(255, 180, 205), new Color(105, 0, 255)),
+            new(new Color(30, 110, 160), new Color(185, 255, 230), new Color(0, 255, 190)),
+            new(new Color(160, 30, 70), new Color(250, 255, 185), new Color(255, 135, 0))
+        ];
+
         private float _yToBecomeCollidable;
 
-        public override string Texture => TheStellarThrowAssets.InvisiblePath;
-        public int TargetIndex => (int)Projectile.ai[0];
+        public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
+        public int TargetIndex { get => (int)Projectile.ai[0]; }
+        public int Style { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
+        public Tuple<Color, Color, Color> StyleColors { get => _colors[Style]; }
 
         public override void SetDefaults()
         {
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
 
-            Projectile.width = 20;
-            Projectile.height = 20;
+            Projectile.width = 32;
+            Projectile.height = 32;
 
             Projectile.timeLeft = 60 * 3;
             Projectile.friendly = true;
@@ -285,6 +297,19 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
+        }
+
+        public override void OnSpawn(IEntitySource source)
+        {
+            var heldItem = Projectile.GetOwner().HeldItem;
+
+            if (heldItem is null || heldItem.type != ModContent.ItemType<TheStellarThrowItem>() || !heldItem.favorited)
+            {
+                Style = Main.rand.Next(0, 4);
+                return;
+            }
+
+            Style = 4; //< Единственный золотой цвет, если игрок отметил йо-йо как *избранный*
         }
 
         void IInitializableProjectile.Initialize(Projectile _)
@@ -297,11 +322,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void AI()
         {
-            if (Projectile.numUpdates == 0)
-            {
-                UpdateVisual();
-                UpdateSound();
-            }
+            UpdateVisual();
+            UpdateSound();
 
             if (!Projectile.tileCollide && Projectile.Center.Y >= _yToBecomeCollidable)
             {
@@ -311,13 +333,44 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         private void UpdateVisual()
         {
-            Projectile.rotation += 0.5f;
-            Projectile.scale = MathHelper.Min(1f, Projectile.scale + 0.1f);
+            if (Projectile.numUpdates == 0)
+            {
+                Projectile.rotation += 0.5f;
+                Projectile.scale = MathHelper.Min(1f, Projectile.scale + 0.1f);
+
+                Lighting.AddLight(Projectile.Center, StyleColors.Item3.ToVector3() * 0.3f);
+            }
+
+            if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(4))
+            {
+                if (Main.rand.NextBool(3))
+                {
+                    var particle = WorldParticleManager.SpawnParticle<StarParticle>();
+
+                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                    particle.Velocity = Projectile.velocity * 0.05f;
+                    particle.StartColor = StyleColors.Item2;
+                    particle.EndColor = StyleColors.Item3;
+                    particle.Scale = Main.rand.NextFloat(1.0f, 2.0f);
+                }
+                else
+                {
+                    var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                    particle.Velocity = Projectile.velocity * 0.05f;
+                    particle.StartColor = StyleColors.Item2;
+                    particle.EndColor = StyleColors.Item3;
+                    particle.Scale = Main.rand.NextFloat(0.3f, 0.6f);
+                }
+            }
         }
 
         private void UpdateSound()
         {
-            if (Projectile.soundDelay == 0)
+            if (Projectile.numUpdates == 0 && Projectile.soundDelay == 0)
             {
                 Projectile.soundDelay = ModUtils.SecondsToTicks(Main.rand.NextFloat(1.0f, 2.0f));
 
@@ -338,9 +391,23 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             // TODO: Реализовать ОБЩУЮ систему подсветки/обводки NPC на пару кадров
         }
 
+        public override bool OnTileCollide(Vector2 oldVelocity)
+        {
+            Projectile.velocity = Vector2.Zero;
+            SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
+
+            return true;
+        }
+
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
         {
+            var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var starTexture = TheStellarThrowAssets.StarTexture;
+            var starOrigin = starTexture.Size() * 0.5f;
 
+            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StyleColors.Item1 * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StyleColors.Item3 with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StyleColors.Item2 with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
         }
     }
 }
