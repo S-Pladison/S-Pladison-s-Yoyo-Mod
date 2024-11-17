@@ -1,4 +1,5 @@
-﻿using SPYoyoMod.Common.Yoyos;
+﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Common.Yoyos;
 using System;
 using System.Runtime.CompilerServices;
 using Terraria;
@@ -87,6 +88,43 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
+        /// Вычисляет направление, в котором нужно выстрелить, чтобы попасть в движущуюся цель с учётом её скорости.
+        /// </summary>
+        public static Vector2 PredictiveAimToTarget(Vector2 startPosition, Vector2 targetPosition, Vector2 targetVelocity, float speed)
+        {
+            var toTarget = targetPosition - startPosition;
+
+            // Квадратные значения для решения уравнения
+            var distanceSquared = toTarget.LengthSquared();
+            var speedSquared = speed * speed;
+            var targetSpeedSquared = targetVelocity.LengthSquared();
+            var targetSpeedAlongToTarget = Vector2.Dot(toTarget, targetVelocity);
+
+            // Дискриминант квадратного уравнения
+            var a = speedSquared - targetSpeedSquared;
+            var b = -2f * targetSpeedAlongToTarget;
+            var c = -distanceSquared;
+            var discriminant = b * b - 4 * a * c;
+
+            if (discriminant < 0)
+                return Vector2.Normalize(toTarget);
+
+            // Вычисление времени до пересечения
+            var sqrtDiscriminant = (float)Math.Sqrt(discriminant);
+            var t1 = (-b + sqrtDiscriminant) / (2f * a);
+            var t2 = (-b - sqrtDiscriminant) / (2f * a);
+            var t = Math.Max(t1, t2);
+
+            if (t < 0)
+                return Vector2.Normalize(toTarget);
+
+            // Вычисление направления к будущей позиции цели
+            var futurePosition = targetPosition + targetVelocity * t;
+            var toFutureTarget = futurePosition - startPosition;
+            return Vector2.Normalize(toFutureTarget);
+        }
+
+        /// <summary>
         /// Возвращает первый снаряд, удовлетворяющий заданному условию, или null, если снаряд не найден.
         /// </summary>
         public static Projectile FirstOrDefault(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
@@ -114,6 +152,7 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Содержит ли коллекция хотя бы один снаряд, удовлетворяющий заданному условию.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Any(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
             => FirstOrDefault(projectiles, predicate) != null;
     }
