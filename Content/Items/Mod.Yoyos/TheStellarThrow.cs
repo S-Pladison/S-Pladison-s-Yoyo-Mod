@@ -7,7 +7,6 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
-using System;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
@@ -266,21 +265,73 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
-        private static readonly Tuple<Color, Color, Color>[] _colors =
+        public static readonly int TrailPointCount = 20;
+
+        private readonly struct Palette(Color starFirst, Color starSecond, Color starThird, Color trailStartOne, Color trailStartZero, Color trailEndOne, Color trailEndZero)
+        {
+            public readonly Color StarFirst = starFirst; //< Основной цвет звезды
+            public readonly Color StarSecond = starSecond; //< Цвет *обводки* звезды
+            public readonly Color StarThird = starThird; //< Цвет *тени*
+
+            public readonly Color TrailStartOne = trailStartOne;
+            public readonly Color TrailStartZero = trailStartZero;
+            public readonly Color TrailEndOne = trailEndOne;
+            public readonly Color TrailEndZero = trailEndZero;
+        }
+
+        private static readonly Palette[] _palettes =
         [
-            new(new Color(160, 30, 120), new Color(255, 240, 185), new Color(255, 0, 80)),
-            new(new Color(85, 30, 160), new Color(185, 240, 255), new Color(0, 135, 255)),
-            new(new Color(165, 35, 35), new Color(255, 180, 205), new Color(105, 0, 255)),
-            new(new Color(30, 110, 160), new Color(185, 255, 230), new Color(0, 255, 190)),
-            new(new Color(160, 30, 70), new Color(250, 255, 185), new Color(255, 135, 0))
+            // Розовато-фиолетовый
+            new(
+                starFirst: new(255, 240, 185),
+                starSecond: new(255, 0, 80),
+                starThird: new(160, 30, 120),
+                trailStartOne: new(255, 0, 80),
+                trailStartZero: new(110, 10, 95),
+                trailEndOne: new(110, 10, 95),
+                trailEndZero: new(40, 15, 50)
+            ),
+            // Синий
+            new(
+                starFirst: new(185, 240, 255),
+                starSecond: new(0, 135, 255),
+                starThird: new(85, 30, 160),
+                trailStartOne: new(185, 240, 255),
+                trailStartZero: new(0, 135, 255),
+                trailEndOne: new(0, 135, 255),
+                trailEndZero: new(25, 40, 100)
+            ),
+            // Изумрудный
+            new(
+                starFirst: new(170, 255, 205),
+                starSecond: new(25, 220, 125),
+                starThird: new(30, 110, 160),
+                trailStartOne: new(25, 220, 125),
+                trailStartZero: new(30, 110, 160),
+                trailEndOne: new(30, 110, 160),
+                trailEndZero: new(15, 25, 100)
+            ),
+            // Золотой
+            new(
+                starFirst: new(250, 255, 185),
+                starSecond: new(255, 135, 0),
+                starThird: new(160, 30, 70),
+                trailStartOne: new(250, 255, 185),
+                trailStartZero: new(255, 135, 0),
+                trailEndOne: new(255, 135, 0),
+                trailEndZero: new(255, 0, 80)
+            ),
         ];
 
         private float _yToBecomeCollidable;
+        private StripRenderer _trailRenderer;
+        private LinkedList<Vector2> _oldPositions;
 
         public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
-        public int TargetIndex { get => (int)Projectile.ai[0]; }
-        public int Style { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
-        public Tuple<Color, Color, Color> StyleColors { get => _colors[Style]; }
+
+        private int TargetIndex { get => (int)Projectile.ai[0]; }
+        private int Style { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
+        private Palette StylePalette { get => _palettes[Style]; }
 
         public override void SetDefaults()
         {
@@ -305,11 +356,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             if (heldItem is null || heldItem.type != ModContent.ItemType<TheStellarThrowItem>() || !heldItem.favorited)
             {
-                Style = Main.rand.Next(0, 4);
+                Style = Main.rand.Next(0, 3);
                 return;
             }
 
-            Style = 4; //< Единственный золотой цвет, если игрок отметил йо-йо как *избранный*
+            Style = 3; //< Единственный, золотой цвет, если игрок отметил йо-йо как *избранный*
         }
 
         void IInitializableProjectile.Initialize(Projectile _)
@@ -318,6 +369,19 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.scale = 0.01f;
 
             _yToBecomeCollidable = (TargetIndex >= 0 && Main.npc[TargetIndex] is NPC target && target.active) ? (target.Top.Y + 2) : 0f;
+
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
+            {
+                StartWidth = 60,
+                EndWidth = 35
+            };
+
+            _oldPositions = [];
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            _trailRenderer?.Dispose();
         }
 
         public override void AI()
@@ -333,12 +397,22 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         private void UpdateVisual()
         {
+            if (_trailRenderer is not null)
+            {
+                _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
+
+                while (_oldPositions.Count > TrailPointCount)
+                    _oldPositions.RemoveLast();
+
+                _trailRenderer.SetPoints(_oldPositions);
+            }
+
             if (Projectile.numUpdates == 0)
             {
                 Projectile.rotation += 0.5f;
                 Projectile.scale = MathHelper.Min(1f, Projectile.scale + 0.1f);
 
-                Lighting.AddLight(Projectile.Center, StyleColors.Item3.ToVector3() * 0.3f);
+                Lighting.AddLight(Projectile.Center, StylePalette.StarSecond.ToVector3() * 0.3f);
             }
 
             if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(4))
@@ -350,8 +424,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.Velocity = Projectile.velocity * 0.05f;
-                    particle.StartColor = StyleColors.Item2;
-                    particle.EndColor = StyleColors.Item3;
+                    particle.StartColor = StylePalette.StarFirst;
+                    particle.EndColor = StylePalette.StarSecond;
                     particle.Scale = Main.rand.NextFloat(1.0f, 2.0f);
                 }
                 else
@@ -361,8 +435,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.Velocity = Projectile.velocity * 0.05f;
-                    particle.StartColor = StyleColors.Item2;
-                    particle.EndColor = StyleColors.Item3;
+                    particle.StartColor = StylePalette.StarFirst;
+                    particle.EndColor = StylePalette.StarSecond;
                     particle.Scale = Main.rand.NextFloat(0.3f, 0.6f);
                 }
             }
@@ -401,13 +475,32 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
         {
+            if (_trailRenderer is not null)
+            {
+                TheStellarThrowAssets.TrailEffect
+                    .Prepare(parameters =>
+                    {
+                        parameters["Texture0"].SetValue(TheStellarThrowAssets.FlameTexture.Value);
+                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
+                        parameters["Color0"].SetValue(StylePalette.TrailStartOne.ToVector4());
+                        parameters["Color1"].SetValue(StylePalette.TrailStartZero.ToVector4());
+                        parameters["Color2"].SetValue(StylePalette.TrailEndOne.ToVector4());
+                        parameters["Color3"].SetValue(StylePalette.TrailEndZero.ToVector4());
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    })
+                    .Apply();
+
+                _trailRenderer.Render();
+            }
+
             var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var starTexture = TheStellarThrowAssets.StarTexture;
             var starOrigin = starTexture.Size() * 0.5f;
 
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StyleColors.Item1 * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StyleColors.Item3 with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StyleColors.Item2 with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarThird * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarSecond with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarFirst with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
         }
     }
 }
