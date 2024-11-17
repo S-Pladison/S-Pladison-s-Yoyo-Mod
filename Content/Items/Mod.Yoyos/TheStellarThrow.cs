@@ -9,6 +9,7 @@ using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -20,6 +21,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     {
         public const string ItemPath = $"{_yoyoPath}TheStellarThrow_Item";
         public const string ProjPath = $"{_yoyoPath}TheStellarThrow_Proj";
+        public const string InvisiblePath = $"{_assetPath}Invisible";
+        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
         public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Star");
@@ -89,7 +92,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 return;
 
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
-               ModContent.Request<Texture2D>(CascadeAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
+               ModContent.Request<Texture2D>(TheStellarThrowAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
                (Color.Transparent, true), (Color.Transparent, true), (GlowColor, true)
             ));
 
@@ -139,12 +142,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             }
 
             var target = nearbyNPCs[Main.rand.Next(nearbyNPCs.Count)];
-
             var starPosition = target.Center - new Vector2((Main.rand.NextBool() ? 1 : -1) * Main.rand.NextFloat(20f, 60f), 50f) * TileUtils.TileSizeInPixels;
-            var starVelosity = Vector2.Normalize(target.Center - starPosition) * 24f;
+            var starSpeed = 26f;
+            var starDirection = ProjectileUtils.PredictiveAimToTarget(starPosition, target.Center, target.velocity, starSpeed);
 
-            // TODO: Спавн звезды
-            // TODO2: Добавить пасхалку; Если йо-йо выделен как избранный, то спавнятся золотые звезды, а не звезды другого цвета
+            var starIndex = Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, target.whoAmI);
+            var starProj = Main.projectile[starIndex];
+
+            starProj.velocity = starDirection * starSpeed / (1 + starProj.extraUpdates);
 
             SetCooldownForStarSpawn();
         }
@@ -255,6 +260,87 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             );
 
             _stringRenderer.Render(Main.spriteBatch, settings);
+        }
+    }
+
+    public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
+    {
+        private float _yToBecomeCollidable;
+
+        public override string Texture => TheStellarThrowAssets.InvisiblePath;
+        public int TargetIndex => (int)Projectile.ai[0];
+
+        public override void SetDefaults()
+        {
+            Projectile.DamageType = DamageClass.MeleeNoSpeed;
+
+            Projectile.width = 20;
+            Projectile.height = 20;
+
+            Projectile.timeLeft = 60 * 3;
+            Projectile.friendly = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.extraUpdates = 1;
+
+            Projectile.usesLocalNPCImmunity = true;
+            Projectile.localNPCHitCooldown = -1;
+        }
+
+        void IInitializableProjectile.Initialize(Projectile _)
+        {
+            Projectile.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+            Projectile.scale = 0.01f;
+
+            _yToBecomeCollidable = (TargetIndex >= 0 && Main.npc[TargetIndex] is NPC target && target.active) ? (target.Top.Y + 2) : 0f;
+        }
+
+        public override void AI()
+        {
+            if (Projectile.numUpdates == 0)
+            {
+                UpdateVisual();
+                UpdateSound();
+            }
+
+            if (!Projectile.tileCollide && Projectile.Center.Y >= _yToBecomeCollidable)
+            {
+                Projectile.tileCollide = true;
+            }
+        }
+
+        private void UpdateVisual()
+        {
+            Projectile.rotation += 0.5f;
+            Projectile.scale = MathHelper.Min(1f, Projectile.scale + 0.1f);
+        }
+
+        private void UpdateSound()
+        {
+            if (Projectile.soundDelay == 0)
+            {
+                Projectile.soundDelay = ModUtils.SecondsToTicks(Main.rand.NextFloat(1.0f, 2.0f));
+
+                SoundEngine.PlaySound(in SoundID.Item9, Projectile.Center);
+            }
+        }
+
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.SourceDamage += 1f;
+        }
+
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            Projectile.tileCollide = true;
+            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+
+            // TODO: Реализовать ОБЩУЮ систему подсветки/обводки NPC на пару кадров
+        }
+
+        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
+        {
+
         }
     }
 }
