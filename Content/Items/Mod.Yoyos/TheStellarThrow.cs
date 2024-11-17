@@ -2,6 +2,8 @@
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Content.Items.Vanilla.Yoyos;
+using SPYoyoMod.Content.Particles;
+using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
@@ -98,6 +100,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override void AI()
         {
             UpdateVisual();
+
+            // TODO: Добавить пасхалку; Если йо-йо выделен как избранный, то спавнятся золотые звезды, а не звезды другого цвета
         }
 
         private void UpdateVisual()
@@ -110,6 +114,17 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     _oldPositions.RemoveLast();
 
                 _trailRenderer.SetPoints(_oldPositions);
+            }
+
+            if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(5))
+            {
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                particle.StartColor = new Color(255, 50, 160);
+                particle.EndColor = new Color(50, 50, 255);
+                particle.Scale = Main.rand.NextFloat(0.3f, 0.4f);
             }
 
             Projectile.rotation -= 0.15f;
