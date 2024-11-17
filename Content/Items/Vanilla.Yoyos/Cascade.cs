@@ -199,8 +199,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 _trailRenderer.Render();
 
                 // Исправление отрисовки руки
-                Main.spriteBatch.End(out var spriteBatchSnapshot);
-                Main.spriteBatch.Begin(spriteBatchSnapshot);
+                if (proj.GetOwner().heldProj == proj.whoAmI)
+                {
+                    Main.spriteBatch.End(out var spriteBatchSnapshot);
+                    Main.spriteBatch.Begin(spriteBatchSnapshot);
+                }
             }
 
             var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;

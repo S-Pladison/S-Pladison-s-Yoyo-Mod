@@ -17,12 +17,6 @@ using IPreHook = SPYoyoMod.Core.Hooks.IPreDrawPixelatedProjectile;
 
 namespace SPYoyoMod.Core.Hooks
 {
-    /// <summary>
-    /// Позволяет снаряду отрисовывать пикселизированные эффекты.
-    /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
-    /// </summary>
-    public interface IDrawPixelatedProjectile : IPreHook, IPostHook { }
-
     /// <inheritdoc cref="IDrawPixelatedProjectile" />
     public interface IPreDrawPixelatedProjectile
     {
@@ -45,7 +39,14 @@ namespace SPYoyoMod.Core.Hooks
         /// Позволяет отрисовывать пикселизированные эффекты поверх снаряда.
         /// </summary>
         void PostDrawPixelated(Projectile proj);
+    }
 
+    /// <summary>
+    /// Позволяет снаряду отрисовывать пикселизированные эффекты.
+    /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
+    /// </summary>
+    public interface IDrawPixelatedProjectile : IPreHook, IPostHook
+    {
         // Примечание: Данная реализация не учитывает отрисовку скрытых снарядов (proj.hide)
         // Ясное дело, добавить это не так сложно, но на данный момент это просто не нужно...
         [Autoload(Side = ModSide.Client)]

@@ -21,31 +21,31 @@ namespace SPYoyoMod.Core.Hooks
         /// Естественно, если снаряд не является йо-йо (или противовесом), то вызываться данная функция не будет.
         /// </summary>
         void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter);
-    }
 
-    [Autoload(Side = ModSide.Client)]
-    internal sealed class PostDrawYoyoStringImplementation : ILoadable
-    {
-        public static void DrawYoyoString(On_Main.orig_DrawProj_DrawYoyoString orig, Main main, Projectile proj, Vector2 mountedCenter)
+        [Autoload(Side = ModSide.Client)]
+        private sealed class PostDrawYoyoStringImplementation : ILoadable
         {
-            orig(main, proj, mountedCenter);
-
-            if (!proj.IsYoyo())
-                return;
-
-            (proj.ModProjectile as IHook)?.PostDrawYoyoString(proj, mountedCenter);
-
-            foreach (IHook g in IHook._hook.Enumerate(proj))
+            public static void DrawYoyoString(On_Main.orig_DrawProj_DrawYoyoString orig, Main main, Projectile proj, Vector2 mountedCenter)
             {
-                g.PostDrawYoyoString(proj, mountedCenter);
+                orig(main, proj, mountedCenter);
+
+                if (!proj.IsYoyo())
+                    return;
+
+                (proj.ModProjectile as IHook)?.PostDrawYoyoString(proj, mountedCenter);
+
+                foreach (IHook g in IHook._hook.Enumerate(proj))
+                {
+                    g.PostDrawYoyoString(proj, mountedCenter);
+                }
             }
-        }
 
-        public void Load(Mod mod)
-        {
-            On_Main.DrawProj_DrawYoyoString += DrawYoyoString;
-        }
+            public void Load(Mod mod)
+            {
+                On_Main.DrawProj_DrawYoyoString += DrawYoyoString;
+            }
 
-        public void Unload() { }
+            public void Unload() { }
+        }
     }
 }
