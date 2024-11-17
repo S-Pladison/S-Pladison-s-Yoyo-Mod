@@ -9,6 +9,7 @@ using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -60,10 +61,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class TheStellarThrowProjectile : YoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
+        public static readonly float SpawnStarRadius = TileUtils.TileSizeInPixels * 15f;
+        public static readonly int SpawnStarCooldownMin = ModUtils.SecondsToTicks(1.5f);
+        public static readonly int SpawnStarCooldownMax = ModUtils.SecondsToTicks(2f);
         public static readonly Color GlowColor = new(252, 194, 116);
         public static readonly Color StarColor = new(255, 0, 80);
         public static readonly int TrailPointCount = 15;
 
+        private int _cooldownTimer;
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
@@ -72,6 +77,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override float LifeTime => -1f;
         public override float MaxRange => 235f;
         public override float TopSpeed => 14f;
+
+        public override void OnSpawn(IEntitySource source)
+        {
+            SetCooldownForStarSpawn();
+        }
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {
@@ -101,7 +111,39 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             UpdateVisual();
 
-            // TODO: Добавить пасхалку; Если йо-йо выделен как избранный, то спавнятся золотые звезды, а не звезды другого цвета
+            // Если снаряд не наш, то смысла обрабатывать его логику спавна звезд просто нет
+            if (!Projectile.IsLocalPlayerAsOwner())
+                return;
+
+            if (--_cooldownTimer > 0)
+                return;
+
+            var nearbyNPCs = new List<NPC>();
+
+            foreach (var npc in Main.ActiveNPCs)
+            {
+                if (!npc.CanBeChasedBy(Projectile, false))
+                    continue;
+
+                if (Vector2.Distance(npc.Center, Projectile.Center) > SpawnStarRadius)
+                    continue;
+
+                nearbyNPCs.Add(npc);
+            }
+
+            if (nearbyNPCs.Count == 0)
+            {
+                // Устанавливаем кулдаун на 5 тиков для того, чтобы не спамить каждый тик проверками на ближайших NPC
+                SetCooldownForStarSpawn(5);
+                return;
+            }
+
+            var target = nearbyNPCs[Main.rand.Next(nearbyNPCs.Count)];
+
+            // TODO: Спавн звезды
+            // TODO2: Добавить пасхалку; Если йо-йо выделен как избранный, то спавнятся золотые звезды, а не звезды другого цвета
+
+            SetCooldownForStarSpawn();
         }
 
         private void UpdateVisual()
@@ -130,6 +172,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.rotation -= 0.15f;
 
             Lighting.AddLight(Projectile.Center, StarColor.ToVector3() * 0.2f);
+        }
+
+        private void SetCooldownForStarSpawn(int? cooldown = null)
+        {
+            _cooldownTimer = cooldown ?? Main.rand.Next(SpawnStarCooldownMin, SpawnStarCooldownMax);
         }
 
         public override Color? GetAlpha(Color lightColor)
