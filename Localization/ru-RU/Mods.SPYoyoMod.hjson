@@ -4,4 +4,5 @@ Projectiles: {
 	// BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
 	// TheStellarThrowProjectile.DisplayName: The Stellar Throw Projectile
 	// TheStellarThrowStarProjectile.DisplayName: The Stellar Throw Star Projectile
+	// TheStellarThrowStarHitProjectile.DisplayName: The Stellar Throw Star Hit Projectile
 }

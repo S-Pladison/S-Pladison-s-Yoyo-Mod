@@ -11,6 +11,22 @@ namespace SPYoyoMod.Utils
     public static class ProjectileUtils
     {
         /// <summary>
+        /// Настраивает указанный снаряд для использования исключительно как визуальный эффект, отключая взаимодействие с окружающей средой и игровыми сущностями.
+        /// </summary>
+        public static void DefaultToVisualEffect(this Projectile proj)
+        {
+            proj.width = 16;
+            proj.height = 16;
+            proj.timeLeft = 60;
+            proj.friendly = true;
+            proj.penetrate = -1;
+            proj.ignoreWater = true;
+            proj.tileCollide = false;
+
+            proj.DamageType = DamageClass.Generic;
+        }
+
+        /// <summary>
         /// Является ли этот снаряд йо-йом.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

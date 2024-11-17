@@ -25,6 +25,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> CircleTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Circle");
         public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Star");
         public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Flame");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}TheStellarThrow_Trail");
@@ -35,6 +36,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         void ILoadable.Unload()
         {
             GlowTexture = null;
+            CircleTexture = null;
             StarTexture = null;
             FlameTexture = null;
             TrailEffect = null;
@@ -461,14 +463,56 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             Projectile.tileCollide = true;
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
-
-            // TODO: Реализовать ОБЩУЮ систему подсветки/обводки NPC на пару кадров
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
         {
             Projectile.velocity = Vector2.Zero;
+
             SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
+
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowStarHitProjectile>(), 0, 0, Projectile.owner);
+
+            for (int i = 0; i < 14; i++)
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+
+                if (Main.rand.NextBool(3))
+                {
+                    var particle = WorldParticleManager.SpawnParticle<StarParticle>();
+
+                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.Position = Projectile.Center + vector * Projectile.width * Main.rand.NextFloat() * 2f;
+                    particle.Velocity = vector;
+                    particle.StartColor = StylePalette.StarFirst;
+                    particle.EndColor = StylePalette.StarSecond;
+                    particle.Scale = Main.rand.NextFloat(1.0f, 2.0f);
+                }
+                else
+                {
+                    var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.Position = Projectile.Center + vector * Projectile.width * Main.rand.NextFloat() * 2f;
+                    particle.Velocity = vector;
+                    particle.StartColor = StylePalette.StarFirst;
+                    particle.EndColor = StylePalette.StarSecond;
+                    particle.Scale = Main.rand.NextFloat(0.3f, 0.6f);
+                }
+            }
+
+            for (int i = 0; i < 10; i++)
+            {
+                var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
+
+                particle.LifeTime = ModUtils.SecondsToTicks(1f);
+                particle.Position = Projectile.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels);
+                particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f);
+                particle.StartColor = new(new Color(100, 25, 75) * 0.25f, true);
+                particle.EndColor = new(new Color(0, 0, 0, 0), false);
+                particle.Scale = 2f;
+            }
 
             return true;
         }
@@ -501,6 +545,50 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarThird * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarSecond with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
             Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarFirst with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
+        }
+    }
+
+    public sealed class TheStellarThrowStarHitProjectile : ModProjectile, IPreDrawPixelatedProjectile
+    {
+        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(0.33f);
+
+        private static readonly EasingBuilder _scaleEasing = new(
+            (EasingFunctions.InOutExpo, 0.2f, 0f, 1f),
+            (EasingFunctions.InOutQuad, 0.8f, 1f, 0f)
+        );
+
+        public override string Texture => TheStellarThrowAssets.InvisiblePath;
+        public float LifeTimeRatio => 1f - Projectile.timeLeft / (float)InitTimeLeft;
+
+        public override void SetDefaults()
+        {
+            Projectile.DefaultToVisualEffect();
+
+            Projectile.timeLeft = InitTimeLeft;
+            Projectile.rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+        }
+
+        public override void AI()
+        {
+            Projectile.rotation += 0.3f;
+        }
+
+        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
+        {
+            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+
+            var starTexture = TheStellarThrowAssets.StarTexture;
+            var starOrigin = starTexture.Size() * 0.5f;
+            var starScale = _scaleEasing.Evaluate(LifeTimeRatio);
+
+            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(100, 25, 75) * 0.25f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.8f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(255, 0, 80) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.6f, SpriteEffects.None, 0f);
+
+            var circleTexture = TheStellarThrowAssets.CircleTexture;
+            var circleOrigin = circleTexture.Size() * 0.5f;
+            var circleColor = new Color(255, 0, 80) with { A = 0 } * (1f - EasingFunctions.InOutQuart(LifeTimeRatio));
+
+            Main.spriteBatch.Draw(circleTexture.Value, position, null, circleColor, 0f, circleOrigin, LifeTimeRatio * 2f, SpriteEffects.None, 0f);
         }
     }
 }
