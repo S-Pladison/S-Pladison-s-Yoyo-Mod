@@ -140,6 +140,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             var target = nearbyNPCs[Main.rand.Next(nearbyNPCs.Count)];
 
+            var starPosition = target.Center - new Vector2((Main.rand.NextBool() ? 1 : -1) * Main.rand.NextFloat(20f, 60f), 50f) * TileUtils.TileSizeInPixels;
+            var starVelosity = Vector2.Normalize(target.Center - starPosition) * 24f;
+
             // TODO: Спавн звезды
             // TODO2: Добавить пасхалку; Если йо-йо выделен как избранный, то спавнятся золотые звезды, а не звезды другого цвета
 
@@ -158,15 +161,28 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 _trailRenderer.SetPoints(_oldPositions);
             }
 
-            if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(5))
+            if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(4))
             {
-                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+                if (Main.rand.NextBool(3))
+                {
+                    var particle = WorldParticleManager.SpawnParticle<StarParticle>();
 
-                particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
-                particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
-                particle.StartColor = new Color(255, 50, 160);
-                particle.EndColor = new Color(50, 50, 255);
-                particle.Scale = Main.rand.NextFloat(0.3f, 0.4f);
+                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                    particle.StartColor = new Color(255, 175, 65);
+                    particle.EndColor = new Color(255, 85, 225);
+                    particle.Scale = Main.rand.NextFloat(0.8f, 1.0f);
+                }
+                else
+                {
+                    var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                    particle.StartColor = new Color(255, 50, 160);
+                    particle.EndColor = new Color(50, 50, 255);
+                    particle.Scale = Main.rand.NextFloat(0.3f, 0.4f);
+                }
             }
 
             Projectile.rotation -= 0.15f;
