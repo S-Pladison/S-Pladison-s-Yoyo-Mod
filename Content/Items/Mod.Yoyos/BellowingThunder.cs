@@ -305,7 +305,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
             {
                 Position = Projectile.Center,
                 Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
@@ -320,7 +320,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (!Projectile.IsLocalPlayerAsOwner())
                 return;
 
-            ScreenEffectManager.Flash(new ScreenEffectManager.FlashSettings() with
+            ScreenEffectManager.Flash(new ScreenEffectManager.FlashSettings()
             {
                 Strength = 0.15f,
                 Frames = 25,

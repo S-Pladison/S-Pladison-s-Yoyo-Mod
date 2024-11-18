@@ -309,7 +309,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 particle.Scale = 3f;
             }
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
             {
                 Position = Projectile.Center,
                 Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
