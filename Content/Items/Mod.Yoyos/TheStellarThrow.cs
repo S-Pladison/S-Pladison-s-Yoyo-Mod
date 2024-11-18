@@ -269,8 +269,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
-        public static readonly int TrailPointCount = 20;
-
         public readonly struct Palette(Color starFirst, Color starSecond, Color starThird, Color trailStartOne, Color trailStartZero, Color trailEndOne, Color trailEndZero)
         {
             public readonly Color StarFirst = starFirst; //< Основной цвет звезды
@@ -283,6 +281,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             public readonly Color TrailEndZero = trailEndZero;
         }
 
+        public static readonly int TrailPointCount = 20;
         public static readonly Palette[] Palettes =
         [
             // Розовато-фиолетовый
@@ -524,6 +523,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         );
 
         public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
+
         public float LifeTimeRatio { get => 1f - Projectile.timeLeft / (float)InitTimeLeft; }
         private int Style { get => (int)Projectile.ai[0]; set => Projectile.ai[0] = value; }
         private TheStellarThrowStarProjectile.Palette StylePalette { get => TheStellarThrowStarProjectile.Palettes[Style]; }
