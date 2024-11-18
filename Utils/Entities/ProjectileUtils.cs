@@ -22,8 +22,10 @@ namespace SPYoyoMod.Utils
             proj.penetrate = -1;
             proj.ignoreWater = true;
             proj.tileCollide = false;
+            proj.damage = 0;
 
             proj.DamageType = DamageClass.Generic;
+            proj.CritChance = 0;
         }
 
         /// <summary>
@@ -53,11 +55,11 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Является ли этот снаряд основным снарядом от йо-йо.
+        /// Является ли этот снаряд основным снарядом йо-йо.
         /// Основным является тот, которым управляет игрок, а не тот, который летает возле.
         /// Учитывайте, что основной йо-йо не обязательно будет тем, что заспавнился первым.
         /// </summary>
-        public static bool IsMainYoyo(this Projectile proj)
+        public static bool IsPrimaryYoyo(this Projectile proj)
         {
             if (!proj.IsYoyo() || proj.IsCounterweight())
                 return false;
@@ -90,7 +92,7 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Получить владельца (игрока) снаряда.
         /// </summary>
-        public static Player? GetOwner(this Projectile proj)
+        public static Player GetOwner(this Projectile proj)
         {
             if (!Main.player.IndexInRange(proj.owner))
                 return null;
@@ -102,6 +104,65 @@ namespace SPYoyoMod.Utils
 
             return player;
         }
+
+        /// <summary>
+        /// Преобразует текущий объект типа <see cref="Projectile"/> в указанный тип <typeparamref name="T"/>, 
+        /// если он является моддовым снарядом типа <typeparamref name="T"/>. Возвращает <c>null</c>, если преобразование невозможно.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T As<T>(this Projectile proj) where T : ModProjectile
+            => proj.ModProjectile as T;
+
+        /// <summary>
+        /// Возвращает первый снаряд, удовлетворяющий заданному условию, или null, если снаряд не найден.
+        /// </summary>
+        public static Projectile FirstOrDefault(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
+        {
+            foreach (var proj in projectiles)
+            {
+                if (predicate(proj))
+                    return proj;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Находит снаряд по указанному идентификатору <paramref name="identity"/>.
+        /// </summary>
+        public static Projectile FindByIdentityOrDefault(this ActiveEntityIterator<Projectile> projectiles, int identity)
+        {
+            if (Main.netMode == NetmodeID.SinglePlayer)
+                return Main.projectile[identity];
+
+            foreach (var proj in projectiles)
+            {
+                if (proj.identity != identity)
+                    continue;
+
+                return proj;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Содержит ли коллекция снарядов хотя бы один снаряд.
+        /// </summary>
+        public static bool Any(this ActiveEntityIterator<Projectile> projectiles)
+        {
+            foreach (var _ in projectiles)
+                return true;
+
+            return false;
+        }
+
+        /// <summary>
+        /// Содержит ли коллекция хотя бы один снаряд, удовлетворяющий заданному условию.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Any(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
+            => FirstOrDefault(projectiles, predicate) != null;
 
         /// <summary>
         /// Вычисляет направление, в котором нужно выстрелить, чтобы попасть в движущуюся цель с учётом её скорости.
@@ -139,37 +200,5 @@ namespace SPYoyoMod.Utils
             var toFutureTarget = futurePosition - startPosition;
             return Vector2.Normalize(toFutureTarget);
         }
-
-        /// <summary>
-        /// Возвращает первый снаряд, удовлетворяющий заданному условию, или null, если снаряд не найден.
-        /// </summary>
-        public static Projectile FirstOrDefault(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
-        {
-            foreach (var proj in projectiles)
-            {
-                if (predicate(proj))
-                    return proj;
-            }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Содержит ли коллекция снарядов хотя бы один снаряд.
-        /// </summary>
-        public static bool Any(this ActiveEntityIterator<Projectile> projectiles)
-        {
-            foreach (var _ in projectiles)
-                return true;
-
-            return false;
-        }
-
-        /// <summary>
-        /// Содержит ли коллекция хотя бы один снаряд, удовлетворяющий заданному условию.
-        /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Any(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
-            => FirstOrDefault(projectiles, predicate) != null;
     }
 }

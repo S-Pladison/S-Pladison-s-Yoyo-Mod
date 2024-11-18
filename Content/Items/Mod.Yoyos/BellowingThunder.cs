@@ -345,7 +345,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             Projectile.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
 
-            var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsMainYoyo());
+            var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsPrimaryYoyo());
 
             if (yoyoProj is null)
             {
