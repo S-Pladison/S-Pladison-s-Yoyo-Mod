@@ -12,15 +12,17 @@ sampler TextureSampler0 = sampler_state
 };
 
 float2 ScreenSize;
+float OutlineThickness;
 float4 OutlineColor;
+float4 NPCColor;
 
-float4 TheStellarThrowOutline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
+float4 Outline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float4 screenColor = tex2D(TextureSampler0, coords);
-    float2 outlineSize = float2(1.5, 1.5) / ScreenSize;
+    float2 outlineSize = float2(OutlineThickness, OutlineThickness) / ScreenSize;
     
     if (any(screenColor))
-        return OutlineColor * 0.4;
+        return NPCColor;
     
     if (any(tex2D(TextureSampler0, coords + float2(outlineSize.x, outlineSize.y))))
         return OutlineColor;
@@ -39,8 +41,8 @@ float4 TheStellarThrowOutline(float2 coords : TEXCOORD0, float4 sampleColor : CO
 
 technique Technique1
 {
-    pass TheStellarThrowOutline
+    pass Outline
     {
-        PixelShader = compile ps_3_0 TheStellarThrowOutline();
+        PixelShader = compile ps_3_0 Outline();
     }
 }

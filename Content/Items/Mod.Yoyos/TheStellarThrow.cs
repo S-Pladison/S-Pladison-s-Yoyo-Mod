@@ -5,12 +5,9 @@ using SPYoyoMod.Content.Items.Vanilla.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
-using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
-using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
 using System.Collections.Generic;
-using System.IO;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -32,7 +29,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Star");
         public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Flame");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}TheStellarThrowEffect_Trail");
-        public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}TheStellarThrowEffect_Outline");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
         private const string _yoyoPath = $"{_assetPath}Items/Mod.Yoyos/TheStellarThrow/";
@@ -44,7 +40,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             StarTexture = null;
             FlameTexture = null;
             TrailEffect = null;
-            OutlineEffect = null;
         }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
@@ -325,13 +320,17 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 trailEndZero: new(255, 0, 80)
             ),
         ];
+        public static readonly int NpcHitOutlineLifeTime = ModUtils.SecondsToTicks(0.25f);
+        public static readonly EasingBuilder NpcHitOutlineThicknessEasing = new(
+            (EasingFunctions.InOutExpo, 0.2f, 0f, 1f),
+            (EasingFunctions.InOutQuad, 0.8f, 1f, 0f)
+        );
 
         private float _yToBecomeCollidable;
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
 
         public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
-
         private int TargetIndex { get => (int)Projectile.ai[0]; }
         private int Style { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
         private Palette StylePalette { get => Palettes[Style]; }
@@ -469,7 +468,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (target.life <= 0)
                 return;
 
-            ModContent.GetInstance<TheStellarThrowNPCOutlineEffectHandler>()?.Apply(target);
+            NPCEffectManager.Outline(new NPCEffectManager.OutlineSettings()
+            {
+                NpcWhoAmI = target.whoAmI,
+                LifeTime = NpcHitOutlineLifeTime,
+                OutlineColor = static (lifeTimeRatio) => new Color(255, 0, 80) * NpcHitOutlineThicknessEasing.Evaluate(lifeTimeRatio)
+            });
         }
 
         public override bool OnTileCollide(Vector2 oldVelocity)
@@ -523,7 +527,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         );
 
         public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
-
         public float LifeTimeRatio { get => 1f - Projectile.timeLeft / (float)InitTimeLeft; }
         private int Style { get => (int)Projectile.ai[0]; set => Projectile.ai[0] = value; }
         private TheStellarThrowStarProjectile.Palette StylePalette { get => TheStellarThrowStarProjectile.Palettes[Style]; }
@@ -586,7 +589,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
 
         public override bool ShouldUpdatePosition()
-            => false;
+        {
+            return false;
+        }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
         {
@@ -604,126 +609,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             var circleColor = new Color(255, 0, 80) with { A = 0 } * (1f - EasingFunctions.InOutQuart(LifeTimeRatio));
 
             Main.spriteBatch.Draw(circleTexture.Value, position, null, circleColor, 0f, circleOrigin, LifeTimeRatio * 2f, SpriteEffects.None, 0f);
-        }
-    }
-
-    [Autoload(Side = ModSide.Client)]
-    public sealed class TheStellarThrowNPCOutlineEffectHandler : ILoadable
-    {
-        private sealed class TheStellarThrowHitNPCPacket : NetPacket
-        {
-            public override void Send(BinaryWriter writer, params object[] context)
-            {
-                writer.Write((byte)context[0]); //< npcWhoAmI
-            }
-
-            public override void Receive(BinaryReader reader, int sender)
-            {
-                var npcWhoAmI = reader.ReadByte();
-
-                if (Main.netMode == NetmodeID.Server)
-                {
-                    NetHandler.Send<TheStellarThrowHitNPCPacket>(null, sender, npcWhoAmI);
-                    return;
-                }
-
-                var handler = ModContent.GetInstance<TheStellarThrowNPCOutlineEffectHandler>();
-                handler._hitNPCIndex = npcWhoAmI;
-                handler._hitTimeLeft = _effectLifeTime;
-            }
-        }
-
-        private static readonly int _effectLifeTime = ModUtils.SecondsToTicks(0.25f);
-        private static readonly EasingBuilder _transparencyEasing = new(
-            (EasingFunctions.InOutQuart, 0.2f, 0f, 1f),
-            (EasingFunctions.InOutQuart, 0.8f, 1f, 0f)
-        );
-
-        private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
-        private int _hitNPCIndex = -1;
-        private int _hitTimeLeft = -1;
-
-        public bool IsActive => _hitNPCIndex >= 0;
-        public float LifeTimeRatio => 1f - _hitTimeLeft / (float)_effectLifeTime;
-
-        public void Apply(NPC npc)
-        {
-            _hitNPCIndex = npc.whoAmI;
-            _hitTimeLeft = _effectLifeTime;
-
-            if (Main.netMode == NetmodeID.MultiplayerClient)
-                NetHandler.Send<TheStellarThrowHitNPCPacket>(null, null, (byte)_hitNPCIndex);
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod)
-        {
-            ModEvents.OnPostUpdateEverything += UpdateHitInfo;
-            ModEvents.OnPostUpdateCameraPosition += DrawNPCToTarget;
-
-            On_Main.DrawNPCs += (orig, main, behindTiles) =>
-            {
-                orig(main, behindTiles);
-
-                if (_hitNPCIndex < 0)
-                    return;
-
-                if (behindTiles != Main.npc[_hitNPCIndex].behindTiles)
-                    return;
-
-                DrawTargetToScreen();
-            };
-        }
-
-        void ILoadable.Unload()
-        {
-            ModEvents.OnPostUpdateCameraPosition -= DrawNPCToTarget;
-            ModEvents.OnPostUpdateEverything -= UpdateHitInfo;
-        }
-
-        private void UpdateHitInfo()
-        {
-            if (!IsActive)
-                return;
-
-            if (--_hitTimeLeft > 0 && Main.npc[_hitNPCIndex].active)
-                return;
-
-            _hitNPCIndex = -1;
-            _hitTimeLeft = -1;
-        }
-
-        private void DrawNPCToTarget()
-        {
-            if (!IsActive)
-                return;
-
-            var device = Main.graphics.GraphicsDevice;
-            device.SetRenderTarget(_renderTarget);
-            device.Clear(Color.Transparent);
-            {
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Effect);
-                NPCUtils.DrawNPC(Main.npc[_hitNPCIndex]);
-                Main.spriteBatch.End();
-            }
-            device.SetRenderTarget(null);
-        }
-
-        private void DrawTargetToScreen()
-        {
-            if (!IsActive)
-                return;
-
-            var effect = TheStellarThrowAssets.OutlineEffect.Prepare(parameters =>
-            {
-                parameters["ScreenSize"].SetValue(_renderTarget.Size);
-                parameters["OutlineColor"].SetValue((new Color(255, 0, 80) * _transparencyEasing.Evaluate(LifeTimeRatio)).ToVector4());
-            });
-
-            Main.spriteBatch.End(out var spriteBatchSnapshot);
-            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, effect.Value, GameMatrices.Zoom);
-            Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
-            Main.spriteBatch.End();
-            Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
     }
 }
