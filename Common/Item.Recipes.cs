@@ -38,6 +38,11 @@ namespace SPYoyoMod.Common
                 .AddIngredient(ItemID.Cascade)
                 .AddTile(TileID.DemonAltar)
                 .Register();
+
+            Recipe.Create(ModContent.ItemType<TitaniumYoyoItem>())
+                .AddIngredient(ItemID.TitaniumBar, 13)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
         }
 
         private static void AddAccessoryRecipes()
