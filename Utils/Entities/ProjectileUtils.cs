@@ -130,7 +130,7 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Находит снаряд по указанному идентификатору <paramref name="identity"/>.
         /// </summary>
-        public static Projectile FindByIdentityOrDefault(this ActiveEntityIterator<Projectile> projectiles, int identity)
+        public static Projectile FindByIdentity(this ActiveEntityIterator<Projectile> projectiles, int identity)
         {
             if (Main.netMode == NetmodeID.SinglePlayer)
                 return Main.projectile[identity];
