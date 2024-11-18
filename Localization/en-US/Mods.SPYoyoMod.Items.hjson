@@ -12,3 +12,8 @@ TheStellarThrowItem: {
 	DisplayName: The Stellar Throw
 	Tooltip: ""
 }
+
+TitaniumYoyoItem: {
+	DisplayName: Titanium Yoyo
+	Tooltip: ""
+}
