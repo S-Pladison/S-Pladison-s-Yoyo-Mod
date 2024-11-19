@@ -5,6 +5,7 @@ using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -13,6 +14,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     [Autoload(Side = ModSide.Client)]
     public sealed class ChikAssets : ILoadable
     {
+        public const string InvisiblePath = $"{_assetPath}Invisible";
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
@@ -60,6 +62,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
+        public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            for (int i = 0; i < 5; i++)
+            {
+                Projectile.NewProjectile(proj.GetSource_OnHit(target), proj.Center, Vector2.Zero, ModContent.ProjectileType<ChikHomingProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI);
+            }
+        }
+
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
             if (_stringRenderer is null)
@@ -85,5 +95,77 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             return true;
         }
+    }
+
+    public sealed class ChikHomingProjectile : ModProjectile, IInitializableProjectile
+    {
+        private Vector2 _spawnPosition;
+        private Vector2 _controlPoint1;
+        private Vector2 _controlPoint2;
+        private Vector2 _controlPoint3;
+        private Vector2 _targetPosition;
+
+        public override string Texture => ChikAssets.InvisiblePath;
+
+        public override void SetDefaults()
+        {
+            Projectile.DamageType = DamageClass.MeleeNoSpeed;
+
+            Projectile.width = 16;
+            Projectile.height = 16;
+
+            Projectile.timeLeft = 60 * 2;
+            Projectile.friendly = true;
+            Projectile.tileCollide = false;
+            Projectile.penetrate = -1;
+            Projectile.extraUpdates = 1;
+
+            Projectile.usesIDStaticNPCImmunity = true;
+            Projectile.idStaticNPCHitCooldown = 0;
+        }
+
+        public override void OnSpawn(IEntitySource source)
+        {
+            _spawnPosition = Projectile.Center;
+            _controlPoint1 = _spawnPosition + Main.rand.NextVector2CircularEdge(500f, 500f);
+            _controlPoint2 = _spawnPosition + Main.rand.NextVector2CircularEdge(800f, 800f);
+            _controlPoint3 = _spawnPosition + Main.rand.NextVector2CircularEdge(500f, 500f);
+            _targetPosition = Projectile.Center;
+
+            Main.NewText(_spawnPosition);
+        }
+
+        void IInitializableProjectile.Initialize(Projectile proj)
+        {
+
+        }
+
+        public override void AI()
+        {
+            float lifeTimeRatio = 1f - Projectile.timeLeft / (60 * 2f);
+            Projectile.Center = BezierCurve.Evaluate(lifeTimeRatio, _spawnPosition, _controlPoint1, _controlPoint2, _controlPoint3, _targetPosition);
+        }
+
+        public override bool? CanHitNPC(NPC target)
+        {
+            float lifeTimeRatio = 1f - Projectile.timeLeft / (60f * 2f);
+
+            if (lifeTimeRatio < 0.8f)
+                return false;
+
+            return base.CanHitNPC(target);
+        }
+
+        /*public override void SendExtraAI(BinaryWriter writer)
+        {
+            writer.Write(_spawnPosition.X);
+            writer.Write(_spawnPosition.Y);
+        }
+
+        public override void ReceiveExtraAI(BinaryReader reader)
+        {
+            _spawnPosition.X = reader.ReadSingle();
+            _spawnPosition.Y = reader.ReadSingle();
+        }*/
     }
 }
