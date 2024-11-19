@@ -38,6 +38,20 @@ namespace SPYoyoMod.Common
                 .AddIngredient(ItemID.Cascade)
                 .AddTile(TileID.DemonAltar)
                 .Register();
+
+            Recipe.Create(ItemID.Gradient)
+                .AddIngredient(ItemID.CobaltBar, 5)
+                .AddIngredient(ItemID.GoldBar, 10)
+                .AddIngredient(ItemID.Marble, 25)
+                .AddTile(TileID.Anvils)
+                .Register();
+
+            Recipe.Create(ItemID.Gradient)
+                .AddIngredient(ItemID.PalladiumBar, 5)
+                .AddIngredient(ItemID.GoldBar, 10)
+                .AddIngredient(ItemID.Marble, 25)
+                .AddTile(TileID.Anvils)
+                .Register();
         }
 
         private static void AddAccessoryRecipes()
