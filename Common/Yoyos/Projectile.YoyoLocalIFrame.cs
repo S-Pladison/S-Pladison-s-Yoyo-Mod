@@ -3,7 +3,7 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Common.Reworks
+namespace SPYoyoMod.Common.Yoyos
 {
     [Autoload(false)]
     public sealed class YoyoLocalIFrameGlobalProjectile : GlobalProjectile

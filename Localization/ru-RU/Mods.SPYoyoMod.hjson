@@ -2,4 +2,8 @@ Projectiles: {
 	// BellowingThunderProjectile.DisplayName: "{$Items.BellowingThunderItem.DisplayName}"
 	// CascadeExplosionProjectile.DisplayName: Cascade Explosion Projectile
 	// BellowingThunderRingProjectile.DisplayName: Bellowing Thunder Ring Projectile
+	// TheStellarThrowProjectile.DisplayName: The Stellar Throw Projectile
+	// TheStellarThrowStarProjectile.DisplayName: The Stellar Throw Star Projectile
+	// TheStellarThrowStarHitProjectile.DisplayName: The Stellar Throw Star Hit Projectile
+	// TheStellarThrowHitProjectile.DisplayName: The Stellar Throw Hit Projectile
 }

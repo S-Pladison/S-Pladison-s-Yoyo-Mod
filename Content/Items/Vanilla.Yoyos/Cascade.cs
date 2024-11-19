@@ -6,7 +6,6 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -74,7 +73,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
-               ModContent.Request<Texture2D>(ValorAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
+               ModContent.Request<Texture2D>(CascadeAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
                (Color.Transparent, true), (Color.Transparent, true), (GlowColor, true)
             ));
 
@@ -200,8 +199,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 _trailRenderer.Render();
 
                 // Исправление отрисовки руки
-                Main.spriteBatch.End(out var spriteBatchSnapshot);
-                Main.spriteBatch.Begin(spriteBatchSnapshot);
+                if (proj.GetOwner().heldProj == proj.whoAmI)
+                {
+                    Main.spriteBatch.End(out var spriteBatchSnapshot);
+                    Main.spriteBatch.Begin(spriteBatchSnapshot);
+                }
             }
 
             var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
@@ -307,7 +309,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 particle.Scale = 3f;
             }
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
             {
                 Position = Projectile.Center,
                 Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),

@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Common;
+﻿using SPYoyoMod.Common.Yoyos;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ID;
@@ -17,6 +17,7 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Кол-во полученного урона от йо-йо и всего, что с ним связано.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static uint TotalDamageTakenFromYoyos(this NPC npc)
             => npc.TryGetGlobalNPC<TotalDamageFromYoyosGlobalNPC>(out var globalProj) ? globalProj.TotalDamage : 0;
 
@@ -24,12 +25,14 @@ namespace SPYoyoMod.Utils
         /// Накладывает на NPC соответствующий бафф.
         /// Если у NPC уже есть этот бафф, то произойдет повторное применение.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void AddBuff<T>(this NPC npc, int time) where T : ModBuff
             => npc.AddBuff(ModContent.BuffType<T>(), time, false);
 
         /// <summary>
         /// Производит поиск индекса соответствующего баффа. Если отсутствует, то возвращает -1.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int FindBuffIndex<T>(this NPC npc) where T : ModBuff
             => npc.FindBuffIndex(ModContent.BuffType<T>());
 

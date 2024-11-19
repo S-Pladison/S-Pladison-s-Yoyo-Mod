@@ -1,4 +1,5 @@
-﻿using SPYoyoMod.Common;
+﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Common.Yoyos;
 using System;
 using System.Runtime.CompilerServices;
 using Terraria;
@@ -9,6 +10,24 @@ namespace SPYoyoMod.Utils
 {
     public static class ProjectileUtils
     {
+        /// <summary>
+        /// Настраивает указанный снаряд для использования исключительно как визуальный эффект, отключая взаимодействие с окружающей средой и игровыми сущностями.
+        /// </summary>
+        public static void DefaultToVisualEffect(this Projectile proj)
+        {
+            proj.width = 16;
+            proj.height = 16;
+            proj.timeLeft = 60;
+            proj.friendly = true;
+            proj.penetrate = -1;
+            proj.ignoreWater = true;
+            proj.tileCollide = false;
+            proj.damage = 0;
+
+            proj.DamageType = DamageClass.Generic;
+            proj.CritChance = 0;
+        }
+
         /// <summary>
         /// Является ли этот снаряд йо-йом.
         /// </summary>
@@ -36,11 +55,11 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Является ли этот снаряд основным снарядом от йо-йо.
+        /// Является ли этот снаряд основным снарядом йо-йо.
         /// Основным является тот, которым управляет игрок, а не тот, который летает возле.
         /// Учитывайте, что основной йо-йо не обязательно будет тем, что заспавнился первым.
         /// </summary>
-        public static bool IsMainYoyo(this Projectile proj)
+        public static bool IsPrimaryYoyo(this Projectile proj)
         {
             if (!proj.IsYoyo() || proj.IsCounterweight())
                 return false;
@@ -73,7 +92,7 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Получить владельца (игрока) снаряда.
         /// </summary>
-        public static Player? GetOwner(this Projectile proj)
+        public static Player GetOwner(this Projectile proj)
         {
             if (!Main.player.IndexInRange(proj.owner))
                 return null;
@@ -87,6 +106,14 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
+        /// Преобразует текущий объект типа <see cref="Projectile"/> в указанный тип <typeparamref name="T"/>, 
+        /// если он является моддовым снарядом типа <typeparamref name="T"/>. Возвращает <c>null</c>, если преобразование невозможно.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T As<T>(this Projectile proj) where T : ModProjectile
+            => proj.ModProjectile as T;
+
+        /// <summary>
         /// Возвращает первый снаряд, удовлетворяющий заданному условию, или null, если снаряд не найден.
         /// </summary>
         public static Projectile FirstOrDefault(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
@@ -95,6 +122,25 @@ namespace SPYoyoMod.Utils
             {
                 if (predicate(proj))
                     return proj;
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Находит снаряд по указанному идентификатору <paramref name="identity"/>.
+        /// </summary>
+        public static Projectile FindByIdentity(this ActiveEntityIterator<Projectile> projectiles, int identity)
+        {
+            if (Main.netMode == NetmodeID.SinglePlayer)
+                return Main.projectile[identity];
+
+            foreach (var proj in projectiles)
+            {
+                if (proj.identity != identity)
+                    continue;
+
+                return proj;
             }
 
             return null;
@@ -114,7 +160,45 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Содержит ли коллекция хотя бы один снаряд, удовлетворяющий заданному условию.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Any(this ActiveEntityIterator<Projectile> projectiles, Predicate<Projectile> predicate)
             => FirstOrDefault(projectiles, predicate) != null;
+
+        /// <summary>
+        /// Вычисляет направление, в котором нужно выстрелить, чтобы попасть в движущуюся цель с учётом её скорости.
+        /// </summary>
+        public static Vector2 PredictiveAimToTarget(Vector2 startPosition, Vector2 targetPosition, Vector2 targetVelocity, float speed)
+        {
+            var toTarget = targetPosition - startPosition;
+
+            // Квадратные значения для решения уравнения
+            var distanceSquared = toTarget.LengthSquared();
+            var speedSquared = speed * speed;
+            var targetSpeedSquared = targetVelocity.LengthSquared();
+            var targetSpeedAlongToTarget = Vector2.Dot(toTarget, targetVelocity);
+
+            // Дискриминант квадратного уравнения
+            var a = speedSquared - targetSpeedSquared;
+            var b = -2f * targetSpeedAlongToTarget;
+            var c = -distanceSquared;
+            var discriminant = b * b - 4 * a * c;
+
+            if (discriminant < 0)
+                return Vector2.Normalize(toTarget);
+
+            // Вычисление времени до пересечения
+            var sqrtDiscriminant = (float)Math.Sqrt(discriminant);
+            var t1 = (-b + sqrtDiscriminant) / (2f * a);
+            var t2 = (-b - sqrtDiscriminant) / (2f * a);
+            var t = Math.Max(t1, t2);
+
+            if (t < 0)
+                return Vector2.Normalize(toTarget);
+
+            // Вычисление направления к будущей позиции цели
+            var futurePosition = targetPosition + targetVelocity * t;
+            var toFutureTarget = futurePosition - startPosition;
+            return Vector2.Normalize(toFutureTarget);
+        }
     }
 }

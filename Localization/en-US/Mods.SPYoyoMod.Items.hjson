@@ -7,3 +7,8 @@ BearingItem: {
 	DisplayName: Bearing
 	Tooltip: "{0}% increased yoyo duration"
 }
+
+TheStellarThrowItem: {
+	DisplayName: The Stellar Throw
+	Tooltip: ""
+}

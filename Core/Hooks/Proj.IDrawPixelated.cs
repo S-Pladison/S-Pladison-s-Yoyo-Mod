@@ -17,12 +17,6 @@ using IPreHook = SPYoyoMod.Core.Hooks.IPreDrawPixelatedProjectile;
 
 namespace SPYoyoMod.Core.Hooks
 {
-    /// <summary>
-    /// Позволяет снаряду отрисовывать пикселизированные эффекты.
-    /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
-    /// </summary>
-    public interface IDrawPixelatedProjectile : IPreHook, IPostHook { }
-
     /// <inheritdoc cref="IDrawPixelatedProjectile" />
     public interface IPreDrawPixelatedProjectile
     {
@@ -47,25 +41,221 @@ namespace SPYoyoMod.Core.Hooks
         void PostDrawPixelated(Projectile proj);
     }
 
-    // Примечание: Данная реализация не учитывает отрисовку скрытых снарядов (proj.hide)
-    // Ясное дело, добавить это не так сложно, но на данный момент это просто не нужно...
-    [Autoload(Side = ModSide.Client)]
-    internal sealed class DrawPixelatedProjectileImplementation : ILoadable
+    /// <summary>
+    /// Позволяет снаряду отрисовывать пикселизированные эффекты.
+    /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
+    /// </summary>
+    public interface IDrawPixelatedProjectile : IPreHook, IPostHook
     {
-        private sealed class PixelatedLayer(Action<IEnumerable<int>> drawAction)
+        // Примечание: Данная реализация не учитывает отрисовку скрытых снарядов (proj.hide)
+        // Ясное дело, добавить это не так сложно, но на данный момент это просто не нужно...
+        [Autoload(Side = ModSide.Client)]
+        private sealed class DrawPixelatedProjectileImplementation : ILoadable
+        {
+            private static ProjectilePixelatedLayer _preDrawProjectilesLayer;
+            private static ProjectilePixelatedLayer _postDrawProjectilesLayer;
+            private static ProjectilePixelatedLayer _postDrawPlayersAfterProjectilesLayer;
+
+            public void Load(Mod mod)
+            {
+                _preDrawProjectilesLayer = new(PreDrawPixelatedProjectiles);
+                _postDrawProjectilesLayer = new(PostDrawPixelatedProjectiles);
+                _postDrawPlayersAfterProjectilesLayer = new(PostDrawPixelatedProjectiles);
+
+                ModEvents.OnPostUpdateCameraPosition += RenderProjectilesToTargets;
+
+                // Хук для отрисовки большинства снарядов (без proj.hide и тех, что не в руке игрока)
+                On_Main.DrawProjectiles += (orig, main) =>
+                {
+                    _preDrawProjectilesLayer.DrawToScreen();
+                    orig(main);
+                    _postDrawProjectilesLayer.DrawToScreen();
+                };
+
+                // Хуки для отрисовка пиксельных снарядов у снарядов, что расположены в руках игрока
+                {
+                    // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
+                    // Не хочу делать постоянные проверки/поиски нужного списка...
+                    // Пример:
+                    // void DrawCachedProjs(List<int> projs) {
+                    //   if (projs == Main.instance.DrawCacheProjsBehindNPCs) {}
+                    //   else (projs == Main.instance.DrawCacheProjsBehindNPCsAndTiles) {}
+                    //   else (...) {}
+                    //   ...
+                    // }
+                    // А текущим методом: просто вызовем наши функции без каких либо проверок
+                    // Такая проблема есть у таких методов, как DrawCachedNPCs и DrawCachedProjs (а может и еще есть, хз)
+
+                    IL_Main.DoDraw += (il) =>
+                    {
+                        Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
+                    };
+
+                    IL_Main.DrawCapture += (il) =>
+                    {
+                        Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
+                    };
+                }
+            }
+
+            public void Unload()
+            {
+                ModEvents.OnPostUpdateCameraPosition -= RenderProjectilesToTargets;
+
+                _postDrawPlayersAfterProjectilesLayer = null;
+                _postDrawProjectilesLayer = null;
+                _preDrawProjectilesLayer = null;
+            }
+
+            private static List<int> FindOnscreenProjectiles()
+            {
+                var onscreenProjs = new List<int>(Main.projectile.Length / 8);
+
+                foreach (var proj in Main.ActiveProjectiles)
+                {
+                    var offscreenDistance = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
+                    var visibleRectangle = new Rectangle((int)Main.Camera.ScaledPosition.X - offscreenDistance, (int)Main.Camera.ScaledPosition.Y - offscreenDistance, (int)Main.Camera.ScaledSize.X + offscreenDistance * 2, (int)Main.Camera.ScaledSize.Y + offscreenDistance * 2);
+
+                    if (!visibleRectangle.Intersects(proj.Hitbox))
+                        continue;
+
+                    onscreenProjs.Add(proj.whoAmI);
+                }
+
+                return onscreenProjs;
+            }
+
+            private static void RenderProjectilesToTargets()
+            {
+                var onscreenProjs = FindOnscreenProjectiles();
+
+                if (onscreenProjs.Count == 0)
+                    return;
+
+                var onscreenProjSet = onscreenProjs.ToHashSet();
+                var playerHeldProjs = new List<int>(Main.player.Length / 4);
+                var notHiddenProjs = new List<int>(Main.projectile.Length / 8);
+
+                foreach (var player in Main.ActivePlayers)
+                {
+                    if (player.heldProj >= 0 && onscreenProjSet.Contains(player.heldProj))
+                        playerHeldProjs.Add(player.heldProj);
+                }
+
+                foreach (var projIndex in onscreenProjs)
+                {
+                    ref var proj = ref Main.projectile[projIndex];
+
+                    if (!proj.hide)
+                        notHiddenProjs.Add(proj.whoAmI);
+                }
+
+                _preDrawProjectilesLayer.RenderToTarget(notHiddenProjs);
+                _postDrawProjectilesLayer.RenderToTarget(notHiddenProjs.Except(playerHeldProjs).ToArray());
+                _postDrawPlayersAfterProjectilesLayer.RenderToTarget(playerHeldProjs);
+            }
+
+            private static bool PreDrawPixelatedProjectiles(IReadOnlyList<int> projs)
+            {
+                var anyDrawCalls = false;
+
+                foreach (var projIndex in projs)
+                {
+                    ref var proj = ref Main.projectile[projIndex];
+
+                    try
+                    {
+                        if (proj.ModProjectile is IPreHook modProj)
+                        {
+                            modProj.PreDrawPixelated(proj);
+                            anyDrawCalls = true;
+                        }
+
+                        foreach (IPreHook g in IPreHook._hook.Enumerate(proj))
+                        {
+                            g.PreDrawPixelated(proj);
+                            anyDrawCalls = true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        proj.active = false;
+                    }
+                }
+
+                return anyDrawCalls;
+            }
+
+            private static bool PostDrawPixelatedProjectiles(IReadOnlyList<int> projs)
+            {
+                var anyDrawCalls = false;
+
+                foreach (var projIndex in projs)
+                {
+                    ref var proj = ref Main.projectile[projIndex];
+
+                    try
+                    {
+                        if (proj.ModProjectile is IPostHook modProj)
+                        {
+                            modProj.PostDrawPixelated(proj);
+                            anyDrawCalls = true;
+                        }
+
+                        foreach (IPostHook g in IPostHook._hook.Enumerate(proj))
+                        {
+                            g.PostDrawPixelated(proj);
+                            anyDrawCalls = true;
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        proj.active = false;
+                    }
+                }
+
+                return anyDrawCalls;
+            }
+
+            private static void Impl_DrawPlayers_AfterProjectiles(ILCursor cursor)
+            {
+                // DrawCachedProjs(DrawCacheProjsOverPlayers);
+
+                // IL_1762: ldarg.0
+                // IL_1763: ldarg.0
+                // IL_1764: ldfld class [System.Collections] System.Collections.Generic.List`1<int32> Terraria.Main::DrawCacheProjsOverPlayers
+                // IL_1769: ldc.i4.1
+                // IL_176a: call instance void Terraria.Main::DrawCachedProjs(class [System.Collections] System.Collections.Generic.List`1<int32>, bool)
+
+                if (!cursor.TryGotoNext(
+                    MoveType.After,
+                    i => i.MatchLdarg(0),
+                    i => i.MatchLdarg(0),
+                    i => i.MatchLdfld<Main>("DrawCacheProjsOverPlayers"),
+                    i => i.MatchLdcI4(1),
+                    i => i.MatchCall(typeof(Main).GetMethod("DrawCachedProjs", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(List<int>), typeof(bool)]))))
+                {
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(Impl_DrawPlayers_AfterProjectiles)}\" failed...");
+                    return;
+                }
+
+                cursor.Emit(OpCodes.Ldsfld, typeof(DrawPixelatedProjectileImplementation).GetField(nameof(_postDrawPlayersAfterProjectilesLayer), BindingFlags.Static | BindingFlags.NonPublic));
+                cursor.Emit(OpCodes.Call, typeof(ProjectilePixelatedLayer).GetMethod(nameof(ProjectilePixelatedLayer.DrawToScreen), BindingFlags.Instance | BindingFlags.Public));
+            }
+        }
+
+        private sealed class ProjectilePixelatedLayer(Func<IReadOnlyList<int>, bool> drawAction)
         {
             private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
-            private readonly Action<IList<int>> _drawAction = drawAction;
-            private bool _targetWasPrepared = false;
+            private readonly Func<IReadOnlyList<int>, bool> _drawAction = drawAction;
 
-            public void Render(IList<int> projectiles)
+            private bool _canBeDrawnToScreen = false;
+
+            public void RenderToTarget(IReadOnlyList<int> projectiles)
             {
                 if (projectiles.Count == 0)
                     return;
 
-                _targetWasPrepared = false;
-
-                var device = Main.graphics.GraphicsDevice;
                 var spriteBatchSpanshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
@@ -79,6 +269,9 @@ namespace SPYoyoMod.Core.Hooks
 
                 // Требуется для отрисовки примитивов
                 // И да, без этого никак...
+
+                var device = Main.graphics.GraphicsDevice;
+
                 device.BlendState = spriteBatchSpanshot.BlendState;
                 device.SamplerStates[0] = spriteBatchSpanshot.SamplerState;
                 device.DepthStencilState = spriteBatchSpanshot.DepthStencilState;
@@ -88,194 +281,27 @@ namespace SPYoyoMod.Core.Hooks
                 device.Clear(Color.Transparent);
                 {
                     Main.spriteBatch.Begin(spriteBatchSpanshot);
-                    _drawAction(projectiles);
+                    _canBeDrawnToScreen = _drawAction(projectiles);
                     Main.spriteBatch.End();
                 }
                 device.SetRenderTarget(null);
-
-                _targetWasPrepared = true;
             }
 
-            public void Draw()
+            public void DrawToScreen()
             {
-                if (!_targetWasPrepared)
+                if (!_canBeDrawnToScreen)
                     return;
 
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GameMatrices.Zoom);
                 Main.spriteBatch.Draw(_renderTarget, Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 2f, SpriteEffects.None, 0);
                 Main.spriteBatch.End();
 
-                _targetWasPrepared = false;
+                // Костыль, исправляющий проблему с отрисовкой трейлов Зенита, Радужного жезла, да и скорее всего других модовых трейлов, если они рисуют их как ванилка...
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Transform);
+                Main.spriteBatch.End();
+
+                _canBeDrawnToScreen = false;
             }
-        }
-
-        private static PixelatedLayer _preDrawProjectilesTarget;
-        private static PixelatedLayer _postDrawProjectilesTarget;
-        private static PixelatedLayer _postDrawPlayersAfterProjectilesTarget;
-
-        private static void PreDrawPixelatedProjectiles(IEnumerable<int> projs)
-        {
-            foreach (var projIndex in projs)
-            {
-                ref var proj = ref Main.projectile[projIndex];
-
-                try
-                {
-                    (proj.ModProjectile as IPreHook)?.PreDrawPixelated(proj);
-
-                    foreach (IPreHook g in IPreHook._hook.Enumerate(proj))
-                    {
-                        g.PreDrawPixelated(proj);
-                    }
-                }
-                catch (Exception)
-                {
-                    proj.active = false;
-                }
-            }
-        }
-
-        private static void PostDrawPixelatedProjectiles(IEnumerable<int> projs)
-        {
-            foreach (var projIndex in projs)
-            {
-                ref var proj = ref Main.projectile[projIndex];
-
-                try
-                {
-                    (proj.ModProjectile as IPostHook)?.PostDrawPixelated(proj);
-
-                    foreach (IPostHook g in IPostHook._hook.Enumerate(proj))
-                    {
-                        g.PostDrawPixelated(proj);
-                    }
-                }
-                catch (Exception)
-                {
-                    proj.active = false;
-                }
-            }
-        }
-
-        public void Load(Mod mod)
-        {
-            _preDrawProjectilesTarget = new(PreDrawPixelatedProjectiles);
-            _postDrawProjectilesTarget = new(PostDrawPixelatedProjectiles);
-            _postDrawPlayersAfterProjectilesTarget = new(PostDrawPixelatedProjectiles);
-
-            ModEvents.OnPostUpdateCameraPosition += RenderLayers;
-
-            On_Main.DrawProjectiles += (orig, main) =>
-            {
-                _preDrawProjectilesTarget.Draw();
-                orig(main);
-                _postDrawProjectilesTarget.Draw();
-            };
-
-            // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
-            // Не хочу делать постоянные проверки/поиски нужного списка...
-            // Пример:
-            // void DrawCachedProjs(List<int> projs) {
-            //   if (projs == Main.instance.DrawCacheProjsBehindNPCs) {}
-            //   else (projs == Main.instance.DrawCacheProjsBehindNPCsAndTiles) {}
-            //   else (...) {}
-            //   ...
-            // }
-            // А текущим методом: просто вызовем наши функции без каких либо проверок
-            // Такая проблема есть у таких методов, как DrawCachedNPCs и DrawCachedProjs (а может и еще есть, хз)
-
-            IL_Main.DoDraw += (il) =>
-            {
-                Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
-            };
-
-            IL_Main.DrawCapture += (il) =>
-            {
-                Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
-            };
-        }
-
-        public void Unload()
-        {
-            ModEvents.OnPostUpdateCameraPosition -= RenderLayers;
-
-            _postDrawPlayersAfterProjectilesTarget = null;
-            _postDrawProjectilesTarget = null;
-            _preDrawProjectilesTarget = null;
-        }
-
-        private static List<int> FindOnscreenProjs()
-        {
-            var onscreenProjs = new List<int>(Main.projectile.Length / 8);
-
-            foreach (var proj in Main.ActiveProjectiles)
-            {
-                var offscreenDistance = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
-                var visibleRectangle = new Rectangle((int)Main.Camera.ScaledPosition.X - offscreenDistance, (int)Main.Camera.ScaledPosition.Y - offscreenDistance, (int)Main.Camera.ScaledSize.X + offscreenDistance * 2, (int)Main.Camera.ScaledSize.Y + offscreenDistance * 2);
-
-                if (!visibleRectangle.Intersects(proj.Hitbox))
-                    continue;
-
-                onscreenProjs.Add(proj.whoAmI);
-            }
-
-            return onscreenProjs;
-        }
-
-        private static void RenderLayers()
-        {
-            var onscreenProjs = FindOnscreenProjs();
-
-            if (onscreenProjs.Count == 0)
-                return;
-
-            var onscreenProjSet = onscreenProjs.ToHashSet();
-            var playerHeldProjs = new List<int>(Main.player.Length / 4);
-            var notHiddenProjs = new List<int>(Main.projectile.Length / 8);
-
-            foreach (var player in Main.ActivePlayers)
-            {
-                if (player.heldProj >= 0 && onscreenProjSet.Contains(player.heldProj))
-                    playerHeldProjs.Add(player.heldProj);
-            }
-
-            foreach (var projIndex in onscreenProjs)
-            {
-                ref var proj = ref Main.projectile[projIndex];
-
-                if (!proj.hide)
-                    notHiddenProjs.Add(proj.whoAmI);
-            }
-
-            _preDrawProjectilesTarget.Render(notHiddenProjs);
-            _postDrawProjectilesTarget.Render(notHiddenProjs.Except(playerHeldProjs).ToArray());
-            _postDrawPlayersAfterProjectilesTarget.Render(playerHeldProjs);
-        }
-
-        private static void Impl_DrawPlayers_AfterProjectiles(ILCursor cursor)
-        {
-            // DrawCachedProjs(DrawCacheProjsOverPlayers);
-
-            // IL_1762: ldarg.0
-            // IL_1763: ldarg.0
-            // IL_1764: ldfld class [System.Collections] System.Collections.Generic.List`1<int32> Terraria.Main::DrawCacheProjsOverPlayers
-            // IL_1769: ldc.i4.1
-            // IL_176a: call instance void Terraria.Main::DrawCachedProjs(class [System.Collections] System.Collections.Generic.List`1<int32>, bool)
-
-            if (!cursor.TryGotoNext(
-                MoveType.After,
-                i => i.MatchLdarg(0),
-                i => i.MatchLdarg(0),
-                i => i.MatchLdfld<Main>("DrawCacheProjsOverPlayers"),
-                i => i.MatchLdcI4(1),
-                i => i.MatchCall(typeof(Main).GetMethod("DrawCachedProjs", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(List<int>), typeof(bool)]))))
-            {
-                ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(Impl_DrawPlayers_AfterProjectiles)}\" failed...");
-                return;
-            }
-
-            cursor.Emit(OpCodes.Ldsfld, typeof(DrawPixelatedProjectileImplementation).GetField(nameof(_postDrawPlayersAfterProjectilesTarget), BindingFlags.Static | BindingFlags.NonPublic));
-            cursor.Emit(OpCodes.Call, typeof(PixelatedLayer).GetMethod(nameof(PixelatedLayer.Draw), BindingFlags.Instance | BindingFlags.Public));
         }
     }
 }

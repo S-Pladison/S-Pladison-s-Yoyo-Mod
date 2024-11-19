@@ -305,7 +305,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings() with
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
             {
                 Position = Projectile.Center,
                 Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
@@ -320,7 +320,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (!Projectile.IsLocalPlayerAsOwner())
                 return;
 
-            ScreenEffectManager.Flash(new ScreenEffectManager.FlashSettings() with
+            ScreenEffectManager.Flash(new ScreenEffectManager.FlashSettings()
             {
                 Strength = 0.15f,
                 Frames = 25,
@@ -345,7 +345,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             Projectile.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
 
-            var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsMainYoyo());
+            var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsPrimaryYoyo());
 
             if (yoyoProj is null)
             {
@@ -486,6 +486,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             };
 
             var device = Main.graphics.GraphicsDevice;
+
             device.BlendState = spriteBatchSpanshot.BlendState;
             device.SamplerStates[0] = spriteBatchSpanshot.SamplerState;
             device.DepthStencilState = spriteBatchSpanshot.DepthStencilState;
@@ -502,6 +503,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 Main.spriteBatch.End();
             }
             device.SetRenderTarget(null);
+
+            // Костыль, исправляющий проблему с отрисовкой трейлов Зенита, Радужного жезла, да и скорее всего других модовых трейлов, если они рисуют их как ванилка...
+            Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, Main.DefaultSamplerState, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Transform);
+            Main.spriteBatch.End();
         }
 
         private void DrawTargetToScreen()

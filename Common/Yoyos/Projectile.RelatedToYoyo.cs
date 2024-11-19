@@ -5,7 +5,7 @@ using Terraria.DataStructures;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
 
-namespace SPYoyoMod.Common
+namespace SPYoyoMod.Common.Yoyos
 {
     public sealed class RelatedToYoyoGlobalProjectile : GlobalProjectile
     {
