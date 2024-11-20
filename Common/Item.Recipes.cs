@@ -50,7 +50,20 @@ namespace SPYoyoMod.Common
 
         public override void PostAddRecipes()
         {
+            RemoveWoodenYoyoFromChikRecipe();
             InsertBearingToYoyoBagRecipes();
+        }
+
+        private static void RemoveWoodenYoyoFromChikRecipe()
+        {
+            for (var i = 0; i < Main.recipe.Length; i++)
+            {
+                ref var recipe = ref Main.recipe[i];
+
+                if (!recipe.TryGetResult(ItemID.Chik, out var _)) continue;
+
+                recipe.RemoveIngredient(ItemID.WoodYoyo);
+            }
         }
 
         private static void InsertBearingToYoyoBagRecipes()
