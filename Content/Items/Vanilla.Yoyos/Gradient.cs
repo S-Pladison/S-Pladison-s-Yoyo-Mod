@@ -1,4 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ID;
@@ -56,8 +57,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class GradientMarkProjectile : ModProjectile
+    public sealed class GradientMarkProjectile : ModProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
     {
+        // TODO: Скорее всего, саму метку над NPC придется рисовать в другом месте...
+
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
 
         public override string Texture { get => GradientAssets.InvisiblePath; }
@@ -72,6 +75,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
+        }
+
+        void IInitializableProjectile.Initialize(Projectile proj)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
         }
 
         public override void AI()
@@ -98,6 +113,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override bool? CanCutTiles()
         {
             return false;
+        }
+
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
+        {
+
         }
     }
 }
