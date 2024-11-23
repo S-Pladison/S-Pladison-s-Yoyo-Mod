@@ -10,7 +10,11 @@ CascadeItem.Tooltip:
 // Code1Item.Tooltip: ""
 // Code2Item.Tooltip: ""
 // FormatCItem.Tooltip: ""
-// GradientItem.Tooltip: ""
+GradientItem.Tooltip:
+	'''
+	Удары могут наложить на врага особую метку
+	В течение её действия на отмеченного врага обрушивается шквал кинжалов
+	'''
 // HelFireItem.Tooltip: ""
 // HiveFiveItem.Tooltip: ""
 // KrakenItem.Tooltip: ""
