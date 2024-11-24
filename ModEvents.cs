@@ -144,12 +144,6 @@ namespace SPYoyoMod
             public override void PostSetupContent()
                 => ModEvents.OnPostSetupContent();
 
-            public override void OnWorldLoad()
-            {
-                // Костыль, без которого не обойтись...
-                ModEvents.OnResolutionChanged(Main.ScreenSize);
-            }
-
             public override void OnWorldUnload()
                 => ModEvents.OnWorldUnload();
 
