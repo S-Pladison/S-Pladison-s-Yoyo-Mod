@@ -152,7 +152,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (LifeTimeRatio > 0.75f)
                 return;
 
-            if (Projectile.timeLeft % 5 == 0)
+            if (Projectile.IsLocalPlayerAsOwner() && Projectile.timeLeft % 5 == 0)
             {
                 var daggerVelocity = Vector2.UnitY * 12;
 
