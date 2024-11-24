@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
-using SPYoyoMod.Content.Items.Vanilla.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
@@ -215,7 +214,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                         parameters["Color1"].SetValue(new Color(170, 30, 90).ToVector4());
                         parameters["Color2"].SetValue(new Color(50, 50, 255).ToVector4());
                         parameters["Color3"].SetValue(new Color(60, 55, 90).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Width() / 128.0f / 4.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
@@ -238,7 +237,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override bool PreDraw(ref Color lightColor)
         {
             var glowPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var glowTexture = CascadeAssets.GlowTexture.Value;
+            var glowTexture = TheStellarThrowAssets.GlowTexture.Value;
             var glowOrigin = glowTexture.Size() * 0.5f;
             var glowScale = Projectile.scale * 1.2f;
 
@@ -373,6 +372,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             _yToBecomeCollidable = (TargetIndex >= 0 && Main.npc[TargetIndex] is NPC target && target.active) ? (target.Top.Y + 2) : 0f;
 
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
             _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
             {
                 StartWidth = 60,
@@ -384,6 +386,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnKill(int timeLeft)
         {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
             _trailRenderer?.Dispose();
         }
 
@@ -499,7 +504,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                         parameters["Color1"].SetValue(StylePalette.TrailStartZero.ToVector4());
                         parameters["Color2"].SetValue(StylePalette.TrailEndOne.ToVector4());
                         parameters["Color3"].SetValue(StylePalette.TrailEndZero.ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Width() / 128.0f / 4.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
