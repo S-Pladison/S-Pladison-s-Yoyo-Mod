@@ -6,7 +6,6 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.Entities;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.ID;
@@ -43,8 +42,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (proj.GetOwner().OwnedProjectileCounts<GradientGodraysProjectile>() > 0)
+            var godraysType = ModContent.ProjectileType<GradientGodraysProjectile>();
+
+            if (proj.GetOwner().ownedProjectileCounts[godraysType] > 0)
                 return;
+
+            foreach (var otherProj in Main.ActiveProjectiles)
+            {
+                if (otherProj.type != godraysType)
+                    continue;
+
+                if ((otherProj.As<GradientGodraysProjectile>().Target?.whoAmI ?? -1) == target.whoAmI)
+                    return;
+            }
 
             Projectile.NewProjectile(proj.GetSource_OnHit(proj), target.Center, Vector2.Zero, ModContent.ProjectileType<GradientGodraysProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI);
         }
@@ -55,8 +65,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
         public static readonly EasingBuilder OpacityEasing = new(
             (EasingFunctions.InOutQuad, 0.07f, 0f, 1f),
-            (EasingFunctions.Linear, 0.86f, 1f, 1f),
-            (EasingFunctions.InOutQuad, 0.07f, 1f, 0f)
+            (EasingFunctions.Linear, 0.78f, 1f, 1f),
+            (EasingFunctions.InOutQuad, 0.15f, 1f, 0f)
         );
 
         private StripRenderer _stripRenderer;
@@ -101,7 +111,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             if (Target is null || !Target.active)
             {
-                Projectile.Kill();
+                var deathTimeLeft = (int)(InitTimeLeft * 0.15f); //< 1.00 - (0.07 + 0.78) из OpacityEasing
+
+                if (Projectile.timeLeft > deathTimeLeft)
+                    Projectile.timeLeft = deathTimeLeft;
+
                 return;
             }
 
@@ -178,5 +192,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 .SetPoints([lightningStartPosition, lightningEndPosition])
                 .Render();
         }
+    }
+
+    public sealed class GradientDaggerProjectile : ModProjectile
+    {
+        public override string Texture { get => GradientAssets.InvisiblePath; }
     }
 }

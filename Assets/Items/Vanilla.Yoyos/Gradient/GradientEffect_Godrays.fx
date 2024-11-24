@@ -74,8 +74,8 @@ float4 GradientGodrays(VertexShaderOutput input) : COLOR
 {
     float2 uv = float2(input.coord.y, input.coord.x);
     
-    float2 ray1 = float2(uv.x * ray1Density + Position.x * 0.025 + sin(Time * 0.1 * speed) * (ray1Density * 0.2) + seed, 1.0);
-    float2 ray2 = float2(uv.x * ray2Density + Position.x * 0.05 + sin(Time * 0.2 * speed) * (ray1Density * 0.2) + seed, 1.0);
+    float2 ray1 = float2(uv.x * ray1Density + Position.x * 0.025 + sin(Time * 0.2 * speed) * (ray1Density * 0.2) + seed, 1.0);
+    float2 ray2 = float2(uv.x * ray2Density + Position.x * 0.05 + sin(Time * 0.4 * speed) * (ray1Density * 0.2) + seed, 1.0);
     
     float rays = clamp(Noise(ray1) + (Noise(ray2) * ray2Intensity), 0.0, 1.0);
     rays *= smoothstep(0.0, falloff, (1.0 - uv.y));
