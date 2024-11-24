@@ -7,4 +7,5 @@ Projectiles: {
 	// TheStellarThrowStarHitProjectile.DisplayName: The Stellar Throw Star Hit Projectile
 	// TheStellarThrowHitProjectile.DisplayName: The Stellar Throw Hit Projectile
 	// GradientMarkProjectile.DisplayName: Gradient Mark Projectile
+	// GradientGodraysProjectile.DisplayName: Gradient Godrays Projectile
 }
