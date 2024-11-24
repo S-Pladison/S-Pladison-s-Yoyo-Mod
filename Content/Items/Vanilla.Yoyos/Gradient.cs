@@ -10,6 +10,7 @@ using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -23,8 +24,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string InvisiblePath = $"{_assetPath}Invisible";
 
         public static Asset<Texture2D> DaggerGlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_DaggerGlow");
+        public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_Flame");
         public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_Star");
         public static Asset<Effect> GodraysEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Godrays", AssetRequestMode.ImmediateLoad); //< Immediate здесь обязателен
+        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Trail");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
         private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Gradient/";
@@ -32,8 +35,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             DaggerGlowTexture = null;
+            FlameTexture = null;
             StarTexture = null;
             GodraysEffect = null;
+            TrailEffect = null;
         }
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
@@ -71,6 +76,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             Projectile.NewProjectile(proj.GetSource_OnHit(proj), target.Center, Vector2.Zero, ModContent.ProjectileType<GradientGodraysProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI);
+
+            proj.GetOwner().ownedProjectileCounts[godraysType]++;
         }
     }
 
@@ -103,6 +110,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
+
+            Projectile.hide = true;
         }
 
         void IInitializableProjectile.Initialize(Projectile proj)
@@ -111,6 +120,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
+
+            SoundEngine.PlaySound(SoundID.DD2_BetsyWindAttack with { Pitch = 1f, }, Projectile.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -138,7 +149,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (LifeTimeRatio > 0.75f)
                 return;
 
-            if (Projectile.timeLeft % 6 == 0)
+            if (Projectile.timeLeft % 5 == 0)
             {
                 var daggerVelocity = Vector2.UnitY * 12;
 
@@ -189,6 +200,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Lighting.AddLight(Projectile.Center, new Color(255, 190, 0).ToVector3() * opacity * 0.5f);
         }
 
+        public override void DrawBehind(int index, List<int> behindNPCsAndTiles, List<int> behindNPCs, List<int> behindProjectiles, List<int> overPlayers, List<int> overWiresUI)
+        {
+            behindNPCs.Add(index);
+        }
+
         public override void PostDraw(Color lightColor)
         {
             if (_stripRenderer is null)
@@ -221,14 +237,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class GradientDaggerProjectile : ModProjectile
+    public sealed class GradientDaggerProjectile : ModProjectile, IInitializableProjectile
     {
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(2f);
+        public static readonly int TrailPointCount = 4;
         public static readonly EasingBuilder OpacityEasing = new(
             (EasingFunctions.InOutQuad, 0.25f, 0f, 1f),
             (EasingFunctions.Linear, 0.65f, 1f, 1f),
             (EasingFunctions.InOutQuad, 0.1f, 1f, 0f)
         );
+
+        private StripRenderer _trailRenderer;
+        private LinkedList<Vector2> _oldPositions;
 
         public override string Texture { get => GradientAssets.DaggerPath; }
         public ref float HeightToBecomeCollidable { get => ref Projectile.ai[0]; }
@@ -252,13 +272,46 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.localNPCHitCooldown = -1;
         }
 
+        void IInitializableProjectile.Initialize(Projectile _)
+        {
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
+            {
+                StartWidth = 20,
+                EndWidth = 10
+            };
+
+            _oldPositions = [];
+        }
+
         public override void OnKill(int timeLeft)
         {
-            //Projectile.NewProjectile(Projectile.GetSource_Death(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<GradientStarProjectile>(), 0, 0, Projectile.owner);
+            if (Main.netMode == NetmodeID.Server)
+                return;
+
+            _trailRenderer?.Dispose();
+
+            SoundEngine.PlaySound(SoundID.DD2_SkyDragonsFuryShot with
+            {
+                Pitch = 1f,
+                PitchVariance = 0.2f
+            }, Projectile.Center);
         }
 
         public override void AI()
         {
+            if (_trailRenderer is not null && Projectile.numUpdates == -1)
+            {
+                _oldPositions.AddFirst(Projectile.Center);
+
+                while (_oldPositions.Count > TrailPointCount)
+                    _oldPositions.RemoveLast();
+
+                _trailRenderer.SetPoints(_oldPositions);
+            }
+
             if (!Projectile.tileCollide && Projectile.Bottom.Y >= HeightToBecomeCollidable)
             {
                 Projectile.tileCollide = true;
@@ -333,11 +386,31 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreDraw(ref Color _)
         {
+            var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
+
+            if (_trailRenderer is not null)
+            {
+                GradientAssets.TrailEffect
+                    .Prepare(parameters =>
+                    {
+                        parameters["Texture0"].SetValue(GradientAssets.FlameTexture.Value);
+                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
+                        parameters["Color0"].SetValue(Color.White.ToVector4());
+                        parameters["Color1"].SetValue(new Color(195, 165, 10).ToVector4());
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / GradientAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly + Projectile.whoAmI * 15.08f);
+                        parameters["Opacity"].SetValue(opacity);
+                    })
+                    .Apply();
+
+                _trailRenderer.Render();
+            }
+
             var position = Projectile.Center - Main.screenPosition;
 
             var glowTexture = GradientAssets.DaggerGlowTexture;
             var glowOrigin = glowTexture.Size() * 0.5f;
-            var glowColor = new Color(120, 110, 60, 0) * OpacityEasing.Evaluate(LifeTimeRatio) * 0.5f;
+            var glowColor = new Color(120, 110, 60, 0) * opacity * 0.5f;
 
             Main.spriteBatch.Draw(glowTexture.Value, position, null, glowColor, Projectile.rotation, glowOrigin, Projectile.scale, SpriteEffects.None, 0);
 
@@ -345,7 +418,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             var daggerOrigin = daggerTexture.Size() * 0.5f;
 
             // Хотя функция и передает параметр цвета, его значение не является истинным, поэтому определяем сами
-            var daggerColor = Color.Lerp(Lighting.GetColor(Projectile.Center.ToTileCoordinates(), Color.White), Color.White, 0.4f) * OpacityEasing.Evaluate(LifeTimeRatio);
+            var daggerColor = Color.Lerp(Lighting.GetColor(Projectile.Center.ToTileCoordinates(), Color.White), Color.White, 0.4f) * opacity;
 
             Main.spriteBatch.Draw(daggerTexture.Value, position, null, daggerColor, Projectile.rotation, daggerOrigin, Projectile.scale, SpriteEffects.None, 0);
 
@@ -385,7 +458,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             var starScale = ScaleEasing.Evaluate(LifeTimeRatio);
 
             Main.spriteBatch.Draw(starTexture.Value, position, null, Color.Black * 0.5f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.55f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(165, 150, 55) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(195, 165, 55) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.4f, SpriteEffects.None, 0f);
         }
     }
 }

@@ -19,11 +19,11 @@ float Time;
 float Opacity;
 
 const float speed = 2.0;
-const float ray1Density = 8.0;
-const float ray2Density = 30.0;
-const float ray2Intensity = 0.3;
+const float ray1Density = 10.0;
+const float ray2Density = 32.0;
+const float ray2Intensity = 0.5;
 const float cutoff = 0.1;
-const float falloff = 0.25;
+const float falloff = 0.35;
 const float edgeFade = 0.2;
 const float seed = 1508;
 
@@ -83,8 +83,8 @@ float4 GradientGodrays(VertexShaderOutput input) : COLOR
     rays *= smoothstep(0.0 + cutoff, edgeFade + cutoff, 1.0 - uv.x);
     rays *= 1.0 - pow(1.0 - input.coord.x, 3.0);
     
-    float4 color = input.color * clamp((lerp(float4(255, 190, 0, 255), float4(255, 250, 185, 255), rays) / 255), 0.0, 1.0);
-    return rays * color * Opacity * 1.4;
+    float4 color = input.color * clamp((lerp(float4(255, 190, 0, 255), float4(255, 250, 185, 255), rays) / 255), 0.0, 1.0) * 1.1;
+    return color * rays * Opacity;
 }
 
 technique Technique1
