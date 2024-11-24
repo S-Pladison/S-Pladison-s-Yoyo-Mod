@@ -243,7 +243,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile
+    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile, IEmitLightProjectile
     {
         public static readonly int MaxRadius = TileUtils.TileSizeInPixels * 4;
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
@@ -299,8 +299,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (Main.netMode == NetmodeID.Server)
                 return;
 
-            _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
+            Projectile.soundDelay = 12;
 
+            _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 25);
 
             ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
@@ -355,7 +356,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             Projectile.Center = yoyoProj.Center;
 
-            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f * _ringRadiusEasing.Evaluate(LifeTimeRatio));
+            if (Projectile.soundDelay <= 0)
+            {
+                Projectile.soundDelay = 12;
+
+                SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { PitchVariance = 0.4f }, Projectile.Center);
+            }
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -368,6 +374,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
+        void IEmitLightProjectile.EmitLight(Projectile _)
+        {
+            Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f * _ringRadiusEasing.Evaluate(LifeTimeRatio));
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -498,7 +509,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 Main.spriteBatch.Begin(spriteBatchSpanshot);
                 foreach (var proj in _projObserver.GetEntityInstances())
                 {
-                    (proj.ModProjectile as BellowingThunderRingProjectile).DrawLightning();
+                    proj.As<BellowingThunderRingProjectile>().DrawLightning();
                 }
                 Main.spriteBatch.End();
             }
