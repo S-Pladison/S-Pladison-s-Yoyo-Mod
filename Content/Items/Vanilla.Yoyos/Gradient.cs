@@ -1,10 +1,14 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Content.Particles;
+using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.Entities;
 using Terraria;
+using Terraria.GameContent;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -15,7 +19,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public const string InvisiblePath = $"{_assetPath}Invisible";
 
-        public static Asset<Effect> GodraysEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Godrays");
+        public static Asset<Effect> GodraysEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Godrays", AssetRequestMode.ImmediateLoad); //< Immediate здесь обязателен
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
         private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Gradient/";
@@ -39,24 +43,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            // TODO: Понижать шанс нанесения метки, если рядом уже есть враг с меткой
-
-            var markType = ModContent.ProjectileType<GradientGodraysProjectile>();
-
-            if (proj.GetOwner().ownedProjectileCounts[markType] == 0)
-            {
-                Projectile.NewProjectile(proj.GetSource_OnHit(proj), target.Center, Vector2.Zero, ModContent.ProjectileType<GradientGodraysProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI);
+            if (proj.GetOwner().OwnedProjectileCounts<GradientGodraysProjectile>() > 0)
                 return;
-            }
-
-            foreach (var otherProj in Main.ActiveProjectiles)
-            {
-                if (otherProj.type != markType || otherProj.owner != proj.owner)
-                    continue;
-
-                if ((otherProj.As<GradientGodraysProjectile>().Target?.whoAmI ?? -1) == target.whoAmI)
-                    return;
-            }
 
             Projectile.NewProjectile(proj.GetSource_OnHit(proj), target.Center, Vector2.Zero, ModContent.ProjectileType<GradientGodraysProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI);
         }
@@ -66,9 +54,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
         public static readonly EasingBuilder OpacityEasing = new(
-            (EasingFunctions.InOutExpo, 0.05f, 0f, 1f),
-            (EasingFunctions.Linear, 0.8f, 1f, 1f),
-            (EasingFunctions.InOutQuad, 0.15f, 1f, 0f)
+            (EasingFunctions.InOutQuad, 0.07f, 0f, 1f),
+            (EasingFunctions.Linear, 0.86f, 1f, 1f),
+            (EasingFunctions.InOutQuad, 0.07f, 1f, 0f)
         );
 
         private StripRenderer _stripRenderer;
@@ -76,6 +64,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override string Texture { get => GradientAssets.InvisiblePath; }
         public NPC Target { get => (int)Projectile.ai[0] >= 0 ? Main.npc[(int)Projectile.ai[0]] : null; }
         public float LifeTimeRatio { get => 1f - Projectile.timeLeft / (float)InitTimeLeft; }
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = TileUtils.TileSizeInPixels * 105;
+        }
 
         public override void SetDefaults()
         {
@@ -113,6 +106,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             Projectile.Center = Target.Center;
+
+            if (LifeTimeRatio > 0.75f)
+                return;
+
+            if (Projectile.timeLeft % 4 == 0)
+            {
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
+
+                particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
+                particle.Position = Projectile.Bottom + new Vector2(Main.rand.NextFloat(-TileUtils.TileSizeInPixels * 6, TileUtils.TileSizeInPixels * 6), Main.rand.NextFloat(-TileUtils.TileSizeInPixels * 70, 6));
+                particle.Velocity = Main.rand.NextVector2Circular(0.2f, 0.5f);
+                particle.StartColor = new Color(255, 250, 185);
+                particle.EndColor = new Color(255, 190, 0);
+                particle.Scale = Main.rand.NextFloat(0.2f, 0.3f);
+            }
         }
 
         public override bool ShouldUpdatePosition()
@@ -134,7 +142,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
 
-            if (opacity <= 0.01f)
+            if (opacity <= 0f)
                 return;
 
             Lighting.AddLight(Projectile.Center, new Color(255, 190, 0).ToVector3() * opacity * 0.5f);
@@ -147,16 +155,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
 
-            if (opacity <= 0.01f)
+            if (opacity <= 0f)
                 return;
 
             var position = Projectile.Bottom + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var lightningStartPosition = position - Vector2.UnitY * Main.screenHeight;
+            var lightningStartPosition = position - Vector2.UnitY * TileUtils.TileSizeInPixels * 100;
             var lightningEndPosition = position;
 
             GradientAssets.GodraysEffect
                 .Prepare(parameters =>
                 {
+                    parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
                     parameters["TransformMatrix"].SetValue(GameMatrices.Transform * GameMatrices.Projection);
                     parameters["Position"].SetValue(Projectile.Bottom);
                     parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);

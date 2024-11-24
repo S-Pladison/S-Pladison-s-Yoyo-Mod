@@ -5,6 +5,12 @@ texture Texture0 : register(s0);
 sampler TextureSampler0 = sampler_state
 {
     texture = <Texture0>;
+    AddressU = Wrap;
+    AddressV = Wrap;
+    AddressW = Wrap;
+    MagFilter = Linear;
+    MinFilter = Linear;
+    Mipfilter = Linear;
 };
 
 matrix TransformMatrix;
@@ -13,13 +19,13 @@ float Time;
 float Opacity;
 
 const float speed = 2.0;
-const float ray1_density = 8.0;
-const float ray2_density = 30.0;
-const float ray2_intensity = 0.3;
-
+const float ray1Density = 8.0;
+const float ray2Density = 30.0;
+const float ray2Intensity = 0.3;
 const float cutoff = 0.1;
-const float falloff = 0.4;
-const float edge_fade = 0.2;
+const float falloff = 0.25;
+const float edgeFade = 0.2;
+const float seed = 1508;
 
 struct VertexShaderInput
 {
@@ -68,18 +74,17 @@ float4 GradientGodrays(VertexShaderOutput input) : COLOR
 {
     float2 uv = float2(input.coord.y, input.coord.x);
     
-    float2 ray1 = float2(uv.x * ray1_density + Position.x * 0.05 + sin(Time * 0.1 * speed) * (ray1_density * 0.2) + 22221, 1.0);
-    float2 ray2 = float2(uv.x * ray2_density + Position.x * 0.1 + sin(Time * 0.2 * speed) * (ray1_density * 0.2) + 22221, 1.0);
+    float2 ray1 = float2(uv.x * ray1Density + Position.x * 0.025 + sin(Time * 0.1 * speed) * (ray1Density * 0.2) + seed, 1.0);
+    float2 ray2 = float2(uv.x * ray2Density + Position.x * 0.05 + sin(Time * 0.2 * speed) * (ray1Density * 0.2) + seed, 1.0);
     
-    float rays = clamp(Noise(ray1) + (Noise(ray2) * ray2_intensity), 0.0, 1.0);
-
+    float rays = clamp(Noise(ray1) + (Noise(ray2) * ray2Intensity), 0.0, 1.0);
     rays *= smoothstep(0.0, falloff, (1.0 - uv.y));
-    rays *= smoothstep(0.0 + cutoff, edge_fade + cutoff, uv.x);
-    rays *= smoothstep(0.0 + cutoff, edge_fade + cutoff, 1.0 - uv.x);
+    rays *= smoothstep(0.0 + cutoff, edgeFade + cutoff, uv.x);
+    rays *= smoothstep(0.0 + cutoff, edgeFade + cutoff, 1.0 - uv.x);
+    rays *= 1.0 - pow(1.0 - input.coord.x, 3.0);
     
-    float4 color = input.color * (lerp(float4(255, 190, 0, 255), float4(255, 250, 185, 255), rays) / 255 * 1.05) * Opacity * 1.2;
-
-    return rays * color;
+    float4 color = input.color * clamp((lerp(float4(255, 190, 0, 255), float4(255, 250, 185, 255), rays) / 255), 0.0, 1.0);
+    return rays * color * Opacity * 1.4;
 }
 
 technique Technique1
