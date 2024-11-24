@@ -10,7 +10,7 @@ CascadeItem.Tooltip:
 // Code1Item.Tooltip: ""
 // Code2Item.Tooltip: ""
 // FormatCItem.Tooltip: ""
-// GradientItem.Tooltip: ""
+GradientItem.Tooltip: Удары могут обрушить на врагов шквал кинжалов
 // HelFireItem.Tooltip: ""
 // HiveFiveItem.Tooltip: ""
 // KrakenItem.Tooltip: ""

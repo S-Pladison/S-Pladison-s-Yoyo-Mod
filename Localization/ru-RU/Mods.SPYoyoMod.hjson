@@ -6,5 +6,9 @@ Projectiles: {
 	// TheStellarThrowStarProjectile.DisplayName: The Stellar Throw Star Projectile
 	// TheStellarThrowStarHitProjectile.DisplayName: The Stellar Throw Star Hit Projectile
 	// TheStellarThrowHitProjectile.DisplayName: The Stellar Throw Hit Projectile
+	// GradientMarkProjectile.DisplayName: Gradient Mark Projectile
+	// GradientGodraysProjectile.DisplayName: Gradient Godrays Projectile
+	// GradientDaggerProjectile.DisplayName: Gradient Dagger Projectile
+	// GradientStarProjectile.DisplayName: Gradient Star Projectile
 	// ChikHomingProjectile.DisplayName: Chik Homing Projectile
 }
