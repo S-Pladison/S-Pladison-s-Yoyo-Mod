@@ -26,7 +26,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static Asset<Texture2D> DaggerGlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_DaggerGlow");
         public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_Flame");
         public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_Star");
-        public static Asset<Effect> GodraysEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Godrays", AssetRequestMode.ImmediateLoad); //< Immediate здесь обязателен
+        public static Asset<Effect> GodraysEffect { get; private set; }
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Trail");
 
         private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
@@ -41,7 +41,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             TrailEffect = null;
         }
 
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        void ILoadable.Load(Terraria.ModLoader.Mod mod)
+        {
+            GodraysEffect = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Godrays", AssetRequestMode.ImmediateLoad); //< Immediate здесь обязателен
+        }
     }
 
     public sealed class GradientItem : VanillaYoyoBaseItem
