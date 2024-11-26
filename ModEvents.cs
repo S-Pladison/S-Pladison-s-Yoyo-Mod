@@ -194,6 +194,12 @@ namespace SPYoyoMod
 
                 NetHandler.Send<PlayerConnectPacket>(null, null, connectedPlayerIndex);
             }
+
+            public override void OnEnterWorld()
+            {
+                // Костыль, исправляющий проблему с ошибочным разрешением экранных целей рендеринга при входе игрока в мир
+                ModEvents.OnResolutionChanged(Main.ScreenSize);
+            }
         }
     }
 }
