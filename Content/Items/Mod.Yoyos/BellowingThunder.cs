@@ -445,7 +445,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     [Autoload(Side = ModSide.Client)]
     public sealed class BellowingThunderScreenEffectHandler : ILoadable
     {
-        private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
+        private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Half);
         private readonly ProjectileObserver _projObserver = new(p => p.ModProjectile is not BellowingThunderRingProjectile);
 
         public RenderTarget2D Target => _renderTarget;

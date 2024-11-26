@@ -246,7 +246,7 @@ namespace SPYoyoMod.Core.Hooks
 
         private sealed class ProjectilePixelatedLayer(Func<IReadOnlyList<int>, bool> drawAction)
         {
-            private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
+            private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Half);
             private readonly Func<IReadOnlyList<int>, bool> _drawAction = drawAction;
 
             private bool _canBeDrawnToScreen = false;

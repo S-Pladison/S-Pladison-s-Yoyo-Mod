@@ -77,7 +77,7 @@ namespace SPYoyoMod.Core.Graphics
 
         private sealed class PixelatedLayer(IReadOnlyList<IWorldParticle> particles)
         {
-            private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
+            private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Half);
             private readonly IReadOnlyList<IWorldParticle> _particles = particles;
             private bool _targetWasPrepared = false;
 

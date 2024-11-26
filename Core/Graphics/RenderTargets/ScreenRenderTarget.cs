@@ -9,7 +9,7 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
     public enum ScreenRenderTargetScale
     {
         Default,
-        TwiceSmaller
+        Half
     }
 
     /// <summary>
@@ -103,7 +103,7 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
             {
                 return scale switch
                 {
-                    ScreenRenderTargetScale.TwiceSmaller => new(screenSize.X / 2, screenSize.Y / 2),
+                    ScreenRenderTargetScale.Half => new(screenSize.X / 2, screenSize.Y / 2),
                     _ => screenSize,
                 };
             }
