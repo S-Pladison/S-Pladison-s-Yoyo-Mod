@@ -83,7 +83,15 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void ModifyTooltips(List<TooltipLine> tooltips)
         {
-            tooltips.ModifyWeaponCritLine(crit => crit + (Main.IsItStorming ? StormCritBonus : 0));
+            var critLine = tooltips.Find(VanillaTooltipLine.CritChance);
+
+            if (critLine is null)
+                return;
+
+            ItemUtils.ModifyFirstIntegerInLine(critLine, (crit) =>
+            {
+                return crit + (Main.IsItStorming ? StormCritBonus : 0);
+            });
         }
     }
 

@@ -65,22 +65,29 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Вставляет строку в позицию, где обычно находится описание предмета.
         /// </summary>
-        public static void InsertDescription(this List<TooltipLine> tooltips, TooltipLine line)
+        public static void InsertDescription(this IList<TooltipLine> tooltips, TooltipLine line)
             => tooltips.InsertDescription([line]);
 
         /// <summary>
         /// Вставляет строки в позицию, где обычно находится описание предмета.
         /// </summary>
-        public static void InsertDescription(this List<TooltipLine> tooltips, IList<TooltipLine> lines)
+        public static void InsertDescription(this IList<TooltipLine> tooltips, IList<TooltipLine> lines)
         {
             for (var i = tooltips.Count - 1; i >= 0; i--)
             {
-                var tooltipLine = tooltips[i];
+                var tooltipLine = tooltips.ElementAt(i);
+                var tooltipName = tooltipLine.Name;
 
                 if (tooltipLine.Mod != "Terraria")
                     continue;
 
-                if (!tooltipLine.Name.StartsWith("Tooltip") && !_descriptionWhitelistSet.Contains(tooltipLine.Name))
+                if (tooltipName.StartsWith("Tooltip"))
+                    tooltipName = "Tooltip";
+
+                if (!Enum.TryParse<VanillaTooltipLine>(tooltipName, out var vanillaTooltipLine) || vanillaTooltipLine == VanillaTooltipLine.Undefined)
+                    continue;
+
+                if (!_descriptionWhitelistSet.Contains(vanillaTooltipLine))
                     continue;
 
                 for (var j = 0; j < lines.Count; j++)
@@ -91,16 +98,14 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Находит строку в подсказке оружия, которая отображает шанс критического удара, и изменяет указанное числовое значение с помощью заданной функции.
+        /// Ищет ванильную строку всплывающей подсказки.
         /// </summary>
-        public static void ModifyWeaponCritLine(this List<TooltipLine> tooltips, Func<int, int> func)
+        public static TooltipLine Find(this IReadOnlyCollection<TooltipLine> tooltips, VanillaTooltipLine line)
         {
-            var critLine = tooltips.FirstOrDefault(x => x.Mod == "Terraria" && x.Name == "CritChance");
+            if (line == VanillaTooltipLine.Undefined)
+                return null;
 
-            if (critLine is null)
-                return;
-
-            ModifyFirstIntegerInLine(critLine, func);
+            return tooltips.FirstOrDefault(x => x.Mod == "Terraria" && x.Name == line.ToString());
         }
 
         /// <summary>
@@ -133,14 +138,8 @@ namespace SPYoyoMod.Utils
             }
         }
 
-        private static readonly HashSet<string> _descriptionWhitelistSet =
-        [
-            "Material", "Consumable", "Ammo", "Placeable", "UseMana", "HealMana",
-            "HealLife", "TileBoost", "HammerPower", "AxePower", "PickPower", "Defense",
-            "Vanity", "Quest", "WandConsumes", "Equipable", "BaitPower", "NeedsBait",
-            "FishingPower", "Knockback", "SpecialSpeedScaling", "NoSpeedScaling",
-            "Speed", "CritChance", "Damage", "SocialDesc", "Social", "NoTransfer",
-            "FavoriteDesc", "Favorite", "ItemName"
-        ];
+        private static readonly HashSet<VanillaTooltipLine> _descriptionWhitelistSet = new(
+            Enumerable.Range((int)VanillaTooltipLine.ItemName, (int)VanillaTooltipLine.Tooltip).Cast<VanillaTooltipLine>()
+        );
     }
 }
