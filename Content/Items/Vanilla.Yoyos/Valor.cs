@@ -11,6 +11,7 @@ using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -29,6 +30,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
 
         public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public static Asset<Texture2D> AnchorTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Valor_Anchor");
+        public static Asset<Texture2D> ChainTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Valor_Chain");
         public static Asset<Texture2D> NoiseTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}CloudNoise");
         public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Trail");
         public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
@@ -39,6 +42,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             GlowTexture = null;
+            AnchorTexture = null;
+            ChainTexture = null;
             NoiseTexture = null;
             TrailEffect = null;
             OutlineEffect = null;
@@ -220,16 +225,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var nodes = new List<PhysicalChain.Node>();
                 var tilePos = tile.ToWorldCoordinates();
                 var dirToNPC = Vector2.Normalize(npc.Center - tilePos);
-                var nodeCount = Math.Max(length / 12f, 2);
+                var nodeCount = Math.Max(length / 10f, 2);
 
                 for (int i = 0; i < nodeCount; i++)
                 {
-                    nodes.Add(new PhysicalChain.Node(tilePos + dirToNPC * i * 12f, false));
+                    nodes.Add(new PhysicalChain.Node(tilePos + dirToNPC * i * 10f, false));
                 }
 
                 Physics = new(nodes)
                 {
-                    DistanceBetweenNodes = 8f,
+                    DistanceBetweenNodes = 7f,
                     Gravity = Vector2.UnitY * 3f
                 };
             }
@@ -754,26 +759,39 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(spriteBatchSnapshot with { Effect = null });
             {
+                var anchorTexture = ValorAssets.AnchorTexture;
+                var anchorOrigin = anchorTexture.Size() * 0.5f;
+
+                var segmentTexture = ValorAssets.ChainTexture;
+                var segmentDefaultRectangle = new Rectangle(0, 0, 14, 16);
+                var segmentGlowRectangle = new Rectangle(14, 0, 14, 16);
+                var segmentOrigin = new Vector2(7, 8);
+
                 foreach (var npc in _npcObserver.GetEntityInstances())
                 {
                     if (!npc.TryGetGlobalNPC<ValorGlobalNPC>(out var valorNPC) || valorNPC.Data is null)
                         continue;
 
                     var chainData = valorNPC.Data;
+                    var chainPoints = chainData.Physics.GetPositions().ToArray();
 
-                    var startPosition = chainData.Tile.ToWorldCoordinates() - Main.screenPosition;
-                    var endPosition = (npc.Center + npc.gfxOffY * Vector2.UnitY - Main.screenPosition);
-                    var vectorFromChainToNPC = endPosition - startPosition;
-                    var vectorFromChainToNPCLength = (int)vectorFromChainToNPC.Length();
+                    if (chainPoints.Length < 2)
+                        continue;
 
-                    /*var segmentRotation = vectorFromChainToNPC.ToRotation() + MathHelper.PiOver2;
-                    var segmentOrigin = texture.Size() * 0.5f;
-                    var segmentCount = (int)Math.Ceiling((float)vectorFromChainToNPCLength / texture.Width());
-                    var segmentVector = Vector2.Normalize(vectorFromChainToNPC) * texture.Width();*/
+                    var anchorColor = Lighting.GetColor(chainData.Tile);
+                    var anchorPosition = chainData.Tile.ToWorldCoordinates() - Main.screenPosition;
 
-                    foreach (var nodePosition in chainData.Physics.GetPositions())
+                    Main.spriteBatch.Draw(anchorTexture.Value, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
+
+                    for (int i = 0; i < chainPoints.Length; i++)
                     {
-                        Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, nodePosition - Main.screenPosition, new Rectangle(-1, -1, 1, 1), Color.Lime);
+                        var segmentPoint = chainPoints[i];
+                        var prevSegmentPoint = i == 0 ? chainPoints[1] : chainPoints[i - 1];
+                        var segmentRotation = (segmentPoint - prevSegmentPoint).ToRotation() + MathHelper.PiOver2;
+                        var lightColor = Lighting.GetColor(segmentPoint.ToTileCoordinates());
+
+                        Main.spriteBatch.Draw(segmentTexture.Value, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                        Main.spriteBatch.Draw(segmentTexture.Value, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
                 }
             }
