@@ -13,7 +13,7 @@ namespace SPYoyoMod.Content.Particles
     [Autoload(Side = ModSide.Client)]
     public abstract class BaseParticle : IWorldParticle, ILoadable
     {
-        private static readonly int _defaultLifeTime = ModUtils.SecondsToTicks(1);
+        private static readonly int _defaultLifeTime = GeneralUtils.SecondsToTicks(1);
 
         /// <summary>
         /// Мировая позиция частицы.

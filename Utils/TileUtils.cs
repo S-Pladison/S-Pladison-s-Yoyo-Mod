@@ -8,6 +8,9 @@ namespace SPYoyoMod.Utils
 {
     public static class TileUtils
     {
+        /// <summary>
+        /// Размер одной плитки в пикселях.
+        /// </summary>
         public const int TileSizeInPixels = 16;
 
         /// <summary>

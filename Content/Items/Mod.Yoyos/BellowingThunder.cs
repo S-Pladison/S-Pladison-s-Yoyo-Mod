@@ -254,7 +254,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile, IEmitLightProjectile
     {
         public static readonly int MaxRadius = TileUtils.TileSizeInPixels * 4;
-        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(3f);
 
         private static readonly EasingBuilder _lightningStrikeWidthEasing = new(
             (EasingFunctions.InOutCubic, 0.05f, 0f, 1f),
@@ -550,7 +550,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     public sealed class BellowingThunderSilhouetteEffectHandler : ILoadable
     {
         public static readonly string FilterName = $"{nameof(SPYoyoMod)}:BellowingThunderSilhouette";
-        public static readonly int FilterActiveTime = ModUtils.SecondsToTicks(0.2f);
+        public static readonly int FilterActiveTime = GeneralUtils.SecondsToTicks(0.2f);
 
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
 

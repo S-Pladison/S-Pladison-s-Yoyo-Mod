@@ -66,8 +66,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     public sealed class TheStellarThrowProjectile : YoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
         public static readonly float SpawnStarRadius = TileUtils.TileSizeInPixels * 15f;
-        public static readonly int SpawnStarCooldownMin = ModUtils.SecondsToTicks(1.5f);
-        public static readonly int SpawnStarCooldownMax = ModUtils.SecondsToTicks(2f);
+        public static readonly int SpawnStarCooldownMin = GeneralUtils.SecondsToTicks(1.5f);
+        public static readonly int SpawnStarCooldownMax = GeneralUtils.SecondsToTicks(2f);
         public static readonly Color GlowColor = new(252, 194, 116);
         public static readonly Color StarColor = new(255, 0, 80);
         public static readonly int TrailPointCount = 15;
@@ -170,7 +170,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     var particle = WorldParticleManager.SpawnParticle<StarParticle>();
 
-                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.StartColor = new Color(255, 175, 65);
                     particle.EndColor = new Color(255, 85, 225);
@@ -180,7 +180,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
-                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.StartColor = new Color(255, 50, 160);
                     particle.EndColor = new Color(50, 50, 255);
@@ -319,7 +319,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 trailEndZero: new(255, 0, 80)
             ),
         ];
-        public static readonly int NpcHitOutlineLifeTime = ModUtils.SecondsToTicks(0.25f);
+        public static readonly int NpcHitOutlineLifeTime = GeneralUtils.SecondsToTicks(0.25f);
         public static readonly EasingBuilder NpcHitOutlineThicknessEasing = new(
             (EasingFunctions.InOutExpo, 0.2f, 0f, 1f),
             (EasingFunctions.InOutQuad, 0.8f, 1f, 0f)
@@ -429,7 +429,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     var particle = WorldParticleManager.SpawnParticle<StarParticle>();
 
-                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.Velocity = Projectile.velocity * 0.05f;
                     particle.StartColor = StylePalette.StarFirst;
@@ -440,7 +440,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
-                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.Velocity = Projectile.velocity * 0.05f;
                     particle.StartColor = StylePalette.StarFirst;
@@ -454,7 +454,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             if (Projectile.numUpdates == 0 && Projectile.soundDelay == 0)
             {
-                Projectile.soundDelay = ModUtils.SecondsToTicks(Main.rand.NextFloat(1.0f, 2.0f));
+                Projectile.soundDelay = GeneralUtils.SecondsToTicks(Main.rand.NextFloat(1.0f, 2.0f));
 
                 SoundEngine.PlaySound(in SoundID.Item9, Projectile.Center);
             }
@@ -524,7 +524,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
     public sealed class TheStellarThrowHitProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
     {
-        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(0.33f);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.33f);
 
         private static readonly EasingBuilder _scaleEasing = new(
             (EasingFunctions.InOutExpo, 0.2f, 0f, 1f),
@@ -554,7 +554,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     var particle = WorldParticleManager.SpawnParticle<StarParticle>();
 
-                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + vector * Projectile.width * Main.rand.NextFloat() * 2f;
                     particle.Velocity = vector;
                     particle.StartColor = StylePalette.StarFirst;
@@ -565,7 +565,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
-                    particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + vector * Projectile.width * Main.rand.NextFloat() * 2f;
                     particle.Velocity = vector;
                     particle.StartColor = StylePalette.StarFirst;
@@ -579,7 +579,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
                 var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
 
-                particle.LifeTime = ModUtils.SecondsToTicks(1f);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(1f);
                 particle.Position = Projectile.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels);
                 particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f);
                 particle.StartColor = new(new Color(100, 25, 75) * 0.25f, true);

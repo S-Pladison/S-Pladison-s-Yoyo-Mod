@@ -52,9 +52,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
     {
-        public static readonly int TimeToStartCharging = ModUtils.SecondsToTicks(2f);
-        public static readonly int TimeToCharge = ModUtils.SecondsToTicks(0.7f);
-        public static readonly int AddTimeForHit = ModUtils.SecondsToTicks(0.2f);
+        public static readonly int TimeToStartCharging = GeneralUtils.SecondsToTicks(2f);
+        public static readonly int TimeToCharge = GeneralUtils.SecondsToTicks(0.7f);
+        public static readonly int AddTimeForHit = GeneralUtils.SecondsToTicks(0.2f);
         public static readonly Color GlowColor = new(255, 180, 95);
         public static readonly int TrailPointCount = 10;
 
@@ -148,7 +148,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             {
                 var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
-                particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                 particle.Position = proj.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * proj.width * Main.rand.NextFloat();
                 particle.StartColor = new Color(255, 135, 90);
                 particle.EndColor = new Color(255, 135, 90);
@@ -266,7 +266,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile
     {
         public static readonly int ExplosionRadius = TileUtils.TileSizeInPixels * 6;
-        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(0.33f);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.33f);
 
         private RingRenderer _ringRenderer;
 
@@ -301,7 +301,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
                 var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
 
-                particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(1.5f);
                 particle.Position = Projectile.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels, ExplosionRadius * 0.85f);
                 particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f);
                 particle.StartColor = new(new Color(50, 50, 50, 255), false);
@@ -337,7 +337,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
-                particle.LifeTime = ModUtils.SecondsToTicks(0.5f);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                 particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(angle) * radius * 0.95f;
                 particle.Velocity = Vector2.UnitX.RotatedBy(angle) * 0.5f;
                 particle.StartColor = new Color(255, 135, 90);
@@ -376,7 +376,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            target.AddBuff(BuffID.OnFire, Main.rand.Next(ModUtils.SecondsToTicks(1f), ModUtils.SecondsToTicks(4f)));
+            target.AddBuff(BuffID.OnFire, Main.rand.Next(GeneralUtils.SecondsToTicks(1f), GeneralUtils.SecondsToTicks(4f)));
 
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }

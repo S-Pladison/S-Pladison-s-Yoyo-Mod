@@ -114,14 +114,14 @@ namespace SPYoyoMod.Core.Hooks
                         MonoModHooks.Add(methodInfo, (orig_ThoriumModYoyoAI orig, int index, float seconds, float length, float acceleration, float rotationSpeed, object action, object initialize) =>
                         {
                             ref var proj = ref Main.projectile[index];
-                            var lifeTime = (float)ModUtils.SecondsToTicks(seconds);
+                            var lifeTime = (float)GeneralUtils.SecondsToTicks(seconds);
 
                             GetYoyoStats(proj, out var statModifiers);
 
                             ModifyYoyoLifeTimeValue(proj, ref lifeTime);
                             ModifyYoyoMaxRangeValue(proj, ref length);
 
-                            orig(index, ModUtils.TicksToSeconds(lifeTime), length, acceleration, rotationSpeed, action, initialize);
+                            orig(index, GeneralUtils.TicksToSeconds(lifeTime), length, acceleration, rotationSpeed, action, initialize);
                         });
                     }
                     catch (Exception)

@@ -76,13 +76,13 @@ namespace SPYoyoMod
 
         private static void LoadModEvents()
         {
-            OnPostSetupRecipes += ModUtils.EmptyAction;
-            OnPostSetupContent += ModUtils.EmptyAction;
-            OnWorldUnload += ModUtils.EmptyAction;
-            OnPreUpdateDusts += ModUtils.EmptyAction;
-            OnPostUpdateEverything += ModUtils.EmptyAction;
-            OnPostUpdateCameraPosition += ModUtils.EmptyAction;
-            OnResolutionChanged += ModUtils.EmptyAction;
+            OnPostSetupRecipes += GeneralUtils.EmptyAction;
+            OnPostSetupContent += GeneralUtils.EmptyAction;
+            OnWorldUnload += GeneralUtils.EmptyAction;
+            OnPreUpdateDusts += GeneralUtils.EmptyAction;
+            OnPostUpdateEverything += GeneralUtils.EmptyAction;
+            OnPostUpdateCameraPosition += GeneralUtils.EmptyAction;
+            OnResolutionChanged += GeneralUtils.EmptyAction;
 
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
             {
@@ -104,7 +104,7 @@ namespace SPYoyoMod
 
         private static void LoadVanillaEvents()
         {
-            OnPreDraw += ModUtils.EmptyAction;
+            OnPreDraw += GeneralUtils.EmptyAction;
             Main.OnPreDraw += ModOnPreDraw;
         }
 

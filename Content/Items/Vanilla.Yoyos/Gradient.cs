@@ -86,7 +86,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class GradientGodraysProjectile : ModProjectile, IInitializableProjectile, IEmitLightProjectile
     {
-        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(3f);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(3f);
         public static readonly EasingBuilder OpacityEasing = new(
             (EasingFunctions.InOutQuad, 0.07f, 0f, 1f),
             (EasingFunctions.Linear, 0.78f, 1f, 1f),
@@ -169,7 +169,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             {
                 var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
-                particle.LifeTime = ModUtils.SecondsToTicks(1.5f);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(1.5f);
                 particle.Position = Projectile.Bottom + new Vector2(Main.rand.NextFloat(-TileUtils.TileSizeInPixels * 4, TileUtils.TileSizeInPixels * 4), Main.rand.NextFloat(-TileUtils.TileSizeInPixels * 70, 6));
                 particle.Velocity = Main.rand.NextVector2Circular(0.2f, 0.5f);
                 particle.StartColor = new Color(255, 250, 185);
@@ -242,7 +242,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class GradientDaggerProjectile : ModProjectile, IInitializableProjectile
     {
-        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(2f);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(2f);
         public static readonly int TrailPointCount = 4;
         public static readonly EasingBuilder OpacityEasing = new(
             (EasingFunctions.InOutQuad, 0.25f, 0f, 1f),
@@ -431,7 +431,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class GradientStarProjectile : ModProjectile, IPostDrawPixelatedProjectile
     {
-        public static readonly int InitTimeLeft = ModUtils.SecondsToTicks(0.2f);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.2f);
         public static readonly EasingBuilder ScaleEasing = new(
             (EasingFunctions.InOutExpo, 0.4f, 0f, 1f),
             (EasingFunctions.InOutQuad, 0.6f, 1f, 0f)
