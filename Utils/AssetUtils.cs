@@ -7,11 +7,11 @@ namespace SPYoyoMod.Utils
     public static class AssetUtils
     {
         /// <summary>
-        /// Выполняет подготовительные действия для заданного эффекта, если он был загружен.
+        /// Р’С‹РїРѕР»РЅСЏРµС‚ РїРѕРґРіРѕС‚РѕРІРёС‚РµР»СЊРЅС‹Рµ РґРµР№СЃС‚РІРёСЏ РґР»СЏ Р·Р°РґР°РЅРЅРѕРіРѕ СЌС„С„РµРєС‚Р°, РµСЃР»Рё РѕРЅ Р±С‹Р» Р·Р°РіСЂСѓР¶РµРЅ.
         /// </summary>
-        /// <param name="effect">Эффект.</param>
-        /// <param name="action">Действие, которое будет применено к параметрам эффекта.</param>
-        /// <returns>Исходный <see cref="Asset{Effect}"/> для цепочки вызовов.</returns>
+        /// <param name="effect">Р­С„С„РµРєС‚.</param>
+        /// <param name="action">Р”РµР№СЃС‚РІРёРµ, РєРѕС‚РѕСЂРѕРµ Р±СѓРґРµС‚ РїСЂРёРјРµРЅРµРЅРѕ Рє РїР°СЂР°РјРµС‚СЂР°Рј СЌС„С„РµРєС‚Р°.</param>
+        /// <returns>РСЃС…РѕРґРЅС‹Р№ <see cref="Asset{Effect}"/> РґР»СЏ С†РµРїРѕС‡РєРё РІС‹Р·РѕРІРѕРІ.</returns>
         public static Asset<Effect> Prepare(this Asset<Effect> effect, Action<EffectParameterCollection> action)
         {
             if (!effect.IsLoaded)
@@ -23,10 +23,10 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Применяет указанный проход эффекта, если он загружен.
+        /// РџСЂРёРјРµРЅСЏРµС‚ СѓРєР°Р·Р°РЅРЅС‹Р№ РїСЂРѕС…РѕРґ СЌС„С„РµРєС‚Р°, РµСЃР»Рё РѕРЅ Р·Р°РіСЂСѓР¶РµРЅ.
         /// </summary>
-        /// <param name="effect">Эффект.</param>
-        /// <param name="passName">Имя прохода техники для применения. Если не указано, применяется первый доступный проход.</param>
+        /// <param name="effect">Р­С„С„РµРєС‚.</param>
+        /// <param name="passName">РРјСЏ РїСЂРѕС…РѕРґР° С‚РµС…РЅРёРєРё РґР»СЏ РїСЂРёРјРµРЅРµРЅРёСЏ. Р•СЃР»Рё РЅРµ СѓРєР°Р·Р°РЅРѕ, РїСЂРёРјРµРЅСЏРµС‚СЃСЏ РїРµСЂРІС‹Р№ РґРѕСЃС‚СѓРїРЅС‹Р№ РїСЂРѕС…РѕРґ.</param>
         public static void Apply(this Asset<Effect> effect, string passName = null)
         {
             if (!effect.IsLoaded)
