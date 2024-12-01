@@ -207,7 +207,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorGlobalNPC : GlobalNPC
+    public sealed class ValorGlobalNPC : GlobalNPC, IEmitLightNPC
     {
         public sealed class ChainData
         {
@@ -615,6 +615,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             npc.velocity += velocityCorrection;
         }
 
+        void IEmitLightNPC.EmitLight(NPC npc)
+        {
+            if (!HasDebuff)
+                return;
+
+            Lighting.AddLight(npc.Center, new Color(35, 90, 255).ToVector3() * 0.3f);
+        }
+
         private static bool CanBeChained(NPC npc)
             => npc.CanBeChasedBy() &&
                 !npc.IsBossOrRelated() &&
@@ -654,7 +662,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             ModEvents.OnPostUpdateEverything += _npcObserver.Update;
             ModEvents.OnPostUpdateCameraPosition += DrawNPCsToTarget;
-            ModEvents.OnPreDraw += EmitLight;
 
             On_Main.DoDraw_DrawNPCsOverTiles += (orig, main) =>
             {
@@ -675,7 +682,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void ILoadable.Unload()
         {
-            ModEvents.OnPreDraw -= EmitLight;
             ModEvents.OnPostUpdateCameraPosition -= DrawNPCsToTarget;
             ModEvents.OnPostUpdateEverything -= _npcObserver.Update;
         }
@@ -701,32 +707,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             device.SetRenderTarget(null);
 
             _targetWasPrepared = true;
-        }
-
-        private void EmitLight()
-        {
-            // - Почему в PreDraw, а не в Update или гдет еще?
-            // В паузе источники освещения из Update не появляются...
-            // Да, костыль, но надеюсь он ни на что не повлияет
-
-            if (!_npcObserver.AnyEntity)
-                return;
-
-            // Lighting.AddLight(...)
-            // {
-            //     if (!Main.gamePaused && Main.netMode != 2)
-            //     {
-            //         _activeEngine.AddLight(...);
-            //     }
-            // }
-
-            var origGamePaused = Main.gamePaused;
-            Main.gamePaused = false;
-
-            foreach (var npc in _npcObserver.GetEntityInstances())
-                Lighting.AddLight(npc.Center, new Color(35, 90, 255).ToVector3() * 0.3f);
-
-            Main.gamePaused = origGamePaused;
         }
 
         private void DrawOutlineToScreen()
