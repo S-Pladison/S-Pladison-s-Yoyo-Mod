@@ -251,7 +251,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile, IEmitLightProjectile
+    public sealed class BellowingThunderRingProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity
     {
         public static readonly int MaxRadius = TileUtils.TileSizeInPixels * 4;
         public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(3f);
@@ -384,7 +384,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }
 
-        void IEmitLightProjectile.EmitLight(Projectile _)
+        void IEmitLightEntity.EmitLight(Entity _)
         {
             Lighting.AddLight(Projectile.Center, new Color(208, 99, 219).ToVector3() * 0.4f * _ringRadiusEasing.Evaluate(LifeTimeRatio));
         }

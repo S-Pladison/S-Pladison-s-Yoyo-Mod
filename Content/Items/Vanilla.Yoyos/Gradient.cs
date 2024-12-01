@@ -84,7 +84,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class GradientGodraysProjectile : ModProjectile, IInitializableProjectile, IEmitLightProjectile
+    public sealed class GradientGodraysProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity
     {
         public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(3f);
         public static readonly EasingBuilder OpacityEasing = new(
@@ -193,7 +193,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             return false;
         }
 
-        void IEmitLightProjectile.EmitLight(Projectile _)
+        void IEmitLightEntity.EmitLight(Entity _)
         {
             var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
 

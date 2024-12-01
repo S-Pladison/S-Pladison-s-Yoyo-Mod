@@ -151,7 +151,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     return;
             }
 
-            target.AddBuff(ModContent.BuffType<ValorBuff>(), ModUtils.SecondsToTicks(7f));
+            target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
@@ -207,7 +207,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorGlobalNPC : GlobalNPC, IEmitLightNPC
+    public sealed class ValorGlobalNPC : GlobalNPC, IEmitLightEntity
     {
         public sealed class ChainData
         {
@@ -355,7 +355,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
         }
 
-        public static readonly int TileCheckFrequency = ModUtils.SecondsToTicks(1f);
+        public static readonly int TileCheckFrequency = GeneralUtils.SecondsToTicks(1f);
         public static readonly int TileCheckRadius = 7;
         public static readonly float ChainAdditionalLength = TileUtils.TileSizeInPixels * 2.5f;
         public static readonly float ChainLengthToBreak = TileUtils.TileSizeInPixels * 12f;
@@ -615,7 +615,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             npc.velocity += velocityCorrection;
         }
 
-        void IEmitLightNPC.EmitLight(NPC npc)
+        void IEmitLightEntity.EmitLight(Entity npc)
         {
             if (!HasDebuff)
                 return;
