@@ -63,7 +63,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class TheStellarThrowProjectile : YoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
+    public sealed class TheStellarThrowProjectile : YoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
     {
         public static readonly float SpawnStarRadius = TileUtils.TileSizeInPixels * 15f;
         public static readonly int SpawnStarCooldownMin = GeneralUtils.SecondsToTicks(1.5f);
@@ -189,13 +189,16 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             }
 
             Projectile.rotation -= 0.15f;
-
-            Lighting.AddLight(Projectile.Center, StarColor.ToVector3() * 0.2f);
         }
 
         private void SetCooldownForStarSpawn(int? cooldown = null)
         {
             _cooldownTimer = cooldown ?? Main.rand.Next(SpawnStarCooldownMin, SpawnStarCooldownMax);
+        }
+
+        void IEmitLightEntity.EmitLight(Entity _)
+        {
+            Lighting.AddLight(Projectile.Center, StarColor.ToVector3() * 0.2f);
         }
 
         public override Color? GetAlpha(Color lightColor)
@@ -261,7 +264,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
+    public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
     {
         public readonly struct Palette(Color starFirst, Color starSecond, Color starThird, Color trailStartOne, Color trailStartZero, Color trailEndOne, Color trailEndZero)
         {
@@ -419,8 +422,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             {
                 Projectile.rotation += 0.5f;
                 Projectile.scale = MathHelper.Min(1f, Projectile.scale + 0.1f);
-
-                Lighting.AddLight(Projectile.Center, StylePalette.StarSecond.ToVector3() * 0.3f);
             }
 
             if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(4))
@@ -489,6 +490,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowHitProjectile>(), 0, 0, Projectile.owner, Style);
 
             return true;
+        }
+
+        void IEmitLightEntity.EmitLight(Entity _)
+        {
+            Lighting.AddLight(Projectile.Center, StylePalette.StarSecond.ToVector3() * 0.3f);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)

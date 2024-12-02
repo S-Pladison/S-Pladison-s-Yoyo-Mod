@@ -66,7 +66,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile
+    public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
     {
         public static readonly Color GlowColor = new(35, 90, 255);
         public static readonly int TrailPointCount = 7;
@@ -122,8 +122,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 dust.noGravity = true;
                 dust.noLightEmittence = true;
             }
-
-            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
@@ -152,6 +150,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));
+        }
+
+        void IEmitLightEntity.EmitLight(Entity proj)
+        {
+            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)

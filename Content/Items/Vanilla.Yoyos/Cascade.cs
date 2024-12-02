@@ -50,7 +50,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override int ItemType => ItemID.Cascade;
     }
 
-    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile
+    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile, IEmitLightEntity
     {
         public static readonly int TimeToStartCharging = GeneralUtils.SecondsToTicks(2f);
         public static readonly int TimeToCharge = GeneralUtils.SecondsToTicks(0.7f);
@@ -154,8 +154,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 particle.EndColor = new Color(255, 135, 90);
                 particle.Scale = Main.rand.NextFloat(0.35f, 0.5f);
             }
-
-            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
@@ -176,6 +174,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             _charging = bitReader.ReadBit();
             _aiTimer = binaryReader.ReadUInt16();
+        }
+
+        void IEmitLightEntity.EmitLight(Entity proj)
+        {
+            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
@@ -263,7 +266,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile
+    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity
     {
         public static readonly int ExplosionRadius = TileUtils.TileSizeInPixels * 6;
         public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.33f);
@@ -354,8 +357,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var dust = Dust.NewDustPerfect(position, DustID.Torch, vector, 0, default, Main.rand.NextFloat(1.2f, 2.0f));
                 dust.noGravity = true;
             }
-
-            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - LifeTimeRatio) * 0.4f);
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
@@ -379,6 +380,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             target.AddBuff(BuffID.OnFire, Main.rand.Next(GeneralUtils.SecondsToTicks(1f), GeneralUtils.SecondsToTicks(4f)));
 
             Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
+        void IEmitLightEntity.EmitLight(Entity _)
+        {
+            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - LifeTimeRatio) * 0.4f);
         }
 
         public override void PostDraw(Color lightColor)

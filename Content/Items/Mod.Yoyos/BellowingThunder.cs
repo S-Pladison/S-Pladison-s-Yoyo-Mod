@@ -95,7 +95,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IDrawPixelatedProjectile
+    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IDrawPixelatedProjectile, IEmitLightEntity
     {
         public static readonly Color GlowColor = new(208, 99, 219);
         public static readonly int TrailPointCount = 5;
@@ -177,8 +177,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 dust.noGravity = true;
                 dust.noLightEmittence = true;
             }
-
-            Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -191,6 +189,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             var ringProjIndex = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner);
 
             Main.projectile[ringProjIndex].CritChance = _initCritChance;
+        }
+
+        void IEmitLightEntity.EmitLight(Entity _)
+        {
+            Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
