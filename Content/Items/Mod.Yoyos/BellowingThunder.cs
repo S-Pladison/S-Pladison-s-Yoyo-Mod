@@ -88,7 +88,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (critLine is null)
                 return;
 
-            ItemUtils.ModifyFirstIntegerInLine(critLine, (crit) =>
+            ItemUtils.ModifyFirstIntegerInLine(critLine, static (crit) =>
             {
                 return crit + (Main.IsItStorming ? StormCritBonus : 0);
             });
