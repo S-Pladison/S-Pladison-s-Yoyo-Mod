@@ -11,4 +11,5 @@ Projectiles: {
 	GradientGodraysProjectile.DisplayName: Gradient Godrays Projectile
 	GradientDaggerProjectile.DisplayName: Gradient Dagger Projectile
 	GradientStarProjectile.DisplayName: Gradient Star Projectile
+	Code1ImprovedCritProjectile.DisplayName: Code1 Improved Crit Projectile
 }
