@@ -6,6 +6,7 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.IO;

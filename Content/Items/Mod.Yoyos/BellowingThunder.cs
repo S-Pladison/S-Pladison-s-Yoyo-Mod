@@ -7,6 +7,7 @@ using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using SPYoyoMod.Utils.Entities;
 using System;
 using System.Collections.Generic;
@@ -23,40 +24,26 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
     [Autoload(Side = ModSide.Client)]
-    public sealed class BellowingThunderAssets : ILoadable
+    public sealed class BellowingThunderAssets
     {
-        public const string ItemPath = $"{_yoyoPath}BellowingThunder_Item";
-        public const string ProjPath = $"{_yoyoPath}BellowingThunder_Proj";
-        public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Mod.Yoyos/BellowingThunder/BellowingThunder";
 
-        public static Asset<Texture2D> ElectricityTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Electricity");
-        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
-        public static Asset<Texture2D> CircleTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Circle");
-        public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Star");
-        public static Asset<Texture2D> LightningTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}BellowingThunder_Lightning");
-        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Trail");
-        public static Asset<Effect> LightningEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Lightning");
-        public static Asset<Effect> ScreenEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Screen");
-        public static Asset<Effect> SilhouetteEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}BellowingThunderEffect_Silhouette");
-        public static SoundStyle LightningStrikeSound { get; private set; } = new($"{_yoyoPath}BellowingThunderSound_LightningStrike");
+        public const string ItemPath = $"{YoyoPath}_Item";
+        public const string ProjPath = $"{YoyoPath}_Proj";
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
+        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Mod.Yoyos/BellowingThunder/";
-
-        void ILoadable.Unload()
-        {
-            ElectricityTexture = null;
-            GlowTexture = null;
-            CircleTexture = null;
-            StarTexture = null;
-            LightningTexture = null;
-            TrailEffect = null;
-            LightningEffect = null;
-            ScreenEffect = null;
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public static readonly LazyAsset<Texture2D> ElectricityTexture = LazyAsset<Texture2D>.From(($"{YoyoPath}_Electricity"));
+        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
+        public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
+        public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
+        public static readonly LazyAsset<Texture2D> LightningTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Lightning");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> LightningEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Lightning");
+        public static readonly LazyAsset<Effect> ScreenEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Screen");
+        public static readonly LazyAsset<Effect> SilhouetteEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Silhouette");
+        public static readonly SoundStyle LightningStrikeSound = new($"{YoyoPath}Sound_LightningStrike");
     }
 
     public sealed class BellowingThunderItem : YoyoBaseItem
@@ -384,11 +371,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override bool PreDraw(ref Color lightColor)
         {
             var circlePosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var circleTexture = BellowingThunderAssets.CircleTexture;
+            var circleTexture = BellowingThunderAssets.CircleTexture.Value;
             var circleColor = new Color(145, 60, 195) with { A = 0 } * EasingFunctions.InOutCubic(LifeTimeRatio) * 0.2f;
             var circleScale = MathHelper.Lerp(4f, 0f, EasingFunctions.InCubic(LifeTimeRatio));
 
-            Main.spriteBatch.Draw(circleTexture.Value, circlePosition, null, circleColor, 0f, circleTexture.Size() * 0.5f, circleScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(circleTexture, circlePosition, null, circleColor, 0f, circleTexture.Size() * 0.5f, circleScale, SpriteEffects.None, 0f);
 
             return true;
         }
@@ -434,11 +421,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 .SetPoints([lightningStartPosition, lightningEndPosition])
                 .Render();
 
-            var starTexture = BellowingThunderAssets.StarTexture;
+            var starTexture = BellowingThunderAssets.StarTexture.Value;
             var starRotation = EasingFunctions.InOutSine(LifeTimeRatio) * MathHelper.PiOver2;
             var starScale = _starEasing.Evaluate(LifeTimeRatio) * 2f;
 
-            Main.spriteBatch.Draw(starTexture.Value, position, null, Color.White, EasingFunctions.InOutSine(starRotation) * MathHelper.PiOver2, starTexture.Size() * 0.5f, starScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, position, null, Color.White, EasingFunctions.InOutSine(starRotation) * MathHelper.PiOver2, starTexture.Size() * 0.5f, starScale, SpriteEffects.None, 0f);
         }
     }
 
