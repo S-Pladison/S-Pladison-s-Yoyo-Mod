@@ -18,7 +18,6 @@ using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
     public sealed class CascadeAssets : ILoadable
     {
         public const string InvisiblePath = $"{_assetPath}Invisible";

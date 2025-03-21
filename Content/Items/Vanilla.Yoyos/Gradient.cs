@@ -7,6 +7,7 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using Terraria;
@@ -17,34 +18,19 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class GradientAssets : ILoadable
+    public sealed class GradientAssets
     {
-        public const string DaggerPath = $"{_yoyoPath}Gradient_Dagger";
-        public const string InvisiblePath = $"{_assetPath}Invisible";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Gradient/Gradient";
 
-        public static Asset<Texture2D> DaggerGlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_DaggerGlow");
-        public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_Flame");
-        public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Gradient_Star");
-        public static Asset<Effect> GodraysEffect { get; private set; }
-        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Trail");
+        public const string DaggerPath = $"{YoyoPath}_Dagger";
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Gradient/";
-
-        void ILoadable.Unload()
-        {
-            DaggerGlowTexture = null;
-            FlameTexture = null;
-            StarTexture = null;
-            GodraysEffect = null;
-            TrailEffect = null;
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod)
-        {
-            GodraysEffect = ModContent.Request<Effect>($"{_yoyoPath}GradientEffect_Godrays", AssetRequestMode.ImmediateLoad); //< Immediate здесь обязателен
-        }
+        public static readonly LazyAsset<Texture2D> DaggerGlowTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_DaggerGlow");
+        public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
+        public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
+        public static readonly LazyAsset<Effect> GodraysEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Godrays", AssetRequestMode.ImmediateLoad);
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
     }
 
     public sealed class GradientItem : VanillaYoyoBaseItem
@@ -400,7 +386,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
                         parameters["Color0"].SetValue(Color.White.ToVector4());
                         parameters["Color1"].SetValue(new Color(195, 165, 10).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / GradientAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / GradientAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly + Projectile.whoAmI * 15.08f);
                         parameters["Opacity"].SetValue(opacity);
                     })
@@ -412,7 +398,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             var position = Projectile.Center - Main.screenPosition;
 
             var glowTexture = GradientAssets.DaggerGlowTexture;
-            var glowOrigin = glowTexture.Size() * 0.5f;
+            var glowOrigin = glowTexture.Value.Size() * 0.5f;
             var glowColor = new Color(120, 110, 60, 0) * opacity * 0.5f;
 
             Main.spriteBatch.Draw(glowTexture.Value, position, null, glowColor, Projectile.rotation, glowOrigin, Projectile.scale, SpriteEffects.None, 0);
@@ -456,12 +442,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
-            var starTexture = GradientAssets.StarTexture;
+            var starTexture = GradientAssets.StarTexture.Value;
             var starOrigin = starTexture.Size() * 0.5f;
             var starScale = ScaleEasing.Evaluate(LifeTimeRatio);
 
-            Main.spriteBatch.Draw(starTexture.Value, position, null, Color.Black * 0.5f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.55f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(195, 165, 55) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, position, null, Color.Black * 0.5f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.55f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, position, null, new Color(195, 165, 55) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.4f, SpriteEffects.None, 0f);
         }
     }
 }

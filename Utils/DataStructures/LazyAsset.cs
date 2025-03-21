@@ -19,7 +19,7 @@ namespace SPYoyoMod.Utils.DataStructures
 
         public static LazyAsset<T> From(string path, AssetRequestMode requestMode = AssetRequestMode.AsyncLoad)
         {
-            return new(() => 
+            return new(() =>
                 ModContent.Request<T>(path, requestMode)
             );
         }
