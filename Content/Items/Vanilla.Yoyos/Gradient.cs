@@ -341,6 +341,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
+            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+
             if (WasCollided)
                 return;
 
