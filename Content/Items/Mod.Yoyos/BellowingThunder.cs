@@ -23,7 +23,6 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
     public sealed class BellowingThunderAssets
     {
         public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
@@ -34,7 +33,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public const string InvisiblePath = $"{AssetPath}/Invisible";
         public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        public static readonly LazyAsset<Texture2D> ElectricityTexture = LazyAsset<Texture2D>.From(($"{YoyoPath}_Electricity"));
+        public static readonly LazyAsset<Texture2D> ElectricityTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Electricity");
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
         public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
