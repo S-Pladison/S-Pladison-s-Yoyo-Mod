@@ -432,7 +432,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     public sealed class BellowingThunderScreenEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.TwiceSmaller);
-        private readonly ProjectileObserver _projObserver = new(p => p.ModProjectile is not BellowingThunderRingProjectile);
+        private readonly ProjectileObserver _projObserver = ProjectileObserver.Create(p => p.ModProjectile is not BellowingThunderRingProjectile);
 
         public RenderTarget2D Target => _renderTarget;
 
@@ -448,7 +448,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
-            ModEvents.OnPostUpdateEverything += _projObserver.Update;
             ModEvents.OnPostUpdateCameraPosition += DrawToTarget;
             ModEvents.OnWorldUnload += _projObserver.Clear;
 
@@ -463,7 +462,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             ModEvents.OnWorldUnload -= _projObserver.Clear;
             ModEvents.OnPostUpdateCameraPosition -= DrawToTarget;
-            ModEvents.OnPostUpdateEverything -= _projObserver.Update;
         }
 
         private void DrawToTarget()

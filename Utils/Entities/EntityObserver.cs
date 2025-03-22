@@ -24,8 +24,6 @@ namespace SPYoyoMod.Utils
         protected readonly T[] _sourseArray = sourse;
         protected readonly Predicate<T> _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
 
-        public EntityObserver(T[] sourse) : this(sourse, null) { }
-
         /// <summary>
         /// Добавить для наблюдение новую сущность.
         /// </summary>
@@ -46,29 +44,22 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Наблюдает за добавленными сущностями и удаляет всех, кто не соответствует условиям наблюдения.
-        /// </summary>
-        public void Update()
-        {
-            for (var i = 0; i < _entities.Count; i++)
-            {
-                ref var entity = ref _sourseArray[_entities[i].WhoAmI];
-
-                if (!entity.active || GetEntityType(entity) != _entities[i].Type || (_entityShouldBeRemovedPredicate?.Invoke(entity) ?? false))
-                {
-                    _entities.RemoveAt(i);
-                    i--;
-                }
-            }
-        }
-
-        /// <summary>
         /// Получить данные обо всех наблюдаемых сущностей.
         /// </summary>
         public IEnumerable<T> GetEntityInstances()
         {
-            foreach (var entityData in _entities)
-                yield return _sourseArray[entityData.WhoAmI];
+            for (var i = 0; i < _entities.Count; i++)
+            {
+                var entity = _sourseArray[_entities[i].WhoAmI];
+
+                if (!entity.active || GetEntityType(entity) != _entities[i].Type || (_entityShouldBeRemovedPredicate?.Invoke(entity) ?? false))
+                {
+                    _entities.RemoveAt(i--);
+                    continue;
+                }
+
+                yield return entity;
+            }
         }
 
         /// <summary>
@@ -85,20 +76,40 @@ namespace SPYoyoMod.Utils
     /// <summary>
     /// Класс-наблюдателя за снарядами.
     /// </summary>
-    public sealed class ProjectileObserver(Predicate<Projectile> entityShouldBeRemovedPredicate) : EntityObserver<Projectile>(Main.projectile, entityShouldBeRemovedPredicate)
+    public sealed class ProjectileObserver : EntityObserver<Projectile>
     {
-        public ProjectileObserver() : this(null) { }
+        private ProjectileObserver(Predicate<Projectile> entityShouldBeRemovedPredicate) : base(Main.projectile, entityShouldBeRemovedPredicate) { }
 
         protected override int GetEntityType(Projectile proj) => proj.type;
+
+        /// <summary>
+        /// Создать объект класса-наблюдателя за снарядами.
+        /// </summary>
+        public static ProjectileObserver Create(Predicate<Projectile> entityShouldBeRemovedPredicate)
+        {
+            return new(
+                entityShouldBeRemovedPredicate
+            );
+        }
     }
 
     /// <summary>
-    /// Класс-наблюдателя за НПС.
+    /// Класс-наблюдателя за NPC.
     /// </summary>
-    public sealed class NPCObserver(Predicate<NPC> entityShouldBeRemovedPredicate) : EntityObserver<NPC>(Main.npc, entityShouldBeRemovedPredicate)
+    public sealed class NPCObserver : EntityObserver<NPC>
     {
-        public NPCObserver() : this(null) { }
+        private NPCObserver(Predicate<NPC> entityShouldBeRemovedPredicate) : base(Main.npc, entityShouldBeRemovedPredicate) { }
 
         protected override int GetEntityType(NPC npc) => npc.type;
+
+        /// <summary>
+        /// Создать объект класса-наблюдателя за NPC.
+        /// </summary>
+        public static NPCObserver Create(Predicate<NPC> entityShouldBeRemovedPredicate)
+        {
+            return new(
+                entityShouldBeRemovedPredicate
+            );
+        }
     }
 }
