@@ -635,7 +635,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class ValorNPCOutlineEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
-        private readonly NPCObserver _npcObserver = new(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.HasDebuff);
+        private readonly NPCObserver _npcObserver = NPCObserver.Create(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.HasDebuff);
 
         private bool _targetWasPrepared = false;
 
@@ -651,7 +651,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
-            ModEvents.OnPostUpdateEverything += _npcObserver.Update;
             ModEvents.OnPostUpdateCameraPosition += DrawNPCsToTarget;
 
             On_Main.DoDraw_DrawNPCsOverTiles += (orig, main) =>
@@ -674,7 +673,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             ModEvents.OnPostUpdateCameraPosition -= DrawNPCsToTarget;
-            ModEvents.OnPostUpdateEverything -= _npcObserver.Update;
         }
 
         private void DrawNPCsToTarget()
