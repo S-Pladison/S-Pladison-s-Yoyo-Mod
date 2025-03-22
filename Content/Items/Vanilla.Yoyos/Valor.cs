@@ -8,6 +8,7 @@ using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,34 +23,21 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class ValorAssets : ILoadable
+    public sealed class ValorAssets
     {
-        public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string BuffPath = $"{_yoyoPath}ValorBuff";
-        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Valor/Valor";
 
-        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
-        public static Asset<Texture2D> AnchorTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Valor_Anchor");
-        public static Asset<Texture2D> ChainTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Valor_Chain");
-        public static Asset<Texture2D> NoiseTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}CloudNoise");
-        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Trail");
-        public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
+        public const string BuffPath = $"{YoyoPath}Buff";
+        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Valor/";
-
-        void ILoadable.Unload()
-        {
-            GlowTexture = null;
-            AnchorTexture = null;
-            ChainTexture = null;
-            NoiseTexture = null;
-            TrailEffect = null;
-            OutlineEffect = null;
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
+        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/CloudNoise");
+        public static readonly LazyAsset<Texture2D> AnchorTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Anchor");
+        public static readonly LazyAsset<Texture2D> ChainTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Chain");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> OutlineEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Outline");
     }
 
     public sealed class ValorItem : VanillaYoyoBaseItem
@@ -742,10 +730,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(spriteBatchSnapshot with { Effect = null });
             {
-                var anchorTexture = ValorAssets.AnchorTexture;
+                var anchorTexture = ValorAssets.AnchorTexture.Value;
                 var anchorOrigin = anchorTexture.Size() * 0.5f;
 
-                var segmentTexture = ValorAssets.ChainTexture;
+                var segmentTexture = ValorAssets.ChainTexture.Value;
                 var segmentDefaultRectangle = new Rectangle(0, 0, 14, 16);
                 var segmentGlowRectangle = new Rectangle(14, 0, 14, 16);
                 var segmentOrigin = new Vector2(7, 8);
@@ -764,7 +752,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     var anchorColor = Lighting.GetColor(chainData.Tile);
                     var anchorPosition = chainData.Tile.ToWorldCoordinates() - Main.screenPosition;
 
-                    Main.spriteBatch.Draw(anchorTexture.Value, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
 
                     for (int i = 0; i < chainPoints.Length; i++)
                     {
@@ -773,8 +761,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         var segmentRotation = (segmentPoint - prevSegmentPoint).ToRotation() + MathHelper.PiOver2;
                         var lightColor = Lighting.GetColor(segmentPoint.ToTileCoordinates());
 
-                        Main.spriteBatch.Draw(segmentTexture.Value, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
-                        Main.spriteBatch.Draw(segmentTexture.Value, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                        Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                        Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
                 }
             }

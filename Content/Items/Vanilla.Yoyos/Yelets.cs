@@ -1,20 +1,11 @@
 ﻿using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class YeletsAssets : ILoadable
+    public sealed class YeletsAssets
     {
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Yelets/";
-
-        void ILoadable.Unload()
-        {
-            // ...
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Yelets/Yelets";
     }
 
     public sealed class YeletsItem : VanillaYoyoBaseItem
