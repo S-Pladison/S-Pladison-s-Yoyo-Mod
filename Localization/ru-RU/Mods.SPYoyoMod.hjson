@@ -11,4 +11,5 @@ Projectiles: {
 	// GradientGodraysProjectile.DisplayName: Gradient Godrays Projectile
 	// GradientDaggerProjectile.DisplayName: Gradient Dagger Projectile
 	// GradientStarProjectile.DisplayName: Gradient Star Projectile
+	// BlackholeProjectile.DisplayName: Blackhole Projectile
 }
