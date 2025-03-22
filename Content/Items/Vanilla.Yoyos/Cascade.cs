@@ -18,31 +18,20 @@ using Terraria.ModLoader.IO;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    public sealed class CascadeAssets : ILoadable
+    public sealed class CascadeAssets
     {
-        public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Cascade/Cascade";
 
-        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
-        public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Star");
-        public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Cascade_Flame");
-        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Trail");
-        public static Asset<Effect> RingEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}CascadeEffect_Ring");
-        public static SoundStyle StartChargingSound { get; private set; } = new($"{_yoyoPath}CascadeSound_StartCharging");
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
+        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Cascade/";
-
-        void ILoadable.Unload()
-        {
-            GlowTexture = null;
-            StarTexture = null;
-            FlameTexture = null;
-            TrailEffect = null;
-            RingEffect = null;
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
+        public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
+        public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> RingEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Ring");
+        public static readonly SoundStyle StartChargingSound = new($"{YoyoPath}Sound_StartCharging");
     }
 
     public sealed class CascadeItem : VanillaYoyoBaseItem
@@ -194,7 +183,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
                         parameters["Color2"].SetValue(new Color(250, 0, 50).ToVector4());
                         parameters["Color3"].SetValue(new Color(145, 25, 85).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Width() / 128.0f / 3.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Value.Width / 128.0f / 3.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
