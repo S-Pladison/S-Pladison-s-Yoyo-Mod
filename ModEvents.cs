@@ -153,6 +153,11 @@ namespace SPYoyoMod
             public override void PostUpdateEverything()
                 => ModEvents.OnPostUpdateEverything();
 
+            public override void OnWorldLoad()
+            {
+                _savedScreenSize = default;
+            }
+
             private void ResolutionChangedHandler(Vector2 screenSize)
             {
                 if (_savedScreenSize != Main.ScreenSize || _savedGameInactive != Main.gameInactive)
