@@ -64,32 +64,32 @@ namespace SPYoyoMod.Common
 
         public override void PostAddRecipes()
         {
-            RemoveWoodenYoyoFromChikRecipe();
-            InsertBearingToYoyoBagRecipes();
+            ModifyYoyoRecipes();
+            ModifyAccessoryRecipes();
         }
 
-        private static void RemoveWoodenYoyoFromChikRecipe()
+        private static void ModifyYoyoRecipes()
         {
             for (var i = 0; i < Main.recipe.Length; i++)
             {
                 ref var recipe = ref Main.recipe[i];
 
-                if (!recipe.TryGetResult(ItemID.Chik, out var _)) continue;
+                if (recipe.TryGetResult(ItemID.CrimsonYoyo, out var _))
+                    recipe.AddIngredient(ItemID.TissueSample, 5);
 
-                recipe.RemoveIngredient(ItemID.WoodYoyo);
+                if (recipe.TryGetResult(ItemID.Chik, out var _))
+                    recipe.RemoveIngredient(ItemID.WoodYoyo);
             }
         }
 
-        private static void InsertBearingToYoyoBagRecipes()
+        private static void ModifyAccessoryRecipes()
         {
             for (var i = 0; i < Main.recipe.Length; i++)
             {
                 ref var recipe = ref Main.recipe[i];
 
-                if (!recipe.TryGetResult(ItemID.YoyoBag, out var _)) continue;
-                if (!recipe.TryGetIngredient(ItemID.WhiteString, out var _)) continue;
-
-                recipe.AddIngredient<BearingItem>();
+                if (recipe.TryGetResult(ItemID.YoyoBag, out var _) && recipe.TryGetIngredient(ItemID.WhiteString, out var _))
+                    recipe.AddIngredient<BearingItem>();
             }
         }
     }
