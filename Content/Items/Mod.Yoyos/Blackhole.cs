@@ -18,17 +18,28 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override string Texture => BlackholeAssets.ItemPath;
         public override int GamepadExtraRange => 15;
 
+        public override void SetStaticDefaults()
+        {
+            base.SetStaticDefaults();
+
+            ModSets.Items.InventoryScaleMultiplier[Type] = 1.3f;
+        }
+
         public override void SetDefaults()
         {
             base.SetDefaults();
 
-            Item.damage = 43;
-            Item.knockBack = 2.5f;
+            Item.width = 42;
+            Item.height = 26;
+
+            Item.damage = 90;
+            Item.knockBack = 2f;
+            Item.crit = 6;
 
             Item.shoot = ModContent.ProjectileType<BlackholeProjectile>();
 
-            Item.rare = ItemRarityID.Lime;
-            Item.value = ItemUtils.SellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            Item.rare = ItemRarityID.Yellow;
+            Item.value = ItemUtils.SellPrice(platinum: 0, gold: 20, silver: 0, copper: 0);
         }
     }
 
