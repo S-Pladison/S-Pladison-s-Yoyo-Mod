@@ -131,34 +131,23 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
         /// <summary>
         /// Информация о цели рендеринга.
         /// </summary>
-        private struct RenderTargetInfo
+        private struct RenderTargetInfo(int width, int height, bool mipMap, SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat, int preferredMultiSampleCount, RenderTargetUsage usage)
         {
-            public int Width;
-            public int Height;
-            public bool MipMap;
-            public SurfaceFormat PreferredFormat;
-            public DepthFormat PreferredDepthFormat;
-            public int PreferredMultiSampleCount;
-            public RenderTargetUsage Usage;
-
-            public RenderTargetInfo(int width, int height, bool mipMap, SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat, int preferredMultiSampleCount, RenderTargetUsage usage)
-            {
-                Width = width;
-                Height = height;
-                MipMap = mipMap;
-                PreferredFormat = preferredFormat;
-                PreferredDepthFormat = preferredDepthFormat;
-                PreferredMultiSampleCount = preferredMultiSampleCount;
-                Usage = usage;
-            }
+            public int Width = width;
+            public int Height = height;
+            public bool MipMap = mipMap;
+            public SurfaceFormat PreferredFormat = preferredFormat;
+            public DepthFormat PreferredDepthFormat = preferredDepthFormat;
+            public int PreferredMultiSampleCount = preferredMultiSampleCount;
+            public RenderTargetUsage Usage = usage;
         };
 
         [Autoload(Side = ModSide.Client)]
-        private class ManagedRenderTargetSystem : ModSystem
+        private sealed class ManagedRenderTargetSystem : ModSystem
         {
             public static readonly int TimeBeforeAutoDispose = ModUtils.SecondsToTicks(60);
             public static List<ManagedRenderTarget> ManagedTargets = [];
-            public static HashSet<ManagedRenderTarget> ActiveManagedTargets = [];
+            public static List<ManagedRenderTarget> ActiveManagedTargets = [];
 
             public override void OnModLoad()
             {
