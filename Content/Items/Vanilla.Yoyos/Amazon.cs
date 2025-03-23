@@ -1,4 +1,6 @@
-﻿using Terraria.ID;
+﻿using Terraria;
+using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -16,5 +18,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class AmazonProjectile : VanillaYoyoBaseProjectile
     {
         public override int ProjType => ProjectileID.JungleYoyo;
+    }
+
+    public sealed class AmazonJungleAreaProjectile : ModProjectile
+    {
+        public override string Texture => base.Texture;
+
+        public override void SetDefaults()
+        {
+            Projectile.width = 16;
+            Projectile.height = 16;
+            Projectile.friendly = true;
+            Projectile.penetrate = -1;
+            Projectile.ignoreWater = true;
+            Projectile.tileCollide = false;
+            Projectile.timeLeft = 60;
+        }
     }
 }
