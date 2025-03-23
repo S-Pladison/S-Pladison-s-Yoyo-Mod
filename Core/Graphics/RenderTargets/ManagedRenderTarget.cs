@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using Terraria;
 using Terraria.ModLoader;
 
@@ -21,10 +22,13 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
         /// </summary>
         public static ManagedRenderTarget Create(int width, int height, bool mipMap, SurfaceFormat preferredFormat, DepthFormat preferredDepthFormat, int preferredMultiSampleCount, RenderTargetUsage usage)
         {
+            if (Main.dedServ)
+                return null;
+
             var info = new RenderTargetInfo(width, height, mipMap, preferredFormat, preferredDepthFormat, preferredMultiSampleCount, usage);
             var target = new ManagedRenderTarget(info);
 
-            ManagedRenderTargetSystem.ManagedTargets.Add(target);
+            ManagedRenderTargetSystem.RegisterTarget(target);
 
             return target;
         }
@@ -97,8 +101,6 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
             if (IsDisposed)
                 return;
 
-            ManagedRenderTargetSystem.ActiveManagedTargets.Remove(this);
-
             IsDisposed = true;
             _target?.Dispose();
 
@@ -121,8 +123,6 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
                 _info.PreferredMultiSampleCount,
                 _info.Usage
             );
-
-            ManagedRenderTargetSystem.ActiveManagedTargets.Add(this);
         }
 
         public static implicit operator RenderTarget2D(ManagedRenderTarget target)
@@ -146,8 +146,9 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
         private sealed class ManagedRenderTargetSystem : ModSystem
         {
             public static readonly int TimeBeforeAutoDispose = ModUtils.SecondsToTicks(60);
-            public static List<ManagedRenderTarget> ManagedTargets = [];
-            public static List<ManagedRenderTarget> ActiveManagedTargets = [];
+
+            private static readonly List<ManagedRenderTarget> _managedTargets = [];
+            private static readonly Mutex _mutex = new();
 
             public override void OnModLoad()
             {
@@ -160,17 +161,29 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
 
                 Main.QueueMainThreadAction(() =>
                 {
-                    foreach (var managedTarget in ManagedTargets)
+                    _mutex.WaitOne();
+
+                    foreach (var managedTarget in _managedTargets)
                         managedTarget?.Dispose();
 
-                    ManagedTargets.Clear();
-                    ActiveManagedTargets.Clear();
+                    _managedTargets.Clear();
+
+                    _mutex.ReleaseMutex();
                 });
+            }
+
+            public static void RegisterTarget(ManagedRenderTarget target)
+            {
+                _mutex.WaitOne();
+                _managedTargets.Add(target);
+                _mutex.ReleaseMutex();
             }
 
             private static void HandleTargets()
             {
-                foreach (var managedTarget in ActiveManagedTargets)
+                _mutex.WaitOne();
+
+                foreach (var managedTarget in _managedTargets)
                 {
                     if (managedTarget.IsDisposed)
                         continue;
@@ -183,6 +196,8 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
 
                     managedTarget._timeSinceLastAccessed++;
                 }
+
+                _mutex.ReleaseMutex();
             }
         }
     }
