@@ -6,6 +6,7 @@ using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System.Collections.Generic;
 using Terraria;
 using Terraria.Audio;
@@ -15,33 +16,21 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class TheStellarThrowAssets : ILoadable
+    public sealed class TheStellarThrowAssets
     {
-        public const string ItemPath = $"{_yoyoPath}TheStellarThrow_Item";
-        public const string ProjPath = $"{_yoyoPath}TheStellarThrow_Proj";
-        public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Mod.Yoyos/TheStellarThrow/TheStellarThrow";
 
-        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
-        public static Asset<Texture2D> CircleTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Circle");
-        public static Asset<Texture2D> StarTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Star");
-        public static Asset<Texture2D> FlameTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}TheStellarThrow_Flame");
-        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}TheStellarThrowEffect_Trail");
+        public const string ItemPath = $"{YoyoPath}_Item";
+        public const string ProjPath = $"{YoyoPath}_Proj";
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
+        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Mod.Yoyos/TheStellarThrow/";
-
-        void ILoadable.Unload()
-        {
-            GlowTexture = null;
-            CircleTexture = null;
-            StarTexture = null;
-            FlameTexture = null;
-            TrailEffect = null;
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
+        public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
+        public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
+        public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
     }
 
     public sealed class TheStellarThrowItem : YoyoBaseItem
@@ -217,7 +206,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                         parameters["Color1"].SetValue(new Color(170, 30, 90).ToVector4());
                         parameters["Color2"].SetValue(new Color(50, 50, 255).ToVector4());
                         parameters["Color3"].SetValue(new Color(60, 55, 90).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
@@ -225,16 +214,16 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 _trailRenderer.Render();
             }
 
-            var starTexture = TheStellarThrowAssets.StarTexture;
+            var starTexture = TheStellarThrowAssets.StarTexture.Value;
             var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var starOrigin = starTexture.Size() * 0.5f;
             var starColor = new Color(100, 25, 75) * 0.35f;
 
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, starColor, Projectile.rotation * 0.05f, starOrigin, proj.scale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, starColor, Projectile.rotation * 0.05f, starOrigin, proj.scale * 0.6f, SpriteEffects.None, 0f);
 
             starColor = StarColor with { A = 0 };
 
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, starColor, Projectile.rotation * 0.1f, starOrigin, proj.scale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, starColor, Projectile.rotation * 0.1f, starOrigin, proj.scale * 0.4f, SpriteEffects.None, 0f);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -510,7 +499,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                         parameters["Color1"].SetValue(StylePalette.TrailStartZero.ToVector4());
                         parameters["Color2"].SetValue(StylePalette.TrailEndOne.ToVector4());
                         parameters["Color3"].SetValue(StylePalette.TrailEndZero.ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Width() / 128.0f / 4.0f);
+                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
                     .Apply();
@@ -519,12 +508,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             }
 
             var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var starTexture = TheStellarThrowAssets.StarTexture;
+            var starTexture = TheStellarThrowAssets.StarTexture.Value;
             var starOrigin = starTexture.Size() * 0.5f;
 
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarThird * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarSecond with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, starPosition, null, StylePalette.StarFirst with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, StylePalette.StarThird * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, StylePalette.StarSecond with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, StylePalette.StarFirst with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
         }
     }
 
@@ -608,18 +597,18 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
-            var starTexture = TheStellarThrowAssets.StarTexture;
+            var starTexture = TheStellarThrowAssets.StarTexture.Value;
             var starOrigin = starTexture.Size() * 0.5f;
             var starScale = _scaleEasing.Evaluate(LifeTimeRatio);
 
-            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(100, 25, 75) * 0.25f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.8f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture.Value, position, null, new Color(255, 0, 80) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, position, null, new Color(100, 25, 75) * 0.25f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.8f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, position, null, new Color(255, 0, 80) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.6f, SpriteEffects.None, 0f);
 
-            var circleTexture = TheStellarThrowAssets.CircleTexture;
+            var circleTexture = TheStellarThrowAssets.CircleTexture.Value;
             var circleOrigin = circleTexture.Size() * 0.5f;
             var circleColor = new Color(255, 0, 80) with { A = 0 } * (1f - EasingFunctions.InOutQuart(LifeTimeRatio));
 
-            Main.spriteBatch.Draw(circleTexture.Value, position, null, circleColor, 0f, circleOrigin, LifeTimeRatio * 2f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(circleTexture, position, null, circleColor, 0f, circleOrigin, LifeTimeRatio * 2f, SpriteEffects.None, 0f);
         }
     }
 }

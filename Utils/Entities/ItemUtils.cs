@@ -15,12 +15,18 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static bool IsYoyo(this Item item)
         {
-            if (ItemID.Sets.Yoyo[item.type]) return true;
-            if (item.shoot <= ProjectileID.None) return false;
+            if (ItemID.Sets.Yoyo[item.type])
+                return true;
 
-            var dict = ContentSamples.ProjectilesByType;
+            if (item.shoot <= ProjectileID.None)
+                return false;
 
-            if (dict.TryGetValue(item.shoot, out Projectile proj))
+            if (ContentSamples.ProjectilesByType.TryGetValue(item.shoot, out Projectile proj))
+                return proj.IsYoyo();
+
+            proj = ProjectileLoader.GetProjectile(item.shoot)?.Projectile;
+
+            if (proj is not null)
                 return proj.IsYoyo();
 
             proj = new Projectile();

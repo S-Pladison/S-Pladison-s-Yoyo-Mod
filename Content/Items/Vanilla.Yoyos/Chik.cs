@@ -4,6 +4,7 @@ using ReLogic.Content;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
@@ -11,23 +12,15 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class ChikAssets : ILoadable
+    public sealed class ChikAssets
     {
-        public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Chik/Chik";
 
-        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
+        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Chik/";
-
-        void ILoadable.Unload()
-        {
-            // ...
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
     }
 
     public sealed class ChikItem : VanillaYoyoBaseItem

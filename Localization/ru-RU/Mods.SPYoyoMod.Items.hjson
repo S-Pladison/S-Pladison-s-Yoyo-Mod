@@ -12,6 +12,11 @@ BearingItem: {
 	Tooltip: Увеличивает время полета йо-йо на {0}%
 }
 
+BlackholeItem: {
+	DisplayName: Черная дыра
+	Tooltip: ""
+}
+
 TheStellarThrowItem: {
 	DisplayName: Звездный бросок
 	Tooltip: Звезды падают с небес на врагов, находящихся рядом с йо-йо

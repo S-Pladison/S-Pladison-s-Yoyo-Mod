@@ -36,7 +36,7 @@ namespace SPYoyoMod.Core.ModSupport
             if (!String.IsNullOrEmpty(_potentialInternalName))
                 modNameList.Add(_potentialInternalName);
 
-            const string postfix = "Support";
+            const string postfix = "Mod";
 
             // Потенциальное имя мода на основе имени типа, но без постфикса
             if (type.Name.EndsWith(postfix))

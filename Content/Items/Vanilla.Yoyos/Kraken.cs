@@ -1,20 +1,11 @@
 ﻿using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class KrakenAssets : ILoadable
+    public sealed class KrakenAssets
     {
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Kraken/";
-
-        void ILoadable.Unload()
-        {
-            // ...
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Kraken/Kraken";
     }
 
     public sealed class KrakenItem : VanillaYoyoBaseItem

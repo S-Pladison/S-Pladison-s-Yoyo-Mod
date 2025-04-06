@@ -8,6 +8,11 @@ BearingItem: {
 	Tooltip: "{0}% increased yoyo duration"
 }
 
+BlackholeItem: {
+	DisplayName: Blackhole
+	Tooltip: ""
+}
+
 TheStellarThrowItem: {
 	DisplayName: The Stellar Throw
 	Tooltip: ""

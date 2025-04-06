@@ -8,6 +8,7 @@ using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Core.Netcode;
 using SPYoyoMod.Utils;
+using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,34 +23,19 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
-    [Autoload(Side = ModSide.Client)]
-    public sealed class ValorAssets : ILoadable
+    public sealed class ValorAssets
     {
-        public const string InvisiblePath = $"{_assetPath}Invisible";
-        public const string BuffPath = $"{_yoyoPath}ValorBuff";
-        public const string StringPath = $"{_assetPath}FishingLine_WithShadow";
+        public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Valor/Valor";
 
-        public static Asset<Texture2D> GlowTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}YoyoGlow_WithShadow");
-        public static Asset<Texture2D> AnchorTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Valor_Anchor");
-        public static Asset<Texture2D> ChainTexture { get; private set; } = ModContent.Request<Texture2D>($"{_yoyoPath}Valor_Chain");
-        public static Asset<Texture2D> NoiseTexture { get; private set; } = ModContent.Request<Texture2D>($"{_assetPath}CloudNoise");
-        public static Asset<Effect> TrailEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Trail");
-        public static Asset<Effect> OutlineEffect { get; private set; } = ModContent.Request<Effect>($"{_yoyoPath}ValorEffect_Outline");
+        public const string InvisiblePath = $"{AssetPath}/Invisible";
+        public const string BuffPath = $"{YoyoPath}Buff";
+        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        private const string _assetPath = $"{nameof(SPYoyoMod)}/Assets/";
-        private const string _yoyoPath = $"{_assetPath}Items/Vanilla.Yoyos/Valor/";
-
-        void ILoadable.Unload()
-        {
-            GlowTexture = null;
-            AnchorTexture = null;
-            ChainTexture = null;
-            NoiseTexture = null;
-            TrailEffect = null;
-            OutlineEffect = null;
-        }
-
-        void ILoadable.Load(Terraria.ModLoader.Mod mod) { }
+        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
+        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/CloudNoise");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> OutlineEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Outline");
     }
 
     public sealed class ValorItem : VanillaYoyoBaseItem
@@ -647,7 +633,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class ValorNPCOutlineEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
-        private readonly NPCObserver _npcObserver = new(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.HasDebuff);
+        private readonly NPCObserver _npcObserver = NPCObserver.Create(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.HasDebuff);
 
         private bool _targetWasPrepared = false;
 
@@ -663,7 +649,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
-            ModEvents.OnPostUpdateEverything += _npcObserver.Update;
             ModEvents.OnPostUpdateCameraPosition += DrawNPCsToTarget;
 
             On_Main.DoDraw_DrawNPCsOverTiles += (orig, main) =>
@@ -686,7 +671,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         void ILoadable.Unload()
         {
             ModEvents.OnPostUpdateCameraPosition -= DrawNPCsToTarget;
-            ModEvents.OnPostUpdateEverything -= _npcObserver.Update;
         }
 
         private void DrawNPCsToTarget()
