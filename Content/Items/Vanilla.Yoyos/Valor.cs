@@ -726,7 +726,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(spriteBatchSnapshot with { Effect = null });
             {
-                var anchorTexture = ValorAssets.AnchorTexture;
+                /*var anchorTexture = ValorAssets.AnchorTexture;
                 var anchorOrigin = anchorTexture.Size() * 0.5f;
 
                 var segmentTexture = ValorAssets.ChainTexture;
@@ -760,7 +760,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         Main.spriteBatch.Draw(segmentTexture.Value, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                         Main.spriteBatch.Draw(segmentTexture.Value, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
-                }
+                }*/
             }
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(spriteBatchSnapshot);

@@ -145,7 +145,7 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
         [Autoload(Side = ModSide.Client)]
         private sealed class ManagedRenderTargetSystem : ModSystem
         {
-            public static readonly int TimeBeforeAutoDispose = ModUtils.SecondsToTicks(60);
+            public static readonly int TimeBeforeAutoDispose = GeneralUtils.SecondsToTicks(60);
 
             private static readonly List<ManagedRenderTarget> _managedTargets = [];
             private static readonly Mutex _mutex = new();
