@@ -1,4 +1,5 @@
 using SPYoyoMod.Content.Items.Mod.Accessories;
+using SPYoyoMod.Content.Items.Mod.Miscellaneous;
 using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Core;
 using Terraria;
@@ -14,6 +15,7 @@ namespace SPYoyoMod.Common
         {
             AddYoyoRecipes();
             AddAccessoryRecipes();
+            AddOtherRecipes();
         }
 
         private static void AddYoyoRecipes()
@@ -59,6 +61,39 @@ namespace SPYoyoMod.Common
             Recipe.Create(ModContent.ItemType<BearingItem>())
                 .AddRecipeGroup(RecipeGroupID.IronBar, 7)
                 .AddTile(TileID.Anvils)
+                .Register();
+        }
+
+        private static void AddOtherRecipes()
+        {
+            Recipe.Create(ModContent.ItemType<StrangeDrinkItem>())
+                .AddIngredient(ItemID.LifeFruit, 3)
+                .AddIngredient(ItemID.Milkshake)
+                .AddIngredient(ItemID.GrapeJuice)
+                .AddIngredient(ItemID.PrismaticPunch)
+                .AddIngredient(ItemID.PinaColada)
+                .AddIngredient(ItemID.TropicalSmoothie)
+                .AddIngredient(ItemID.SmoothieofDarkness)
+                .AddIngredient(ItemID.AppleJuice)
+                .AddIngredient(ItemID.BananaDaiquiri)
+                .AddIngredient(ItemID.Lemonade)
+                .AddIngredient(ItemID.PeachSangria)
+                .AddTile(TileID.CookingPots)
+                .Register();
+
+            Recipe.Create(ModContent.ItemType<StrangeDrinkItem>())
+                .AddIngredient(ItemID.LifeFruit, 3)
+                .AddIngredient(ItemID.Milkshake)
+                .AddIngredient(ItemID.GrapeJuice)
+                .AddIngredient(ItemID.PrismaticPunch)
+                .AddIngredient(ItemID.PinaColada)
+                .AddIngredient(ItemID.TropicalSmoothie)
+                .AddIngredient(ItemID.BloodyMoscato)
+                .AddIngredient(ItemID.AppleJuice)
+                .AddIngredient(ItemID.BananaDaiquiri)
+                .AddIngredient(ItemID.Lemonade)
+                .AddIngredient(ItemID.PeachSangria)
+                .AddTile(TileID.CookingPots)
                 .Register();
         }
 

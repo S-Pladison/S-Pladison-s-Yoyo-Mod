@@ -12,4 +12,5 @@ Projectiles: {
 	// GradientDaggerProjectile.DisplayName: Gradient Dagger Projectile
 	// GradientStarProjectile.DisplayName: Gradient Star Projectile
 	// BlackholeProjectile.DisplayName: Blackhole Projectile
+	// SoulTormentorProjectile.DisplayName: Soul Tormentor Projectile
 }

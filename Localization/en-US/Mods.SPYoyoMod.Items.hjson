@@ -17,3 +17,21 @@ TheStellarThrowItem: {
 	DisplayName: The Stellar Throw
 	Tooltip: ""
 }
+
+SoulTormentorItem: {
+	DisplayName: Soul Tormentor
+	Tooltip:
+		'''
+		Charms {0} nearest enemies
+		'No, it's not a love triangle...'
+		'''
+}
+
+StrangeDrinkItem: {
+	DisplayName: Strange Drink
+	Tooltip:
+		'''
+		Can be given to the Nurse
+		'Don't even think about drinking it'
+		'''
+}
