@@ -38,7 +38,7 @@ namespace SPYoyoMod.Core.ModSupport
         {
             availability ??= () => true;
 
-            if (Call("AddButton", npcType, buttonText, iconTexturePath, hoverCallback, availability, frame, customTextOffset) is not bool value || !value)
+            if (Call("AddButton", npcType, buttonText, iconTexturePath, hoverCallback, availability, frame, customTextOffset) is bool result && !result)
                 ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Failed to call 'AddButton'] Mod:[{Instance.Name}] NPCTypes:[{string.Join(",", npcType)}]");
         }
     }
