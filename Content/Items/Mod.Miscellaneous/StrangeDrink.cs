@@ -24,6 +24,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
         }
     }
 
+    [Autoload(Side = ModSide.Client)]
     public sealed class StrangeDrinkNurseButtonImplemention : ILoadable
     {
         public static LocalizedText ButtonText { get; private set; }
