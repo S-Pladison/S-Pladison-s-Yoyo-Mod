@@ -31,7 +31,7 @@ StrangeDrinkItem: {
 	DisplayName: Strange Drink
 	Tooltip:
 		'''
-		Can be given to the Nurse
+		Might be of interest to the Nurse
 		'Don't even think about drinking it'
 		'''
 }
