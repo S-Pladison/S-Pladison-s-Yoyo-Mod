@@ -9,7 +9,7 @@ using Terraria.ModLoader;
 namespace SPYoyoMod.Common
 {
     [LoadPriority(sbyte.MaxValue)]
-    public sealed class ItemRecipes : ModSystem
+    public sealed class ItemRecipesSystem : ModSystem
     {
         public override void AddRecipes()
         {
