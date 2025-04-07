@@ -99,17 +99,5 @@ namespace SPYoyoMod.Core.ModSupport
 
             return null;
         }
-
-        public static bool TryCall<T>(out T value, params object[] args)
-        {
-            if (Call(args) is T localValue)
-            {
-                value = localValue;
-                return true;
-            }
-
-            value = default;
-            return false;
-        }
     }
 }

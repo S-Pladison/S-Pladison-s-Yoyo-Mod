@@ -36,9 +36,12 @@ namespace SPYoyoMod.Core.ModSupport
         /// <param name="customTextOffset">Расстояние от левой стороны области, содержащей текст, до левой стороны кнопки.</param>
         public static void AddButton(List<int> npcType, Func<string> buttonText, Func<string> iconTexturePath, Action hoverCallback, Func<bool> availability = null, Func<Rectangle> frame = null, Func<float> customTextOffset = null)
         {
+            if (!IsLoaded)
+                return;
+
             availability ??= () => true;
 
-            if (Call("AddButton", npcType, buttonText, iconTexturePath, hoverCallback, availability, frame, customTextOffset) is bool result && !result)
+            if (Call("AddButton", npcType, buttonText, iconTexturePath, hoverCallback, availability, frame, customTextOffset) is not bool result || !result)
                 ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Failed to call 'AddButton'] Mod:[{Instance.Name}] NPCTypes:[{string.Join(",", npcType)}]");
         }
     }
