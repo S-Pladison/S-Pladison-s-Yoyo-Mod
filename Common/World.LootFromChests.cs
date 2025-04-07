@@ -10,18 +10,27 @@ namespace SPYoyoMod.Common
 {
     public sealed class LoolFromChestsSystem : ModSystem
     {
-        private class ChestItemInfo(int itemType, ChestStyle chestStyle, float chance)
+        /// <summary>
+        /// Данные об единице лута генерируемого сундука.
+        /// </summary>
+        public readonly struct ChestItemInfo(int itemType, ChestStyle chestStyle, float chance)
         {
             public readonly int ItemType = itemType;
             public readonly ChestStyle ChestStyle = chestStyle;
             public readonly float Chance = Math.Clamp(chance, 0f, 1f);
         }
 
-        private static List<ChestItemInfo> LootFromChests =>
+        /// <summary>
+        /// Импровизированная база данных лута генерируемых в мире сундуков.
+        /// </summary>
+        public static readonly List<ChestItemInfo> LootFromChests =
         [
             new(ModContent.ItemType<TheStellarThrowItem>(), ChestStyle.Skyware, 0.15f)
         ];
 
+        /// <summary>
+        /// База данных лута, доступ к данным которых производится по типу сундука.
+        /// </summary>
         private Dictionary<ChestStyle, List<ChestItemInfo>> _lootFromChestsByChestStyle;
 
         public override void PostSetupContent()
