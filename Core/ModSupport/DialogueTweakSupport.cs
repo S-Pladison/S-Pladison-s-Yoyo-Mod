@@ -15,7 +15,7 @@ namespace SPYoyoMod.Core.ModSupport
         /// <param name="npcType">Тип NPC, к которому добавляется кнопка.</param>
         /// <param name="buttonText">Отображаемый текст кнопки. Необходимо передать функцию типа <see cref="Func{TResult}"/>. Можно использовать <see cref="Language.GetTextValue"/> или что-нибудь еще.</param>
         /// <param name="iconTexturePath">Путь к текстурке иконки. Если вернуть пустую строку или <see langword="null"/>, то иконки не будет.</param>
-        /// <param name="hoverCallback">Действие, вызываемая при наведении на кнопку. Используйте ее для определения поведения того, была ли прожата кнопка.</param>
+        /// <param name="hoverCallback">Действие, вызываемое при наведении на кнопку. Используйте ее для определения поведения того, была ли прожата кнопка.</param>
         /// <param name="availability">Доступна ли эта кнопка.</param>
         /// <param name="frame">Область текстуры иконки, которая будет отображаться.</param>
         /// <param name="customTextOffset">Расстояние от левой стороны области, содержащей текст, до левой стороны кнопки.</param>
@@ -30,7 +30,7 @@ namespace SPYoyoMod.Core.ModSupport
         /// <param name="npcType">Список типов NPC, к которым добавляется кнопка.</param>
         /// <param name="buttonText">Отображаемый текст кнопки. Необходимо передать функцию типа <see cref="Func{TResult}"/>. Можно использовать <see cref="Language.GetTextValue"/> или что-нибудь еще.</param>
         /// <param name="iconTexturePath">Путь к текстурке иконки. Если вернуть пустую строку или <see langword="null"/>, то иконки не будет.</param>
-        /// <param name="hoverCallback">Действие, вызываемая при наведении на кнопку. Используйте ее для определения поведения того, была ли прожата кнопка.</param>
+        /// <param name="hoverCallback">Действие, вызываемое при наведении на кнопку. Используйте ее для определения поведения того, была ли прожата кнопка.</param>
         /// <param name="availability">Доступна ли эта кнопка.</param>
         /// <param name="frame">Область текстуры иконки, которая будет отображаться.</param>
         /// <param name="customTextOffset">Расстояние от левой стороны области, содержащей текст, до левой стороны кнопки.</param>
