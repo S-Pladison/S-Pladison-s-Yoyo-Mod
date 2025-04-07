@@ -14,3 +14,10 @@ Projectiles: {
 	// BlackholeProjectile.DisplayName: Blackhole Projectile
 	// SoulTormentorProjectile.DisplayName: Soul Tormentor Projectile
 }
+
+NPCs: {
+	NurseNPC: {
+		Button.StrangeDrink: "{$Items.StrangeDrinkItem.DisplayName}"
+		Dialogue.StrangeDrink: Что за запах!? Конфискую! Взамен держи вот это... Купила когда-то эту игрушку у странного скелета.
+	}
+}
