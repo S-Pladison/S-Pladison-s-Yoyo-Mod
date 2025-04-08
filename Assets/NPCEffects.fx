@@ -12,6 +12,7 @@ sampler TextureSampler0 = sampler_state
 };
 
 float2 ScreenSize;
+float2 Zoom;
 float OutlineThickness;
 float4 OutlineColor;
 float4 NPCColor;
@@ -19,21 +20,30 @@ float4 NPCColor;
 float4 Outline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float4 screenColor = tex2D(TextureSampler0, coords);
-    float2 outlineSize = float2(OutlineThickness, OutlineThickness) / ScreenSize;
+    float2 outlineSize = float2(OutlineThickness, OutlineThickness) * (1.0f / ScreenSize) * Zoom;
+    const float minAlpha = 0.5f;
     
-    if (any(screenColor))
+    if (screenColor.a >= minAlpha)
         return NPCColor;
     
-    if (any(tex2D(TextureSampler0, coords + float2(outlineSize.x, outlineSize.y))))
+    float4 outlineColor = tex2D(TextureSampler0, coords + float2(outlineSize.x, outlineSize.y));
+    
+    if (outlineColor.a >= minAlpha)
         return OutlineColor;
     
-    if (any(tex2D(TextureSampler0, coords + float2(outlineSize.x, -outlineSize.y))))
+    outlineColor = tex2D(TextureSampler0, coords + float2(outlineSize.x, -outlineSize.y));
+    
+    if (outlineColor.a >= minAlpha)
         return OutlineColor;
     
-    if (any(tex2D(TextureSampler0, coords + float2(-outlineSize.x, outlineSize.y))))
+    outlineColor = tex2D(TextureSampler0, coords + float2(-outlineSize.x, outlineSize.y));
+    
+    if (outlineColor.a >= minAlpha)
         return OutlineColor;
     
-    if (any(tex2D(TextureSampler0, coords + float2(-outlineSize.x, -outlineSize.y))))
+    outlineColor = tex2D(TextureSampler0, coords + float2(-outlineSize.x, -outlineSize.y));
+    
+    if (outlineColor.a >= minAlpha)
         return OutlineColor;
     
     return screenColor;
