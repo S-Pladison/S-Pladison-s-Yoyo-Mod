@@ -29,6 +29,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> DaggerGlowTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_DaggerGlow");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
+        public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
+        public static readonly LazyAsset<Texture2D> GlowCircleTexture = LazyAsset<Texture2D>.From($"{AssetPath}/Glow_Circle");
         public static readonly LazyAsset<Effect> GodraysEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Godrays", AssetRequestMode.ImmediateLoad);
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
     }
@@ -204,7 +206,24 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (opacity <= 0f)
                 return;
 
-            var position = Projectile.Bottom + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+
+            var glowTexture = GradientAssets.GlowCircleTexture.Value;
+            var glowOrigin = glowTexture.Size() * 0.5f;
+            var glowColor = new Color(255, 190, 0, 0) * 0.125f * opacity;
+
+            Main.spriteBatch.Draw(glowTexture, position, null, glowColor, 0f, glowOrigin, 1f, SpriteEffects.None, 0);
+
+            var circleTexture = GradientAssets.CircleTexture.Value;
+            var circleOrigin = circleTexture.Size() * 0.5f;
+            var circleColor = new Color(255, 190, 0, 0) * 0.05f * opacity;
+            var circleScale = 3f + 0.25f * MathF.Sin((float)Main.timeForVisualEffects * 0.025f) * opacity;
+
+            Main.spriteBatch.Draw(circleTexture, position, null, circleColor, 0f, circleOrigin, circleScale, SpriteEffects.None, 0);
+
+            // Опускаем позицию отрисовки божественных лучей чуть ниже снаряда
+            position = Projectile.Bottom + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+
             var lightningStartPosition = position - Vector2.UnitY * TileUtils.TileSizeInPixels * 80;
             var lightningEndPosition = position;
 
