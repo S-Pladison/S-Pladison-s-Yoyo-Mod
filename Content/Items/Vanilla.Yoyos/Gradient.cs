@@ -38,6 +38,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class GradientItem : VanillaYoyoBaseItem
     {
         public override int ItemType => ItemID.Gradient;
+
+        public override void SetDefaults(Item item)
+        {
+            item.rare = ItemRarityID.LightRed;
+        }
     }
 
     public sealed class GradientProjectile : VanillaYoyoBaseProjectile
