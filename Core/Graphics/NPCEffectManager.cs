@@ -63,7 +63,7 @@ namespace SPYoyoMod.Core.Graphics
         }
 
         /// <summary>
-        /// Менеджен, управляющий эффектом обводки NPC.
+        /// Менеджер, управляющий эффектом обводки NPC.
         /// </summary>
         [Autoload(Side = ModSide.Client)]
         private sealed class NPCOutlineManager : ILoadable
