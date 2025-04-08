@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using SPYoyoMod.Utils;
+using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
@@ -36,7 +37,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Item.shoot = ModContent.ProjectileType<SoulTormentorProjectile>();
 
             Item.rare = ItemRarityID.Lime;
-            Item.value = Terraria.Item.sellPrice(platinum: 0, gold: 5, silver: 0, copper: 0);
+            Item.value = ItemUtils.SellPrice(platinum: 0, gold: 5, silver: 0, copper: 0);
         }
     }
 
