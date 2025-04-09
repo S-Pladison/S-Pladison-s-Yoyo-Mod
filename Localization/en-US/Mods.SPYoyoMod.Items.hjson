@@ -1,6 +1,10 @@
 BellowingThunderItem: {
 	DisplayName: Bellowing Thunder
-	Tooltip: ... {0} ...
+	Tooltip:
+		'''
+		... {0} ...
+		'Rainfall alone does not constitute a storm. Thunder is required.'
+		'''
 }
 
 BearingItem: {
@@ -10,7 +14,11 @@ BearingItem: {
 
 BlackholeItem: {
 	DisplayName: Blackhole
-	Tooltip: ""
+	Tooltip:
+		'''
+		Attracts nearby enemies to itself
+		'Warning: never divide by zero!'
+		'''
 }
 
 TheStellarThrowItem: {
