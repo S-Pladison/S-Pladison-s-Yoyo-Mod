@@ -1,4 +1,10 @@
-﻿using SPYoyoMod.Utils;
+﻿using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
+using SPYoyoMod.Core.Hooks;
+using SPYoyoMod.Utils;
+using Terraria;
+using Terraria.Graphics.Light;
 using Terraria.ID;
 using Terraria.ModLoader;
 
@@ -43,11 +49,94 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BlackholeProjectile : YoyoBaseProjectile
+    public sealed class BlackholeProjectile : YoyoBaseProjectile, IInitializableProjectile
     {
         public override string Texture => BlackholeAssets.ProjPath;
         public override float LifeTime => -1f;
         public override float MaxRange => 300f;
         public override float TopSpeed => 13f;
+
+        void IInitializableProjectile.Initialize(Projectile _)
+        {
+            ModContent.GetInstance<BlackholeBackgroundHandler>()?.Add(Projectile);
+        }
+
+        public override void OnKill(int timeLeft)
+        {
+            ModContent.GetInstance<BlackholeBackgroundHandler>()?.Remove(Projectile);
+        }
+    }
+
+    public sealed class BlackholeBackgroundHandler : ILoadable
+    {
+        private readonly ProjectileObserver _projObserver = ProjectileObserver.Create(p => p.ModProjectile is not BlackholeProjectile);
+
+        private static float _effectStrength;
+
+        public void Add(Projectile proj)
+        {
+            _projObserver.Add(proj);
+        }
+
+        public void Remove(Projectile proj)
+        {
+            _projObserver.Remove(proj);
+        }
+
+        void ILoadable.Load(Terraria.ModLoader.Mod mod)
+        {
+            // Просто определяем силу эффекта;
+            // Если есть хоть один йо-йо, то эффект должен плавно включаться, а если нет - выключаться
+            ModEvents.OnPostUpdateEverything += () =>
+            {
+                _effectStrength = MathHelper.Clamp(_projObserver.AnyEntity ? (_effectStrength + 0.025f) : (_effectStrength - 0.025f), 0.0f, 1.0f);
+            };
+
+            // Шиммер (мерцание) отключает отрисовку этой фигни...
+            On_Main.DrawBlack += (orig, self, force) =>
+            {
+                if (_effectStrength >= 1.0f)
+                    return;
+
+                orig(self, force);
+            };
+
+            // Шиммер (мерцание) отключает глобальное освещение
+            IL_TileLightScanner.ApplySurfaceLight += (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // float num11 = 1f - Main.shimmerDarken;
+
+                // IL_040d: ldc.r4 1
+                // IL_0412: ldsfld float32 Terraria.Main::shimmerDarken
+                // IL_0417: sub
+                // IL_0418: stloc.s 7 // num11
+
+                var num11Index = -1;
+
+                if (!c.TryGotoNext(
+                    MoveType.After,
+                    i => i.MatchLdcR4(1),
+                    i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.shimmerDarken))),
+                    i => i.MatchSub(),
+                    i => i.MatchStloc(out num11Index)))
+                {
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(BlackholeBackgroundHandler)}..{nameof(IL_TileLightScanner.ApplySurfaceLight)}\" failed...");
+                    return;
+                }
+
+                c.Emit(OpCodes.Ldloca, num11Index);
+                c.EmitDelegate(static (ref float value) =>
+                {
+                    value = MathHelper.Max(0.0f, value - _effectStrength);
+                });
+            };
+        }
+
+        void ILoadable.Unload()
+        {
+
+        }
     }
 }
