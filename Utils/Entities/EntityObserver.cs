@@ -18,7 +18,16 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Ведется ли наблюдение хотя бы за 1 сущностью.
         /// </summary>
-        public bool AnyEntity { get => _entities.Count > 0; }
+        public bool AnyEntity
+        {
+            get
+            {
+                foreach (var _ in GetEntityInstances())
+                    return true;
+
+                return false;
+            }
+        }
 
         protected readonly List<EntityData> _entities = [];
         protected readonly T[] _sourseArray = sourse;
