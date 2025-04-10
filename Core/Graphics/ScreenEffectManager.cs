@@ -86,10 +86,12 @@ namespace SPYoyoMod.Core.Graphics
         /// <summary>
         /// Создает эффект вспышки.
         /// Эффект может сильно напрягать глаза при высоких значениях силы, так что лучше с этим не перебарщивать.
-        /// Для светочувствительных людей этот эффект можно отключить в конфиге мода.
         /// </summary>
         public static void Flash(in FlashSettings settings)
         {
+            if (Main.DisableIntenseVisualEffects)
+                return;
+
             ModContent.GetInstance<ScreenFlashManager>()?.Flash(settings);
         }
 

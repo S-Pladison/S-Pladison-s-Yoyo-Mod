@@ -546,6 +546,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public void Activate()
         {
+            if (Main.DisableIntenseVisualEffects)
+                return;
+
             _filterTime = FilterActiveTime;
         }
 
