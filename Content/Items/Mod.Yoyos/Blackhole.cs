@@ -1,9 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
+using Terraria.GameContent;
+using Terraria.Graphics;
+using Terraria.Graphics.Effects;
 using Terraria.Graphics.Light;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -99,6 +103,59 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     return;
 
                 orig(self, force);
+            };
+
+            // Отрисовка заднего фона эффекта (прям как шиммер...)
+            IL_Main.DoDraw += (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // Overlays.Scene.Draw(spriteBatch, RenderLayers.InWorldUI);
+
+                // IL_14d6: ldsfld class Terraria.Graphics.Effects.OverlayManager Terraria.Graphics.Effects.Overlays::Scene
+                // IL_14db: ldsfld class [FNA]Microsoft.Xna.Framework.Graphics.SpriteBatch Terraria.Main::spriteBatch
+                // IL_14e0: ldc.i4.3
+                // IL_14e1: ldc.i4.0
+                // IL_14e2: callvirt instance void Terraria.Graphics.Effects.OverlayManager::Draw(class [FNA]Microsoft.Xna.Framework.Graphics.SpriteBatch, valuetype Terraria.Graphics.Effects.RenderLayers, bool)
+
+                if (!c.TryGotoNext(
+                    MoveType.Before,
+                    i => i.MatchLdsfld(typeof(Overlays).GetField(nameof(Overlays.Scene))),
+                    i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.spriteBatch))),
+                    i => i.MatchLdcI4(3),
+                    i => i.MatchLdcI4(0)))
+                {
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(BlackholeBackgroundHandler)}..{nameof(IL_Main.DoDraw)}\" failed...");
+                    return;
+                }
+
+                ILLabel label = null;
+
+                // if (shimmerAlpha > 0f)
+
+                // IL_1453: ldsfld float32 Terraria.Main::shimmerAlpha
+                // IL_1458: ldc.r4 0.0
+                // IL_145d: ble.un.s IL_14d6
+
+                if (!c.TryGotoNext(
+                    MoveType.Before,
+                    i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.shimmerAlpha))),
+                    i => i.MatchLdcR4(0.0f),
+                    i => i.MatchBleUn(out label)))
+                {
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(BlackholeBackgroundHandler)}..{nameof(IL_Main.DoDraw)}\" failed...");
+                    return;
+                }
+
+                c.GotoLabel(label, MoveType.Before);
+                c.MarkLabel(label);
+                c.EmitDelegate(static () =>
+                {
+                    if (_effectStrength <= 0)
+                        return;
+
+                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Vector2.Zero, null, Color.Black * _effectStrength, 0f, Vector2.Zero, new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2), SpriteEffects.None, 0f);
+                });
             };
 
             // Шиммер (мерцание) отключает глобальное освещение
