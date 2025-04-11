@@ -119,11 +119,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 // IL_14e2: callvirt instance void Terraria.Graphics.Effects.OverlayManager::Draw(class [FNA]Microsoft.Xna.Framework.Graphics.SpriteBatch, valuetype Terraria.Graphics.Effects.RenderLayers, bool)
 
                 if (!c.TryGotoNext(
-                    MoveType.Before,
+                    MoveType.After,
                     i => i.MatchLdsfld(typeof(Overlays).GetField(nameof(Overlays.Scene))),
                     i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.spriteBatch))),
                     i => i.MatchLdcI4(3),
-                    i => i.MatchLdcI4(0)))
+                    i => i.MatchLdcI4(0),
+                    i => i.MatchCallvirt(typeof(OverlayManager).GetMethod(nameof(OverlayManager.Draw)))))
                 {
                     ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(BlackholeBackgroundHandler)}..{nameof(IL_Main.DoDraw)}\" failed...");
                     return;
@@ -137,7 +138,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 // IL_1458: ldc.r4 0.0
                 // IL_145d: ble.un.s IL_14d6
 
-                if (!c.TryGotoNext(
+                if (!c.TryGotoPrev(
                     MoveType.Before,
                     i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.shimmerAlpha))),
                     i => i.MatchLdcR4(0.0f),
