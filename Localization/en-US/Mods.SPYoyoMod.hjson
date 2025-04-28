@@ -18,6 +18,8 @@ Projectiles: {
 NPCs: {
 	NurseNPC: {
 		Button.StrangeDrink: "{$Items.StrangeDrinkItem.DisplayName}"
-		Dialogue.StrangeDrink: What’s that smell? Confiscated! In exchange, take this... I bought this trinket from a strange skeleton some time ago.
+		Dialogue.StrangeDrink: Whatï¿½s that smell? Confiscated! In exchange, take this... I bought this trinket from a strange skeleton some time ago.
 	}
 }
+
+Misc.RecipeGroup.MechanicalBossSoul: Any Mechanical Boss Soul
