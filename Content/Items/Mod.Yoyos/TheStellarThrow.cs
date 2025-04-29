@@ -31,6 +31,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly SoundStyle ShootingStarSound = new($"{YoyoPath}Sound_ShootingStar");
     }
 
     public sealed class TheStellarThrowItem : YoyoBaseItem
@@ -368,6 +369,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (Main.netMode == NetmodeID.Server)
                 return;
 
+            SoundEngine.PlaySound(TheStellarThrowAssets.ShootingStarSound, Projectile.Center);
+
             _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
             {
                 StartWidth = 60,
@@ -388,7 +391,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override void AI()
         {
             UpdateVisual();
-            UpdateSound();
 
             if (!Projectile.tileCollide && Projectile.Center.Y >= _yToBecomeCollidable)
             {
@@ -438,16 +440,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.EndColor = Style.StarSecond;
                     particle.Scale = Main.rand.NextFloat(0.3f, 0.6f);
                 }
-            }
-        }
-
-        private void UpdateSound()
-        {
-            if (Projectile.numUpdates == 0 && Projectile.soundDelay == 0)
-            {
-                Projectile.soundDelay = GeneralUtils.SecondsToTicks(Main.rand.NextFloat(1.0f, 2.0f));
-
-                SoundEngine.PlaySound(in SoundID.Item9, Projectile.Center);
             }
         }
 
