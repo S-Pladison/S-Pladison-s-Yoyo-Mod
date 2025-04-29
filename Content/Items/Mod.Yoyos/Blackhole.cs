@@ -6,7 +6,6 @@ using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.GameContent;
-using Terraria.Graphics;
 using Terraria.Graphics.Effects;
 using Terraria.Graphics.Light;
 using Terraria.ID;
@@ -75,7 +74,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     {
         private readonly ProjectileObserver _projObserver = ProjectileObserver.Create(p => p.ModProjectile is not BlackholeProjectile);
 
-        private static float _effectStrength;
+        private static float _effectAlphaStrength;
+        private static float _effectSurfaceDarkStrength;
+        private static float _effectDisappearDelay;
 
         public void Add(Projectile proj)
         {
@@ -93,13 +94,30 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             // Если есть хоть один йо-йо, то эффект должен плавно включаться, а если нет - выключаться
             ModEvents.OnPostUpdateEverything += () =>
             {
-                _effectStrength = MathHelper.Clamp(_projObserver.AnyEntity ? (_effectStrength + 0.025f) : (_effectStrength - 0.025f), 0.0f, 1.0f);
+                if (_projObserver.AnyEntity)
+                {
+                    _effectAlphaStrength = MathHelper.Min(_effectAlphaStrength + 0.025f, 1.0f);
+                    _effectSurfaceDarkStrength = MathHelper.Max(_effectAlphaStrength - 0.5f, 0.0f) * 2.0f;
+                    _effectDisappearDelay = 1.0f;
+                }
+                else if (_effectSurfaceDarkStrength > 0.0f)
+                {
+                    _effectSurfaceDarkStrength = MathHelper.Max(_effectSurfaceDarkStrength - 0.05f, 0.0f);
+                }
+                else if (_effectDisappearDelay > 0.0f)
+                {
+                    _effectDisappearDelay = MathHelper.Max(_effectDisappearDelay - 0.25f, 0.0f);
+                }
+                else
+                {
+                    _effectAlphaStrength = MathHelper.Max(_effectAlphaStrength - 0.025f, 0.0f);
+                }
             };
 
             // Шиммер (мерцание) отключает отрисовку этой фигни...
             On_Main.DrawBlack += (orig, self, force) =>
             {
-                if (_effectStrength >= 1.0f)
+                if (_effectAlphaStrength >= 1.0f)
                     return;
 
                 orig(self, force);
@@ -152,10 +170,38 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 c.MarkLabel(label);
                 c.EmitDelegate(static () =>
                 {
-                    if (_effectStrength <= 0)
+                    if (_effectAlphaStrength <= 0)
                         return;
 
-                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Vector2.Zero, null, Color.Black * _effectStrength, 0f, Vector2.Zero, new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2), SpriteEffects.None, 0f);
+                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Vector2.Zero, null, Color.Black * _effectAlphaStrength, 0f, Vector2.Zero, new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2), SpriteEffects.None, 0f);
+                });
+            };
+
+            // Нужно сделать фон прозрачнее, прям как с шиммером...
+            IL_Main.DrawBackground += (il) =>
+            {
+                var c = new ILCursor(il);
+
+                // float num = shimmerAlpha;
+
+                // IL_0000: ldsfld float32 Terraria.Main::shimmerAlpha
+                // IL_0005: stloc.0
+
+                var numIndex = -1;
+
+                if (!c.TryGotoNext(
+                    MoveType.After,
+                    i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.shimmerAlpha))),
+                    i => i.MatchStloc(out numIndex)))
+                {
+                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(BlackholeBackgroundHandler)}..{nameof(IL_Main.DrawBackground)}\" failed...");
+                    return;
+                }
+
+                c.Emit(OpCodes.Ldloca, numIndex);
+                c.EmitDelegate(static (ref float num) =>
+                {
+                    num = MathHelper.Min(_effectAlphaStrength + num, 1.0f);
                 });
             };
 
@@ -187,7 +233,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 c.Emit(OpCodes.Ldloca, num11Index);
                 c.EmitDelegate(static (ref float value) =>
                 {
-                    value = MathHelper.Max(0.0f, value - _effectStrength);
+                    value = MathHelper.Max(0.0f, value - _effectSurfaceDarkStrength);
                 });
             };
         }
