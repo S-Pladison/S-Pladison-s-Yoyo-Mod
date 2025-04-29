@@ -4,6 +4,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
+using System;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.Graphics.Effects;
@@ -70,13 +71,23 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
+    [Autoload(Side = ModSide.Client)]
     public sealed class BlackholeBackgroundHandler : ILoadable
     {
-        private readonly ProjectileObserver _projObserver = ProjectileObserver.Create(p => p.ModProjectile is not BlackholeProjectile);
+        /// <summary>
+        /// Общая сила эффекта от 0 до 1, где промежуток от 0 до 0.5 - затемнение заднего фона/удаление глобального освещения, а 0.5 до 1 - яркость/прозрачность космоса
+        /// </summary>
+        private static float _effectStrength;
 
-        private static float _effectAlphaStrength;
-        private static float _effectSurfaceDarkStrength;
-        private static float _effectDisappearDelay;
+        /// <summary>
+        /// Значение затемнения глобального освещения на поверхности.
+        /// </summary>
+        private static float _surfaceDarkStrength;
+
+        /// <summary>
+        /// Наблюдатель за снарядами черной дыры.
+        /// </summary>
+        private readonly ProjectileObserver _projObserver = ProjectileObserver.Create(p => p.ModProjectile is not BlackholeProjectile);
 
         public void Add(Projectile proj)
         {
@@ -96,28 +107,24 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             {
                 if (_projObserver.AnyEntity)
                 {
-                    _effectAlphaStrength = MathHelper.Min(_effectAlphaStrength + 0.025f, 1.0f);
-                    _effectSurfaceDarkStrength = MathHelper.Max(_effectAlphaStrength - 0.5f, 0.0f) * 2.0f;
-                    _effectDisappearDelay = 1.0f;
+                    _effectStrength = MathHelper.Min(_effectStrength + 0.0125f, 1.0f);
+
+                    if (_effectStrength >= 0.25f)
+                        _surfaceDarkStrength = MathHelper.Min(_surfaceDarkStrength + 0.05f, 1.0f);
                 }
-                else if (_effectSurfaceDarkStrength > 0.0f)
+                else if (_effectStrength > 0.0f)
                 {
-                    _effectSurfaceDarkStrength = MathHelper.Max(_effectSurfaceDarkStrength - 0.05f, 0.0f);
-                }
-                else if (_effectDisappearDelay > 0.0f)
-                {
-                    _effectDisappearDelay = MathHelper.Max(_effectDisappearDelay - 0.25f, 0.0f);
-                }
-                else
-                {
-                    _effectAlphaStrength = MathHelper.Max(_effectAlphaStrength - 0.025f, 0.0f);
+                    _effectStrength = MathHelper.Max(_effectStrength - 0.0125f, 0.0f);
+
+                    if (_effectStrength <= 0.75f)
+                        _surfaceDarkStrength = MathHelper.Max(_surfaceDarkStrength - 0.05f, 0.0f);
                 }
             };
 
             // Шиммер (мерцание) отключает отрисовку этой фигни...
             On_Main.DrawBlack += (orig, self, force) =>
             {
-                if (_effectAlphaStrength >= 1.0f)
+                if (_effectStrength >= 0.5f) //< Вычитаем 0.25 из-за промежутка на включение/отключение глобального освещения
                     return;
 
                 orig(self, force);
@@ -168,13 +175,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
                 c.GotoLabel(label, MoveType.Before);
                 c.MarkLabel(label);
-                c.EmitDelegate(static () =>
-                {
-                    if (_effectAlphaStrength <= 0)
-                        return;
-
-                    Main.spriteBatch.Draw(TextureAssets.MagicPixel.Value, Vector2.Zero, null, Color.Black * _effectAlphaStrength, 0f, Vector2.Zero, new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2), SpriteEffects.None, 0f);
-                });
+                c.EmitDelegate(DrawBackground);
             };
 
             // Нужно сделать фон прозрачнее, прям как с шиммером...
@@ -201,7 +202,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 c.Emit(OpCodes.Ldloca, numIndex);
                 c.EmitDelegate(static (ref float num) =>
                 {
-                    num = MathHelper.Min(_effectAlphaStrength + num, 1.0f);
+                    if (_effectStrength <= 0.0f)
+                        return;
+
+                    num = MathHelper.Min(MathHelper.Min(_effectStrength * 2.0f, 1.0f) + num, 1.0f);
                 });
             };
 
@@ -233,14 +237,35 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 c.Emit(OpCodes.Ldloca, num11Index);
                 c.EmitDelegate(static (ref float value) =>
                 {
-                    value = MathHelper.Max(0.0f, value - _effectSurfaceDarkStrength);
+                    if (_surfaceDarkStrength <= 0.0f)
+                        return;
+
+                    value = MathHelper.Max(0.0f, value - _surfaceDarkStrength);
                 });
             };
         }
 
         void ILoadable.Unload()
         {
+            // ...
+        }
 
+        private static void DrawBackground()
+        {
+            if (_effectStrength <= 0)
+                return;
+
+            var backgroundTexture = TextureAssets.MagicPixel.Value;
+            var backgroundColor = Color.Black * MathHelper.Min(_effectStrength * 2.0f, 1.0f);
+            var backgroundScale = new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2);
+
+            Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, null, backgroundColor, 0f, Vector2.Zero, backgroundScale, SpriteEffects.None, 0f);
+
+            backgroundTexture = TextureAssets.MagicPixel.Value;
+            backgroundColor = Color.Red * MathHelper.Max(_effectStrength - 0.5f, 0.0f) * 2.0f;
+            backgroundScale = new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2);
+
+            Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, null, backgroundColor, 0f, Vector2.Zero, backgroundScale, SpriteEffects.None, 0f);
         }
     }
 }
