@@ -55,7 +55,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BlackholeProjectile : YoyoBaseProjectile, IInitializableProjectile
+    public sealed class BlackholeProjectile : YoyoBaseProjectile, IInitializableProjectile, IEmitLightEntity
     {
         public override string Texture => BlackholeAssets.ProjPath;
         public override float LifeTime => -1f;
@@ -70,6 +70,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override void OnKill(int timeLeft)
         {
             ModContent.GetInstance<BlackholeBackgroundHandler>()?.Remove(Projectile);
+        }
+
+        void IEmitLightEntity.EmitLight(Entity _)
+        {
+            Lighting.AddLight(Projectile.Center, Color.Purple.ToVector3() * 0.35f);
         }
     }
 
