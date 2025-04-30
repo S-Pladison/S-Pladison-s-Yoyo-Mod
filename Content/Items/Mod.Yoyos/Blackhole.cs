@@ -74,7 +74,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IEmitLightEntity.EmitLight(Entity _)
         {
-            Lighting.AddLight(Projectile.Center, Color.Purple.ToVector3() * 0.35f);
+            Lighting.AddLight(Projectile.Center, new Color(95, 70, 178).ToVector3() * 0.45f);
         }
     }
 
@@ -121,22 +121,20 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     _effectStrength = MathHelper.Min(_effectStrength + 0.0125f, 1.0f);
 
-                    if (_effectStrength >= 0.25f)
+                    if (_effectStrength > 0.5f)
                         _surfaceDarkStrength = MathHelper.Min(_surfaceDarkStrength + 0.05f, 1.0f);
                 }
                 else if (_effectStrength > 0.0f)
                 {
                     _effectStrength = MathHelper.Max(_effectStrength - 0.0125f, 0.0f);
-
-                    if (_effectStrength <= 0.75f)
-                        _surfaceDarkStrength = MathHelper.Max(_surfaceDarkStrength - 0.05f, 0.0f);
+                    _surfaceDarkStrength = MathHelper.Max(_surfaceDarkStrength - 0.05f, 0.0f);
                 }
             };
 
             // Шиммер (мерцание) отключает отрисовку этой фигни...
             On_Main.DrawBlack += (orig, self, force) =>
             {
-                if (_effectStrength >= 0.5f)
+                if (_surfaceDarkStrength > 0.0f)
                     return;
 
                 orig(self, force);
