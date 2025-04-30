@@ -65,7 +65,7 @@ float4 Blur(sampler sourceSampler, float2 uv, float2 radius)
 
 float4 BlackholeBackground(VertexShaderOutput input) : COLOR
 {
-    return Blur(TextureSampler0, input.coord + Texture0Offset, BlurRadius) * Transparency;
+    return (float4(0.0, 0.0, 1.0, 1.0) + Blur(TextureSampler0, input.coord + Texture0Offset, BlurRadius)) * Transparency;
 }
 
 technique Technique1

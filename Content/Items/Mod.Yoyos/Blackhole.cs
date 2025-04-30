@@ -87,7 +87,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         private static readonly short[] _quadIndices = [ 0, 2, 3, 0, 1, 2 ];
 
         /// <summary>
-        /// Общая сила эффекта от 0 до 1, где промежуток от 0 до 0.5 - затемнение заднего фона/удаление глобального освещения, а 0.5 до 1 - яркость/прозрачность космоса
+        /// Общая сила эффекта от 0 до 1, где промежуток от 0 до 0.25 - затемнение заднего фона/удаление глобального освещения, а 0.25 до 1 - яркость/прозрачность космоса
         /// </summary>
         private static float _effectStrength;
 
@@ -121,13 +121,13 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 {
                     _effectStrength = MathHelper.Min(_effectStrength + 0.0125f, 1.0f);
 
-                    if (_effectStrength > 0.5f)
-                        _surfaceDarkStrength = MathHelper.Min(_surfaceDarkStrength + 0.05f, 1.0f);
+                    if (_effectStrength > 0.25f)
+                        _surfaceDarkStrength = MathHelper.Min(_surfaceDarkStrength + 0.025f, 1.0f);
                 }
                 else if (_effectStrength > 0.0f)
                 {
                     _effectStrength = MathHelper.Max(_effectStrength - 0.0125f, 0.0f);
-                    _surfaceDarkStrength = MathHelper.Max(_surfaceDarkStrength - 0.05f, 0.0f);
+                    _surfaceDarkStrength = MathHelper.Max(_surfaceDarkStrength - 0.025f, 0.0f);
                 }
             };
 
@@ -266,7 +266,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 return;
 
             var backgroundTexture = TextureAssets.MagicPixel.Value;
-            var backgroundColor = Color.Black * MathHelper.Min(_effectStrength * 2.0f, 1.0f);
+            var backgroundColor = Color.Black * MathHelper.Min(_effectStrength * 4.0f, 1.0f);
             var backgroundScale = new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2);
 
             Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, null, backgroundColor, 0f, Vector2.Zero, backgroundScale, SpriteEffects.None, 0f);
@@ -278,7 +278,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 parameters["Texture0"].SetValue(Main.instance.tileTarget);
                 parameters["Texture0Offset"].SetValue(Vector2.Zero);
                 parameters["BlurRadius"].SetValue(Vector2.One * 16 / backgroundScale);
-                parameters["Transparency"].SetValue(MathHelper.Max(_effectStrength - 0.5f, 0.0f) * 2.0f);
+                parameters["Transparency"].SetValue(_effectStrength <= 0.25f ? 0f : (_effectStrength - 0.25f) / 0.75f);
             });
 
             Main.spriteBatch.End(out var spriteBatchSnapshot);
