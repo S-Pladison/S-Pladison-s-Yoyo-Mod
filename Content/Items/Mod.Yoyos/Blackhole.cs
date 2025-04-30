@@ -76,7 +76,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     [Autoload(Side = ModSide.Client)]
     public sealed class BlackholeBackgroundHandler : ILoadable
     {
-        private static readonly short[] QuadTriangles = { 0, 2, 3, 0, 1, 2 };
+        /// <summary>
+        /// Индексы вершин для отрисовки области задника.
+        /// </summary>
+        private static readonly short[] _quadIndices = [ 0, 2, 3, 0, 1, 2 ];
 
         /// <summary>
         /// Общая сила эффекта от 0 до 1, где промежуток от 0 до 0.5 - затемнение заднего фона/удаление глобального освещения, а 0.5 до 1 - яркость/прозрачность космоса
@@ -288,7 +291,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     new VertexPositionTexture(new Vector3(backgroundRectangle.Left, backgroundRectangle.Bottom, 0f), new Vector2(0f, 1f))
                 };
 
-                Main.graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, QuadTriangles, 0, QuadTriangles.Length / 3);
+                Main.graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, _quadIndices, 0, _quadIndices.Length / 3);
             }
 
             Main.spriteBatch.Begin(spriteBatchSnapshot);
