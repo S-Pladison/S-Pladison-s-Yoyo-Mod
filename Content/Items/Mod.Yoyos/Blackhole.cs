@@ -4,7 +4,7 @@ using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
-using System;
+using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.GameContent;
 using Terraria.Graphics.Effects;
@@ -21,6 +21,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public const string ItemPath = $"{YoyoPath}_Item";
         public const string ProjPath = $"{YoyoPath}_Proj";
+
+        public static readonly LazyAsset<Effect> BackgroundEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Background", ReLogic.Content.AssetRequestMode.ImmediateLoad);
     }
 
     public sealed class BlackholeItem : YoyoBaseItem
@@ -74,6 +76,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     [Autoload(Side = ModSide.Client)]
     public sealed class BlackholeBackgroundHandler : ILoadable
     {
+        private static readonly short[] QuadTriangles = { 0, 2, 3, 0, 1, 2 };
+
         /// <summary>
         /// Общая сила эффекта от 0 до 1, где промежуток от 0 до 0.5 - затемнение заднего фона/удаление глобального освещения, а 0.5 до 1 - яркость/прозрачность космоса
         /// </summary>
@@ -124,7 +128,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             // Шиммер (мерцание) отключает отрисовку этой фигни...
             On_Main.DrawBlack += (orig, self, force) =>
             {
-                if (_effectStrength >= 0.5f) //< Вычитаем 0.25 из-за промежутка на включение/отключение глобального освещения
+                if (_effectStrength >= 0.5f)
                     return;
 
                 orig(self, force);
@@ -261,11 +265,33 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, null, backgroundColor, 0f, Vector2.Zero, backgroundScale, SpriteEffects.None, 0f);
 
-            backgroundTexture = TextureAssets.MagicPixel.Value;
-            backgroundColor = Color.Red * MathHelper.Max(_effectStrength - 0.5f, 0.0f) * 2.0f;
-            backgroundScale = new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2);
+            var backgroundRectangle = new Rectangle((int)(Main.sceneTilePos.X - Main.screenPosition.X), (int)(Main.sceneTilePos.Y - Main.screenPosition.Y), (int)backgroundScale.X, (int)backgroundScale.Y);
+            var backgroundEffect = BlackholeAssets.BackgroundEffect.Prepare(parameters =>
+            {
+                parameters["TransformMatrix"].SetValue(Main.GameViewMatrix.NormalizedTransformationmatrix);
+                parameters["Texture0"].SetValue(Main.instance.tileTarget);
+                parameters["Texture0Offset"].SetValue(Vector2.Zero);
+                parameters["BlurRadius"].SetValue(Vector2.One * 16 / backgroundScale);
+                parameters["Transparency"].SetValue(MathHelper.Max(_effectStrength - 0.5f, 0.0f) * 2.0f);
+            });
 
-            Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, null, backgroundColor, 0f, Vector2.Zero, backgroundScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.End(out var spriteBatchSnapshot);
+
+            foreach (var pass in backgroundEffect.Value.CurrentTechnique.Passes)
+            {
+                pass.Apply();
+
+                var vertices = new[] {
+                    new VertexPositionTexture(new Vector3(backgroundRectangle.Left, backgroundRectangle.Top, 0f), new Vector2(0f, 0f)),
+                    new VertexPositionTexture(new Vector3(backgroundRectangle.Right, backgroundRectangle.Top, 0f), new Vector2(1f, 0f)),
+                    new VertexPositionTexture(new Vector3(backgroundRectangle.Right, backgroundRectangle.Bottom, 0f), new Vector2(1f, 1f)),
+                    new VertexPositionTexture(new Vector3(backgroundRectangle.Left, backgroundRectangle.Bottom, 0f), new Vector2(0f, 1f))
+                };
+
+                Main.graphics.GraphicsDevice.DrawUserIndexedPrimitives(PrimitiveType.TriangleList, vertices, 0, vertices.Length, QuadTriangles, 0, QuadTriangles.Length / 3);
+            }
+
+            Main.spriteBatch.Begin(spriteBatchSnapshot);
         }
     }
 }
