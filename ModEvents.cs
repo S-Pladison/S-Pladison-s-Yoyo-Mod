@@ -7,12 +7,15 @@ using System.IO;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
+using static SPYoyoMod.ModEvents;
 
 namespace SPYoyoMod
 {
     [LoadPriority(sbyte.MaxValue)]
     public sealed class ModEvents : ILoadable
     {
+        public delegate void ModifySunLightColor(ref Color tileColor, ref Color backgroundColor);
+
         // Mod
 
         /// <summary>
@@ -51,6 +54,11 @@ namespace SPYoyoMod
         public static event Action OnPostUpdateCameraPosition;
 
         /// <summary>
+        /// Позволяет модифицировать цвет света, испускаемый солнцем.
+        /// </summary>
+        public static event ModifySunLightColor OnModifySunLightColor;
+
+        /// <summary>
         /// Вызывается при изменении разрешения экрана.
         /// </summary>
         public static event Action<Point> OnResolutionChanged;
@@ -82,6 +90,7 @@ namespace SPYoyoMod
             OnPreUpdateDusts += GeneralUtils.EmptyAction;
             OnPostUpdateEverything += GeneralUtils.EmptyAction;
             OnPostUpdateCameraPosition += GeneralUtils.EmptyAction;
+            OnModifySunLightColor += (ref Color _, ref Color _) => { };
             OnResolutionChanged += GeneralUtils.EmptyAction;
 
             On_Main.DoDraw_UpdateCameraPosition += (orig) =>
@@ -94,6 +103,7 @@ namespace SPYoyoMod
         private static void UnloadModEvents()
         {
             OnResolutionChanged = null;
+            OnModifySunLightColor = null;
             OnPostUpdateCameraPosition = null;
             OnPostUpdateEverything = null;
             OnPreUpdateDusts = null;
@@ -152,6 +162,9 @@ namespace SPYoyoMod
 
             public override void PostUpdateEverything()
                 => ModEvents.OnPostUpdateEverything();
+
+            public override void ModifySunLightColor(ref Color tileColor, ref Color backgroundColor)
+                => ModEvents.OnModifySunLightColor(ref tileColor, ref backgroundColor);
 
             private void ResolutionChangedHandler(Vector2 screenSize)
             {

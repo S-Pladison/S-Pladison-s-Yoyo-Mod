@@ -33,7 +33,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
-        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/CloudNoise");
+        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/LiquidNoise");
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
         public static readonly LazyAsset<Effect> OutlineEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Outline");
     }

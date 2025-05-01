@@ -8,8 +8,21 @@ sampler TextureSampler0 = sampler_state
     Mipfilter = Point;
 };
 
+texture Texture1 : register(s1);
+
+sampler TextureSampler1 = sampler_state
+{
+    texture = <Texture1>;
+    AddressU = Wrap;
+    AddressV = Wrap;
+    AddressW = Wrap;
+    MagFilter = Linear;
+    MinFilter = Linear;
+    Mipfilter = Linear;
+};
+
 matrix TransformMatrix;
-float2 Texture0Offset;
+float2 Texture1Offset;
 float2 BlurRadius;
 float Transparency;
 
@@ -65,7 +78,18 @@ float4 Blur(sampler sourceSampler, float2 uv, float2 radius)
 
 float4 BlackholeBackground(VertexShaderOutput input) : COLOR
 {
-    return (float4(0.0, 0.0, 1.0, 1.0) + Blur(TextureSampler0, input.coord + Texture0Offset, BlurRadius)) * Transparency;
+    //float4 backgroundColor = float4(55, 40, 95, 255) / 255;
+    //float4 backgroundColor = float4(5, 5, 10, 255) / 255;
+    float4 backgroundColor = float4(0, 0, 0, 255) / 255;
+    float4 maskColor = 1.0f - Blur(TextureSampler0, input.coord, BlurRadius);
+    float4 noiseColor = tex2D(TextureSampler1, input.coord + Texture1Offset);
+    
+    noiseColor.rgb *= lerp(float3(15, 15, 45) / 255, float3(55, 55, 115) / 255, noiseColor.r);
+    
+    backgroundColor += noiseColor;
+    backgroundColor *= maskColor.a;
+    
+    return backgroundColor * Transparency;
 }
 
 technique Technique1

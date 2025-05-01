@@ -22,6 +22,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public const string ItemPath = $"{YoyoPath}_Item";
         public const string ProjPath = $"{YoyoPath}_Proj";
 
+        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/CloudNoise");
         public static readonly LazyAsset<Effect> BackgroundEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Background", ReLogic.Content.AssetRequestMode.ImmediateLoad);
     }
 
@@ -84,7 +85,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         /// <summary>
         /// Индексы вершин для отрисовки области задника.
         /// </summary>
-        private static readonly short[] _quadIndices = [ 0, 2, 3, 0, 1, 2 ];
+        private static readonly short[] _quadIndices = [0, 2, 3, 0, 1, 2];
 
         /// <summary>
         /// Общая сила эффекта от 0 до 1, где промежуток от 0 до 0.25 - затемнение заднего фона/удаление глобального освещения, а 0.25 до 1 - яркость/прозрачность космоса
@@ -113,8 +114,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void ILoadable.Load(Terraria.ModLoader.Mod mod)
         {
-            // Просто определяем силу эффекта;
-            // Если есть хоть один йо-йо, то эффект должен плавно включаться, а если нет - выключаться
             ModEvents.OnPostUpdateEverything += () =>
             {
                 if (_projObserver.AnyEntity)
@@ -129,6 +128,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     _effectStrength = MathHelper.Max(_effectStrength - 0.0125f, 0.0f);
                     _surfaceDarkStrength = MathHelper.Max(_surfaceDarkStrength - 0.025f, 0.0f);
                 }
+            };
+
+            ModEvents.OnModifySunLightColor += (ref Color tileColor, ref Color backgroundColor) =>
+            {
+                if (_surfaceDarkStrength <= 0.0f)
+                    return;
+
+                tileColor = Color.Lerp(tileColor, new Color(55, 40, 95), _surfaceDarkStrength * 0.75f);
             };
 
             // Шиммер (мерцание) отключает отрисовку этой фигни...
@@ -218,41 +225,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     num = MathHelper.Min(MathHelper.Min(_effectStrength * 2.0f, 1.0f) + num, 1.0f);
                 });
             };
-
-            // Шиммер (мерцание) отключает глобальное освещение
-            IL_TileLightScanner.ApplySurfaceLight += (il) =>
-            {
-                var c = new ILCursor(il);
-
-                // float num11 = 1f - Main.shimmerDarken;
-
-                // IL_040d: ldc.r4 1
-                // IL_0412: ldsfld float32 Terraria.Main::shimmerDarken
-                // IL_0417: sub
-                // IL_0418: stloc.s 7 // num11
-
-                var num11Index = -1;
-
-                if (!c.TryGotoNext(
-                    MoveType.After,
-                    i => i.MatchLdcR4(1),
-                    i => i.MatchLdsfld(typeof(Main).GetField(nameof(Main.shimmerDarken))),
-                    i => i.MatchSub(),
-                    i => i.MatchStloc(out num11Index)))
-                {
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(BlackholeBackgroundHandler)}..{nameof(IL_TileLightScanner.ApplySurfaceLight)}\" failed...");
-                    return;
-                }
-
-                c.Emit(OpCodes.Ldloca, num11Index);
-                c.EmitDelegate(static (ref float value) =>
-                {
-                    if (_surfaceDarkStrength <= 0.0f)
-                        return;
-
-                    value = MathHelper.Max(0.0f, value - _surfaceDarkStrength);
-                });
-            };
         }
 
         void ILoadable.Unload()
@@ -267,17 +239,17 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             var backgroundTexture = TextureAssets.MagicPixel.Value;
             var backgroundColor = Color.Black * MathHelper.Min(_effectStrength * 4.0f, 1.0f);
-            var backgroundScale = new Vector2(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2, Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2);
+            var backgroundRectangle = new Rectangle((int)(Main.sceneTilePos.X - Main.screenPosition.X), (int)(Main.sceneTilePos.Y - Main.screenPosition.Y), (int)(Main.Camera.UnscaledSize.X + Main.offScreenRange * 2), (int)(Main.Camera.UnscaledSize.Y + Main.offScreenRange * 2));
 
-            Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, null, backgroundColor, 0f, Vector2.Zero, backgroundScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(backgroundTexture, Vector2.Zero, backgroundRectangle, backgroundColor, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0f);
 
-            var backgroundRectangle = new Rectangle((int)(Main.sceneTilePos.X - Main.screenPosition.X), (int)(Main.sceneTilePos.Y - Main.screenPosition.Y), (int)backgroundScale.X, (int)backgroundScale.Y);
             var backgroundEffect = BlackholeAssets.BackgroundEffect.Prepare(parameters =>
             {
                 parameters["TransformMatrix"].SetValue(Main.GameViewMatrix.NormalizedTransformationmatrix);
                 parameters["Texture0"].SetValue(Main.instance.tileTarget);
-                parameters["Texture0Offset"].SetValue(Vector2.Zero);
-                parameters["BlurRadius"].SetValue(Vector2.One * 16 / backgroundScale);
+                parameters["Texture1"].SetValue(BlackholeAssets.NoiseTexture.Value);
+                parameters["Texture1Offset"].SetValue(Main.sceneTilePos - Main.screenPosition);
+                parameters["BlurRadius"].SetValue(Vector2.One * 16 / backgroundRectangle.Size());
                 parameters["Transparency"].SetValue(_effectStrength <= 0.25f ? 0f : (_effectStrength - 0.25f) / 0.75f);
             });
 
