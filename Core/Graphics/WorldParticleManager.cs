@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.Linq;

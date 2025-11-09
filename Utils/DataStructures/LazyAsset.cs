@@ -3,7 +3,7 @@ using ReLogic.Content;
 using System;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Utils.DataStructures
+namespace SPYoyoMod.Utils
 {
     public readonly struct LazyAsset<T>(Func<Asset<T>> valueFactory) where T : class
     {

@@ -12,6 +12,8 @@ Projectiles: {
 	GradientDaggerProjectile.DisplayName: Gradient Dagger Projectile
 	GradientStarProjectile.DisplayName: Gradient Star Projectile
 	Code1ImprovedCritProjectile.DisplayName: Code1 Improved Crit Projectile
+	BlackholeProjectile.DisplayName: Blackhole Projectile
+	SoulTormentorProjectile.DisplayName: Soul Tormentor Projectile
 }
 
 NPCs: {

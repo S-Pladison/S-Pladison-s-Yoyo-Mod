@@ -4,7 +4,6 @@ using ReLogic.Content;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
-using SPYoyoMod.Utils.DataStructures;
 using Terraria;
 using Terraria.DataStructures;
 using Terraria.ID;
