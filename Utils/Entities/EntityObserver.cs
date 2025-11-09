@@ -30,7 +30,7 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public event Action<T> OnRemoveEntity;
 
-        protected readonly FastList<EntityData> _entities;
+        protected readonly FastList<EntityData> _entities = new();
         protected readonly T[] _sourseArray = sourse;
         protected readonly Predicate<T> _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
 
