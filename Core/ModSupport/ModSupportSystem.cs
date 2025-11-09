@@ -36,7 +36,7 @@ namespace SPYoyoMod.Core.ModSupport
             if (!String.IsNullOrEmpty(_potentialInternalName))
                 modNameList.Add(_potentialInternalName);
 
-            const string postfix = "Support";
+            const string postfix = "Mod";
 
             // Потенциальное имя мода на основе имени типа, но без постфикса
             if (type.Name.EndsWith(postfix))
@@ -98,18 +98,6 @@ namespace SPYoyoMod.Core.ModSupport
             }
 
             return null;
-        }
-
-        public static bool TryCall<T>(out T value, params object[] args)
-        {
-            if (Call(args) is T localValue)
-            {
-                value = localValue;
-                return true;
-            }
-
-            value = default;
-            return false;
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using ReLogic.Content;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
@@ -16,15 +15,43 @@ namespace SPYoyoMod.Core.Graphics
     /// </summary>
     public static class NPCEffectManager
     {
+        /// <summary>
+        /// Общий 'Effect', используемый всеми типами визульных эффектов.
+        /// </summary>
+        private static readonly LazyAsset<Effect> _effect = LazyAsset<Effect>.From($"{nameof(SPYoyoMod)}/Assets/NPCEffects");
+
         // [Обводка]
 
-        public record struct OutlineSettings(
-            int NpcWhoAmI,
-            int LifeTime,
-            Func<float, float> OutlineThickness,
-            Func<float, Color> OutlineColor,
-            Func<float, Color> NpcColor
-        );
+        /// <summary>
+        /// Параметры эффекта обводки NPC.
+        /// </summary>
+        public readonly ref struct OutlineSettings
+        {
+            /// <summary>
+            /// Идентификатор NPC, к которому закреплен эффект.
+            /// </summary>
+            public readonly int NpcWhoAmI { get; init; }
+
+            /// <summary>
+            /// Время действия эффекта.
+            /// </summary>
+            public readonly int LifeTime { get; init; }
+
+            /// <summary>
+            /// Толщина обводки.
+            /// </summary>
+            public readonly Func<float, float> OutlineThickness { get; init; }
+
+            /// <summary>
+            /// Цвет обводки.
+            /// </summary>
+            public readonly Func<float, Color> OutlineColor { get; init; }
+
+            /// <summary>
+            /// Цвет заливки внутри обводки поверх NPC.
+            /// </summary>
+            public readonly Func<float, Color> NpcColor { get; init; }
+        };
 
         /// <summary>
         /// Применяет эффект обводки к NPC. Не рекомендую устанавливать обводку на продолжительное время.
@@ -35,18 +62,39 @@ namespace SPYoyoMod.Core.Graphics
             ModContent.GetInstance<NPCOutlineManager>()?.Outline(settings);
         }
 
+        /// <summary>
+        /// Менеджер, управляющий эффектом обводки NPC.
+        /// </summary>
         [Autoload(Side = ModSide.Client)]
         private sealed class NPCOutlineManager : ILoadable
         {
-            public class OutlineData(in OutlineSettings settings, int timeLeft)
+            /// <summary>
+            /// Контекст активного эффекта.
+            /// </summary>
+            public sealed class OutlineContext(in OutlineSettings settings, int timeLeft)
             {
-                public OutlineSettings Settings = settings;
+                public readonly int NpcWhoAmI = settings.NpcWhoAmI;
+                public readonly int LifeTime = settings.LifeTime;
+                public readonly Func<float, float> OutlineThickness = settings.OutlineThickness;
+                public readonly Func<float, Color> OutlineColor = settings.OutlineColor;
+                public readonly Func<float, Color> NpcColor = settings.NpcColor;
+
                 public int TimeLeft = timeLeft;
             }
 
+            /// <summary>
+            /// Максимальное кол-во NPC, которые могут иметь эффект обводки за раз.
+            /// </summary>
             public const int MaxOutlinedNPC = 3;
 
-            private readonly List<OutlineData> _outlineData = new(MaxOutlinedNPC);
+            /// <summary>
+            /// Список всех активных контекстов.
+            /// </summary>
+            private readonly List<OutlineContext> _contexts = new(MaxOutlinedNPC);
+
+            /// <summary>
+            /// Коллекция экранных целей рендеринга. Каждая цель - отдельный NPC/контекст.
+            /// </summary>
             private readonly ScreenRenderTarget[] _renderTargets =
             [
                 ScreenRenderTarget.Create(ScreenRenderTargetScale.Default),
@@ -72,82 +120,93 @@ namespace SPYoyoMod.Core.Graphics
                 ModEvents.OnPostUpdateEverything -= Update;
             }
 
+            /// <summary>
+            /// Накладываем эффект обводка с определенными параметрами.
+            /// </summary>
             public void Outline(in OutlineSettings settings)
             {
-                if (_outlineData.Count >= MaxOutlinedNPC)
-                    _outlineData.RemoveAt(0);
+                if (_contexts.Count >= MaxOutlinedNPC)
+                    _contexts.RemoveAt(0);
 
-                _outlineData.Add(new(settings, settings.LifeTime));
+                _contexts.Add(new(in settings, settings.LifeTime));
             }
 
+            /// <summary>
+            /// Обновление активных контекстов. Удаляет контекст, если время жизни стало <= 0, а также если NPC перестал существовать.
+            /// </summary>
             private void Update()
             {
-                for (int i = 0; i < _outlineData.Count; i++)
+                for (int i = 0; i < _contexts.Count; i++)
                 {
-                    var data = _outlineData[i];
+                    var context = _contexts[i];
 
-                    if (--data.TimeLeft <= 0 || Main.npc[data.Settings.NpcWhoAmI] is null || !Main.npc[data.Settings.NpcWhoAmI].active)
+                    if (--context.TimeLeft <= 0 || Main.npc[context.NpcWhoAmI] is null || !Main.npc[context.NpcWhoAmI].active)
                     {
-                        _outlineData.RemoveAt(i);
+                        _contexts.RemoveAt(i);
                         i--;
                     }
                 }
             }
 
+            /// <summary>
+            /// Отрисовываем контексты на соответствующие им цели рендеринга.
+            /// </summary>
             private void RenderNPCToTargets()
             {
-                if (_outlineData.Count == 0)
+                if (_contexts.Count == 0)
                     return;
 
                 var device = Main.graphics.GraphicsDevice;
 
-                for (int i = 0; i < _outlineData.Count; i++)
+                for (int i = 0; i < _contexts.Count; i++)
                 {
                     device.SetRenderTarget(_renderTargets[i]);
                     device.Clear(Color.Transparent);
 
-                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Effect);
-                    NPCUtils.DrawNPC(Main.npc[_outlineData[i].Settings.NpcWhoAmI]);
+                    Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Transform);
+                    NPCUtils.DrawNPC(Main.npc[_contexts[i].NpcWhoAmI]);
                     Main.spriteBatch.End();
                 }
 
                 device.SetRenderTarget(null);
             }
 
+            /// <summary>
+            /// Отрисовываем цели рендеринга соответствующих контекстов. 
+            /// </summary>
             private void DrawTargetsToScreen(bool behindTiles)
             {
-                if (_outlineData.Count == 0)
+                if (_contexts.Count == 0)
                     return;
 
-                var effect = NPCEffectAssets.Effect.Prepare(parameters =>
+                _effect.Prepare(parameters =>
                 {
                     parameters["ScreenSize"].SetValue(Main.ScreenSize.ToVector2());
+                    parameters["Zoom"].SetValue(Main.GameViewMatrix.Zoom);
                 });
 
                 Main.spriteBatch.End(out var spriteBatchSnapshot);
-                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, GameMatrices.Zoom);
+                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Matrix.Identity);
 
-                for (int i = 0; i < _outlineData.Count; i++)
+                for (int i = 0; i < _contexts.Count; i++)
                 {
-                    var data = _outlineData[i];
-                    var settings = data.Settings;
+                    var context = _contexts[i];
 
-                    if (Main.npc[settings.NpcWhoAmI].behindTiles != behindTiles)
+                    if (Main.npc[context.NpcWhoAmI].behindTiles != behindTiles)
                         continue;
 
-                    var lifeTimeRatio = 1f - data.TimeLeft / (float)settings.LifeTime;
-                    var outlineThickness = (settings.OutlineThickness is not null) ? settings.OutlineThickness(lifeTimeRatio) : 1.5f;
-                    var outlineColor = (settings.OutlineColor is not null) ? settings.OutlineColor(lifeTimeRatio) : Color.White;
-                    var npcColor = (settings.NpcColor is not null) ? settings.NpcColor(lifeTimeRatio) : (outlineColor * 0.4f);
+                    var lifeTimeRatio = 1f - context.TimeLeft / (float)context.LifeTime;
+                    var outlineThickness = (context.OutlineThickness is not null) ? context.OutlineThickness(lifeTimeRatio) : 1.5f;
+                    var outlineColor = (context.OutlineColor is not null) ? context.OutlineColor(lifeTimeRatio) : Color.White;
+                    var npcColor = (context.NpcColor is not null) ? context.NpcColor(lifeTimeRatio) : (outlineColor * 0.4f);
 
-                    effect
-                        .Prepare(parameters =>
-                        {
-                            parameters["OutlineThickness"].SetValue(outlineThickness);
-                            parameters["OutlineColor"].SetValue(outlineColor.ToVector4());
-                            parameters["NPCColor"].SetValue(npcColor.ToVector4());
-                        })
-                        .Apply("Outline");
+                    _effect.Prepare(parameters =>
+                    {
+                        parameters["OutlineThickness"].SetValue(outlineThickness);
+                        parameters["OutlineColor"].SetValue(outlineColor.ToVector4());
+                        parameters["NPCColor"].SetValue(npcColor.ToVector4());
+                    }
+                    ).Apply("Outline");
 
                     Main.spriteBatch.Draw(_renderTargets[i], Vector2.Zero, null, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, 0);
                 }
@@ -155,19 +214,6 @@ namespace SPYoyoMod.Core.Graphics
                 Main.spriteBatch.End();
                 Main.spriteBatch.Begin(spriteBatchSnapshot);
             }
-        }
-
-        [Autoload(Side = ModSide.Client)]
-        private sealed class NPCEffectAssets : ILoadable
-        {
-            public static Asset<Effect> Effect { get; private set; } = ModContent.Request<Effect>($"{nameof(SPYoyoMod)}/Assets/NPCEffects");
-
-            void ILoadable.Unload()
-            {
-                Effect = null;
-            }
-
-            void ILoadable.Load(Mod mod) { }
         }
     }
 }

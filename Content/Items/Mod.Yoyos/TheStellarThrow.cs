@@ -253,22 +253,18 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
+    public readonly struct TheStellarThrowPalette(Color starFirst, Color starSecond, Color starThird, Color trailStartOne, Color trailStartZero, Color trailEndOne, Color trailEndZero)
     {
-        public readonly struct Palette(Color starFirst, Color starSecond, Color starThird, Color trailStartOne, Color trailStartZero, Color trailEndOne, Color trailEndZero)
-        {
-            public readonly Color StarFirst = starFirst; //< Основной цвет звезды
-            public readonly Color StarSecond = starSecond; //< Цвет *обводки* звезды
-            public readonly Color StarThird = starThird; //< Цвет *тени*
+        public readonly Color StarFirst = starFirst; //< Основной цвет звезды
+        public readonly Color StarSecond = starSecond; //< Цвет *обводки* звезды
+        public readonly Color StarThird = starThird; //< Цвет *тени*
 
-            public readonly Color TrailStartOne = trailStartOne;
-            public readonly Color TrailStartZero = trailStartZero;
-            public readonly Color TrailEndOne = trailEndOne;
-            public readonly Color TrailEndZero = trailEndZero;
-        }
+        public readonly Color TrailStartOne = trailStartOne;
+        public readonly Color TrailStartZero = trailStartZero;
+        public readonly Color TrailEndOne = trailEndOne;
+        public readonly Color TrailEndZero = trailEndZero;
 
-        public static readonly int TrailPointCount = 20;
-        public static readonly Palette[] Palettes =
+        public static readonly TheStellarThrowPalette[] Palettes =
         [
             // Розовато-фиолетовый
             new(
@@ -311,6 +307,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 trailEndZero: new(255, 0, 80)
             ),
         ];
+    }
+
+    public sealed class TheStellarThrowStarProjectile : ModProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
+    {
+        public static readonly int TrailPointCount = 20;
         public static readonly int NpcHitOutlineLifeTime = GeneralUtils.SecondsToTicks(0.25f);
         public static readonly EasingBuilder NpcHitOutlineThicknessEasing = new(
             (EasingFunctions.InOutExpo, 0.2f, 0f, 1f),
@@ -323,8 +324,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
         private int TargetIndex { get => (int)Projectile.ai[0]; }
-        private int Style { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
-        private Palette StylePalette { get => Palettes[Style]; }
+        private int StyleIndex { get => (int)Projectile.ai[1]; set => Projectile.ai[1] = value; }
+        private ref TheStellarThrowPalette Style { get => ref TheStellarThrowPalette.Palettes[StyleIndex]; }
 
         public override void SetDefaults()
         {
@@ -349,11 +350,11 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             if (heldItem is null || heldItem.type != ModContent.ItemType<TheStellarThrowItem>() || !heldItem.favorited)
             {
-                Style = Main.rand.Next(0, 3);
+                StyleIndex = Main.rand.Next(0, 3);
                 return;
             }
 
-            Style = 3; //< Единственный, золотой цвет, если игрок отметил йо-йо как *избранный*
+            StyleIndex = 3; //< Единственный, золотой цвет, если игрок отметил йо-йо как *избранный*
         }
 
         void IInitializableProjectile.Initialize(Projectile _)
@@ -422,8 +423,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.Velocity = Projectile.velocity * 0.05f;
-                    particle.StartColor = StylePalette.StarFirst;
-                    particle.EndColor = StylePalette.StarSecond;
+                    particle.StartColor = Style.StarFirst;
+                    particle.EndColor = Style.StarSecond;
                     particle.Scale = Main.rand.NextFloat(1.0f, 2.0f);
                 }
                 else
@@ -433,8 +434,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
                     particle.Velocity = Projectile.velocity * 0.05f;
-                    particle.StartColor = StylePalette.StarFirst;
-                    particle.EndColor = StylePalette.StarSecond;
+                    particle.StartColor = Style.StarFirst;
+                    particle.EndColor = Style.StarSecond;
                     particle.Scale = Main.rand.NextFloat(0.3f, 0.6f);
                 }
             }
@@ -476,14 +477,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.velocity = Vector2.Zero;
 
             SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
-            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowHitProjectile>(), 0, 0, Projectile.owner, Style);
+            Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowHitProjectile>(), 0, 0, Projectile.owner, StyleIndex);
 
             return true;
         }
 
         void IEmitLightEntity.EmitLight(Entity _)
         {
-            Lighting.AddLight(Projectile.Center, StylePalette.StarSecond.ToVector3() * 0.3f);
+            Lighting.AddLight(Projectile.Center, Style.StarSecond.ToVector3() * 0.3f);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
@@ -495,10 +496,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     {
                         parameters["Texture0"].SetValue(TheStellarThrowAssets.FlameTexture.Value);
                         parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
-                        parameters["Color0"].SetValue(StylePalette.TrailStartOne.ToVector4());
-                        parameters["Color1"].SetValue(StylePalette.TrailStartZero.ToVector4());
-                        parameters["Color2"].SetValue(StylePalette.TrailEndOne.ToVector4());
-                        parameters["Color3"].SetValue(StylePalette.TrailEndZero.ToVector4());
+                        parameters["Color0"].SetValue(Style.TrailStartOne.ToVector4());
+                        parameters["Color1"].SetValue(Style.TrailStartZero.ToVector4());
+                        parameters["Color2"].SetValue(Style.TrailEndOne.ToVector4());
+                        parameters["Color3"].SetValue(Style.TrailEndZero.ToVector4());
                         parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                         parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
                     })
@@ -511,9 +512,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             var starTexture = TheStellarThrowAssets.StarTexture.Value;
             var starOrigin = starTexture.Size() * 0.5f;
 
-            Main.spriteBatch.Draw(starTexture, starPosition, null, StylePalette.StarThird * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture, starPosition, null, StylePalette.StarSecond with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture, starPosition, null, StylePalette.StarFirst with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, Style.StarThird * 0.25f, Projectile.rotation * 0.05f, starOrigin, Projectile.scale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, Style.StarSecond with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, Style.StarFirst with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, Projectile.scale * 0.35f, SpriteEffects.None, 0f);
         }
     }
 
@@ -528,8 +529,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
         public float LifeTimeRatio { get => 1f - Projectile.timeLeft / (float)InitTimeLeft; }
-        private int Style { get => (int)Projectile.ai[0]; set => Projectile.ai[0] = value; }
-        private TheStellarThrowStarProjectile.Palette StylePalette { get => TheStellarThrowStarProjectile.Palettes[Style]; }
+        private int StyleIndex { get => (int)Projectile.ai[0]; set => Projectile.ai[0] = value; }
+        private ref TheStellarThrowPalette Style { get => ref TheStellarThrowPalette.Palettes[StyleIndex]; }
 
         public override void SetDefaults()
         {
@@ -552,8 +553,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + vector * Projectile.width * Main.rand.NextFloat() * 2f;
                     particle.Velocity = vector;
-                    particle.StartColor = StylePalette.StarFirst;
-                    particle.EndColor = StylePalette.StarSecond;
+                    particle.StartColor = Style.StarFirst;
+                    particle.EndColor = Style.StarSecond;
                     particle.Scale = Main.rand.NextFloat(1.0f, 2.0f);
                 }
                 else
@@ -563,8 +564,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
                     particle.Position = Projectile.Center + vector * Projectile.width * Main.rand.NextFloat() * 2f;
                     particle.Velocity = vector;
-                    particle.StartColor = StylePalette.StarFirst;
-                    particle.EndColor = StylePalette.StarSecond;
+                    particle.StartColor = Style.StarFirst;
+                    particle.EndColor = Style.StarSecond;
                     particle.Scale = Main.rand.NextFloat(0.3f, 0.6f);
                 }
             }

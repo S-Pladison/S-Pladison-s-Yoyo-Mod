@@ -12,6 +12,6 @@ namespace SPYoyoMod.Common.Yoyos
             => lateInstantiation && item.IsYoyo();
 
         public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
-            => tooltips.Find(i => i.Mod == "Terraria" && i.Name == "OneDropLogo")?.Hide();
+            => tooltips.Find(VanillaTooltipLine.OneDropLogo)?.Hide();
     }
 }

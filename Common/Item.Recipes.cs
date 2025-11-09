@@ -1,19 +1,48 @@
 using SPYoyoMod.Content.Items.Mod.Accessories;
+using SPYoyoMod.Content.Items.Mod.Miscellaneous;
 using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Core;
+using SPYoyoMod.Core.ModSupport;
+using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ID;
+using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
     [LoadPriority(sbyte.MaxValue)]
-    public sealed class ItemRecipes : ModSystem
+    public sealed class ItemRecipesSystem : ModSystem
     {
+        public static LocalizedText MechanicalBossSoulGroupText { get; private set; }
+
+        public static int MechanicalBossSoulGroupIndex { get; private set; }
+
+        public override void Load()
+        {
+            MechanicalBossSoulGroupText = Language.GetOrRegister("Mods.SPYoyoMod.Misc.RecipeGroup.MechanicalBossSoul");
+        }
+
+        public override void Unload()
+        {
+            MechanicalBossSoulGroupText = null;
+        }
+
+        public override void AddRecipeGroups()
+        {
+            MechanicalBossSoulGroupIndex = RecipeGroup.RegisterGroup($"MechanicalBossSoul", new RecipeGroup(() => MechanicalBossSoulGroupText.Value,
+            [
+                ItemID.SoulofMight,
+                ItemID.SoulofSight,
+                ItemID.SoulofFright
+            ]));
+        }
+
         public override void AddRecipes()
         {
             AddYoyoRecipes();
             AddAccessoryRecipes();
+            AddOtherRecipes();
         }
 
         private static void AddYoyoRecipes()
@@ -40,13 +69,6 @@ namespace SPYoyoMod.Common
                 .Register();
 
             Recipe.Create(ItemID.Gradient)
-                .AddIngredient(ItemID.CobaltBar, 5)
-                .AddIngredient(ItemID.GoldBar, 10)
-                .AddIngredient(ItemID.Marble, 25)
-                .AddTile(TileID.Anvils)
-                .Register();
-
-            Recipe.Create(ItemID.Gradient)
                 .AddIngredient(ItemID.PalladiumBar, 5)
                 .AddIngredient(ItemID.GoldBar, 10)
                 .AddIngredient(ItemID.Marble, 25)
@@ -59,6 +81,39 @@ namespace SPYoyoMod.Common
             Recipe.Create(ModContent.ItemType<BearingItem>())
                 .AddRecipeGroup(RecipeGroupID.IronBar, 7)
                 .AddTile(TileID.Anvils)
+                .Register();
+        }
+
+        private static void AddOtherRecipes()
+        {
+            Recipe.Create(ModContent.ItemType<StrangeDrinkItem>())
+                .AddIngredient(ItemID.LifeFruit, 3)
+                .AddRecipeGroupIf(() => CalamitySupport.IsLoaded, MechanicalBossSoulGroupIndex, 5)
+                .AddIngredient(ItemID.GrapeJuice)
+                .AddIngredient(ItemID.PrismaticPunch)
+                .AddIngredient(ItemID.PinaColada)
+                .AddIngredient(ItemID.TropicalSmoothie)
+                .AddIngredient(ItemID.SmoothieofDarkness)
+                .AddIngredient(ItemID.AppleJuice)
+                .AddIngredient(ItemID.BananaDaiquiri)
+                .AddIngredient(ItemID.Lemonade)
+                .AddIngredient(ItemID.PeachSangria)
+                .AddTile(TileID.CookingPots)
+                .Register();
+
+            Recipe.Create(ModContent.ItemType<StrangeDrinkItem>())
+                .AddIngredient(ItemID.LifeFruit, 3)
+                .AddRecipeGroupIf(() => CalamitySupport.IsLoaded, MechanicalBossSoulGroupIndex, 5)
+                .AddIngredient(ItemID.GrapeJuice)
+                .AddIngredient(ItemID.PrismaticPunch)
+                .AddIngredient(ItemID.PinaColada)
+                .AddIngredient(ItemID.TropicalSmoothie)
+                .AddIngredient(ItemID.BloodyMoscato)
+                .AddIngredient(ItemID.AppleJuice)
+                .AddIngredient(ItemID.BananaDaiquiri)
+                .AddIngredient(ItemID.Lemonade)
+                .AddIngredient(ItemID.PeachSangria)
+                .AddTile(TileID.CookingPots)
                 .Register();
         }
 

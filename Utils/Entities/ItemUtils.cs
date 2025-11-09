@@ -144,6 +144,34 @@ namespace SPYoyoMod.Utils
             }
         }
 
+        /// <summary>
+        /// Добавление ингредиента в рецепт при выполнении определенного условия.
+        /// </summary>
+        public static Recipe AddIngredientIf(this Recipe recipe, Func<bool> condition, int itemID, int stack = 1)
+        {
+            if (condition?.Invoke() ?? true)
+                recipe.AddIngredient(itemID, stack);
+
+            return recipe;
+        }
+
+        /// <summary>
+        /// Добавление ингредиента в рецепт при выполнении определенного условия.
+        /// </summary>
+        public static Recipe AddIngredientIf<T>(this Recipe recipe, Func<bool> condition, int stack = 1) where T : ModItem
+            => recipe.AddIngredientIf(condition, ModContent.ItemType<T>(), stack);
+
+        /// <summary>
+        /// Добавление группы ингредиентов в рецепт при выполнении определенного условия.
+        /// </summary>
+        public static Recipe AddRecipeGroupIf(this Recipe recipe, Func<bool> condition, int recipeGroupId, int stack = 1)
+        {
+            if (condition?.Invoke() ?? true)
+                recipe.AddRecipeGroup(recipeGroupId, stack);
+
+            return recipe;
+        }
+
         private static readonly HashSet<VanillaTooltipLine> _descriptionWhitelistSet = new(
             Enumerable.Range((int)VanillaTooltipLine.ItemName, (int)VanillaTooltipLine.Tooltip).Cast<VanillaTooltipLine>()
         );

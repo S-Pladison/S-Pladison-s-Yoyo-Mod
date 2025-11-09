@@ -8,7 +8,30 @@ BearingItem: {
 	Tooltip: "{0}% increased yoyo duration"
 }
 
+BlackholeItem: {
+	DisplayName: Blackhole
+	Tooltip: ""
+}
+
 TheStellarThrowItem: {
 	DisplayName: The Stellar Throw
 	Tooltip: ""
+}
+
+SoulTormentorItem: {
+	DisplayName: Soul Tormentor
+	Tooltip:
+		'''
+		Charms {0} nearest enemies
+		'No, it's not a love triangle...'
+		'''
+}
+
+StrangeDrinkItem: {
+	DisplayName: Strange Drink
+	Tooltip:
+		'''
+		Might be of interest to the Nurse
+		'Don't even think about drinking it'
+		'''
 }
