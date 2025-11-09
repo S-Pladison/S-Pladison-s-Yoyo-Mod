@@ -68,7 +68,8 @@ namespace SPYoyoMod.Utils
         /// Removes the item from the list
         /// </summary>
         /// <param name="item">Item.</param>
-        public void Remove(T item)
+        /// <returns>True if item was found and removed, false otherwise.</returns>
+        public bool Remove(T item)
         {
             var comp = EqualityComparer<T>.Default;
 
@@ -77,9 +78,11 @@ namespace SPYoyoMod.Utils
                 if (comp.Equals(Buffer[i], item))
                 {
                     RemoveAt(i);
-                    return;
+                    return true;
                 }
             }
+
+            return false;
         }
 
         /// <summary>

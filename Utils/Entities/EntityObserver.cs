@@ -18,7 +18,7 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Ведется ли наблюдение хотя бы за 1 сущностью.
         /// </summary>
-        public bool AnyEntity { get => _entities.Count > 0; }
+        public bool AnyEntity { get => _entities.Length > 0; }
 
         /// <summary>
         /// Событие, вызываемое в момент добавления сущности в список наблюдения.
@@ -30,7 +30,7 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public event Action<T> OnRemoveEntity;
 
-        protected readonly List<EntityData> _entities = [];
+        protected readonly FastList<EntityData> _entities;
         protected readonly T[] _sourseArray = sourse;
         protected readonly Predicate<T> _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
 
@@ -62,7 +62,7 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public IEnumerable<T> GetEntityInstances()
         {
-            for (var i = 0; i < _entities.Count; i++)
+            for (var i = 0; i < _entities.Length; i++)
             {
                 var entity = _sourseArray[_entities[i].WhoAmI];
 
