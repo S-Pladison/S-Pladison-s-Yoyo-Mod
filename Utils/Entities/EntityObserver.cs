@@ -20,6 +20,16 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public bool AnyEntity { get => _entities.Count > 0; }
 
+        /// <summary>
+        /// Событие, вызываемое в момент добавления сущности в список наблюдения.
+        /// </summary>
+        public event Action<T> OnAddEntity;
+
+        /// <summary>
+        /// Событие, вызываемое в момент удаления сущности из наблюдения.
+        /// </summary>
+        public event Action<T> OnRemoveEntity;
+
         protected readonly List<EntityData> _entities = [];
         protected readonly T[] _sourseArray = sourse;
         protected readonly Predicate<T> _entityShouldBeRemovedPredicate = entityShouldBeRemovedPredicate;
@@ -31,7 +41,10 @@ namespace SPYoyoMod.Utils
         public void Add(T entity)
         {
             if (!_entityShouldBeRemovedPredicate?.Invoke(entity) ?? true)
+            {
                 _entities.Add(new EntityData(entity.whoAmI, GetEntityType(entity)));
+                OnAddEntity?.Invoke(entity);
+            }
         }
 
         /// <summary>
@@ -40,7 +53,8 @@ namespace SPYoyoMod.Utils
         /// <param name="entity">Объект сущности, за которым нужно прекратить наблюдение.</param>
         public void Remove(T entity)
         {
-            _entities.Remove(new EntityData(entity.whoAmI, GetEntityType(entity)));
+            if (_entities.Remove(new EntityData(entity.whoAmI, GetEntityType(entity))))
+                OnRemoveEntity?.Invoke(entity);
         }
 
         /// <summary>
@@ -54,6 +68,7 @@ namespace SPYoyoMod.Utils
 
                 if (!entity.active || GetEntityType(entity) != _entities[i].Type || (_entityShouldBeRemovedPredicate?.Invoke(entity) ?? false))
                 {
+                    OnRemoveEntity?.Invoke(entity);
                     _entities.RemoveAt(i--);
                     continue;
                 }
