@@ -51,9 +51,7 @@ namespace SPYoyoMod.Common
 
         public override void PostWorldGen()
         {
-            var logger = ModContent.GetInstance<SPYoyoMod>().Logger;
-
-            logger.Info("Starting to populate chests with modded loot...");
+            Mod.Logger.Info("Starting to populate chests with modded loot...");
 
             // Получаем список сундуков, расположенных в случайном порядке, сгрупированные по типу стиля сундука
             var chestsByStyle = Main.chest
@@ -69,7 +67,7 @@ namespace SPYoyoMod.Common
                 .ToDictionary(g => g.Key, g => g.ToList());
 
             foreach (var (style, chests) in chestsByStyle)
-                logger.Info($"Found {chests.Count} chests of style [{style}:{(int)style}]");
+                Mod.Logger.Info($"Found {chests.Count} chests of style [{style}:{(int)style}]");
 
             foreach (var (style, chests) in chestsByStyle)
             {
@@ -86,7 +84,7 @@ namespace SPYoyoMod.Common
                         if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
                             continue;
 
-                        logger.Info($"Inserted item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into chest at [Style:{style}:{(int)style}] [Coord:{chest.x},{chest.y}]");
+                        Mod.Logger.Info($"Inserted item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into chest at [Style:{style}:{(int)style}] [Coord:{chest.x},{chest.y}]");
                         hasGuaranteedItem = true;
                     }
 
@@ -98,18 +96,18 @@ namespace SPYoyoMod.Common
                     {
                         if (TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
                         {
-                            logger.Info($"Inserted guaranteed item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into chest at [Style:{style}:{(int)style}] [Coord:{chest.x},{chest.y}]");
+                            Mod.Logger.Info($"Inserted guaranteed item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into chest at [Style:{style}:{(int)style}] [Coord:{chest.x},{chest.y}]");
                             hasGuaranteedItem = true;
                             break;
                         }
                     }
 
                     if (!hasGuaranteedItem)
-                        logger.Info($"Failed to insert guaranteed item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into any chest of style [Style:{style}:{(int)style}]...");
+                        Mod.Logger.Info($"Failed to insert guaranteed item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into any chest of style [Style:{style}:{(int)style}]...");
                 }
             }
 
-            logger.Info("Finished populating chests with modded loot");
+            Mod.Logger.Info("Finished populating chests with modded loot");
         }
 
         private static bool TryInsertItemToFirstChestSlot(Chest chest, int itemType, out Item item)
