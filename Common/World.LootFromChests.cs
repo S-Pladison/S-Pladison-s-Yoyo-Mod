@@ -50,32 +50,53 @@ namespace SPYoyoMod.Common
 
         public override void PostWorldGen()
         {
-            // Набор лута, который хотя бы раз был помещен в сундук
-            var successfulItemSet = new HashSet<ChestItemInfo>();
-
-            // Получаем список сундуков, расположенных в случайном порядке
-            var chests = Main.chest
+            // Получаем список сундуков, расположенных в случайном порядке, сгрупированные по типу стиля сундука
+            var chestsByStyle = Main.chest
                 .Where(c => c is not null && Framing.GetTileSafely(c.x, c.y) is Tile tile && tile.HasTile)
-                .OrderBy(_ => WorldGen.genRand.Next());
-
-            foreach (var chest in chests)
-            {
-                var style = (ChestStyle)(Main.tile[chest.x, chest.y].TileFrameX / 36);
-
-                if (!_lootFromChestsByChestStyle.ContainsKey(style))
-                    continue;
-
-                var lootCollection = _lootFromChestsByChestStyle[style];
-
-                foreach (var loot in lootCollection)
+                .OrderBy(_ => WorldGen.genRand.Next())
+                .GroupBy(c =>
                 {
-                    if (successfulItemSet.Contains(loot) && WorldGen.genRand.NextFloat() > loot.Chance)
+                    var tile = Main.tile[c.x, c.y];
+                    var style = (ChestStyle)(tile.TileFrameX / 36);
+
+                    return Enum.IsDefined<ChestStyle>(style) ? style : ChestStyle.Undefined;
+                })
+                .Where(g => _lootFromChestsByChestStyle.ContainsKey(g.Key))
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var (style, chests) in chestsByStyle)
+            {
+                ModContent.GetInstance<SPYoyoMod>().Logger.Info($"Found {chests.Count} chests of style {style}.");
+            }
+
+            foreach (var (style, chests) in chestsByStyle)
+            {
+                foreach (var loot in _lootFromChestsByChestStyle[style])
+                {
+                    bool hasGuaranteedItem = false;
+
+                    // Сначала пытаемся добавить предменты с некоторой вероятностью в каждый сундук
+                    foreach (var chest in chests)
+                    {
+                        if (WorldGen.genRand.NextFloat() > loot.Chance)
+                            continue;
+
+                        if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
+                            continue;
+
+                        hasGuaranteedItem = true;
+                    }
+
+                    // Если предмет хоть раз был добавлен, пропускаем добавление гарантированного предмета
+                    if (hasGuaranteedItem)
                         continue;
 
-                    if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
-                        continue;
-
-                    successfulItemSet.Add(loot);
+                    // Пытаемся добавить гарантированный предмет в первый попавшийся сундук
+                    foreach (var chest in chests)
+                    {
+                        if (TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
+                            break;
+                    }
                 }
             }
         }
