@@ -58,7 +58,6 @@ namespace SPYoyoMod.Common
             // Получаем список сундуков, расположенных в случайном порядке, сгрупированные по типу стиля сундука
             var chestsByStyle = Main.chest
                 .Where(c => c is not null && Framing.GetTileSafely(c.x, c.y) is Tile tile && tile.HasTile && (tile.TileType == TileID.Containers || tile.TileType == TileID.Containers2))
-                .OrderBy(_ => WorldGen.genRand.NextFloat())
                 .GroupBy(c =>
                 {
                     var tile = Main.tile[c.x, c.y];
@@ -91,12 +90,11 @@ namespace SPYoyoMod.Common
                         hasGuaranteedItem = true;
                     }
 
-                    // Если предмет хоть раз был добавлен, пропускаем добавление гарантированного предмета
                     if (hasGuaranteedItem)
                         continue;
 
                     // Пытаемся добавить гарантированный предмет в первый попавшийся сундук
-                    foreach (var chest in chests)
+                    foreach (var chest in chests.OrderBy(_ => WorldGen.genRand.NextFloat()))
                     {
                         if (TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
                         {
