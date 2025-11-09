@@ -41,6 +41,7 @@ namespace SPYoyoMod.Content.Particles
         /// Интерполированное значение (от 0 до 1) того, насколько продвинулась частица в своем жизненном цикле.
         /// </summary>
         public float LifeTimeRatio { get => Math.Min(ElapsedTime / (float)LifeTime, 1.0f); }
+
         public bool ShouldBeRemoved { get; private set; } = false;
 
         public void Update()
