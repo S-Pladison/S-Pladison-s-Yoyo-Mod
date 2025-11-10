@@ -28,7 +28,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Valor/Valor";
 
         public const string InvisiblePath = $"{AssetPath}/Invisible";
-        public const string BuffPath = $"{YoyoPath}Buff";
         public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
