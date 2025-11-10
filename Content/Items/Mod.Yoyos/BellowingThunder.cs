@@ -166,7 +166,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!hit.Crit || Projectile.ai[0] == -1 || Projectile.GetOwner().OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0) //< Вторая проверка - возвращается ли йо-йо к игроку
+            if (!Projectile.TryGetOwner(out var owner))
+                return;
+
+            if (!hit.Crit || Projectile.ai[0] == -1 || owner.OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0) //< Вторая проверка - возвращается ли йо-йо к игроку
                 return;
 
             var source = Projectile.GetSource_OnHit(target);
@@ -215,9 +218,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (_stringRenderer is null)
                 return;
 
+            if (!Projectile.TryGetOwner(out var owner))
+                return;
+
             var settings = new YoyoStringRendererSettings(
                 proj: Projectile,
-                start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                start: mountedCenter + owner.gfxOffY * Vector2.UnitY,
                 offset: -Main.screenPosition
             );
 
@@ -369,7 +375,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+            if (!Projectile.TryGetOwner(out var owner))
+                return;
+
+            owner.Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }
 
         void IEmitLightEntity.EmitLight(Entity _)

@@ -105,7 +105,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
 
         public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
-            if (!proj.GetOwner().yoyoString)
+            if (!proj.TryGetOwner(out var owner) || !owner.yoyoString)
                 return;
 
             statModifiers.MaxRange.Flat += ProjectileID.Sets.YoyosMaximumRange[proj.type] * 1.25f + 30f - ProjectileID.Sets.YoyosMaximumRange[proj.type];

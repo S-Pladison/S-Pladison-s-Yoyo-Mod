@@ -67,9 +67,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (_stringRenderer is null)
                 return;
 
+            if (!proj.TryGetOwner(out var owner))
+                return;
+
             var settings = new YoyoStringRendererSettings(
                 proj: proj,
-                start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                start: mountedCenter + owner.gfxOffY * Vector2.UnitY,
                 offset: -Main.screenPosition
             );
 

@@ -242,9 +242,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (_stringRenderer is null)
                 return;
 
+            if (!Projectile.TryGetOwner(out var owner))
+                return;
+
             var settings = new YoyoStringRendererSettings(
                 proj: Projectile,
-                start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                start: mountedCenter + owner.gfxOffY * Vector2.UnitY,
                 offset: -Main.screenPosition
             );
 
@@ -345,7 +348,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnSpawn(IEntitySource source)
         {
-            var heldItem = Projectile.GetOwner().HeldItem;
+            if (!Projectile.TryGetOwner(out var owner))
+                return;
+
+            var heldItem = owner.HeldItem;
 
             if (heldItem is null || heldItem.type != ModContent.ItemType<TheStellarThrowItem>() || !heldItem.favorited)
             {
@@ -458,7 +464,9 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             Projectile.tileCollide = true;
-            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+
+            if (Projectile.TryGetOwner(out var owner))
+                owner.Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
 
             if (target.life <= 0)
                 return;

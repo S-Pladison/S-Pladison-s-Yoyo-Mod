@@ -83,7 +83,10 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryApplyingPlayerStringColor")]
                 extern static Color TryApplyingPlayerStringColor(Main _, int playerStringColor, Color defaultColor);
 
-                var stringColor = TryApplyingPlayerStringColor(null, settings.Projectile.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
+                if (!settings.Projectile.TryGetOwner(out var owner))
+                    return;
+
+                var stringColor = TryApplyingPlayerStringColor(null, owner.stringColor, Color.White with { A = (byte)(255 * 0.4f) });
                 var origin = new Vector2(Texture.Width * 0.5f, 0f);
 
                 foreach (var segment in segments)

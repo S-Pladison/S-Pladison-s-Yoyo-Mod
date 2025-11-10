@@ -90,22 +90,6 @@ namespace SPYoyoMod.Utils
             => proj.owner == Main.myPlayer;
 
         /// <summary>
-        /// Получить владельца (игрока) снаряда.
-        /// </summary>
-        public static Player GetOwner(this Projectile proj)
-        {
-            if (!Main.player.IndexInRange(proj.owner))
-                return null;
-
-            var player = Main.player[proj.owner];
-
-            if (player == null || !player.active)
-                return null;
-
-            return player;
-        }
-
-        /// <summary>
         /// Преобразует текущий объект типа <see cref="Projectile"/> в указанный тип <typeparamref name="T"/>, 
         /// если он является моддовым снарядом типа <typeparamref name="T"/>. Возвращает <c>null</c>, если преобразование невозможно.
         /// </summary>

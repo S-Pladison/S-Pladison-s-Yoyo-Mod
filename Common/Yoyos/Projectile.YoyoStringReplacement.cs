@@ -36,17 +36,20 @@ namespace SPYoyoMod.Common.Yoyos
                     if (!(proj.IsYoyo() || proj.IsCounterweight()) || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj) || globalProj._stringRenderer is null)
                         return;
 
+                    if (!proj.TryGetOwner(out var owner))
+                        return;
+
                     ref var renderer = ref globalProj._stringRenderer;
 
                     var settings = new YoyoStringRendererSettings(
                         proj: proj,
-                        start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
+                        start: mountedCenter + owner.gfxOffY * Vector2.UnitY,
                         offset: -Main.screenPosition
                     );
 
                     renderer.Render(Main.spriteBatch, settings);
 
-                    if (proj.GetOwner().heldProj != proj.whoAmI)
+                    if (owner.heldProj != proj.whoAmI)
                         return;
 
                     // Отрисовка нити для ванильных йо-йо и йо-йо из этого мода отличается от отрисовки йо-йо из других модов.

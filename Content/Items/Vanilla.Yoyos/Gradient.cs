@@ -56,9 +56,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (target.life <= 0)
                 return;
 
+            if (!proj.TryGetOwner(out var owner))
+                return;
+
             var godraysType = ModContent.ProjectileType<GradientGodraysProjectile>();
 
-            if (proj.GetOwner().ownedProjectileCounts[godraysType] > 0)
+            if (owner.ownedProjectileCounts[godraysType] > 0)
                 return;
 
             foreach (var otherProj in Main.ActiveProjectiles)
@@ -72,7 +75,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, godraysType, proj.damage, proj.knockBack, proj.owner, target.whoAmI);
 
-            proj.GetOwner().ownedProjectileCounts[godraysType]++;
+            owner.ownedProjectileCounts[godraysType]++;
         }
     }
 
@@ -364,7 +367,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+            if (Projectile.TryGetOwner(out var owner))
+                owner.Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
 
             if (WasCollided)
                 return;
