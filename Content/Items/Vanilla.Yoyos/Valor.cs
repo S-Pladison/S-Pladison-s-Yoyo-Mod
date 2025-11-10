@@ -123,7 +123,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
                 return;
 
-            foreach (var npc in Main.ActiveNPCs)
+            /*foreach (var npc in Main.ActiveNPCs)
             {
                 if (!npc.HasBuff<ValorBuff>())
                     continue;
@@ -135,7 +135,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     return;
             }
 
-            target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));
+            target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));*/
         }
 
         void IEmitLightEntity.EmitLight(Entity proj)
@@ -273,7 +273,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             public override void Send(BinaryWriter writer, params object[] context)
             {
-                var valorNPCs = new List<(NPC npc, ChainData data)>();
+                /*var valorNPCs = new List<(NPC npc, ChainData data)>();
 
                 foreach (var npc in Main.ActiveNPCs)
                 {
@@ -302,7 +302,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         writer.Write(chainData.Length);
                         writer.Write(chainData.LifeTime);
                     }
-                }
+                }*/
             }
 
             public override void Receive(BinaryReader reader, int sender)
@@ -310,7 +310,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var valorNPCCount = reader.ReadByte();
 
                 // Чаще всего таких NPC будет 0... Ну, к максимум 1-2...
-                for (var index = 0; index < valorNPCCount; index++)
+                /*for (var index = 0; index < valorNPCCount; index++)
                 {
                     var npcWhoAmI = reader.ReadByte();
                     var npcType = reader.ReadUInt16();
@@ -333,7 +333,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     var chainLifeTime = reader.ReadUInt16();
 
                     globalNPC.SetChainData(npc, new ChainData(chainTile, npc, chainLength, chainLifeTime));
-                }
+                }*/
             }
         }
 
@@ -406,8 +406,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnSpawn(NPC npc, IEntitySource source)
         {
-            if (!CanBeChained(npc))
-                npc.buffImmune[ModContent.BuffType<ValorBuff>()] = true;
+            /*if (!CanBeChained(npc))
+                npc.buffImmune[ModContent.BuffType<ValorBuff>()] = true;*/
         }
 
         public override void OnKill(NPC npc)
@@ -423,7 +423,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreAI(NPC npc)
         {
-            UpdateDebuffState(npc, npc.HasBuff<ValorBuff>());
+            //UpdateDebuffState(npc, npc.HasBuff<ValorBuff>());
 
             if (!HasDebuff)
                 return true;
