@@ -190,16 +190,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorBuff : ModBuff
-    {
-        public override string Texture => ValorAssets.BuffPath;
-
-        public override void SetStaticDefaults()
-        {
-            Main.debuff[Type] = true;
-        }
-    }
-
     public sealed class ValorGlobalNPC : GlobalNPC, IEmitLightEntity
     {
         public sealed class ChainData
