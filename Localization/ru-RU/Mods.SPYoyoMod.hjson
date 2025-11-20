@@ -14,6 +14,7 @@ Projectiles: {
 	// Code1ImprovedCritProjectile.DisplayName: Code1 Improved Crit Projectile
 	// BlackholeProjectile.DisplayName: Blackhole Projectile
 	// SoulTormentorProjectile.DisplayName: Soul Tormentor Projectile
+	// Code1SphereProjectile.DisplayName: Code1 Sphere Projectile
 }
 
 NPCs: {
