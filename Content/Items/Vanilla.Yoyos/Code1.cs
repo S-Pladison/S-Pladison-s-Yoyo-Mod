@@ -109,6 +109,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.Center = Target.Center + Target.netOffset + Vector2.UnitX.RotatedBy(angle) * orbitRadius;
         }
 
+        public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
+        {
+            modifiers.Knockback *= 0.1f;
+        }
+
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
             if (Projectile.TryGetOwner(out var owner))

@@ -7,7 +7,7 @@ CascadeItem.Tooltip:
 	Периодически взрывается, нанося при этом урон по области
 	'''
 // ChikItem.Tooltip: ""
-Code1Item.Tooltip: Мини-сферы формируют локальные потоки энергии вокруг цели
+Code1Item.Tooltip: Удары создают мини-сферы, которые формируют локальные потоки энергии вокруг цели
 // Code2Item.Tooltip: ""
 // FormatCItem.Tooltip: ""
 GradientItem.Tooltip: Удары могут обрушить на врагов шквал кинжалов
