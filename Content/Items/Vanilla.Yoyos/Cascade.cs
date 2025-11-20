@@ -303,14 +303,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 particle.Scale = 3f;
             }
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
+            CameraModifierSystem.Add(new CameraModifierSystem.Modifiers.Shake()
             {
-                Position = Projectile.Center,
-                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
                 Strength = 7f,
-                VibrationCyclesPerSecond = 6f,
-                Frames = 15,
-                DistanceFalloff = 16f * 25f
+                Frames = 15
             });
 
             SoundEngine.PlaySound(SoundID.Item14, proj.Center);

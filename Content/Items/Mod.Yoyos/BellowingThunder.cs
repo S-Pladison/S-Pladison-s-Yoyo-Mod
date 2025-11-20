@@ -308,14 +308,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
+            CameraModifierSystem.Add(new CameraModifierSystem.Modifiers.Shake()
             {
-                Position = Projectile.Center,
-                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
                 Strength = 7f,
-                VibrationCyclesPerSecond = 6f,
-                Frames = 15,
-                DistanceFalloff = 16f * 25f
+                Frames = 15
             });
 
             SoundEngine.PlaySound(BellowingThunderAssets.LightningStrikeSound, Projectile.Center);
