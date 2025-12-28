@@ -167,6 +167,9 @@ namespace SPYoyoMod.Utils
             last.Locked = true;
         }
 
+        /// <summary>
+        /// Выполнение симуляции физики цепи.
+        /// </summary>
         public void Simulate()
         {
             if (_segments.Count == 0)
@@ -197,10 +200,6 @@ namespace SPYoyoMod.Utils
             IntegrateNode(_segments[^1].B);
         }
 
-        /// <summary>
-        /// XPBD-ограничение длины сегментов.
-        /// Именно здесь реализуется мягкость/жёсткость.
-        /// </summary>
         private void SolveConstraints()
         {
             for (var i = 0; i < SolverIterations; i++)
@@ -261,8 +260,6 @@ namespace SPYoyoMod.Utils
 
             var segments = Math.Max(1, (int)MathF.Ceiling(totalLength / segmentLength));
             var direction = Terraria.Utils.SafeNormalize(delta, Vector2.Zero);
-
-            Main.NewText($"count: {segments} length: {totalLength}");
 
             var nodes = new List<PhysicalChain.Node>(segments);
 
