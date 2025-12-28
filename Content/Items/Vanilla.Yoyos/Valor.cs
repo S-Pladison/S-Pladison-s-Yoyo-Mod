@@ -40,7 +40,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorItem : VanillaYoyoBaseItem
     {
-        public static readonly int DebuffApplyChanceDenominator = 9;
+        public static readonly int DebuffApplyChanceDenominator = 1; //< TODO: Тут была 9
         public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
 
         public override int ItemType => ItemID.Valor;
@@ -401,6 +401,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
                     Data = updatedData;
                     IsChained = true;
+                    ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
                     return;
                 }
 
@@ -408,8 +409,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 Data.Length = updatedData.Length;
                 Data.LifeTime = updatedData.LifeTime;
                 IsChained = true;
+                ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
                 return;
             }
+
+            ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Remove(npc);
 
             if (Data is not null)
             {
@@ -608,7 +612,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.End(out var spriteBatchSnapshot);
             Main.spriteBatch.Begin(spriteBatchSnapshot with { Effect = null });
             {
-                /*var anchorTexture = ValorAssets.AnchorTexture;
+                var anchorTexture = ValorAssets.AnchorTexture.Value;
                 var anchorOrigin = anchorTexture.Size() * 0.5f;
 
                 var segmentTexture = ValorAssets.ChainTexture.Value;
@@ -627,8 +631,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     if (chainPoints.Length < 2)
                         continue;
 
-                    var anchorColor = Lighting.GetColor(chainData.Tile);
-                    var anchorPosition = chainData.Tile.ToWorldCoordinates() - Main.screenPosition;
+                    var anchorColor = Lighting.GetColor(chainData.Start);
+                    var anchorPosition = chainData.Start.ToWorldCoordinates() - Main.screenPosition;
 
                     Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
 
@@ -642,7 +646,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
-                }*/
+                }
             }
             Main.spriteBatch.End();
             Main.spriteBatch.Begin(spriteBatchSnapshot);
