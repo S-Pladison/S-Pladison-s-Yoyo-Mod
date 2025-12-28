@@ -228,7 +228,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             {
                 if ((Target.whoAmI + Main.GameUpdateCount) % 2 == 0)
                 {
-                    Physics.Gravity = new Vector2(0, 1.0f - Vector2.Distance(Target.Center, Position.ToWorldCoordinates()) / Length);
+                    Physics.Gravity = new Vector2(0, 1.0f - Vector2.Distance(Target.Center, Position.ToWorldCoordinates()) / Vector2Utils.Distance([.. Physics.Nodes.Select(x => x.Position)]));
 
                     Physics.SetStart(Position.ToWorldCoordinates());
                     Physics.SetEnd(Target.Center);
@@ -632,6 +632,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     if (chainPoints.Length < 2)
                         continue;
 
+                    var anchorColor = Lighting.GetColor(chainData.Position);
+                    var anchorPosition = chainData.Position.ToWorldCoordinates() - Main.screenPosition;
+
+                    Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
+
                     for (int i = 0; i < chainPoints.Length; i++)
                     {
                         var segmentPoint = chainPoints[i];
@@ -642,11 +647,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
-
-                    var anchorColor = Lighting.GetColor(chainData.Position);
-                    var anchorPosition = chainData.Position.ToWorldCoordinates() - Main.screenPosition;
-
-                    Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
                 }
             }
             Main.spriteBatch.End();
