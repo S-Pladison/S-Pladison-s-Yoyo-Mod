@@ -1,38 +1,121 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Microsoft.Xna.Framework;
+using Terraria;
 
 namespace SPYoyoMod.Utils
 {
+    /// <summary>
+    /// Класс физической цепи...
+    /// </summary>
     public sealed class PhysicalChain
     {
-        public class Node(Vector2 position, bool locked)
+        /// <summary>
+        /// Узел цепи.
+        /// </summary>
+        public sealed class Node(Vector2 position, bool locked = false)
         {
             public Vector2 Position = position;
-            public Vector2 OldPosition = position;
             public bool Locked = locked;
+
+            internal Vector2 OldPosition = position;
         }
 
-        private class Segment(Node first, Node second)
+        /// <summary>
+        /// Сегмент цепи между двумя узлами.
+        /// </summary>
+        private sealed class Segment(PhysicalChain.Node a, PhysicalChain.Node b)
         {
-            public readonly Node First = first;
-            public readonly Node Second = second;
+            public readonly Node A = a;
+            public readonly Node B = b;
         }
-
-        private float _innerDistanceBetweenNodes;
 
         private readonly List<Segment> _segments = [];
 
-        public float DistanceBetweenNodes
+        private float _restLength = 16f;
+        private float _compliance = 0f;
+        private float _damping = 1f;
+        private int _solverIterations = 3;
+
+        /// <summary>
+        /// Длина сегмента в состоянии покоя.
+        /// </summary>
+        public float RestLength
         {
-            get => _innerDistanceBetweenNodes;
-            set => _innerDistanceBetweenNodes = MathHelper.Max(value, 0.1f);
+            get => _restLength;
+            set => _restLength = MathF.Max(value, 0.001f);
         }
 
-        public Vector2 Gravity
+        /// <summary>
+        /// Гравитация, применяемая к каждому узлу.
+        /// </summary>
+        public Vector2 Gravity { get; set; }
+
+        /// <summary>
+        /// XPBD Compliance — параметр мягкости.
+        /// 0 = абсолютно жёсткая цепь.
+        /// Рекомендуемый диапазон: 0..0.1
+        /// </summary>
+        public float Compliance
         {
-            get;
-            set;
+            get => _compliance;
+            set => _compliance = MathF.Max(value, 0f);
+        }
+
+        /// <summary>
+        /// Количество итераций солвера.
+        /// Отвечает за стабильность, а не жёсткость.
+        /// Диапазон: 1..32
+        /// </summary>
+        public int SolverIterations
+        {
+            get => _solverIterations;
+            set => _solverIterations = Math.Clamp(value, 1, 32);
+        }
+
+        /// <summary>
+        /// Демпфирование скорости (затухание).
+        /// 1 = без затухания.
+        /// Диапазон: 0.01..1
+        /// </summary>
+        public float Damping
+        {
+            get => _damping;
+            set => _damping = Math.Clamp(value, 0.01f, 1f);
+        }
+
+        /// <summary>
+        /// Доступ к сегментам (readonly, для отладки / рендера).
+        /// </summary>
+        public IReadOnlyList<Node> Nodes
+        {
+            get
+            {
+                if (_segments.Count == 0)
+                    return [];
+
+                var list = new List<Node>(_segments.Count + 1);
+                foreach (var s in _segments)
+                    list.Add(s.A);
+
+                list.Add(_segments[^1].B);
+                return list;
+            }
+        }
+
+        /// <summary>
+        /// Получает позиции всех узлов цепи.
+        /// </summary>
+        public IEnumerable<Vector2> GetPositions()
+        {
+            if (_segments.Count == 0)
+                yield break;
+
+            foreach (var segment in _segments)
+                yield return segment.A.Position;
+
+            yield return _segments[^1].B.Position;
         }
 
         public PhysicalChain(IList<Node> nodes = null)
@@ -40,86 +123,163 @@ namespace SPYoyoMod.Utils
             Setup(nodes);
         }
 
+        /// <summary>
+        /// Инициализация цепи из списка узлов.
+        /// </summary>
         public void Setup(IList<Node> nodes)
         {
             _segments.Clear();
 
-            if (nodes is null || nodes.Count <= 1)
+            if (nodes == null || nodes.Count < 2)
                 return;
 
-            _segments.EnsureCapacity(nodes.Count);
+            _segments.EnsureCapacity(nodes.Count - 1);
 
             for (int i = 0; i < nodes.Count - 1; i++)
-            {
                 _segments.Add(new Segment(nodes[i], nodes[i + 1]));
-            }
         }
 
-        public IEnumerable<Vector2> GetPositions()
+        /// <summary>
+        /// Устанавливает позицию первого узла цепи (начала) и фиксирует его.
+        /// </summary>
+        public void SetStart(Vector2 position)
         {
             if (_segments.Count == 0)
-                yield break;
+                return;
 
-            foreach (var segment in _segments)
-                yield return segment.First.Position;
-
-            yield return _segments[^1].Second.Position;
+            var first = _segments[0].A;
+            first.Position = position;
+            first.OldPosition = position;
+            first.Locked = true;
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Simulate(uint iterations)
-            => Simulate(null, null, iterations);
-
-        public void Simulate(Vector2? firstNodePosition, Vector2? secondNodePosition, uint iterations)
+        /// <summary>
+        /// Устанавливает позицию последнего узла цепи (конца) и фиксирует его.
+        /// </summary>
+        public void SetEnd(Vector2 position)
         {
-            if (firstNodePosition is not null)
-            {
-                _segments[0].First.Position = firstNodePosition.Value;
-                _segments[0].First.Locked = true;
-            }
+            if (_segments.Count == 0)
+                return;
 
-            if (secondNodePosition is not null)
-            {
-                _segments[^1].Second.Position = secondNodePosition.Value;
-                _segments[^1].Second.Locked = true;
-            }
+            var last = _segments[^1].B;
+            last.Position = position;
+            last.OldPosition = position;
+            last.Locked = true;
+        }
 
+        public void Simulate()
+        {
+            if (_segments.Count == 0)
+                return;
+
+            Integrate();
+            SolveConstraints();
+        }
+
+        private void Integrate()
+        {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void SimulateNode(Node node)
+            void IntegrateNode(Node node)
             {
                 if (node.Locked)
                     return;
 
-                var positionBeforeUpdate = node.Position;
+                var current = node.Position;
+                var velocity = (node.Position - node.OldPosition) * Damping;
 
-                node.Position += node.Position - node.OldPosition;
-                node.Position += Gravity;
-
-                node.OldPosition = positionBeforeUpdate;
+                node.Position += velocity + Gravity;
+                node.OldPosition = current;
             }
 
             for (int i = 0; i < _segments.Count; i++)
-            {
-                SimulateNode(_segments[i].First);
-            }
+                IntegrateNode(_segments[i].A);
 
-            SimulateNode(_segments[^1].Second);
+            IntegrateNode(_segments[^1].B);
+        }
 
-            for (uint i = 0; i < iterations; i++)
+        /// <summary>
+        /// XPBD-ограничение длины сегментов.
+        /// Именно здесь реализуется мягкость/жёсткость.
+        /// </summary>
+        private void SolveConstraints()
+        {
+            for (var i = 0; i < SolverIterations; i++)
             {
-                for (int j = 0; j < _segments.Count; j++)
+                foreach (var segment in _segments)
                 {
-                    var segment = _segments[j];
-                    var center = (segment.First.Position + segment.Second.Position) / 2.0f;
-                    var direction = Vector2.Normalize(segment.First.Position - segment.Second.Position);
+                    var a = segment.A;
+                    var b = segment.B;
 
-                    if (!segment.First.Locked)
-                        segment.First.Position = center + direction * DistanceBetweenNodes / 2.0f;
+                    var delta = b.Position - a.Position;
+                    var dist = delta.Length();
 
-                    if (!segment.Second.Locked)
-                        segment.Second.Position = center - direction * DistanceBetweenNodes / 2.0f;
+                    if (dist <= 1e-6f)
+                        continue;
+
+                    var constraint = dist - RestLength;
+
+                    var wA = a.Locked ? 0f : 1f;
+                    var wB = b.Locked ? 0f : 1f;
+
+                    var denom = wA + wB + Compliance;
+
+                    if (denom == 0f)
+                        continue;
+
+                    var lambda = -constraint / denom;
+                    var correction = lambda * delta / dist;
+
+                    if (!a.Locked)
+                        a.Position -= wA * correction;
+
+                    if (!b.Locked)
+                        b.Position += wB * correction;
                 }
             }
+        }
+    }
+
+    /// <summary>
+    /// Утилиты для работы с физической цепью.
+    /// </summary>
+    public static class PhysicalChainUtils
+    {
+        /// <summary>
+        /// Создаёт объект физической цепи между двумя точками, с заданной длиной сегмента.
+        /// Начальный и конечный узлы автоматически фиксируются.
+        /// </summary>
+        /// <param name="start">Начальная точка цепи</param>
+        /// <param name="end">Конечная точка цепи</param>
+        /// <param name="segmentLength">Ожидаемая длина сегмента</param>
+        public static PhysicalChain CreateBetweenTwoPoints(Vector2 start, Vector2 end, float segmentLength)
+        {
+            if (segmentLength <= 0f)
+                throw new ArgumentException("Segment length must be greater than zero.", nameof(segmentLength));
+
+            var delta = end - start;
+            var totalLength = delta.Length();
+
+            var segments = Math.Max(1, (int)MathF.Ceiling(totalLength / segmentLength));
+            var direction = Terraria.Utils.SafeNormalize(delta, Vector2.Zero);
+
+            Main.NewText($"count: {segments} length: {totalLength}");
+
+            var nodes = new List<PhysicalChain.Node>(segments);
+
+            for (int i = 0; i < segments; i++)
+            {
+                var pos = start + direction * segmentLength * i;
+                var locked = (i == 0 || i == segments);
+
+                nodes.Add(new PhysicalChain.Node(pos, locked));
+            }
+
+            var chain = new PhysicalChain(nodes)
+            {
+                RestLength = segmentLength
+            };
+
+            return chain;
         }
     }
 }

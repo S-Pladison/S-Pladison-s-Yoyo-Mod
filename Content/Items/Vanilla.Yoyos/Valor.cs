@@ -22,6 +22,8 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
+    // https://www.artstation.com/artwork/DLbnDG
+
     public sealed class ValorAssets
     {
         public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
@@ -210,29 +212,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 LifeTime = lifeTime;
                 Target = target;
 
-                var nodes = new List<PhysicalChain.Node>();
-                var tilePos = start.ToWorldCoordinates();
-                var dirToNPC = Vector2.Normalize(target.Center - tilePos);
-                var nodeCount = Math.Max(length / 10f, 2);
+                var worldPos = start.ToWorldCoordinates();
+                var directionToNPC = Terraria.Utils.SafeNormalize(target.Center - worldPos, Vector2.Zero);
 
-                for (int i = 0; i < nodeCount; i++)
-                {
-                    nodes.Add(new PhysicalChain.Node(tilePos + dirToNPC * i * 10f, false));
-                }
-
-                Physics = new(nodes)
-                {
-                    DistanceBetweenNodes = 7f,
-                    Gravity = Vector2.UnitY * 3f
-                };
+                Physics = PhysicalChainUtils.CreateBetweenTwoPoints(worldPos, worldPos + directionToNPC * length * 0.8f, 8f);
+                Physics.Gravity = Vector2.UnitY;
             }
 
             public void Update()
             {
                 if ((Target.whoAmI + Main.GameUpdateCount) % 2 == 0)
-                    Physics.Simulate(Start.ToWorldCoordinates(), Target.Center, 5);
-
-                Main.NewText(LifeTime);
+                {
+                    Physics.SetStart(Start.ToWorldCoordinates());
+                    Physics.SetEnd(Target.Center);
+                    Physics.Simulate();
+                }
 
                 if (LifeTime++ >= GeneralUtils.SecondsToTicks(7f) && Target.TryGetGlobalNPC<ValorGlobalNPC>(out var valorTarget))
                     valorTarget.BreakChain(Target);
@@ -483,7 +477,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (vectorFromChainToNPCLength <= Data.Length)
                 return;
 
-            var normalizedVectorFromChainToNPC = Vector2.Normalize(vectorFromChainToNPC);
+            var normalizedVectorFromChainToNPC = Terraria.Utils.SafeNormalize(vectorFromChainToNPC, Vector2.Zero);
             var newPosition = chainPosition + normalizedVectorFromChainToNPC * Data.Length;
             var velocityCorrection = newPosition - nextPosition;
 
