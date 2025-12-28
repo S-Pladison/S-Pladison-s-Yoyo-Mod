@@ -123,19 +123,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
                 return;
 
-            /*foreach (var npc in Main.ActiveNPCs)
+            foreach (var npc in Main.ActiveNPCs)
             {
-                if (!npc.HasBuff<ValorBuff>())
-                    continue;
-
                 if (npc.whoAmI == target.whoAmI)
                     continue;
 
-                if (Vector2.DistanceSquared(npc.Center, target.Center) <= ValorItem.DebuffChanceReductionDistance)
+                if (Vector2.DistanceSquared(npc.Center, target.Center) > ValorItem.DebuffChanceReductionDistance)
+                    continue;
+
+                if (npc.TryGetGlobalNPC<ValorGlobalNPC>(out var valorNpc) && valorNpc.IsChained)
                     return;
             }
 
-            target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));*/
+            if (target.TryGetGlobalNPC<ValorGlobalNPC>(out var valorTarget))
+                valorTarget.TryApplyChain(target);
         }
 
         void IEmitLightEntity.EmitLight(Entity proj)
@@ -193,20 +194,25 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public sealed class ChainData
         {
-            public Point Tile;
+            public Tile Tile { get => Main.tile[Start.X, Start.Y]; }
+
+            public readonly NPC Target;
+
+            public Point Start;
             public float Length;
             public PhysicalChain Physics;
             public ushort LifeTime;
 
-            public ChainData(Point tile, NPC npc, float length, ushort lifeTime = 0)
+            public ChainData(Point start, NPC target, float length, ushort lifeTime = 0)
             {
-                Tile = tile;
+                Start = start;
                 Length = length;
                 LifeTime = lifeTime;
+                Target = target;
 
                 var nodes = new List<PhysicalChain.Node>();
-                var tilePos = tile.ToWorldCoordinates();
-                var dirToNPC = Vector2.Normalize(npc.Center - tilePos);
+                var tilePos = start.ToWorldCoordinates();
+                var dirToNPC = Vector2.Normalize(target.Center - tilePos);
                 var nodeCount = Math.Max(length / 10f, 2);
 
                 for (int i = 0; i < nodeCount; i++)
@@ -220,120 +226,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     Gravity = Vector2.UnitY * 3f
                 };
             }
-        }
 
-        // Отравляем с сервера клиентам в случаях, когда зацепили/отцепили NPC
-        private sealed class NPCValorSyncPacket : NetPacket
-        {
-            public override void Send(BinaryWriter writer, params object[] context)
+            public void Update()
             {
-                // Данные об NPC
-                writer.Write((byte)context[0]); //< npcWhoAmI
-                writer.Write((ushort)context[1]); //< npcType
+                if ((Target.whoAmI + Main.GameUpdateCount) % 2 == 0)
+                    Physics.Simulate(Start.ToWorldCoordinates(), Target.Center, 5);
 
-                var chainData = context[2] as ChainData;
+                Main.NewText(LifeTime);
 
-                // Данные о цепи
-                writer.Write(chainData is not null);
-                if (chainData is not null)
-                {
-                    writer.Write((ushort)chainData.Tile.X);
-                    writer.Write((ushort)chainData.Tile.Y);
-                    writer.Write(chainData.Length);
-                    writer.Write(chainData.LifeTime);
-                }
-            }
-
-            public override void Receive(BinaryReader reader, int sender)
-            {
-                var npcWhoImA = reader.ReadByte();
-                var npcType = reader.ReadUInt16();
-                var hasChainData = reader.ReadBoolean();
-                var npc = Main.npc[npcWhoImA];
-
-                if (npc is null || npc.type != npcType || !npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC))
-                    return;
-
-                if (!hasChainData)
-                {
-                    globalNPC.SetChainData(npc, null);
-                    return;
-                }
-
-                var chainTile = new Point(reader.ReadUInt16(), reader.ReadUInt16());
-                var chainLength = reader.ReadSingle();
-                var chainLifeTime = reader.ReadUInt16();
-
-                globalNPC.SetChainData(npc, new ChainData(chainTile, npc, chainLength, chainLifeTime));
-            }
-        }
-
-        // Отправляем с сервера только что подключившемуся клиенту для синхронизации данных обо всех подцепленных NPC
-        private sealed class NPCValorSyncAllPacket : NetPacket
-        {
-            public override void Send(BinaryWriter writer, params object[] context)
-            {
-                /*var valorNPCs = new List<(NPC npc, ChainData data)>();
-
-                foreach (var npc in Main.ActiveNPCs)
-                {
-                    if (!npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC) || !npc.HasBuff<ValorBuff>())
-                        continue;
-
-                    valorNPCs.Add((npc, globalNPC.Data));
-                }
-
-                writer.Write((byte)valorNPCs.Count);
-
-                // Чаще всего таких NPC будет 0... Ну, к максимум 1-2...
-                foreach (var (npc, chainData) in valorNPCs)
-                {
-                    // Данные об NPC
-                    writer.Write((byte)npc.whoAmI);
-                    writer.Write((ushort)npc.type);
-                    writer.Write((ushort)npc.buffTime[npc.FindBuffIndex<ValorBuff>()]);
-
-                    // Данные о цепи
-                    writer.Write(chainData is not null);
-                    if (chainData is not null)
-                    {
-                        writer.Write((ushort)chainData.Tile.X);
-                        writer.Write((ushort)chainData.Tile.Y);
-                        writer.Write(chainData.Length);
-                        writer.Write(chainData.LifeTime);
-                    }
-                }*/
-            }
-
-            public override void Receive(BinaryReader reader, int sender)
-            {
-                var valorNPCCount = reader.ReadByte();
-
-                // Чаще всего таких NPC будет 0... Ну, к максимум 1-2...
-                /*for (var index = 0; index < valorNPCCount; index++)
-                {
-                    var npcWhoAmI = reader.ReadByte();
-                    var npcType = reader.ReadUInt16();
-                    var npcDebuffTime = reader.ReadUInt16();
-                    var hasChainData = reader.ReadBoolean();
-                    var npc = Main.npc[npcWhoAmI];
-
-                    if (npc is null || npc.type != npcType || !npc.TryGetGlobalNPC<ValorGlobalNPC>(out var globalNPC))
-                        continue;
-
-                    // При подключении игрок не знает о дебаффах врагов
-                    npc.AddBuff<ValorBuff>(npcDebuffTime);
-                    globalNPC.HasDebuff = true;
-
-                    if (!hasChainData)
-                        continue;
-
-                    var chainTile = new Point(reader.ReadUInt16(), reader.ReadUInt16());
-                    var chainLength = reader.ReadSingle();
-                    var chainLifeTime = reader.ReadUInt16();
-
-                    globalNPC.SetChainData(npc, new ChainData(chainTile, npc, chainLength, chainLifeTime));
-                }*/
+                if (LifeTime++ >= GeneralUtils.SecondsToTicks(7f) && Target.TryGetGlobalNPC<ValorGlobalNPC>(out var valorTarget))
+                    valorTarget.BreakChain(Target);
             }
         }
 
@@ -345,7 +247,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private int _timeSinceLastTileCheck;
 
         public override bool InstancePerEntity { get => true; }
-        public bool HasDebuff { get; private set; }
+        public bool IsChained { get; private set; }
         public ChainData Data { get; private set; }
 
         public override void Load()
@@ -395,19 +297,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
                 orig(npc, position, style, extraInfo);
             };
-
-            // Отправляем информацию подключившемуся игроку обо всех прицепленных врагах
-            ModEvents.OnPlayerConnect += (Player player) =>
-            {
-                if (Main.netMode == NetmodeID.Server)
-                    NetHandler.Send<NPCValorSyncAllPacket>(player.whoAmI, null);
-            };
         }
 
-        public override void OnSpawn(NPC npc, IEntitySource source)
+        public bool TryApplyChain(NPC npc)
         {
-            /*if (!CanBeChained(npc))
-                npc.buffImmune[ModContent.BuffType<ValorBuff>()] = true;*/
+            if (IsChained || !CanBeChained(npc))
+                return false;
+
+            return ChainToTile(npc);
         }
 
         public override void OnKill(NPC npc)
@@ -425,7 +322,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             //UpdateDebuffState(npc, npc.HasBuff<ValorBuff>());
 
-            if (!HasDebuff)
+            if (!IsChained)
                 return true;
 
             if (Main.rand.NextBool(4))
@@ -436,13 +333,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             // Обновляем физику цепи и счетчик жизни
-            if (Data is not null)
-            {
-                Data.LifeTime++;
-
-                if ((npc.whoAmI + Main.GameUpdateCount) % 2 == 0)
-                    Data.Physics.Simulate(Data.Tile.ToWorldCoordinates(), npc.Center, 5);
-            }
+            Data?.Update();
 
             HandleChain(npc);
 
@@ -451,10 +342,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private void UpdateDebuffState(NPC npc, bool state)
         {
-            if (HasDebuff == state)
+            if (IsChained == state)
                 return;
 
-            HasDebuff = state;
+            IsChained = state;
 
             if (state)
             {
@@ -487,7 +378,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             // Разрушаем цепь, если НПС слишком далеко от тайла (обычно, это будет происходить при телепортации)
-            if (Vector2.Distance(Data.Tile.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
+            if (Vector2.Distance(Data.Start.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
             {
                 BreakChain(npc);
                 return;
@@ -509,12 +400,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 {
                     SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
                     Data = updatedData;
+                    IsChained = true;
                     return;
                 }
 
-                Data.Tile = updatedData.Tile;
+                Data.Start = updatedData.Start;
                 Data.Length = updatedData.Length;
                 Data.LifeTime = updatedData.LifeTime;
+                IsChained = true;
                 return;
             }
 
@@ -523,10 +416,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
                 _timeSinceLastTileCheck = TileCheckFrequency;
                 Data = null;
+                IsChained = false;
                 return;
             }
 
             Data = null;
+            IsChained = false;
         }
 
         private bool ChainToTile(NPC npc)
@@ -551,9 +446,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             SetChainData(npc, chainData);
 
-            if (Main.netMode == NetmodeID.Server)
-                NetHandler.Send<NPCValorSyncPacket>(null, null, (byte)npc.whoAmI, (ushort)npc.type, chainData);
-
             npc.netUpdate = true;
             return true;
         }
@@ -569,9 +461,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             SetChainData(npc, null);
 
-            if (Main.netMode == NetmodeID.Server)
-                NetHandler.Send<NPCValorSyncPacket>(null, null, (byte)npc.whoAmI, (ushort)npc.type, null);
-
             npc.netUpdate = true;
             return true;
         }
@@ -581,7 +470,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Data is null)
                 return;
 
-            var chainPosition = Data.Tile.ToWorldCoordinates();
+            var chainPosition = Data.Start.ToWorldCoordinates();
 
             var nextPosition = npc.Center + npc.velocity;
             var vectorFromChainToNPC = nextPosition - chainPosition;
@@ -599,7 +488,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IEmitLightEntity.EmitLight(Entity npc)
         {
-            if (!HasDebuff)
+            if (!IsChained)
                 return;
 
             Lighting.AddLight(npc.Center, new Color(35, 90, 255).ToVector3() * 0.3f);
@@ -626,7 +515,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class ValorNPCOutlineEffectHandler : ILoadable
     {
         private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Default);
-        private readonly NPCObserver _npcObserver = NPCObserver.Create(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.HasDebuff);
+        private readonly NPCObserver _npcObserver = NPCObserver.Create(n => !n.TryGetGlobalNPC(out ValorGlobalNPC valorNPC) || !valorNPC.IsChained);
 
         private bool _targetWasPrepared = false;
 
