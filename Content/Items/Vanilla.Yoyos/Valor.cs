@@ -196,18 +196,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public sealed class ChainData
         {
-            public Tile Tile { get => Main.tile[Start.X, Start.Y]; }
+            public const float SegmentLength = 8f;
+
+            public Tile Tile { get => Main.tile[Position.X, Position.Y]; }
 
             public readonly NPC Target;
+            public readonly float Length;
+            public readonly PhysicalChain Physics;
 
-            public Point Start;
-            public float Length;
-            public PhysicalChain Physics;
+            public Point Position;
             public ushort LifeTime;
 
             public ChainData(Point start, NPC target, float length, ushort lifeTime = 0)
             {
-                Start = start;
+                length = (length / (int)SegmentLength) * SegmentLength;
+                length = MathF.Max(length, SegmentLength);
+
+                Position = start;
                 Length = length;
                 LifeTime = lifeTime;
                 Target = target;
@@ -215,15 +220,17 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var worldPos = start.ToWorldCoordinates();
                 var directionToNPC = Terraria.Utils.SafeNormalize(target.Center - worldPos, Vector2.Zero);
 
-                Physics = PhysicalChainUtils.CreateBetweenTwoPoints(worldPos, worldPos + directionToNPC * length * 0.8f, 8f);
-                Physics.Gravity = Vector2.UnitY;
+                Physics = PhysicalChainUtils.CreateBetweenTwoPoints(worldPos, worldPos + directionToNPC * length, SegmentLength);
+                Physics.SolverIterations = 6;
             }
 
             public void Update()
             {
                 if ((Target.whoAmI + Main.GameUpdateCount) % 2 == 0)
                 {
-                    Physics.SetStart(Start.ToWorldCoordinates());
+                    Physics.Gravity = new Vector2(0, 1.0f - Vector2.Distance(Target.Center, Position.ToWorldCoordinates()) / Length);
+
+                    Physics.SetStart(Position.ToWorldCoordinates());
                     Physics.SetEnd(Target.Center);
                     Physics.Simulate();
                 }
@@ -372,7 +379,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             // Разрушаем цепь, если НПС слишком далеко от тайла (обычно, это будет происходить при телепортации)
-            if (Vector2.Distance(Data.Start.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
+            if (Vector2.Distance(Data.Position.ToWorldCoordinates(), npc.Center) >= ChainLengthToBreak)
             {
                 BreakChain(npc);
                 return;
@@ -399,8 +406,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     return;
                 }
 
-                Data.Start = updatedData.Start;
-                Data.Length = updatedData.Length;
+                Data.Position = updatedData.Position;
+                //Data.Length = updatedData.Length;
                 Data.LifeTime = updatedData.LifeTime;
                 IsChained = true;
                 ModContent.GetInstance<ValorNPCOutlineEffectHandler>()?.Add(npc);
@@ -468,7 +475,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Data is null)
                 return;
 
-            var chainPosition = Data.Start.ToWorldCoordinates();
+            var chainPosition = Data.Position.ToWorldCoordinates();
 
             var nextPosition = npc.Center + npc.velocity;
             var vectorFromChainToNPC = nextPosition - chainPosition;
@@ -625,11 +632,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     if (chainPoints.Length < 2)
                         continue;
 
-                    var anchorColor = Lighting.GetColor(chainData.Start);
-                    var anchorPosition = chainData.Start.ToWorldCoordinates() - Main.screenPosition;
-
-                    Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
-
                     for (int i = 0; i < chainPoints.Length; i++)
                     {
                         var segmentPoint = chainPoints[i];
@@ -640,6 +642,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
+
+                    var anchorColor = Lighting.GetColor(chainData.Position);
+                    var anchorPosition = chainData.Position.ToWorldCoordinates() - Main.screenPosition;
+
+                    Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
                 }
             }
             Main.spriteBatch.End();
