@@ -218,7 +218,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
                 for (int i = 0; i < nodeCount; i++)
                 {
-                    nodes.Add(new PhysicalChain.Node(tilePos + dirToNPC * i * 10f, false));
+                    nodes.Add(new PhysicalChain.Node(tilePos + dirToNPC * i * 10f));
                 }
 
                 Physics = new(nodes)

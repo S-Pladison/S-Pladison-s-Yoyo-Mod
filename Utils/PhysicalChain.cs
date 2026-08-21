@@ -1,125 +1,238 @@
 ﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 
 namespace SPYoyoMod.Utils
 {
+    /// <summary>
+    /// Verlet-цепь из узлов с фиксированной длиной звена.
+    /// Один вызов <see cref="Simulate"/> — один физический тик.
+    /// </summary>
     public sealed class PhysicalChain
     {
-        public class Node(Vector2 position, bool locked)
+        private const float MinDistanceBetweenNodes = 0.1f;
+        private const float MinConstraintLength = 0.0001f;
+
+        public struct Node(Vector2 position, bool locked = false)
         {
             public Vector2 Position = position;
             public Vector2 OldPosition = position;
             public bool Locked = locked;
         }
 
-        private class Segment(Node first, Node second)
-        {
-            public readonly Node First = first;
-            public readonly Node Second = second;
-        }
+        private Node[] _nodes = [];
+        private int _nodeCount;
+        private float _distanceBetweenNodes = MinDistanceBetweenNodes;
+        private float _damping = 0.99f;
 
-        private float _innerDistanceBetweenNodes;
-
-        private readonly List<Segment> _segments = [];
-
+        /// <summary>
+        /// Целевая длина звена между соседними узлами.
+        /// </summary>
         public float DistanceBetweenNodes
         {
-            get => _innerDistanceBetweenNodes;
-            set => _innerDistanceBetweenNodes = MathHelper.Max(value, 0.1f);
+            get => _distanceBetweenNodes;
+            set => _distanceBetweenNodes = MathHelper.Max(value, MinDistanceBetweenNodes);
         }
 
-        public Vector2 Gravity
+        /// <summary>
+        /// Смещение, добавляемое свободным узлам за один тик.
+        /// </summary>
+        public Vector2 Gravity { get; set; }
+
+        /// <summary>
+        /// Коэффициент сохранения скорости (0 — сразу останавливается, 1 — без затухания).
+        /// </summary>
+        public float Damping
         {
-            get;
-            set;
+            get => _damping;
+            set => _damping = MathHelper.Clamp(value, 0f, 1f);
         }
 
-        public PhysicalChain(IList<Node> nodes = null)
+        /// <summary>
+        /// Кол-во узлов в цепи.
+        /// </summary>
+        public int NodeCount => _nodeCount;
+
+        public ref Node this[int index]
+        {
+            get
+            {
+                if ((uint)index >= (uint)_nodeCount)
+                    throw new ArgumentOutOfRangeException(nameof(index));
+
+                return ref _nodes[index];
+            }
+        }
+
+        /// <summary>
+        /// Первый узел цепи.
+        /// </summary>
+        public ref Node First => ref this[0];
+
+        /// <summary>
+        /// Последний узел цепи.
+        /// </summary>
+        public ref Node Last => ref this[_nodeCount - 1];
+
+        public PhysicalChain(IReadOnlyList<Node> nodes = null)
         {
             Setup(nodes);
         }
 
-        public void Setup(IList<Node> nodes)
+        /// <summary>
+        /// Задать узлы цепи. Переданные значения копируются.
+        /// </summary>
+        public void Setup(IReadOnlyList<Node> nodes)
         {
-            _segments.Clear();
-
-            if (nodes is null || nodes.Count <= 1)
-                return;
-
-            _segments.EnsureCapacity(nodes.Count);
-
-            for (int i = 0; i < nodes.Count - 1; i++)
+            if (nodes is null || nodes.Count == 0)
             {
-                _segments.Add(new Segment(nodes[i], nodes[i + 1]));
+                _nodeCount = 0;
+                return;
             }
+
+            if (_nodes.Length < nodes.Count)
+                _nodes = new Node[nodes.Count];
+
+            for (var i = 0; i < nodes.Count; i++)
+                _nodes[i] = nodes[i];
+
+            _nodeCount = nodes.Count;
         }
 
-        public IEnumerable<Vector2> GetPositions()
-        {
-            if (_segments.Count == 0)
-                yield break;
-
-            foreach (var segment in _segments)
-                yield return segment.First.Position;
-
-            yield return _segments[^1].Second.Position;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Simulate(uint iterations)
+        /// <summary>
+        /// Просимулировать один тик без принудительного пина концов.
+        /// </summary>
+        public void Simulate(int iterations)
             => Simulate(null, null, iterations);
 
-        public void Simulate(Vector2? firstNodePosition, Vector2? secondNodePosition, uint iterations)
+        /// <summary>
+        /// Просимулировать один тик. Переданные позиции удерживают соответствующие концы только на время этого тика.
+        /// </summary>
+        public void Simulate(Vector2? startPosition, Vector2? endPosition, int iterations)
         {
-            if (firstNodePosition is not null)
+            if (_nodeCount == 0)
+                return;
+
+            var startWasLocked = false;
+            var endWasLocked = false;
+
+            if (startPosition is Vector2 start)
             {
-                _segments[0].First.Position = firstNodePosition.Value;
-                _segments[0].First.Locked = true;
+                ref var node = ref _nodes[0];
+                startWasLocked = node.Locked;
+                node.Position = start;
+                node.OldPosition = start;
+                node.Locked = true;
             }
 
-            if (secondNodePosition is not null)
+            if (endPosition is Vector2 end)
             {
-                _segments[^1].Second.Position = secondNodePosition.Value;
-                _segments[^1].Second.Locked = true;
+                ref var node = ref _nodes[_nodeCount - 1];
+                endWasLocked = node.Locked;
+                node.Position = end;
+                node.OldPosition = end;
+                node.Locked = true;
             }
 
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void SimulateNode(Node node)
+            Integrate();
+            SolveConstraints(iterations);
+
+            if (startPosition is not null)
+                _nodes[0].Locked = startWasLocked;
+
+            if (endPosition is not null)
+                _nodes[_nodeCount - 1].Locked = endWasLocked;
+        }
+
+        public Enumerator GetEnumerator()
+            => new(_nodes, _nodeCount);
+
+        private void Integrate()
+        {
+            for (var i = 0; i < _nodeCount; i++)
             {
+                ref var node = ref _nodes[i];
+
                 if (node.Locked)
-                    return;
+                    continue;
 
-                var positionBeforeUpdate = node.Position;
-
-                node.Position += node.Position - node.OldPosition;
-                node.Position += Gravity;
-
-                node.OldPosition = positionBeforeUpdate;
+                var previous = node.Position;
+                node.Position += (node.Position - node.OldPosition) * _damping + Gravity;
+                node.OldPosition = previous;
             }
+        }
 
-            for (int i = 0; i < _segments.Count; i++)
+        private void SolveConstraints(int iterations)
+        {
+            if (_nodeCount < 2)
+                return;
+
+            var restLength = _distanceBetweenNodes;
+
+            for (var i = 0; i < iterations; i++)
             {
-                SimulateNode(_segments[i].First);
-            }
-
-            SimulateNode(_segments[^1].Second);
-
-            for (uint i = 0; i < iterations; i++)
-            {
-                for (int j = 0; j < _segments.Count; j++)
+                if ((i & 1) == 0)
                 {
-                    var segment = _segments[j];
-                    var center = (segment.First.Position + segment.Second.Position) / 2.0f;
-                    var direction = Vector2.Normalize(segment.First.Position - segment.Second.Position);
-
-                    if (!segment.First.Locked)
-                        segment.First.Position = center + direction * DistanceBetweenNodes / 2.0f;
-
-                    if (!segment.Second.Locked)
-                        segment.Second.Position = center - direction * DistanceBetweenNodes / 2.0f;
+                    for (var j = 0; j < _nodeCount - 1; j++)
+                        Constrain(j, j + 1, restLength);
+                }
+                else
+                {
+                    for (var j = _nodeCount - 2; j >= 0; j--)
+                        Constrain(j, j + 1, restLength);
                 }
             }
+        }
+
+        private void Constrain(int firstIndex, int secondIndex, float restLength)
+        {
+            ref var first = ref _nodes[firstIndex];
+            ref var second = ref _nodes[secondIndex];
+
+            if (first.Locked && second.Locked)
+                return;
+
+            var delta = second.Position - first.Position;
+            var distanceSquared = delta.LengthSquared();
+
+            if (distanceSquared < MinConstraintLength * MinConstraintLength)
+                return;
+
+            var distance = MathF.Sqrt(distanceSquared);
+            var error = (distance - restLength) / distance;
+
+            if (first.Locked)
+            {
+                second.Position -= delta * error;
+            }
+            else if (second.Locked)
+            {
+                first.Position += delta * error;
+            }
+            else
+            {
+                var half = delta * (error * 0.5f);
+                first.Position += half;
+                second.Position -= half;
+            }
+        }
+
+        public struct Enumerator
+        {
+            private readonly Node[] _nodes;
+            private readonly int _count;
+            private int _index;
+
+            internal Enumerator(Node[] nodes, int count)
+            {
+                _nodes = nodes;
+                _count = count;
+                _index = -1;
+            }
+
+            public readonly Vector2 Current => _nodes[_index].Position;
+
+            public bool MoveNext() => ++_index < _count;
         }
     }
 }
