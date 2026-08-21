@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Collections.Generic;
+using System.Reflection;
 using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
@@ -10,6 +11,7 @@ namespace SPYoyoMod.Core.Hooks
     /// Позволяет проинициализировать данные/объекты для снаряда.
     /// Вызывается один раз за жизнь снаряда, но при этом, в отличии от <see cref="Projectile.OnSpawn"/>,
     /// гарантированно вызывается для всех игроков.
+    /// Примечание: вызывается не в момент появления снаряда, а в момент первого вызова AI.
     /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
     /// </summary>
     public interface IInitializableProjectile
@@ -21,21 +23,61 @@ namespace SPYoyoMod.Core.Hooks
         /// Позволяет проинициализировать данные/объекты для снаряда.
         /// Вызывается один раз за жизнь снаряда, но при этом, в отличии от <see cref="Projectile.OnSpawn"/>,
         /// гарантированно вызывается для всех игроков.
+        /// Примечание: вызывается не в момент появления снаряда, а в момент первого вызова AI.
         /// </summary>
         void Initialize(Projectile proj);
 
         [LoadPriority(sbyte.MinValue)]
         private sealed class InitializableProjectileImplementation : GlobalProjectile
         {
+            private static GlobalProjectile[] _initializableGlobals;
+
+            public static IReadOnlyList<GlobalProjectile> InitializableGlobals
+            {
+                get
+                {
+                    if (_initializableGlobals is not null)
+                        return _initializableGlobals;
+
+                    var globals = new List<GlobalProjectile>();
+
+                    foreach (var global in ModContent.GetContent<GlobalProjectile>())
+                    {
+                        if (global is IHook)
+                            globals.Add(global);
+                    }
+
+                    return _initializableGlobals = [.. globals];
+                }
+            }
+
             private bool _initialized;
 
             public override bool InstancePerEntity => true;
 
             public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
             {
-                // Ну, я не придумал способа ограничить данный Global лишь для снарядов с интерфейсом, что выше...
-                // Да, для ModProjectile это не проблеме, но как это сделать с остальными GlobalProjectile?..
-                return true;
+                if (!lateInstantiation)
+                    return false;
+
+                if (proj.ModProjectile is IHook)
+                    return true;
+
+                foreach (var global in InitializableGlobals)
+                {
+                    if (!global.ConditionallyAppliesToEntities)
+                        return true;
+
+                    if (global.AppliesToEntity(proj, lateInstantiation: false) || global.AppliesToEntity(proj, lateInstantiation: true))
+                        return true;
+                }
+
+                return false;
+            }
+
+            public override void Unload()
+            {
+                _initializableGlobals = null;
             }
 
             public override void Load()
