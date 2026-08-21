@@ -196,7 +196,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public sealed class ChainData
         {
             public const float SegmentLength = 8f;
-            public const int SolverIterations = 6;
+            public const int SolverIterations = 5;
 
             public Tile Tile { get => Main.tile[Position.X, Position.Y]; }
 
@@ -220,7 +220,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var worldPos = start.ToWorldCoordinates();
                 var directionToNPC = Terraria.Utils.SafeNormalize(target.Center - worldPos, Vector2.Zero);
 
-                Physics = PhysicalChain.CreateBetween(worldPos, worldPos + directionToNPC * length, SegmentLength);
+                Physics = PhysicalChain.CreateTautBetween(worldPos, worldPos + directionToNPC * length, SegmentLength);
             }
 
             public void Update()

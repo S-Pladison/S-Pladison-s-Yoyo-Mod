@@ -80,14 +80,14 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Создать цепь между двумя точками с заданной длиной звена.
+        /// Создать цепь между двумя точками с заданным числом звеньев.
+        /// Длина звена равна расстоянию между точками, делённому на число звеньев.
         /// </summary>
-        public static PhysicalChain CreateBetween(Vector2 start, Vector2 end, float segmentLength)
+        public static PhysicalChain CreateBetween(Vector2 start, Vector2 end, int segmentCount)
         {
-            segmentLength = MathHelper.Max(segmentLength, MinDistanceBetweenNodes);
+            segmentCount = Math.Max(segmentCount, 1);
 
-            var length = Vector2.Distance(start, end);
-            var nodeCount = Math.Max((int)MathF.Round(length / segmentLength) + 1, 2);
+            var nodeCount = segmentCount + 1;
             var nodes = new Node[nodeCount];
 
             for (var i = 0; i < nodeCount; i++)
@@ -96,10 +96,44 @@ namespace SPYoyoMod.Utils
                 nodes[i] = new Node(Vector2.Lerp(start, end, t));
             }
 
+            var length = Vector2.Distance(start, end);
+
             return new PhysicalChain(nodes)
             {
-                DistanceBetweenNodes = segmentLength
+                DistanceBetweenNodes = length > 0f ? length / segmentCount : MinDistanceBetweenNodes
             };
+        }
+
+        /// <summary>
+        /// Создать цепь со слабиной между двумя точками с заданной длиной звена.
+        /// Цепь длинее или равна расстоянию между точками и может провисать.
+        /// </summary>
+        public static PhysicalChain CreateSlackBetween(Vector2 start, Vector2 end, float segmentLength)
+        {
+            segmentLength = MathHelper.Max(segmentLength, MinDistanceBetweenNodes);
+
+            var length = Vector2.Distance(start, end);
+            var segmentCount = Math.Max((int)MathF.Ceiling(length / segmentLength), 1);
+            var chain = CreateBetween(start, end, segmentCount);
+
+            chain.DistanceBetweenNodes = segmentLength;
+            return chain;
+        }
+
+        /// <summary>
+        /// Создать натянутую цепь между двумя точками с заданной длиной звена.
+        /// Цепь короче или равна расстоянию между точками, слабины нет.
+        /// </summary>
+        public static PhysicalChain CreateTautBetween(Vector2 start, Vector2 end, float segmentLength)
+        {
+            segmentLength = MathHelper.Max(segmentLength, MinDistanceBetweenNodes);
+
+            var length = Vector2.Distance(start, end);
+            var segmentCount = Math.Max((int)MathF.Floor(length / segmentLength), 1);
+            var chain = CreateBetween(start, end, segmentCount);
+
+            chain.DistanceBetweenNodes = segmentLength;
+            return chain;
         }
 
         /// <summary>
