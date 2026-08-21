@@ -1,282 +1,238 @@
-﻿using System;
+﻿using Microsoft.Xna.Framework;
+using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using Microsoft.Xna.Framework;
-using Terraria;
 
 namespace SPYoyoMod.Utils
 {
     /// <summary>
-    /// Класс физической цепи...
+    /// Verlet-цепь из узлов с фиксированной длиной звена.
+    /// Один вызов <see cref="Simulate"/> — один физический тик.
     /// </summary>
     public sealed class PhysicalChain
     {
-        /// <summary>
-        /// Узел цепи.
-        /// </summary>
-        public sealed class Node(Vector2 position, bool locked = false)
+        private const float MinDistanceBetweenNodes = 0.1f;
+        private const float MinConstraintLength = 0.0001f;
+
+        public struct Node(Vector2 position, bool locked = false)
         {
             public Vector2 Position = position;
+            public Vector2 OldPosition = position;
             public bool Locked = locked;
-
-            internal Vector2 OldPosition = position;
         }
 
+        private Node[] _nodes = [];
+        private int _nodeCount;
+        private float _distanceBetweenNodes = MinDistanceBetweenNodes;
+        private float _damping = 0.99f;
+
         /// <summary>
-        /// Сегмент цепи между двумя узлами.
+        /// Целевая длина звена между соседними узлами.
         /// </summary>
-        private sealed class Segment(PhysicalChain.Node a, PhysicalChain.Node b)
+        public float DistanceBetweenNodes
         {
-            public readonly Node A = a;
-            public readonly Node B = b;
-        }
-
-        private readonly List<Segment> _segments = [];
-
-        private float _restLength = 16f;
-        private float _compliance = 0f;
-        private float _damping = 1f;
-        private int _solverIterations = 3;
-
-        /// <summary>
-        /// Длина сегмента в состоянии покоя.
-        /// </summary>
-        public float RestLength
-        {
-            get => _restLength;
-            set => _restLength = MathF.Max(value, 0.001f);
+            get => _distanceBetweenNodes;
+            set => _distanceBetweenNodes = MathHelper.Max(value, MinDistanceBetweenNodes);
         }
 
         /// <summary>
-        /// Гравитация, применяемая к каждому узлу.
+        /// Смещение, добавляемое свободным узлам за один тик.
         /// </summary>
         public Vector2 Gravity { get; set; }
 
         /// <summary>
-        /// XPBD Compliance — параметр мягкости.
-        /// 0 = абсолютно жёсткая цепь.
-        /// Рекомендуемый диапазон: 0..0.1
-        /// </summary>
-        public float Compliance
-        {
-            get => _compliance;
-            set => _compliance = MathF.Max(value, 0f);
-        }
-
-        /// <summary>
-        /// Количество итераций солвера.
-        /// Отвечает за стабильность, а не жёсткость.
-        /// Диапазон: 1..32
-        /// </summary>
-        public int SolverIterations
-        {
-            get => _solverIterations;
-            set => _solverIterations = Math.Clamp(value, 1, 32);
-        }
-
-        /// <summary>
-        /// Демпфирование скорости (затухание).
-        /// 1 = без затухания.
-        /// Диапазон: 0.01..1
+        /// Коэффициент сохранения скорости (0 — сразу останавливается, 1 — без затухания).
         /// </summary>
         public float Damping
         {
             get => _damping;
-            set => _damping = Math.Clamp(value, 0.01f, 1f);
+            set => _damping = MathHelper.Clamp(value, 0f, 1f);
         }
 
         /// <summary>
-        /// Доступ к сегментам (readonly, для отладки / рендера).
+        /// Кол-во узлов в цепи.
         /// </summary>
-        public IReadOnlyList<Node> Nodes
+        public int NodeCount => _nodeCount;
+
+        public ref Node this[int index]
         {
             get
             {
-                if (_segments.Count == 0)
-                    return [];
+                if ((uint)index >= (uint)_nodeCount)
+                    throw new ArgumentOutOfRangeException(nameof(index));
 
-                var list = new List<Node>(_segments.Count + 1);
-                foreach (var s in _segments)
-                    list.Add(s.A);
-
-                list.Add(_segments[^1].B);
-                return list;
+                return ref _nodes[index];
             }
         }
 
         /// <summary>
-        /// Получает позиции всех узлов цепи.
+        /// Первый узел цепи.
         /// </summary>
-        public IEnumerable<Vector2> GetPositions()
-        {
-            if (_segments.Count == 0)
-                yield break;
+        public ref Node First => ref this[0];
 
-            foreach (var segment in _segments)
-                yield return segment.A.Position;
+        /// <summary>
+        /// Последний узел цепи.
+        /// </summary>
+        public ref Node Last => ref this[_nodeCount - 1];
 
-            yield return _segments[^1].B.Position;
-        }
-
-        public PhysicalChain(IList<Node> nodes = null)
+        public PhysicalChain(IReadOnlyList<Node> nodes = null)
         {
             Setup(nodes);
         }
 
         /// <summary>
-        /// Инициализация цепи из списка узлов.
+        /// Задать узлы цепи. Переданные значения копируются.
         /// </summary>
-        public void Setup(IList<Node> nodes)
+        public void Setup(IReadOnlyList<Node> nodes)
         {
-            _segments.Clear();
-
-            if (nodes == null || nodes.Count < 2)
+            if (nodes is null || nodes.Count == 0)
+            {
+                _nodeCount = 0;
                 return;
+            }
 
-            _segments.EnsureCapacity(nodes.Count - 1);
+            if (_nodes.Length < nodes.Count)
+                _nodes = new Node[nodes.Count];
 
-            for (int i = 0; i < nodes.Count - 1; i++)
-                _segments.Add(new Segment(nodes[i], nodes[i + 1]));
+            for (var i = 0; i < nodes.Count; i++)
+                _nodes[i] = nodes[i];
+
+            _nodeCount = nodes.Count;
         }
 
         /// <summary>
-        /// Устанавливает позицию первого узла цепи (начала) и фиксирует его.
+        /// Просимулировать один тик без принудительного пина концов.
         /// </summary>
-        public void SetStart(Vector2 position)
-        {
-            if (_segments.Count == 0)
-                return;
-
-            var first = _segments[0].A;
-            first.Position = position;
-            first.OldPosition = position;
-            first.Locked = true;
-        }
+        public void Simulate(int iterations)
+            => Simulate(null, null, iterations);
 
         /// <summary>
-        /// Устанавливает позицию последнего узла цепи (конца) и фиксирует его.
+        /// Просимулировать один тик. Переданные позиции удерживают соответствующие концы только на время этого тика.
         /// </summary>
-        public void SetEnd(Vector2 position)
+        public void Simulate(Vector2? startPosition, Vector2? endPosition, int iterations)
         {
-            if (_segments.Count == 0)
+            if (_nodeCount == 0)
                 return;
 
-            var last = _segments[^1].B;
-            last.Position = position;
-            last.OldPosition = position;
-            last.Locked = true;
-        }
+            var startWasLocked = false;
+            var endWasLocked = false;
 
-        /// <summary>
-        /// Выполнение симуляции физики цепи.
-        /// </summary>
-        public void Simulate()
-        {
-            if (_segments.Count == 0)
-                return;
+            if (startPosition is Vector2 start)
+            {
+                ref var node = ref _nodes[0];
+                startWasLocked = node.Locked;
+                node.Position = start;
+                node.OldPosition = start;
+                node.Locked = true;
+            }
+
+            if (endPosition is Vector2 end)
+            {
+                ref var node = ref _nodes[_nodeCount - 1];
+                endWasLocked = node.Locked;
+                node.Position = end;
+                node.OldPosition = end;
+                node.Locked = true;
+            }
 
             Integrate();
-            SolveConstraints();
+            SolveConstraints(iterations);
+
+            if (startPosition is not null)
+                _nodes[0].Locked = startWasLocked;
+
+            if (endPosition is not null)
+                _nodes[_nodeCount - 1].Locked = endWasLocked;
         }
+
+        public Enumerator GetEnumerator()
+            => new(_nodes, _nodeCount);
 
         private void Integrate()
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            void IntegrateNode(Node node)
+            for (var i = 0; i < _nodeCount; i++)
             {
+                ref var node = ref _nodes[i];
+
                 if (node.Locked)
-                    return;
+                    continue;
 
-                var current = node.Position;
-                var velocity = (node.Position - node.OldPosition) * Damping;
-
-                node.Position += velocity + Gravity;
-                node.OldPosition = current;
+                var previous = node.Position;
+                node.Position += (node.Position - node.OldPosition) * _damping + Gravity;
+                node.OldPosition = previous;
             }
-
-            for (int i = 0; i < _segments.Count; i++)
-                IntegrateNode(_segments[i].A);
-
-            IntegrateNode(_segments[^1].B);
         }
 
-        private void SolveConstraints()
+        private void SolveConstraints(int iterations)
         {
-            for (var i = 0; i < SolverIterations; i++)
+            if (_nodeCount < 2)
+                return;
+
+            var restLength = _distanceBetweenNodes;
+
+            for (var i = 0; i < iterations; i++)
             {
-                foreach (var segment in _segments)
+                if ((i & 1) == 0)
                 {
-                    var a = segment.A;
-                    var b = segment.B;
-
-                    var delta = b.Position - a.Position;
-                    var dist = delta.Length();
-
-                    if (dist <= 1e-6f)
-                        continue;
-
-                    var constraint = dist - RestLength;
-
-                    var wA = a.Locked ? 0f : 1f;
-                    var wB = b.Locked ? 0f : 1f;
-
-                    var denom = wA + wB + Compliance;
-
-                    if (denom == 0f)
-                        continue;
-
-                    var lambda = -constraint / denom;
-                    var correction = lambda * delta / dist;
-
-                    if (!a.Locked)
-                        a.Position -= wA * correction;
-
-                    if (!b.Locked)
-                        b.Position += wB * correction;
+                    for (var j = 0; j < _nodeCount - 1; j++)
+                        Constrain(j, j + 1, restLength);
+                }
+                else
+                {
+                    for (var j = _nodeCount - 2; j >= 0; j--)
+                        Constrain(j, j + 1, restLength);
                 }
             }
         }
-    }
 
-    /// <summary>
-    /// Утилиты для работы с физической цепью.
-    /// </summary>
-    public static class PhysicalChainUtils
-    {
-        /// <summary>
-        /// Создаёт объект физической цепи между двумя точками, с заданной длиной сегмента.
-        /// Начальный и конечный узлы автоматически фиксируются.
-        /// </summary>
-        /// <param name="start">Начальная точка цепи</param>
-        /// <param name="end">Конечная точка цепи</param>
-        /// <param name="segmentLength">Ожидаемая длина сегмента</param>
-        public static PhysicalChain CreateBetweenTwoPoints(Vector2 start, Vector2 end, float segmentLength)
+        private void Constrain(int firstIndex, int secondIndex, float restLength)
         {
-            if (segmentLength <= 0f)
-                throw new ArgumentException("Segment length must be greater than zero.", nameof(segmentLength));
+            ref var first = ref _nodes[firstIndex];
+            ref var second = ref _nodes[secondIndex];
 
-            var delta = end - start;
-            var totalLength = delta.Length();
+            if (first.Locked && second.Locked)
+                return;
 
-            var segments = Math.Max(1, (int)MathF.Ceiling(totalLength / segmentLength));
-            var direction = Terraria.Utils.SafeNormalize(delta, Vector2.Zero);
+            var delta = second.Position - first.Position;
+            var distanceSquared = delta.LengthSquared();
 
-            var nodes = new List<PhysicalChain.Node>(segments);
+            if (distanceSquared < MinConstraintLength * MinConstraintLength)
+                return;
 
-            for (int i = 0; i < segments; i++)
+            var distance = MathF.Sqrt(distanceSquared);
+            var error = (distance - restLength) / distance;
+
+            if (first.Locked)
             {
-                var pos = start + direction * segmentLength * i;
-                var locked = (i == 0 || i == segments);
+                second.Position -= delta * error;
+            }
+            else if (second.Locked)
+            {
+                first.Position += delta * error;
+            }
+            else
+            {
+                var half = delta * (error * 0.5f);
+                first.Position += half;
+                second.Position -= half;
+            }
+        }
 
-                nodes.Add(new PhysicalChain.Node(pos, locked));
+        public struct Enumerator
+        {
+            private readonly Node[] _nodes;
+            private readonly int _count;
+            private int _index;
+
+            internal Enumerator(Node[] nodes, int count)
+            {
+                _nodes = nodes;
+                _count = count;
+                _index = -1;
             }
 
-            var chain = new PhysicalChain(nodes)
-            {
-                RestLength = segmentLength
-            };
+            public readonly Vector2 Current => _nodes[_index].Position;
 
-            return chain;
+            public bool MoveNext() => ++_index < _count;
         }
     }
 }

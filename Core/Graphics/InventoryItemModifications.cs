@@ -31,14 +31,14 @@ namespace SPYoyoMod.Core.Graphics
                 var finalDrawScaleIndex = -1;
 
                 if (!c.TryGotoNext(MoveType.After,
-                        i => i.MatchLdarg0(),
-                        i => i.MatchLdarg(out _),
-                        i => i.MatchLdarga(out _),
-                        i => i.MatchLdarg(out _),
-                        i => i.MatchLdloca(out _),
-                        i => i.MatchLdloca(out _),
-                        i => i.MatchLdloca(out finalDrawScaleIndex),
-                        i => i.MatchCall(typeof(ItemSlot).GetMethod(nameof(ItemSlot.DrawItem_GetColorAndScale), BindingFlags.Public | BindingFlags.Static)))) return;
+                    i => i.MatchLdarg0(),
+                    i => i.MatchLdarg(out _),
+                    i => i.MatchLdarga(out _),
+                    i => i.MatchLdarg(out _),
+                    i => i.MatchLdloca(out _),
+                    i => i.MatchLdloca(out _),
+                    i => i.MatchLdloca(out finalDrawScaleIndex),
+                    i => i.MatchCall(typeof(ItemSlot).GetMethod(nameof(ItemSlot.DrawItem_GetColorAndScale), BindingFlags.Public | BindingFlags.Static)))) return;
 
                 c.Emit(OpCodes.Ldarg_0);
                 c.Emit(OpCodes.Ldloca, finalDrawScaleIndex);

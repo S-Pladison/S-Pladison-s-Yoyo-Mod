@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
@@ -50,34 +51,63 @@ namespace SPYoyoMod.Common
 
         public override void PostWorldGen()
         {
-            // Набор лута, который хотя бы раз был помещен в сундук
-            var successfulItemSet = new HashSet<ChestItemInfo>();
+            Mod.Logger.Info("Starting to populate chests with modded loot...");
 
-            // Получаем список сундуков, расположенных в случайном порядке
-            var chests = Main.chest
-                .Where(c => c is not null && Framing.GetTileSafely(c.x, c.y) is Tile tile && tile.HasTile)
-                .OrderBy(_ => WorldGen.genRand.Next());
-
-            foreach (var chest in chests)
-            {
-                var style = (ChestStyle)(Main.tile[chest.x, chest.y].TileFrameX / 36);
-
-                if (!_lootFromChestsByChestStyle.ContainsKey(style))
-                    continue;
-
-                var lootCollection = _lootFromChestsByChestStyle[style];
-
-                foreach (var loot in lootCollection)
+            // Получаем список сундуков, расположенных в случайном порядке, сгрупированные по типу стиля сундука
+            var chestsByStyle = Main.chest
+                .Where(c => c is not null && Framing.GetTileSafely(c.x, c.y) is Tile tile && tile.HasTile && (tile.TileType == TileID.Containers || tile.TileType == TileID.Containers2))
+                .GroupBy(c =>
                 {
-                    if (successfulItemSet.Contains(loot) && WorldGen.genRand.NextFloat() > loot.Chance)
+                    var tile = Main.tile[c.x, c.y];
+                    var style = (ChestStyle)(tile.TileFrameX / 36);
+
+                    return Enum.IsDefined<ChestStyle>(style) ? style : ChestStyle.Undefined;
+                })
+                .Where(g => _lootFromChestsByChestStyle.ContainsKey(g.Key))
+                .ToDictionary(g => g.Key, g => g.ToList());
+
+            foreach (var (style, chests) in chestsByStyle)
+                Mod.Logger.Info($"Found {chests.Count} chests of style [{style}:{(int)style}]");
+
+            foreach (var (style, chests) in chestsByStyle)
+            {
+                foreach (var loot in _lootFromChestsByChestStyle[style])
+                {
+                    bool hasGuaranteedItem = false;
+
+                    // Сначала пытаемся добавить предменты с некоторой вероятностью в каждый сундук
+                    foreach (var chest in chests)
+                    {
+                        if (WorldGen.genRand.NextFloat() > loot.Chance)
+                            continue;
+
+                        if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
+                            continue;
+
+                        Mod.Logger.Info($"Inserted item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into chest at [Style:{style}:{(int)style}] [Coord:{chest.x},{chest.y}]");
+                        hasGuaranteedItem = true;
+                    }
+
+                    if (hasGuaranteedItem)
                         continue;
 
-                    if (!TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
-                        continue;
+                    // Пытаемся добавить гарантированный предмет в первый попавшийся сундук
+                    foreach (var chest in chests.OrderBy(_ => WorldGen.genRand.NextFloat()))
+                    {
+                        if (TryInsertItemToFirstChestSlot(chest, loot.ItemType, out _))
+                        {
+                            Mod.Logger.Info($"Inserted guaranteed item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into chest at [Style:{style}:{(int)style}] [Coord:{chest.x},{chest.y}]");
+                            hasGuaranteedItem = true;
+                            break;
+                        }
+                    }
 
-                    successfulItemSet.Add(loot);
+                    if (!hasGuaranteedItem)
+                        Mod.Logger.Info($"Failed to insert guaranteed item [Type:{loot.ItemType}] [Name:{ContentSamples.ItemsByType[loot.ItemType].Name}] into any chest of style [Style:{style}:{(int)style}]...");
                 }
             }
+
+            Mod.Logger.Info("Finished populating chests with modded loot");
         }
 
         private static bool TryInsertItemToFirstChestSlot(Chest chest, int itemType, out Item item)
