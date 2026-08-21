@@ -80,6 +80,29 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
+        /// Создать цепь между двумя точками с заданной длиной звена.
+        /// </summary>
+        public static PhysicalChain CreateBetween(Vector2 start, Vector2 end, float segmentLength)
+        {
+            segmentLength = MathHelper.Max(segmentLength, MinDistanceBetweenNodes);
+
+            var length = Vector2.Distance(start, end);
+            var nodeCount = Math.Max((int)MathF.Round(length / segmentLength) + 1, 2);
+            var nodes = new Node[nodeCount];
+
+            for (var i = 0; i < nodeCount; i++)
+            {
+                var t = i / (float)(nodeCount - 1);
+                nodes[i] = new Node(Vector2.Lerp(start, end, t));
+            }
+
+            return new PhysicalChain(nodes)
+            {
+                DistanceBetweenNodes = segmentLength
+            };
+        }
+
+        /// <summary>
         /// Задать узлы цепи. Переданные значения копируются.
         /// </summary>
         public void Setup(IReadOnlyList<Node> nodes)

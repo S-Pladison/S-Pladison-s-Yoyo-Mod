@@ -11,7 +11,6 @@ using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -197,6 +196,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public sealed class ChainData
         {
             public const float SegmentLength = 8f;
+            public const int SolverIterations = 6;
 
             public Tile Tile { get => Main.tile[Position.X, Position.Y]; }
 
@@ -220,19 +220,18 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var worldPos = start.ToWorldCoordinates();
                 var directionToNPC = Terraria.Utils.SafeNormalize(target.Center - worldPos, Vector2.Zero);
 
-                Physics = PhysicalChainUtils.CreateBetweenTwoPoints(worldPos, worldPos + directionToNPC * length, SegmentLength);
-                Physics.SolverIterations = 6;
+                Physics = PhysicalChain.CreateBetween(worldPos, worldPos + directionToNPC * length, SegmentLength);
             }
 
             public void Update()
             {
                 if ((Target.whoAmI + Main.GameUpdateCount) % 2 == 0)
                 {
-                    Physics.Gravity = new Vector2(0, 1.0f - Vector2.Distance(Target.Center, Position.ToWorldCoordinates()) / Vector2Utils.Distance([.. Physics.Nodes.Select(x => x.Position)]));
+                    var tilePos = Position.ToWorldCoordinates();
+                    var slack = 1.0f - Vector2.Distance(Target.Center, tilePos) / Length;
 
-                    Physics.SetStart(Position.ToWorldCoordinates());
-                    Physics.SetEnd(Target.Center);
-                    Physics.Simulate();
+                    Physics.Gravity = new Vector2(0f, MathHelper.Max(slack, 0f));
+                    Physics.Simulate(tilePos, Target.Center, SolverIterations);
                 }
 
                 if (LifeTime++ >= GeneralUtils.SecondsToTicks(7f) && Target.TryGetGlobalNPC<ValorGlobalNPC>(out var valorTarget))
@@ -627,9 +626,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         continue;
 
                     var chainData = valorNPC.Data;
-                    var chainPoints = chainData.Physics.GetPositions().ToArray();
+                    var chain = chainData.Physics;
 
-                    if (chainPoints.Length < 2)
+                    if (chain.NodeCount < 2)
                         continue;
 
                     var anchorColor = Lighting.GetColor(chainData.Position);
@@ -637,15 +636,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
                     Main.spriteBatch.Draw(anchorTexture, anchorPosition, null, anchorColor, 0f, anchorOrigin, 1f, SpriteEffects.None, 0f);
 
-                    for (int i = 0; i < chainPoints.Length; i++)
+                    for (int i = 0; i < chain.NodeCount; i++)
                     {
-                        var segmentPoint = chainPoints[i];
-                        var prevSegmentPoint = i == 0 ? chainPoints[1] : chainPoints[i - 1];
+                        var segmentPoint = chain[i].Position;
+                        var prevSegmentPoint = i == 0 ? chain[1].Position : chain[i - 1].Position;
                         var segmentRotation = (segmentPoint - prevSegmentPoint).ToRotation() + MathHelper.PiOver2;
                         var lightColor = Lighting.GetColor(segmentPoint.ToTileCoordinates());
 
                         Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentDefaultRectangle, lightColor, segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
-                        Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chainPoints.Length), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
+                        Main.spriteBatch.Draw(segmentTexture, segmentPoint - Main.screenPosition, segmentGlowRectangle, Color.White * (i / (float)chain.NodeCount), segmentRotation, segmentOrigin, 1f, SpriteEffects.None, 0);
                     }
                 }
             }
