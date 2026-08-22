@@ -517,7 +517,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    [Autoload(Side = ModSide.Client), LoadAfter]
+    [Autoload(Side = ModSide.Client)]
     public sealed class BellowingThunderSilhouetteEffectHandler : ILoadable
     {
         public static readonly string FilterName = $"{nameof(SPYoyoMod)}:BellowingThunderSilhouette";
