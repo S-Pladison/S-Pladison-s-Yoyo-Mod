@@ -230,13 +230,6 @@ namespace SPYoyoMod
 
                 NetHandler.Send<PlayerConnectPacket>(null, null, connectedPlayerIndex);
             }
-
-            public override void OnEnterWorld()
-            {
-                // После входа в мир устройство могло сброситься, а Main.ScreenSize —
-                // ещё не совпадать с backbuffer. Нельзя слать ScreenSize напрямую.
-                ModContent.GetInstance<EventSystem>()?.RequestResolutionRefresh();
-            }
         }
     }
 }
