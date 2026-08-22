@@ -38,13 +38,13 @@ namespace SPYoyoMod.Common.Yoyos
 
                     ref var renderer = ref globalProj._stringRenderer;
 
-                    var settings = new YoyoStringRendererSettings(
+                    var context = new YoyoStringRendererContext(
                         proj: proj,
                         start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
                         offset: -Main.screenPosition
                     );
 
-                    renderer.Render(Main.spriteBatch, settings);
+                    renderer.Render(Main.spriteBatch, context);
 
                     if (proj.GetOwner().heldProj != proj.whoAmI)
                         return;
@@ -57,7 +57,7 @@ namespace SPYoyoMod.Common.Yoyos
                     if (!proj.IsVanilla() && !(proj.ModProjectile is not null && proj.ModProjectile.Mod is SPYoyoMod))
                         return;
 
-                    renderer.Render(Main.spriteBatch, settings);
+                    renderer.Render(Main.spriteBatch, context);
                 });
 
                 cursor.Emit(OpCodes.Ret);

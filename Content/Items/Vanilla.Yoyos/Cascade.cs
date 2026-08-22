@@ -207,13 +207,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            var settings = new YoyoStringRendererSettings(
+            var context = new YoyoStringRendererContext(
                 proj: proj,
                 start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
                 offset: -Main.screenPosition
             );
 
-            _stringRenderer.Render(Main.spriteBatch, settings);
+            _stringRenderer.Render(Main.spriteBatch, context);
         }
 
         public override void PostDraw(Projectile proj, Color lightColor)

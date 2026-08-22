@@ -210,13 +210,13 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            var settings = new YoyoStringRendererSettings(
+            var context = new YoyoStringRendererContext(
                 proj: Projectile,
                 start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
                 offset: -Main.screenPosition
             );
 
-            _stringRenderer.Render(Main.spriteBatch, settings);
+            _stringRenderer.Render(Main.spriteBatch, context);
         }
 
         void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)

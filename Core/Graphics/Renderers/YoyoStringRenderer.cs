@@ -11,9 +11,9 @@ using Terraria.GameContent;
 namespace SPYoyoMod.Core.Graphics.Renderers
 {
     /// <summary>
-    /// Настройки для отрисовки нити снарядов йо-йо.
+    /// Контекст отрисовки нити снарядов йо-йо.
     /// </summary>
-    public struct YoyoStringRendererSettings(Projectile proj, Vector2 start, Vector2 offset = default)
+    public struct YoyoStringRendererContext(Projectile proj, Vector2 start, Vector2 offset = default)
     {
         /// <summary>
         /// Снаряд, до которого будет отрисоваться нить (начиная со старта до самого снаряда). Если значения равно null, то нить рисоваться не будет.
@@ -63,7 +63,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
     public interface IDrawYoyoStringSegments
     {
         Texture2D Texture { get; }
-        void Draw(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings, IReadOnlyList<YoyoStringSegment> segments);
+        void Draw(SpriteBatch spriteBatch, in YoyoStringRendererContext context, IReadOnlyList<YoyoStringSegment> segments);
 
         public record struct ColorData(Color Value, bool Glow)
         {
@@ -78,12 +78,12 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         {
             public Texture2D Texture { get => TextureAssets.FishingLine.Value; }
 
-            public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings, IReadOnlyList<YoyoStringSegment> segments)
+            public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererContext context, IReadOnlyList<YoyoStringSegment> segments)
             {
                 [UnsafeAccessor(UnsafeAccessorKind.StaticMethod, Name = "TryApplyingPlayerStringColor")]
                 extern static Color TryApplyingPlayerStringColor(Main _, int playerStringColor, Color defaultColor);
 
-                var stringColor = TryApplyingPlayerStringColor(null, settings.Projectile.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
+                var stringColor = TryApplyingPlayerStringColor(null, context.Projectile.GetOwner().stringColor, Color.White with { A = (byte)(255 * 0.4f) });
                 var origin = new Vector2(Texture.Width * 0.5f, 0f);
 
                 foreach (var segment in segments)
@@ -92,7 +92,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                     var color = Lighting.GetColor(segment.Position.ToTileCoordinates(), stringColor);
                     color = new Color((byte)(color.R * 0.5f), (byte)(color.G * 0.5f), (byte)(color.B * 0.5f), (byte)(color.A * 0.5f));
 
-                    spriteBatch.Draw(Texture, segment.Position + settings.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(Texture, segment.Position + context.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
                 }
             }
         }
@@ -107,7 +107,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
 
             public Default(ColorData color) : this(null, color) { }
 
-            public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings, IReadOnlyList<YoyoStringSegment> segments)
+            public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererContext context, IReadOnlyList<YoyoStringSegment> segments)
             {
                 var origin = new Vector2(Texture.Width * 0.5f, 0f);
 
@@ -116,7 +116,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                     var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Length);
                     var color = Color.Glow ? Color.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), Color.Value);
 
-                    spriteBatch.Draw(Texture, segment.Position + settings.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(Texture, segment.Position + context.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
                 }
             }
         }
@@ -131,7 +131,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
 
             public Gradient(params ColorData[] colors) : this(null, colors) { }
 
-            public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings, IReadOnlyList<YoyoStringSegment> segments)
+            public void Draw(SpriteBatch spriteBatch, in YoyoStringRendererContext context, IReadOnlyList<YoyoStringSegment> segments)
             {
                 var origin = new Vector2(Texture.Width * 0.5f, 0f);
 
@@ -140,7 +140,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                     var rectangle = new Rectangle(0, 0, Texture.Width, (int)segment.Length);
                     var color = ColorUtils.MultipleLerp(segment.Index / (float)segments.Count, Colors.Select(x => x.Glow ? x.Value : Lighting.GetColor(segment.Position.ToTileCoordinates(), x.Value)).ToArray());
 
-                    spriteBatch.Draw(Texture, segment.Position + settings.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
+                    spriteBatch.Draw(Texture, segment.Position + context.Offset, rectangle, color, segment.Rotation, origin, 1f, SpriteEffects.None, 0f);
                 }
             }
         }
@@ -159,12 +159,12 @@ namespace SPYoyoMod.Core.Graphics.Renderers
         private Vector2 _projVelocity;
         private Vector2 _startPosition;
 
-        public void Render(SpriteBatch spriteBatch, in YoyoStringRendererSettings settings)
+        public void Render(SpriteBatch spriteBatch, in YoyoStringRendererContext context)
         {
-            if (settings.Projectile is null)
+            if (context.Projectile is null)
                 return;
 
-            var proj = settings.Projectile;
+            var proj = context.Projectile;
 
             if (_projVelocity != proj.velocity || _projHitbox != proj.Hitbox)
             {
@@ -174,21 +174,21 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                 _isDirty = true;
             }
 
-            if (_startPosition != settings.Start)
+            if (_startPosition != context.Start)
             {
-                _startPosition = settings.Start;
+                _startPosition = context.Start;
 
                 _isDirty = true;
             }
 
             if (_isDirty)
             {
-                CalculateSegments(settings.Projectile);
+                CalculateSegments(context.Projectile);
 
                 _isDirty = false;
             }
 
-            _segmentRenderer.Draw(spriteBatch, settings, _segments);
+            _segmentRenderer.Draw(spriteBatch, context, _segments);
         }
 
         private void CalculateSegments(Projectile proj)
