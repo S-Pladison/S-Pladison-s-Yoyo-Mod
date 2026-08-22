@@ -176,12 +176,10 @@ namespace SPYoyoMod.Utils
         /// </summary>
         public static void DrawNPC(NPC npc, bool? behindTiles = null)
         {
-            var oldPosition = npc.position;
-            npc.position += npc.netOffset;
-
-            Main.instance.DrawNPC(npc.whoAmI, behindTiles ?? npc.behindTiles);
-
-            npc.position = oldPosition;
+            using (TemporaryValue.Replace(ref npc.position, npc.position + npc.netOffset))
+            {
+                Main.instance.DrawNPC(npc.whoAmI, behindTiles ?? npc.behindTiles);
+            }
         }
     }
 }

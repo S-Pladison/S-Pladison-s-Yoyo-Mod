@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using SPYoyoMod.Utils;
+using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 using IHook = SPYoyoMod.Core.Hooks.IEmitLightEntity;
@@ -46,32 +47,30 @@ namespace SPYoyoMod.Core.Hooks
                     //     }
                     // }
 
-                    var origGamePaused = Main.gamePaused;
-                    Main.gamePaused = false;
-
-                    foreach (var player in Main.ActivePlayers)
+                    using (TemporaryValue.Replace(ref Main.gamePaused, false))
                     {
-                        foreach (IHook g in _playerHook.Enumerate(player))
-                            g.EmitLight(player);
+                        foreach (var player in Main.ActivePlayers)
+                        {
+                            foreach (IHook g in _playerHook.Enumerate(player))
+                                g.EmitLight(player);
+                        }
+
+                        foreach (var npc in Main.ActiveNPCs)
+                        {
+                            (npc.ModNPC as IHook)?.EmitLight(npc);
+
+                            foreach (IHook g in _npcHook.Enumerate(npc))
+                                g.EmitLight(npc);
+                        }
+
+                        foreach (var proj in Main.ActiveProjectiles)
+                        {
+                            (proj.ModProjectile as IHook)?.EmitLight(proj);
+
+                            foreach (IHook g in _projHook.Enumerate(proj))
+                                g.EmitLight(proj);
+                        }
                     }
-
-                    foreach (var npc in Main.ActiveNPCs)
-                    {
-                        (npc.ModNPC as IHook)?.EmitLight(npc);
-
-                        foreach (IHook g in _npcHook.Enumerate(npc))
-                            g.EmitLight(npc);
-                    }
-
-                    foreach (var proj in Main.ActiveProjectiles)
-                    {
-                        (proj.ModProjectile as IHook)?.EmitLight(proj);
-
-                        foreach (IHook g in _projHook.Enumerate(proj))
-                            g.EmitLight(proj);
-                    }
-
-                    Main.gamePaused = origGamePaused;
                 };
             }
 
