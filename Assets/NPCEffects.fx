@@ -17,35 +17,45 @@ float OutlineThickness;
 float4 OutlineColor;
 float4 NPCColor;
 
+const float MinAlpha = 0.5;
+
+float HasSprite(float2 uv)
+{
+    return tex2D(TextureSampler0, uv).a >= MinAlpha ? 1.0 : 0.0;
+}
+
+float NearSprite(float2 uv, float2 size)
+{
+    float hit = 0.0;
+    hit += HasSprite(uv + float2(size.x, 0));
+    hit += HasSprite(uv + float2(-size.x, 0));
+    hit += HasSprite(uv + float2(0, size.y));
+    hit += HasSprite(uv + float2(0, -size.y));
+    hit += HasSprite(uv + float2(size.x, size.y));
+    hit += HasSprite(uv + float2(size.x, -size.y));
+    hit += HasSprite(uv + float2(-size.x, size.y));
+    hit += HasSprite(uv + float2(-size.x, -size.y));
+    return saturate(hit);
+}
+
 float4 Outline(float2 coords : TEXCOORD0, float4 sampleColor : COLOR0) : COLOR0
 {
     float4 screenColor = tex2D(TextureSampler0, coords);
-    float2 outlineSize = float2(OutlineThickness, OutlineThickness) * (1.0f / ScreenSize) * Zoom;
-    const float minAlpha = 0.5f;
-    
-    if (screenColor.a >= minAlpha)
+    float2 pixel = (1.0 / ScreenSize) * Zoom;
+    float2 outlineSize = pixel * OutlineThickness;
+
+    // Заливка
+    if (screenColor.a >= MinAlpha)
         return NPCColor;
-    
-    float4 outlineColor = tex2D(TextureSampler0, coords + float2(outlineSize.x, outlineSize.y));
-    
-    if (outlineColor.a >= minAlpha)
+
+    // Основная обводка
+    if (NearSprite(coords, outlineSize) > 0.0)
         return OutlineColor;
-    
-    outlineColor = tex2D(TextureSampler0, coords + float2(outlineSize.x, -outlineSize.y));
-    
-    if (outlineColor.a >= minAlpha)
-        return OutlineColor;
-    
-    outlineColor = tex2D(TextureSampler0, coords + float2(-outlineSize.x, outlineSize.y));
-    
-    if (outlineColor.a >= minAlpha)
-        return OutlineColor;
-    
-    outlineColor = tex2D(TextureSampler0, coords + float2(-outlineSize.x, -outlineSize.y));
-    
-    if (outlineColor.a >= minAlpha)
-        return OutlineColor;
-    
+
+    // Тень снизу-справа
+    if (NearSprite(coords - outlineSize, outlineSize) > 0.0)
+        return float4(0, 0, 0, 0.28 * OutlineColor.a);
+
     return screenColor;
 }
 
