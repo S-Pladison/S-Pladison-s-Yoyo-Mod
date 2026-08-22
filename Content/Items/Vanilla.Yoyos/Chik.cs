@@ -39,7 +39,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
@@ -65,9 +65,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            if (_stringRenderer is null)
-                return;
-
             var settings = new YoyoStringRendererSettings(
                 proj: proj,
                 start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,

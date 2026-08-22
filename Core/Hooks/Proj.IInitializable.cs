@@ -11,7 +11,7 @@ namespace SPYoyoMod.Core.Hooks
     /// Позволяет проинициализировать данные/объекты для снаряда.
     /// Вызывается один раз за жизнь снаряда, но при этом, в отличии от <see cref="Projectile.OnSpawn"/>,
     /// гарантированно вызывается для всех игроков.
-    /// Примечание: вызывается не в момент появления снаряда, а в момент первого вызова AI.
+    /// Вызов происходит перед первым <see cref="ProjectileLoader.ProjectileAI"/> или перед первой отрисовкой — в зависимости от того, что наступит раньше.
     /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
     /// </summary>
     public interface IInitializableProjectile
@@ -23,7 +23,7 @@ namespace SPYoyoMod.Core.Hooks
         /// Позволяет проинициализировать данные/объекты для снаряда.
         /// Вызывается один раз за жизнь снаряда, но при этом, в отличии от <see cref="Projectile.OnSpawn"/>,
         /// гарантированно вызывается для всех игроков.
-        /// Примечание: вызывается не в момент появления снаряда, а в момент первого вызова AI.
+        /// Вызов происходит перед первым <see cref="ProjectileLoader.ProjectileAI"/> или перед первой отрисовкой — в зависимости от того, что наступит раньше.
         /// </summary>
         void Initialize(Projectile proj);
 
@@ -75,29 +75,47 @@ namespace SPYoyoMod.Core.Hooks
                 return false;
             }
 
-            public override void Unload()
-            {
-                _initializableGlobals = null;
-            }
-
             public override void Load()
             {
                 MonoModHooks.Add(typeof(ProjectileLoader).GetMethod(nameof(ProjectileLoader.ProjectileAI), BindingFlags.Public | BindingFlags.Static), static (orig_ProjectileLoader_AI orig, Projectile proj) =>
                 {
-                    if (proj.TryGetGlobalProjectile(out InitializableProjectileImplementation globalProj) && !globalProj._initialized)
-                    {
-                        (proj.ModProjectile as IHook)?.Initialize(proj);
-
-                        foreach (IHook g in IHook._hook.Enumerate(proj))
-                        {
-                            g.Initialize(proj);
-                        }
-
-                        globalProj._initialized = true;
-                    }
-
+                    InvokeInitializeMethod(proj);
                     orig(proj);
                 });
+
+                if (Main.dedServ)
+                    return;
+
+                ModEvents.OnPreDraw += InitializeActiveProjectiles;
+            }
+
+            public override void Unload()
+            {
+                _initializableGlobals = null;
+
+                ModEvents.OnPreDraw -= InitializeActiveProjectiles;
+            }
+
+            private static void InitializeActiveProjectiles()
+            {
+                if (Main.gameMenu)
+                    return;
+
+                foreach (var proj in Main.ActiveProjectiles)
+                    InvokeInitializeMethod(proj);
+            }
+
+            private static void InvokeInitializeMethod(Projectile proj)
+            {
+                if (!proj.TryGetGlobalProjectile(out InitializableProjectileImplementation globalProj) || globalProj._initialized)
+                    return;
+
+                (proj.ModProjectile as IHook)?.Initialize(proj);
+
+                foreach (IHook g in IHook._hook.Enumerate(proj))
+                    g.Initialize(proj);
+
+                globalProj._initialized = true;
             }
 
             private delegate void orig_ProjectileLoader_AI(Projectile proj);

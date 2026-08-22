@@ -102,7 +102,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             _initCritChance = Projectile.CritChance;
 
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
@@ -133,7 +133,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _trailRenderer?.Dispose();
@@ -184,9 +184,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
         {
-            if (_trailRenderer is null || _shadowTrailRenderer is null)
-                return;
-
             BellowingThunderAssets.TrailEffect
                 .Prepare(parameters =>
                 {
@@ -213,9 +210,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            if (_stringRenderer is null)
-                return;
-
             var settings = new YoyoStringRendererSettings(
                 proj: Projectile,
                 start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
@@ -293,7 +287,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             _initCritChance = Projectile.CritChance;
 
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             Projectile.soundDelay = 12;
@@ -330,7 +324,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stripRenderer?.Dispose();
@@ -392,9 +386,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public void DrawLightning()
         {
-            if (_stripRenderer is null) //< Если он не null, то и _ringRenderer тоже
-                return;
-
             var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var ringThickness = TileUtils.TileSizeInPixels * 5f * _ringRadiusEasing.Evaluate(LifeTimeRatio);
 

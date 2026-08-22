@@ -58,7 +58,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
@@ -172,30 +172,27 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            if (_trailRenderer is not null)
-            {
-                CascadeAssets.TrailEffect
-                    .Prepare(parameters =>
-                    {
-                        parameters["Texture0"].SetValue(CascadeAssets.FlameTexture.Value);
-                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
-                        parameters["Color0"].SetValue(new Color(255, 255, 105).ToVector4());
-                        parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
-                        parameters["Color2"].SetValue(new Color(250, 0, 50).ToVector4());
-                        parameters["Color3"].SetValue(new Color(145, 25, 85).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Value.Width / 128.0f / 3.0f);
-                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
-                    })
-                    .Apply();
-
-                _trailRenderer.Render();
-
-                // Исправление отрисовки руки
-                if (proj.GetOwner().heldProj == proj.whoAmI)
+            CascadeAssets.TrailEffect
+                .Prepare(parameters =>
                 {
-                    Main.spriteBatch.End(out var spriteBatchSnapshot);
-                    Main.spriteBatch.Begin(spriteBatchSnapshot);
-                }
+                    parameters["Texture0"].SetValue(CascadeAssets.FlameTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(new Color(255, 255, 105).ToVector4());
+                    parameters["Color1"].SetValue(new Color(255, 80, 0).ToVector4());
+                    parameters["Color2"].SetValue(new Color(250, 0, 50).ToVector4());
+                    parameters["Color3"].SetValue(new Color(145, 25, 85).ToVector4());
+                    parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Value.Width / 128.0f / 3.0f);
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                })
+                .Apply();
+
+            _trailRenderer.Render();
+
+            // Исправление отрисовки руки
+            if (proj.GetOwner().heldProj == proj.whoAmI)
+            {
+                Main.spriteBatch.End(out var spriteBatchSnapshot);
+                Main.spriteBatch.Begin(spriteBatchSnapshot);
             }
 
             var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
@@ -210,9 +207,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            if (_stringRenderer is null)
-                return;
-
             var settings = new YoyoStringRendererSettings(
                 proj: proj,
                 start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
@@ -283,7 +277,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 20);
@@ -378,9 +372,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDraw(Color lightColor)
         {
-            if (_ringRenderer is null)
-                return;
-
             var thickness = (1f - LifeTimeRatio) * TileUtils.TileSizeInPixels * 5f;
             var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
 

@@ -78,7 +78,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
@@ -195,24 +195,21 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
         {
-            if (_trailRenderer is not null)
-            {
-                TheStellarThrowAssets.TrailEffect
-                    .Prepare(parameters =>
-                    {
-                        parameters["Texture0"].SetValue(TheStellarThrowAssets.FlameTexture.Value);
-                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
-                        parameters["Color0"].SetValue(new Color(255, 50, 160).ToVector4());
-                        parameters["Color1"].SetValue(new Color(170, 30, 90).ToVector4());
-                        parameters["Color2"].SetValue(new Color(50, 50, 255).ToVector4());
-                        parameters["Color3"].SetValue(new Color(60, 55, 90).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
-                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
-                    })
-                    .Apply();
+            TheStellarThrowAssets.TrailEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(TheStellarThrowAssets.FlameTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(new Color(255, 50, 160).ToVector4());
+                    parameters["Color1"].SetValue(new Color(170, 30, 90).ToVector4());
+                    parameters["Color2"].SetValue(new Color(50, 50, 255).ToVector4());
+                    parameters["Color3"].SetValue(new Color(60, 55, 90).ToVector4());
+                    parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                })
+                .Apply();
 
-                _trailRenderer.Render();
-            }
+            _trailRenderer.Render();
 
             var starTexture = TheStellarThrowAssets.StarTexture.Value;
             var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
@@ -240,9 +237,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            if (_stringRenderer is null)
-                return;
-
             var settings = new YoyoStringRendererSettings(
                 proj: Projectile,
                 start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
@@ -365,7 +359,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             _yToBecomeCollidable = (TargetIndex >= 0 && Main.npc[TargetIndex] is NPC target && target.active) ? (target.Top.Y + 2) : 0f;
 
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
@@ -379,7 +373,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _trailRenderer?.Dispose();
@@ -489,24 +483,21 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
         {
-            if (_trailRenderer is not null)
-            {
-                TheStellarThrowAssets.TrailEffect
-                    .Prepare(parameters =>
-                    {
-                        parameters["Texture0"].SetValue(TheStellarThrowAssets.FlameTexture.Value);
-                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
-                        parameters["Color0"].SetValue(Style.TrailStartOne.ToVector4());
-                        parameters["Color1"].SetValue(Style.TrailStartZero.ToVector4());
-                        parameters["Color2"].SetValue(Style.TrailEndOne.ToVector4());
-                        parameters["Color3"].SetValue(Style.TrailEndZero.ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
-                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
-                    })
-                    .Apply();
+            TheStellarThrowAssets.TrailEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(TheStellarThrowAssets.FlameTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(Style.TrailStartOne.ToVector4());
+                    parameters["Color1"].SetValue(Style.TrailStartZero.ToVector4());
+                    parameters["Color2"].SetValue(Style.TrailEndOne.ToVector4());
+                    parameters["Color3"].SetValue(Style.TrailEndZero.ToVector4());
+                    parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                })
+                .Apply();
 
-                _trailRenderer.Render();
-            }
+            _trailRenderer.Render();
 
             var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var starTexture = TheStellarThrowAssets.StarTexture.Value;

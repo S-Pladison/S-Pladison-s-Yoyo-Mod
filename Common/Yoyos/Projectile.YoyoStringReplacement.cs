@@ -33,7 +33,7 @@ namespace SPYoyoMod.Common.Yoyos
                 cursor.Emit(OpCodes.Ldarg_2);
                 cursor.EmitDelegate((Projectile proj, Vector2 mountedCenter) =>
                 {
-                    if (!(proj.IsYoyo() || proj.IsCounterweight()) || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj) || globalProj._stringRenderer is null)
+                    if (!(proj.IsYoyo() || proj.IsCounterweight()) || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj))
                         return;
 
                     ref var renderer = ref globalProj._stringRenderer;

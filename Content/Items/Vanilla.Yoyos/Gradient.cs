@@ -112,7 +112,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
@@ -122,7 +122,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _stripRenderer?.Dispose();
@@ -203,9 +203,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDraw(Color lightColor)
         {
-            if (_stripRenderer is null)
-                return;
-
             var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
 
             if (opacity <= 0f)
@@ -287,7 +284,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
@@ -301,7 +298,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnKill(int timeLeft)
         {
-            if (Main.netMode == NetmodeID.Server)
+            if (Main.dedServ)
                 return;
 
             _trailRenderer?.Dispose();
@@ -403,23 +400,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
 
-            if (_trailRenderer is not null)
-            {
-                GradientAssets.TrailEffect
-                    .Prepare(parameters =>
-                    {
-                        parameters["Texture0"].SetValue(GradientAssets.FlameTexture.Value);
-                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
-                        parameters["Color0"].SetValue(Color.White.ToVector4());
-                        parameters["Color1"].SetValue(new Color(195, 165, 10).ToVector4());
-                        parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / GradientAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
-                        parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly + Projectile.whoAmI * 15.08f);
-                        parameters["Opacity"].SetValue(opacity);
-                    })
-                    .Apply();
+            GradientAssets.TrailEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(GradientAssets.FlameTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(Color.White.ToVector4());
+                    parameters["Color1"].SetValue(new Color(195, 165, 10).ToVector4());
+                    parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / GradientAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly + Projectile.whoAmI * 15.08f);
+                    parameters["Opacity"].SetValue(opacity);
+                })
+                .Apply();
 
-                _trailRenderer.Render();
-            }
+            _trailRenderer.Render();
 
             var position = Projectile.Center - Main.screenPosition;
 
