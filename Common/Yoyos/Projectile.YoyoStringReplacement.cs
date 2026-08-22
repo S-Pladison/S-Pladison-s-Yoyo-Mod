@@ -36,13 +36,8 @@ namespace SPYoyoMod.Common.Yoyos
                     if (!(proj.IsYoyo() || proj.IsCounterweight()) || !proj.TryGetGlobalProjectile(out YoyoStringReplacementGlobalProjectile globalProj))
                         return;
 
-                    ref var renderer = ref globalProj._stringRenderer;
-
-                    var context = new YoyoStringRendererContext(
-                        proj: proj,
-                        start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
-                        offset: -Main.screenPosition
-                    );
+                    var renderer = globalProj._stringRenderer;
+                    var context = YoyoStringRendererContext.FromProjectile(proj, mountedCenter);
 
                     renderer.Render(Main.spriteBatch, context);
 

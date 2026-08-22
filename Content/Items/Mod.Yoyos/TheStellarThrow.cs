@@ -237,13 +237,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void PostDrawYoyoString(Vector2 mountedCenter)
         {
-            var context = new YoyoStringRendererContext(
-                proj: Projectile,
-                start: mountedCenter + Projectile.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
-                offset: -Main.screenPosition
-            );
-
-            _stringRenderer.Render(Main.spriteBatch, context);
+            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(Projectile, mountedCenter));
         }
     }
 

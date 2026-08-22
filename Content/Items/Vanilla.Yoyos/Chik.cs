@@ -65,13 +65,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            var context = new YoyoStringRendererContext(
-                proj: proj,
-                start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
-                offset: -Main.screenPosition
-            );
-
-            _stringRenderer.Render(Main.spriteBatch, context);
+            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(proj, mountedCenter));
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)

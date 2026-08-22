@@ -176,13 +176,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (_stringRenderer is null)
                 return;
 
-            var context = new YoyoStringRendererContext(
-                proj: proj,
-                start: mountedCenter + proj.GetOwner()?.gfxOffY * Vector2.UnitY ?? Vector2.Zero,
-                offset: -Main.screenPosition
-            );
-
-            _stringRenderer.Render(Main.spriteBatch, context);
+            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(proj, mountedCenter));
         }
     }
 
