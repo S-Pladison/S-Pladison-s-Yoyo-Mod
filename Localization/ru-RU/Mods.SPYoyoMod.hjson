@@ -13,6 +13,7 @@ Projectiles: {
 	// GradientStarProjectile.DisplayName: Gradient Star Projectile
 	// BlackholeProjectile.DisplayName: Blackhole Projectile
 	// SoulTormentorProjectile.DisplayName: Soul Tormentor Projectile
+	// Code1DigitalWaveProjectile.DisplayName: Code1 Digital Wave Projectile
 }
 
 NPCs: {
