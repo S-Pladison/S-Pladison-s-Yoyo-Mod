@@ -1,7 +1,6 @@
 using SPYoyoMod.Content.Items.Mod.Accessories;
 using SPYoyoMod.Content.Items.Mod.Miscellaneous;
 using SPYoyoMod.Content.Items.Mod.Yoyos;
-using SPYoyoMod.Core;
 using SPYoyoMod.Core.ModSupport;
 using SPYoyoMod.Utils;
 using Terraria;
@@ -11,7 +10,6 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
-    [LoadBefore]
     public sealed class ItemRecipesSystem : ModSystem
     {
         public static LocalizedText MechanicalBossSoulGroupText { get; private set; }

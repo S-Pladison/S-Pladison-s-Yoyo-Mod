@@ -14,7 +14,7 @@ namespace SPYoyoMod.Utils
         public static Matrix Projection { get; private set; }
         public static Matrix Transform { get => Main.GameViewMatrix.TransformationMatrix; }
 
-        [LoadBefore]
+        [LoadBefore] //< Для того, чтобы подписка на ModEvents.OnPostUpdateCameraPosition вызывалась раньше остальных...
         private sealed class GameMatricesHandler : ILoadable
         {
             private static void RecalculateMatrices()
