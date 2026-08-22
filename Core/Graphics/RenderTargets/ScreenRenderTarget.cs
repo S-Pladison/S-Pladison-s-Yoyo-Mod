@@ -88,14 +88,14 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
 
             private static void ResizeTargets(Point screenSize)
             {
-                Main.QueueMainThreadAction(() =>
+                if (screenSize.X <= 0 || screenSize.Y <= 0)
+                    return;
+
+                foreach (var screenTarget in ScreenTargets)
                 {
-                    foreach (var screenTarget in ScreenTargets)
-                    {
-                        var size = GetTargetSize(screenSize, screenTarget._scale);
-                        screenTarget._managedTarget.Resize(size.X, size.Y);
-                    }
-                });
+                    var size = GetTargetSize(screenSize, screenTarget._scale);
+                    screenTarget._managedTarget.Resize(size.X, size.Y);
+                }
             }
 
             private static Point GetTargetSize(Point screenSize, ScreenRenderTargetScale scale)
