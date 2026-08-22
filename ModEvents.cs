@@ -117,32 +117,38 @@ namespace SPYoyoMod
         private static void ModOnPreDraw(GameTime _)
             => ModEvents.OnPreDraw();
 
-        [LoadBefore]
+        [LoadAfter(typeof(ModEvents))]
         private sealed class EventSystem : ModSystem
         {
             private Point _savedScreenSize;
-            private bool _savedGameInactive;
 
             public override void Load()
             {
-                // - Почему не используется только ванильный Main.OnResolutionChanged?
-                // При загрузке мода с разрешением происходят какиет проблемы,
-                // а вызова OnResolutionChanged не происходит.
-                // Данный способ хоть и добавляет дополнительную постоянную проверку,
-                // но гарантирует, что размер экрана действительно был изменен.
-                ModEvents.OnPreDraw += () => ResolutionChangedHandler(Main.ScreenSize.ToVector2());
+                if (Main.dedServ)
+                    return;
 
-                Main.OnResolutionChanged += ResolutionChangedHandler;
+                ModEvents.OnPreDraw += CheckResolution;
+                Main.OnResolutionChanged += VanillaResolutionChanged;
             }
 
             public override void Unload()
-                => Main.OnResolutionChanged -= ResolutionChangedHandler;
+            {
+                if (Main.dedServ)
+                    return;
+
+                Main.OnResolutionChanged -= VanillaResolutionChanged;
+                ModEvents.OnPreDraw -= CheckResolution;
+            }
 
             public override void PostAddRecipes()
                 => ModEvents.OnPostSetupRecipes(Main.recipe);
 
             public override void PostSetupContent()
-                => ModEvents.OnPostSetupContent();
+            {
+                CheckResolution();
+
+                ModEvents.OnPostSetupContent();
+            }
 
             public override void OnWorldUnload()
                 => ModEvents.OnWorldUnload();
@@ -153,15 +159,45 @@ namespace SPYoyoMod
             public override void PostUpdateEverything()
                 => ModEvents.OnPostUpdateEverything();
 
-            private void ResolutionChangedHandler(Vector2 screenSize)
+            private void VanillaResolutionChanged(Vector2 _)
             {
-                if (_savedScreenSize != Main.ScreenSize || _savedGameInactive != Main.gameInactive)
-                {
-                    _savedScreenSize = Main.ScreenSize;
-                    _savedGameInactive = Main.gameInactive;
+                CheckResolution();
+            }
 
-                    ModEvents.OnResolutionChanged(Main.ScreenSize);
+            private void CheckResolution()
+            {
+                var screenSize = GetActualScreenSize();
+
+                if (screenSize.X <= 0 || screenSize.Y <= 0)
+                    return;
+
+                if (_savedScreenSize == screenSize)
+                    return;
+
+                _savedScreenSize = screenSize;
+
+                ModEvents.OnResolutionChanged(screenSize);
+            }
+
+            private static Point GetActualScreenSize()
+            {
+                var width = Main.screenWidth;
+                var height = Main.screenHeight;
+                var device = Main.graphics?.GraphicsDevice;
+
+                if (device is not null)
+                {
+                    var backBufferWidth = device.PresentationParameters.BackBufferWidth;
+                    var backBufferHeight = device.PresentationParameters.BackBufferHeight;
+
+                    if (backBufferWidth > 0 && backBufferHeight > 0)
+                    {
+                        width = backBufferWidth;
+                        height = backBufferHeight;
+                    }
                 }
+
+                return new Point(width, height);
             }
         }
 
@@ -183,7 +219,7 @@ namespace SPYoyoMod
             }
         }
 
-        [LoadBefore]
+        [LoadAfter(typeof(ModEvents))]
         private sealed class EventPlayer : ModPlayer
         {
             public override void PlayerConnect()
@@ -197,8 +233,9 @@ namespace SPYoyoMod
 
             public override void OnEnterWorld()
             {
-                // Костыль, исправляющий проблему с ошибочным разрешением экранных целей рендеринга при входе игрока в мир
-                ModEvents.OnResolutionChanged(Main.ScreenSize);
+                // После входа в мир устройство могло сброситься, а Main.ScreenSize —
+                // ещё не совпадать с backbuffer. Нельзя слать ScreenSize напрямую.
+                ModContent.GetInstance<EventSystem>()?.RequestResolutionRefresh();
             }
         }
     }
