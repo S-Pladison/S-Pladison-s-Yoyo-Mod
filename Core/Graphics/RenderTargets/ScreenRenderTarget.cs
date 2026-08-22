@@ -63,8 +63,7 @@ namespace SPYoyoMod.Core.Graphics.RenderTargets
         public static implicit operator RenderTarget2D(ScreenRenderTarget target)
             => target.Target;
 
-        [Autoload(Side = ModSide.Client)]
-        [LoadPriority(sbyte.MaxValue)]
+        [Autoload(Side = ModSide.Client), LoadBefore]
         private class ScreenRenderTargetSystem : ModSystem
         {
             public static List<ScreenRenderTarget> ScreenTargets = [];

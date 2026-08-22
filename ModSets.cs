@@ -4,7 +4,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod
 {
-    [LoadPriority(sbyte.MinValue)]
+    [LoadAfter]
     public sealed class ModSets : ILoadable
     {
         public sealed class Items

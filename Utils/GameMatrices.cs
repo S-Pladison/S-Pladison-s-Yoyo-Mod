@@ -14,7 +14,7 @@ namespace SPYoyoMod.Utils
         public static Matrix Projection { get; private set; }
         public static Matrix Transform { get => Main.GameViewMatrix.TransformationMatrix; }
 
-        [LoadPriority(sbyte.MaxValue)]
+        [LoadBefore]
         private sealed class GameMatricesHandler : ILoadable
         {
             private static void RecalculateMatrices()

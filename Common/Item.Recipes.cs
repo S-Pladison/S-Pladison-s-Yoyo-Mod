@@ -11,7 +11,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
-    [LoadPriority(sbyte.MaxValue)]
+    [LoadBefore]
     public sealed class ItemRecipesSystem : ModSystem
     {
         public static LocalizedText MechanicalBossSoulGroupText { get; private set; }

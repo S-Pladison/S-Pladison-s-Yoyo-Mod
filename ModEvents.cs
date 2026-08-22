@@ -10,7 +10,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod
 {
-    [LoadPriority(sbyte.MaxValue)]
+    [LoadBefore]
     public sealed class ModEvents : ILoadable
     {
         // Mod
@@ -117,7 +117,7 @@ namespace SPYoyoMod
         private static void ModOnPreDraw(GameTime _)
             => ModEvents.OnPreDraw();
 
-        [LoadPriority(sbyte.MaxValue)]
+        [LoadBefore]
         private sealed class EventSystem : ModSystem
         {
             private Point _savedScreenSize;
@@ -183,7 +183,7 @@ namespace SPYoyoMod
             }
         }
 
-        [LoadPriority(sbyte.MaxValue)]
+        [LoadBefore]
         private sealed class EventPlayer : ModPlayer
         {
             public override void PlayerConnect()

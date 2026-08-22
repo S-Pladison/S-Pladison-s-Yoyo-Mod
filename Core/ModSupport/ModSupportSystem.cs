@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.ModSupport
 {
-    [LoadPriority(sbyte.MaxValue)]
+    [LoadBefore]
     public abstract class ModSupportSystem<TMe>(string internalName = default) : ModSystem where TMe : ModSupportSystem<TMe>
     {
         private readonly string _potentialInternalName = internalName;

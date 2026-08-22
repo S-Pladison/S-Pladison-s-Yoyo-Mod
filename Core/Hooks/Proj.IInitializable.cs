@@ -27,7 +27,7 @@ namespace SPYoyoMod.Core.Hooks
         /// </summary>
         void Initialize(Projectile proj);
 
-        [LoadPriority(sbyte.MinValue)]
+        [LoadAfter]
         private sealed class InitializableProjectileImplementation : GlobalProjectile
         {
             private static GlobalProjectile[] _initializableGlobals;

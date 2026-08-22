@@ -19,29 +19,24 @@ namespace SPYoyoMod
 
         public override void Load()
         {
-            var loadedInstances = new PriorityQueue<ILoadable, sbyte>(
-                Comparer<sbyte>.Create((a, b) =>
-                {
-                    return b.CompareTo(a);
-                })
-            );
-
-            LoaderUtils.ForEachAndAggregateExceptions((
+            var typesToLoad = LoadOrder.Sort(
                 from t in AssemblyManager.GetLoadableTypes(Code)
                 where !t.IsAbstract && !t.ContainsGenericParameters
                 where t.IsAssignableTo(typeof(ILoadable))
                 where t.GetConstructor(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, Type.EmptyTypes) != null
                 where AutoloadAttribute.GetValue(t).NeedsAutoloading
-                select t).OrderBy((Type type) => type.FullName, StringComparer.InvariantCulture), delegate (Type t)
-                {
-                    loadedInstances.Enqueue(Activator.CreateInstance(t, true) as ILoadable, LoadPriorityAttribute.GetValue(t).Value);
-                }
+                select t
             );
 
-            while (loadedInstances.TryDequeue(out var name, out var priority))
+            var loadedInstances = new List<ILoadable>(typesToLoad.Count);
+
+            LoaderUtils.ForEachAndAggregateExceptions(typesToLoad, t =>
             {
-                AddContent(name);
-            }
+                loadedInstances.Add(Activator.CreateInstance(t, true) as ILoadable);
+            });
+
+            foreach (var instance in loadedInstances)
+                AddContent(instance);
         }
 
         public override void HandlePacket(BinaryReader reader, int sender)
