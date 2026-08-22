@@ -27,7 +27,7 @@ namespace SPYoyoMod.Core.Hooks
         /// </summary>
         void Initialize(Projectile proj);
 
-        [LoadAfter]
+        [LoadBefore] //< Для того, чтобы подписка на ModEvents.OnPreDraw вызывалась раньше остальных...
         private sealed class InitializableProjectileImplementation : GlobalProjectile
         {
             private static GlobalProjectile[] _initializableGlobals;
@@ -83,17 +83,16 @@ namespace SPYoyoMod.Core.Hooks
                     orig(proj);
                 });
 
-                if (Main.dedServ)
-                    return;
-
-                ModEvents.OnPreDraw += InitializeActiveProjectiles;
+                if (!Main.dedServ)
+                    ModEvents.OnPreDraw += InitializeActiveProjectiles;
             }
 
             public override void Unload()
             {
-                _initializableGlobals = null;
+                if (!Main.dedServ)
+                    ModEvents.OnPreDraw -= InitializeActiveProjectiles;
 
-                ModEvents.OnPreDraw -= InitializeActiveProjectiles;
+                _initializableGlobals = null;
             }
 
             private static void InitializeActiveProjectiles()
