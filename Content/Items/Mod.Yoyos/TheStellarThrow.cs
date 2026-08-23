@@ -31,6 +31,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly SoundStyle StarSound = SoundID.Item9;
+        public static readonly SoundStyle TileHitSound = SoundID.Dig;
     }
 
     public sealed class TheStellarThrowItem : YoyoBaseItem
@@ -435,7 +437,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             {
                 Projectile.soundDelay = GeneralUtils.SecondsToTicks(Main.rand.NextFloat(1.0f, 2.0f));
 
-                SoundEngine.PlaySound(in SoundID.Item9, Projectile.Center);
+                SoundEngine.PlaySound(in TheStellarThrowAssets.StarSound, Projectile.Center);
             }
         }
 
@@ -464,7 +466,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             Projectile.velocity = Vector2.Zero;
 
-            SoundEngine.PlaySound(SoundID.Dig, Projectile.Center);
+            SoundEngine.PlaySound(TheStellarThrowAssets.TileHitSound, Projectile.Center);
             Projectile.NewProjectile(Projectile.GetSource_FromThis(), Projectile.Center, Vector2.Zero, ModContent.ProjectileType<TheStellarThrowHitProjectile>(), 0, 0, Projectile.owner, StyleIndex);
 
             return true;

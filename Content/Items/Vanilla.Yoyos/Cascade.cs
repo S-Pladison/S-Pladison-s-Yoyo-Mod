@@ -32,6 +32,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
         public static readonly LazyAsset<Effect> RingEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Ring");
         public static readonly SoundStyle StartChargingSound = new($"{YoyoPath}Sound_StartCharging");
+        public static readonly SoundStyle ExplosionSound = SoundID.Item14;
     }
 
     public sealed class CascadeItem : VanillaYoyoBaseItem
@@ -299,7 +300,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 DistanceFalloff = 16f * 25f
             });
 
-            SoundEngine.PlaySound(SoundID.Item14, proj.Center);
+            SoundEngine.PlaySound(CascadeAssets.ExplosionSound, proj.Center);
         }
 
         public override void OnKill(int timeLeft)

@@ -43,6 +43,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly LazyAsset<Effect> ScreenEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Screen");
         public static readonly LazyAsset<Effect> SilhouetteEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Silhouette");
         public static readonly SoundStyle LightningStrikeSound = new($"{YoyoPath}Sound_LightningStrike");
+        public static readonly SoundStyle LightningZapSound = SoundID.DD2_LightningAuraZap;
     }
 
     public sealed class BellowingThunderItem : YoyoBaseItem
@@ -345,7 +346,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             {
                 Projectile.soundDelay = 12;
 
-                SoundEngine.PlaySound(SoundID.DD2_LightningAuraZap with { PitchVariance = 0.4f }, Projectile.Center);
+                SoundEngine.PlaySound(BellowingThunderAssets.LightningZapSound with { PitchVariance = 0.4f }, Projectile.Center);
             }
         }
 

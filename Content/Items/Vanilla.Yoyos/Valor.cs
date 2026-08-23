@@ -36,6 +36,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/CloudNoise");
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
         public static readonly LazyAsset<Effect> OutlineEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Outline");
+        public static readonly SoundStyle ChainSound = SoundID.Unlock;
     }
 
     public sealed class ValorItem : VanillaYoyoBaseItem
@@ -508,7 +509,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             {
                 if (Data is null)
                 {
-                    SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+                    SoundEngine.PlaySound(ValorAssets.ChainSound, npc.Center);
                     Data = updatedData;
                     return;
                 }
@@ -521,7 +522,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             if (Data is not null)
             {
-                SoundEngine.PlaySound(SoundID.Unlock, npc.Center);
+                SoundEngine.PlaySound(ValorAssets.ChainSound, npc.Center);
                 _timeSinceLastTileCheck = TileCheckFrequency;
                 Data = null;
                 return;

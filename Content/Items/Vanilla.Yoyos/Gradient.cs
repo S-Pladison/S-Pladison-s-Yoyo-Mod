@@ -33,6 +33,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> GlowCircleTexture = LazyAsset<Texture2D>.From($"{AssetPath}/Glow_Circle");
         public static readonly LazyAsset<Effect> GodraysEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Godrays", AssetRequestMode.ImmediateLoad);
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly SoundStyle GodraysSound = SoundID.DD2_BetsyWindAttack;
+        public static readonly SoundStyle DaggerSound = SoundID.DD2_SkyDragonsFuryShot;
     }
 
     public sealed class GradientItem : VanillaYoyoBaseItem
@@ -117,7 +119,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
 
-            SoundEngine.PlaySound(SoundID.DD2_BetsyWindAttack with { Pitch = 1f, }, Projectile.Center);
+            SoundEngine.PlaySound(GradientAssets.GodraysSound with { Pitch = 1f, }, Projectile.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -303,7 +305,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             _trailRenderer?.Dispose();
 
-            SoundEngine.PlaySound(SoundID.DD2_SkyDragonsFuryShot with
+            SoundEngine.PlaySound(GradientAssets.DaggerSound with
             {
                 Pitch = 1f,
                 PitchVariance = 0.2f
