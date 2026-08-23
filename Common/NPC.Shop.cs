@@ -17,7 +17,7 @@ namespace SPYoyoMod.Common
 
         public override void SetupTravelShop(int[] shop, ref int nextSlot)
         {
-            ModifyTravellingMerchantShop(shop, ref nextSlot);
+            ModifyTravelingMerchantShop(shop, ref nextSlot);
         }
 
         private static void ModifySkeletonMerchantShop(NPCShop shop)
@@ -26,7 +26,7 @@ namespace SPYoyoMod.Common
                 entry.Disable();
         }
 
-        private static void ModifyTravellingMerchantShop(int[] shop, ref int nextSlot)
+        private static void ModifyTravelingMerchantShop(int[] shop, ref int nextSlot)
         {
             var hasCode1 = false;
             var code2Index = -1;
