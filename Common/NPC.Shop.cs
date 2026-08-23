@@ -1,7 +1,5 @@
-﻿using Terraria;
-using Terraria.ID;
+﻿using Terraria.ID;
 using Terraria.ModLoader;
-using static SPYoyoMod.ModSets;
 
 namespace SPYoyoMod.Common
 {
