@@ -121,8 +121,9 @@ namespace SPYoyoMod.Utils
             }
 
             ref var easingData = ref _easings[easingIndex];
+            var localT = (progress - _shiftedDurations[easingIndex] + easingData.Duration) / easingData.Duration;
 
-            return MathHelper.Lerp(easingData.StartY, easingData.EndY, (progress - _shiftedDurations[easingIndex] + easingData.Duration) / easingData.Duration);
+            return MathHelper.Lerp(easingData.StartY, easingData.EndY, easingData.Easing(localT));
         }
 
         /// <summary>
