@@ -74,8 +74,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, godraysType, proj.damage, proj.knockBack, proj.owner, target.whoAmI);
-
-            proj.GetOwner().ownedProjectileCounts[godraysType]++;
         }
     }
 

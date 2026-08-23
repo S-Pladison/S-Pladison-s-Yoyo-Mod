@@ -86,6 +86,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (owner.ownedProjectileCounts[waveType] > 0)
                 return;
 
+            foreach (var otherProj in Main.ActiveProjectiles)
+            {
+                if (otherProj.type != waveType)
+                    continue;
+
+                if ((otherProj.As<Code1DigitalWaveProjectile>()?.TargetWhoAmI ?? -1) == target.whoAmI)
+                    return;
+            }
+
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, waveType, proj.damage, 0f, proj.owner, target.whoAmI);
 
             code1Player.SetWaveCooldown();
