@@ -7,6 +7,7 @@ using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
+using System;
 using Terraria;
 using Terraria.Audio;
 using Terraria.Graphics.Effects;
@@ -26,11 +27,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
         public static readonly LazyAsset<Effect> ScreenEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Screen");
+        public static readonly SoundStyle InfectSound = new("Terraria/Sounds/Item_182");
+        public static readonly SoundStyle BurstSound = SoundID.Item77;
     }
 
     public sealed class Code1Item : VanillaYoyoBaseItem
     {
-        public static readonly int WaveCooldown = GeneralUtils.SecondsToTicks(6f);
+        public static readonly int WaveCooldown = GeneralUtils.SecondsToTicks(2f);
+        public static readonly int WaveApplyChanceDenominator = 5;
+        public static readonly int WaveMinRemainingHits = 3;
 
         public override int ItemType => ItemID.Code1;
 
@@ -62,10 +67,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!hit.Crit)
+            if (!Main.rand.NextBool(Code1Item.WaveApplyChanceDenominator))
                 return;
 
-            if (!proj.IsLocalPlayerAsOwner())
+            var remainingLife = target.IsChild(out var parent) ? parent.life : target.life;
+
+            if (remainingLife <= damageDone * Code1Item.WaveMinRemainingHits)
                 return;
 
             var owner = proj.GetOwner();
@@ -125,36 +132,70 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class Code1DigitalWaveProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity
     {
-        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.65f);
-        public static readonly int NpcOutlineLifeTime = GeneralUtils.SecondsToTicks(0.5f);
-        public static readonly float MaxRadius = TileUtils.TileSizeInPixels * 16f;
-        public static readonly Color GlowColor = Code1Projectile.GlowColor;
-        public static readonly Color GlitchColor = new(255, 55, 190);
-        public static readonly EasingBuilder StrengthEasing = new(
-            (EasingFunctions.OutQuad, 0.1f, 0f, 1f),
-            (EasingFunctions.Linear, 0.18f, 1f, 0.75f),
-            (EasingFunctions.InQuad, 0.32f, 0.75f, 0.18f),
-            (EasingFunctions.InCubic, 0.4f, 0.18f, 0f)
+        private enum State
+        {
+            Appear,
+            Hold,
+            Compress,
+            Burst
+        }
+
+        public static readonly float MinChargeRadius = TileUtils.TileSizeInPixels * 3f;
+        public static readonly float MaxWaveRadius = TileUtils.TileSizeInPixels * 16f;
+
+        private static readonly EasingBuilder _npcOutlineEasing = new(
+            (EasingFunctions.OutQuad, 0.08f, 0f, 1f),
+            (EasingFunctions.Linear, 0.75f, 1f, 1f),
+            (EasingFunctions.InCubic, 0.17f, 1f, 0f)
         );
-        public static readonly EasingBuilder NpcOutlineEasing = new(
-            (EasingFunctions.OutQuad, 0.12f, 0f, 1f),
-            (EasingFunctions.Linear, 0.48f, 1f, 0.8f),
-            (EasingFunctions.InCubic, 0.4f, 0.8f, 0f)
-        );
+
+        private State _state = State.Appear;
+        private int _stateTimer;
+        private float _chargeRadius = MinChargeRadius;
 
         public override string Texture => Code1Assets.InvisiblePath;
         public int TargetWhoAmI => (int)Projectile.ai[0];
-        public float LifeTimeRatio => 1f - Projectile.timeLeft / (float)InitTimeLeft;
-        public float CurrentRadius => MaxRadius * EasingFunctions.OutCubic(LifeTimeRatio);
-        public float Strength => StrengthEasing.Evaluate(LifeTimeRatio);
+        public bool IsBursting => _state == State.Burst;
+        public float ChargeRadius => _chargeRadius;
+        public float CompressRadius => MathHelper.Max(8f, ChargeRadius * 0.12f);
+        public float StateProgress => MathHelper.Clamp(_stateTimer / (float)GetStateDuration(_state), 0f, 1f);
+
+        public float Radius => _state switch
+        {
+            State.Appear => ChargeRadius * EasingFunctions.OutCubic(StateProgress),
+            State.Hold => ChargeRadius,
+            State.Compress => MathHelper.Lerp(ChargeRadius, CompressRadius, EasingFunctions.InCubic(StateProgress)),
+            State.Burst => MathHelper.Lerp(CompressRadius, MaxWaveRadius, EasingFunctions.OutExpo(StateProgress)),
+            _ => ChargeRadius
+        };
+
+        public float Strength => _state switch
+        {
+            State.Appear => EasingFunctions.OutQuad(StateProgress),
+            State.Burst when StateProgress < 0.4f => MathHelper.Lerp(1f, 0.55f, StateProgress / 0.4f),
+            State.Burst => MathHelper.Lerp(0.55f, 0f, EasingFunctions.OutCubic((StateProgress - 0.4f) / 0.6f)),
+            _ => 1f
+        };
+
+        public float Fill => IsBursting ? 0f : 1f; //< Кольцо или круг
+
+        public override void SetStaticDefaults()
+        {
+            ProjectileID.Sets.DrawScreenCheckFluff[Type] = (int)MaxWaveRadius;
+        }
 
         public override void SetDefaults()
         {
-            Projectile.DefaultToVisualEffect();
-
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
-            Projectile.timeLeft = InitTimeLeft;
+
+            Projectile.width = (int)(MaxWaveRadius * 2);
+            Projectile.height = (int)(MaxWaveRadius * 2);
+            Projectile.timeLeft = GetStateDuration(State.Appear) + GetStateDuration(State.Hold) + GetStateDuration(State.Compress) + GetStateDuration(State.Burst);
             Projectile.hide = true;
+            Projectile.friendly = true;
+            Projectile.tileCollide = false;
+            Projectile.ignoreWater = true;
+            Projectile.penetrate = -1;
 
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
@@ -162,6 +203,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IInitializableProjectile.Initialize(Projectile _)
         {
+            if (TryGetTarget(out var npc))
+                RefreshChargeFromTarget(npc);
+
             if (Main.dedServ)
                 return;
 
@@ -169,21 +213,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             ModContent.GetInstance<Code1ScreenEffectHandler>()?.Add(Projectile);
 
-            SoundEngine.PlaySound(SoundID.Item77 with { Pitch = 0.55f, PitchVariance = 0.12f, Volume = 0.4f }, Projectile.Center);
-
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
-            {
-                Position = Projectile.Center,
-                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
-                Strength = 1.6f,
-                VibrationCyclesPerSecond = 5f,
-                Frames = 5,
-                DistanceFalloff = TileUtils.TileSizeInPixels * 28f,
-                UniqueIdentity = $"{nameof(SPYoyoMod)}:Code1"
-            });
-
-            for (var i = 0; i < 10; i++)
-                SpawnWaveParticle(0f, 1.8f);
+            SoundEngine.PlaySound(Code1Assets.InfectSound with { Pitch = 0.7f, PitchVariance = 0.08f }, Projectile.Center);
         }
 
         public override void OnKill(int timeLeft)
@@ -196,38 +226,35 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void AI()
         {
-            if (Main.dedServ)
+            if (!IsBursting)
+            {
+                if (TryGetTarget(out var npc))
+                    RefreshChargeFromTarget(npc);
+                else
+                    SetState(State.Burst);
+            }
+
+            TickState();
+
+            if (Main.dedServ || IsBursting)
                 return;
 
-            if (Main.rand.NextBool(2))
-                SpawnWaveParticle(CurrentRadius, 1.1f);
+            SpawnChargeParticle();
         }
 
         public override bool ShouldUpdatePosition()
             => false;
 
         public override bool? CanDamage()
-            => true;
-
-        public override bool? CanHitNPC(NPC target)
-        {
-            if (target.whoAmI == TargetWhoAmI)
-                return false;
-
-            return null;
-        }
+            => IsBursting;
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            var closest = Terraria.Utils.ClosestPointInRect(targetHitbox, Projectile.Center);
-            var radius = CurrentRadius;
-
-            return Vector2.DistanceSquared(Projectile.Center, closest) <= radius * radius;
-        }
+            => CollisionUtils.CheckRectanglevCircle(targetHitbox, Projectile.Center, Radius);
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.HitDirectionOverride = target.Center.X >= Projectile.Center.X ? 1 : -1;
+            modifiers.SetCrit();
         }
 
         public override bool? CanCutTiles()
@@ -235,36 +262,127 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IEmitLightEntity.EmitLight(Entity _)
         {
-            Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * Strength * 0.35f);
+            Lighting.AddLight(Projectile.Center, GetBurstGlowColor().ToVector3() * Strength * 0.35f);
         }
 
-        public Vector4 PackScreenWave()
-            => new(Projectile.Center.X, Projectile.Center.Y, CurrentRadius, Strength);
+        private static int GetStateDuration(State state) => state switch
+        {
+            State.Appear => GeneralUtils.SecondsToTicks(0.12f),
+            State.Hold => GeneralUtils.SecondsToTicks(0.88f),
+            State.Compress => GeneralUtils.SecondsToTicks(0.2f),
+            State.Burst => GeneralUtils.SecondsToTicks(0.8f),
+            _ => 1
+        };
+
+        private void TickState()
+        {
+            _stateTimer++;
+
+            if (_stateTimer < GetStateDuration(_state))
+                return;
+
+            switch (_state)
+            {
+                case State.Appear:
+                    SetState(State.Hold);
+                    break;
+                case State.Hold:
+                    SetState(State.Compress);
+                    break;
+                case State.Compress:
+                    SetState(State.Burst);
+                    break;
+                case State.Burst:
+                    Projectile.Kill();
+                    break;
+            }
+        }
+
+        private void SetState(State state)
+        {
+            var startBurst = state == State.Burst && _state != State.Burst;
+
+            _state = state;
+            _stateTimer = 0;
+
+            if (startBurst)
+                OnStartBurst();
+        }
+
+        private void RefreshChargeFromTarget(NPC npc)
+        {
+            Projectile.Center = npc.Center;
+
+            var size = (npc.width + npc.height) * 0.5f;
+            _chargeRadius = MinChargeRadius * MathF.Sqrt(Math.Max(size / MinChargeRadius, 1f));
+        }
+
+        private void OnStartBurst()
+        {
+            if (Main.dedServ)
+                return;
+
+            SoundEngine.PlaySound(Code1Assets.BurstSound with { Pitch = 0.55f, PitchVariance = 0.12f }, Projectile.Center);
+
+            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
+            {
+                Position = Projectile.Center,
+                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
+                Strength = 1.6f,
+                VibrationCyclesPerSecond = 5f,
+                Frames = 5,
+                DistanceFalloff = TileUtils.TileSizeInPixels * 28f,
+                UniqueIdentity = $"{nameof(SPYoyoMod)}:Code1"
+            });
+
+            SpawnExplosionParticles();
+        }
+
+        private bool TryGetTarget(out NPC npc)
+        {
+            npc = null;
+
+            if (!Main.npc.IndexInRange(TargetWhoAmI))
+                return false;
+
+            npc = Main.npc[TargetWhoAmI];
+            return npc is not null && npc.active && npc.life > 0;
+        }
 
         private void TryOutlineTarget()
         {
-            if (!Main.npc.IndexInRange(TargetWhoAmI))
-                return;
-
-            var npc = Main.npc[TargetWhoAmI];
-
-            if (npc is null || !npc.active || npc.life <= 0)
+            if (!TryGetTarget(out var npc))
                 return;
 
             NPCEffectManager.Outline(new NPCEffectManager.OutlineSettings()
             {
                 NpcWhoAmI = npc.whoAmI,
-                LifeTime = NpcOutlineLifeTime,
-                OutlineColor = static (lifeTimeRatio) => GlowColor * NpcOutlineEasing.Evaluate(lifeTimeRatio),
-                NpcColor = static (lifeTimeRatio) => GlowColor * (NpcOutlineEasing.Evaluate(lifeTimeRatio) * 0.05f)
+                LifeTime = GetStateDuration(State.Appear) + GetStateDuration(State.Hold) + GetStateDuration(State.Compress) + GetStateDuration(State.Burst) / 2,
+                OutlineColor = lifeTimeRatio => GetBurstGlowColor() * _npcOutlineEasing.Evaluate(lifeTimeRatio),
+                NpcColor = lifeTimeRatio => GetBurstGlowColor() * (_npcOutlineEasing.Evaluate(lifeTimeRatio) * MathHelper.Lerp(0.05f, 0.4f, GetBurstRedden()))
             });
         }
 
-        private void SpawnWaveParticle(float radius, float speedScale)
+        private float GetBurstRedden()
         {
-            var angle = Main.rand.NextFloat(MathHelper.TwoPi);
-            var direction = Vector2.UnitX.RotatedBy(angle);
-            var color = Main.rand.NextBool() ? GlowColor : GlitchColor;
+            if (!IsBursting)
+                return 0f;
+
+            return EasingFunctions.OutCubic(MathHelper.Clamp(StateProgress / 0.3f, 0f, 1f));
+        }
+
+        private Color GetBurstGlowColor()
+            => Color.Lerp(Code1Projectile.GlowColor, new(215, 36, 62), GetBurstRedden());
+
+        private void SpawnChargeParticle()
+        {
+            if (!Main.rand.NextBool(3))
+                return;
+
+            var speedScale = _state == State.Compress ? -1.2f : 0.35f;
+            var radius = Radius * Main.rand.NextFloat(0.2f, 0.9f);
+            var direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+            var color = Main.rand.NextBool() ? Code1Projectile.GlowColor : new Color(148, 18, 48);
             var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
 
             particle.LifeTime = GeneralUtils.SecondsToTicks(0.4f);
@@ -274,12 +392,34 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             particle.EndColor = color;
             particle.Scale = Main.rand.NextFloat(0.2f, 0.4f);
         }
+
+        private void SpawnExplosionParticles()
+        {
+            const int count = 14;
+
+            for (var i = 0; i < count; i++)
+            {
+                var angle = MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.2f, 0.2f);
+                var direction = Vector2.UnitX.RotatedBy(angle);
+                var color = Main.rand.NextBool() ? Code1Projectile.GlowColor : new Color(148, 18, 48);
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
+
+                particle.LifeTime = GeneralUtils.SecondsToTicks(0.4f);
+                particle.Position = Projectile.Center;
+                particle.Velocity = direction * Main.rand.NextFloat(2.8f, 5.5f);
+                particle.StartColor = color;
+                particle.EndColor = color;
+                particle.Scale = Main.rand.NextFloat(0.25f, 0.5f);
+            }
+        }
     }
 
     [Autoload(Side = ModSide.Client)]
     public sealed class Code1ScreenEffectHandler : ILoadable
     {
-        public static readonly string FilterName = $"{nameof(SPYoyoMod)}:Code1DigitalWave";
+        public readonly record struct ScreenWave(Vector2 Center, float Radius, float Strength, float Fill);
+
+        private const string FilterName = $"{nameof(SPYoyoMod)}:Code1DigitalWave";
 
         private readonly ProjectileObserver _projObserver = ProjectileObserver.Create(p => p.ModProjectile is not Code1DigitalWaveProjectile);
         private DigitalWaveShaderData _shaderData;
@@ -322,6 +462,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 _shaderData.Wave0 = Vector4.Zero;
                 _shaderData.Wave1 = Vector4.Zero;
                 _shaderData.Wave2 = Vector4.Zero;
+                _shaderData.WaveFill = Vector3.Zero;
 
                 filter.GetShader().UseIntensity(0f);
                 filter.Deactivate();
@@ -329,12 +470,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
             }
 
-            var packed = new Vector4[3];
+            var waves = new ScreenWave[3];
             var index = 0;
 
             foreach (var proj in _projObserver.GetEntityInstances())
             {
-                if (index >= packed.Length)
+                if (index >= waves.Length)
                     break;
 
                 var wave = proj.As<Code1DigitalWaveProjectile>();
@@ -342,12 +483,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 if (wave is null)
                     continue;
 
-                packed[index++] = wave.PackScreenWave();
+                waves[index] = new ScreenWave(wave.Projectile.Center, wave.Radius, wave.Strength, wave.Fill);
+                index++;
             }
 
-            _shaderData.Wave0 = packed[0];
-            _shaderData.Wave1 = packed[1];
-            _shaderData.Wave2 = packed[2];
+            _shaderData.SetWaves(waves);
 
             if (!filter.IsActive())
                 Filters.Scene.Activate(FilterName);
@@ -361,6 +501,15 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             public Vector4 Wave0;
             public Vector4 Wave1;
             public Vector4 Wave2;
+            public Vector3 WaveFill;
+
+            public void SetWaves(ScreenWave[] waves)
+            {
+                Wave0 = ToShaderWave(waves[0]);
+                Wave1 = ToShaderWave(waves[1]);
+                Wave2 = ToShaderWave(waves[2]);
+                WaveFill = new Vector3(waves[0].Fill, waves[1].Fill, waves[2].Fill);
+            }
 
             public override void Apply()
             {
@@ -369,9 +518,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 Shader.Parameters["Wave0"]?.SetValue(WithOffScreen(Wave0, offScreen));
                 Shader.Parameters["Wave1"]?.SetValue(WithOffScreen(Wave1, offScreen));
                 Shader.Parameters["Wave2"]?.SetValue(WithOffScreen(Wave2, offScreen));
+                Shader.Parameters["WaveFill"]?.SetValue(WaveFill);
 
                 base.Apply();
             }
+
+            private static Vector4 ToShaderWave(ScreenWave wave)
+                => new(wave.Center.X, wave.Center.Y, wave.Radius, wave.Strength);
 
             private static Vector4 WithOffScreen(Vector4 wave, Vector2 offScreen)
                 => new(wave.X - offScreen.X, wave.Y - offScreen.Y, wave.Z, wave.W);
