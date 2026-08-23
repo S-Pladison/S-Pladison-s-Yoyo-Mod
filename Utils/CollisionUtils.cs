@@ -17,7 +17,7 @@ namespace SPYoyoMod.Utils
             var direction = circleCenter - vector;
             var distanceSquared = direction.LengthSquared();
 
-            return (distanceSquared > 0) && (distanceSquared < circleRadius * circleRadius);
+            return distanceSquared <= circleRadius * circleRadius;
         }
     }
 }
