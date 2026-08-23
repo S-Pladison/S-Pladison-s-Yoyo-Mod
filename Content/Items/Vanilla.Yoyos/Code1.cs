@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
-using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
@@ -23,9 +22,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Code1/Code1";
 
         public const string InvisiblePath = $"{AssetPath}/Invisible";
-        public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
-        public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
         public static readonly LazyAsset<Effect> ScreenEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Screen");
         public static readonly SoundStyle InfectSound = new("Terraria/Sounds/Item_182");
         public static readonly SoundStyle BurstSound = SoundID.Item77;
@@ -45,25 +42,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class Code1Projectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IEmitLightEntity
+    public sealed class Code1Projectile : VanillaYoyoBaseProjectile
     {
-        public static readonly Color GlowColor = new(40, 230, 220);
-
-        private YoyoStringRenderer _stringRenderer;
-
         public override int ProjType => ProjectileID.Code1;
-        public override bool InstancePerEntity => true;
-
-        void IInitializableProjectile.Initialize(Projectile _)
-        {
-            if (Main.dedServ)
-                return;
-
-            _stringRenderer = new YoyoStringRenderer(new IDrawYoyoStringSegments.Gradient(
-                ModContent.Request<Texture2D>(Code1Assets.StringPath, AssetRequestMode.ImmediateLoad).Value,
-                (Color.Transparent, true), (Color.Transparent, true), (GlowColor, true)
-            ));
-        }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
@@ -99,28 +80,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             code1Player.SetWaveCooldown();
         }
-
-        void IEmitLightEntity.EmitLight(Entity proj)
-        {
-            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
-        }
-
-        public override bool PreDraw(Projectile proj, ref Color lightColor)
-        {
-            var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
-            var glowTexture = Code1Assets.GlowTexture.Value;
-            var glowOrigin = glowTexture.Size() * 0.5f;
-            var glowScale = proj.scale * 1.2f;
-
-            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, proj.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
-
-            return true;
-        }
-
-        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
-        {
-            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(proj, mountedCenter));
-        }
     }
 
     public sealed class Code1Player : ModPlayer
@@ -149,6 +108,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Burst
         }
 
+        public static readonly Color ChargeColor = new(90, 175, 255);
+        public static readonly Color BurstColor = new(215, 36, 62);
         public static readonly float MinChargeRadius = TileUtils.TileSizeInPixels * 3f;
         public static readonly float MaxWaveRadius = TileUtils.TileSizeInPixels * 16f;
 
@@ -381,7 +342,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
 
         private Color GetBurstGlowColor()
-            => Color.Lerp(Code1Projectile.GlowColor, new(215, 36, 62), GetBurstRedden());
+            => Color.Lerp(ChargeColor, BurstColor, GetBurstRedden());
 
         private void SpawnChargeParticle()
         {
@@ -391,7 +352,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             var speedScale = _state == State.Compress ? -1.2f : 0.35f;
             var radius = Radius * Main.rand.NextFloat(0.2f, 0.9f);
             var direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-            var color = Main.rand.NextBool() ? Code1Projectile.GlowColor : new Color(148, 18, 48);
+            var color = Main.rand.NextBool() ? ChargeColor : BurstColor;
             var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
 
             particle.LifeTime = GeneralUtils.SecondsToTicks(0.4f);
@@ -410,7 +371,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             {
                 var angle = MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.2f, 0.2f);
                 var direction = Vector2.UnitX.RotatedBy(angle);
-                var color = Main.rand.NextBool() ? Code1Projectile.GlowColor : new Color(148, 18, 48);
+                var color = Main.rand.NextBool() ? ChargeColor : BurstColor;
                 var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
 
                 particle.LifeTime = GeneralUtils.SecondsToTicks(0.4f);
