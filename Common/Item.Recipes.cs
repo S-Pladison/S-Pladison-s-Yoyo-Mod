@@ -72,6 +72,12 @@ namespace SPYoyoMod.Common
                 .AddIngredient(ItemID.Marble, 25)
                 .AddTile(TileID.Anvils)
                 .Register();
+
+            Recipe.Create(ItemID.Code2)
+                .AddIngredient(ItemID.Code1)
+                .AddRecipeGroup(MechanicalBossSoulGroupIndex, 15)
+                .AddTile(TileID.MythrilAnvil)
+                .Register();
         }
 
         private static void AddAccessoryRecipes()
