@@ -190,7 +190,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _trailRenderer.Render();
 
             // Исправление отрисовки руки
-            if (proj.GetOwner().heldProj == proj.whoAmI)
+            if (proj.TryGetOwner(out var owner) && owner.heldProj == proj.whoAmI)
             {
                 Main.spriteBatch.End(out var spriteBatchSnapshot);
                 Main.spriteBatch.Begin(spriteBatchSnapshot);
@@ -357,7 +357,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             target.AddBuff(BuffID.OnFire, Main.rand.Next(GeneralUtils.SecondsToTicks(1f), GeneralUtils.SecondsToTicks(4f)));
 
-            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+            if (Projectile.TryGetOwner(out var owner))
+                owner.Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }
 
         void IEmitLightEntity.EmitLight(Entity _)

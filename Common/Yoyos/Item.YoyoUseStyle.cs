@@ -145,7 +145,10 @@ namespace SPYoyoMod.Common.Yoyos
             if (!proj.IsYoyo() && !proj.IsCounterweight())
                 return;
 
-            mountedCenter += GetMountedCenterOffset(proj.GetOwner());
+            if (!proj.TryGetOwner(out var owner))
+                return;
+
+            mountedCenter += GetMountedCenterOffset(owner);
         }
 
         private static Vector2 GetMountedCenterOffset(Player player)

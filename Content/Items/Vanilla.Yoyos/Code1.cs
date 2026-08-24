@@ -56,9 +56,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (remainingLife <= damageDone * Code1Item.WaveMinRemainingHits)
                 return;
 
-            var owner = proj.GetOwner();
-
-            if (owner.IsCooldownActiveFor<Code1Item>())
+            if (!proj.TryGetOwner(out var owner) || owner.IsCooldownActiveFor<Code1Item>())
                 return;
 
             var waveType = ModContent.ProjectileType<Code1DigitalWaveProjectile>();

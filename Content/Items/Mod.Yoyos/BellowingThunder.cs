@@ -167,7 +167,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!hit.Crit || Projectile.ai[0] == -1 || Projectile.GetOwner().OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0) //< Вторая проверка - возвращается ли йо-йо к игроку
+            if (!hit.Crit || Projectile.ai[0] == -1 || !Projectile.TryGetOwner(out var owner) || owner.OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0) //< Вторая проверка - возвращается ли йо-йо к игроку
                 return;
 
             var source = Projectile.GetSource_OnHit(target);
@@ -358,7 +358,8 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
         {
-            Projectile.GetOwner().Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+            if (Projectile.TryGetOwner(out var owner))
+                owner.Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
         }
 
         void IEmitLightEntity.EmitLight(Entity _)

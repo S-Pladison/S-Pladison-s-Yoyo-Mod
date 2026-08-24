@@ -100,7 +100,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
-            if (!proj.GetOwner().GetModPlayer<BearingPlayer>().Equipped)
+            if (!proj.TryGetOwner(out var owner) || !owner.GetModPlayer<BearingPlayer>().Equipped)
                 return;
 
             statModifiers.LifeTime += BearingItem.PercentageStatBonus / 100.0f;

@@ -41,7 +41,7 @@ namespace SPYoyoMod.Common.Yoyos
 
                     renderer.Render(Main.spriteBatch, context);
 
-                    if (proj.GetOwner().heldProj != proj.whoAmI)
+                    if (!proj.TryGetOwner(out var owner) || owner.heldProj != proj.whoAmI)
                         return;
 
                     // Отрисовка нити для ванильных йо-йо и йо-йо из этого мода отличается от отрисовки йо-йо из других модов.
