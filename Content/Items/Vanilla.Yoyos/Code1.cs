@@ -57,9 +57,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
 
             var owner = proj.GetOwner();
-            var code1Player = owner.GetModPlayer<Code1Player>();
 
-            if (code1Player.WaveCooldown > 0)
+            if (owner.IsCooldownActiveFor<Code1Item>())
                 return;
 
             var waveType = ModContent.ProjectileType<Code1DigitalWaveProjectile>();
@@ -78,23 +77,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, waveType, proj.damage, 0f, proj.owner, target.whoAmI);
 
-            code1Player.SetWaveCooldown();
-        }
-    }
-
-    public sealed class Code1Player : ModPlayer
-    {
-        public int WaveCooldown { get; private set; }
-
-        public void SetWaveCooldown()
-        {
-            WaveCooldown = Code1Item.WaveCooldown;
-        }
-
-        public override void PostUpdate()
-        {
-            if (WaveCooldown > 0)
-                WaveCooldown--;
+            owner.SetCooldownFor<Code1Item>(Code1Item.WaveCooldown);
         }
     }
 

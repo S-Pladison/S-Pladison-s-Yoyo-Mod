@@ -8,7 +8,6 @@ using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
-using SPYoyoMod.Utils.Entities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
