@@ -1,4 +1,4 @@
-using SPYoyoMod.Content.Items.Mod.Yoyos;
+﻿using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -11,9 +11,6 @@ namespace SPYoyoMod.Common
 {
     public sealed class LoolFromChestsSystem : ModSystem
     {
-        /// <summary>
-        /// Данные об единице лута генерируемого сундука.
-        /// </summary>
         public readonly struct ChestItemInfo(int itemType, ChestStyle chestStyle, float chance)
         {
             public readonly int ItemType = itemType;
@@ -21,14 +18,8 @@ namespace SPYoyoMod.Common
             public readonly float Chance = Math.Clamp(chance, 0f, 1f);
         }
 
-        /// <summary>
-        /// Импровизированная база данных лута генерируемых в мире сундуков.
-        /// </summary>
         public static readonly List<ChestItemInfo> LootFromChests = [];
 
-        /// <summary>
-        /// База данных лута, доступ к данным которых производится по типу сундука.
-        /// </summary>
         private Dictionary<ChestStyle, List<ChestItemInfo>> _lootFromChestsByChestStyle;
 
         public override void PostSetupContent()

@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System;
@@ -9,28 +9,15 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.Yoyos
 {
-    /// <summary>
-    /// Инициализация нового и модификация существующего снаряда йо-йо.<br/>
-    /// Если задан <see cref="OverrideType"/>, накладывается на существующий снаряд; иначе создаётся новый модовый снаряд.<br/>
-    /// </summary>
     public abstract partial class YoyoProjectile : GlobalProjectile, IPostDrawYoyoStringProjectile
     {
         private static readonly Dictionary<Type, YoyoProjectile> _definitions = [];
         private static readonly Dictionary<int, YoyoProjectile> _byProjectileType = [];
 
-        /// <summary>
-        /// Тип снаряда.
-        /// </summary>
         public int Type { get; private set; }
 
-        /// <summary>
-        /// Снаряд, к которому привязан этот экземпляр.
-        /// </summary>
         public Projectile Projectile { get; private set; }
 
-        /// <summary>
-        /// Йо-йо в руке владельца.
-        /// </summary>
         public Item Item
         {
             get
@@ -50,47 +37,21 @@ namespace SPYoyoMod.Common.Yoyos
             }
         }
 
-        /// <summary>
-        /// Возвращается ли йо-йо к игроку.
-        /// </summary>
         public bool IsReturning => Projectile.ai[0] < 0f;
 
-        /// <summary>
-        /// Накладывается ли этот класс на уже существующий снаряд.
-        /// </summary>
         public bool IsOverride => OverrideType > 0;
 
-        /// <summary>
-        /// Накладывается ли этот класс на ванильный снаряд.
-        /// </summary>
         public bool IsVanilla => IsOverride && ProjectileUtils.IsVanilla(OverrideType);
 
-        /// <summary>
-        /// Тип снаряда, который нужно модифицировать.<br/>
-        /// Оставьте 0, чтобы создать новый модовый снаряд.
-        /// </summary>
         public virtual int OverrideType => 0;
 
         // TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
-        /// <summary>
-        /// Текстура снаряда. Обязательна для нового йо-йо.
-        /// </summary>
         public virtual string Texture => null;
 
-        /// <summary>
-        /// Как долго в секундах йо-йо будет оставаться в бою, прежде чем вернуться к игроку.<br/>
-        /// -1 — бесконечно. Для нового йо-йо обязательно.
-        /// </summary>
         public virtual float? LifeTime => null;
 
-        /// <summary>
-        /// Максимальное расстояние от владельца в пикселях. Для нового йо-йо обязательно.
-        /// </summary>
         public virtual float? MaxRange => null;
 
-        /// <summary>
-        /// Максимальная скорость в пикселях за тик. Для нового йо-йо обязательно.
-        /// </summary>
         public virtual float? TopSpeed => null;
 
         internal abstract Type ItemClass { get; }
@@ -105,10 +66,6 @@ namespace SPYoyoMod.Common.Yoyos
             return proj.type == Type;
         }
 
-        /// <summary>
-        /// Возвращает экземпляр типа <typeparamref name="T"/>.
-        /// Данный экземпляр не существует в мире. Он лишь служит примером того, каким должен быть снаряд.
-        /// </summary>
         public static T Get<T>() where T : YoyoProjectile
         {
             if (_definitions.TryGetValue(typeof(T), out var proj))
@@ -117,17 +74,10 @@ namespace SPYoyoMod.Common.Yoyos
             throw new InvalidOperationException($"YoyoProjectile '{typeof(T).Name}' is not loaded.");
         }
 
-        /// <summary>
-        /// Является ли снаряд йо-йом типа <typeparamref name="T"/>.
-        /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool Is<T>(Projectile proj) where T : YoyoProjectile
             => proj.type == Get<T>().Type;
 
-        /// <summary>
-        /// Пытается получить экземпляр типа <typeparamref name="T"/>.
-        /// Данный экземпляр не существует в мире. Он лишь служит примером того, каким должен быть снаряд.
-        /// </summary>
         public static bool TryGet<T>(Projectile proj, out T yoyo) where T : YoyoProjectile
             => proj.TryGetGlobalProjectile(out yoyo);
 
@@ -196,14 +146,8 @@ namespace SPYoyoMod.Common.Yoyos
                 _byProjectileType.Clear();
         }
 
-        /// <summary>
-        /// Вызывается при загрузке, после регистрации типа.
-        /// </summary>
         protected virtual void OnLoad() { }
 
-        /// <summary>
-        /// Вызывается при выгрузке.
-        /// </summary>
         protected virtual void OnUnload() { }
 
         /// <inheritdoc cref="IPostDrawYoyoStringProjectile.PostDrawYoyoString"/>
@@ -226,14 +170,8 @@ namespace SPYoyoMod.Common.Yoyos
         }
     }
 
-    /// <summary>
-    /// Снаряд йо-йо, связанный с предметом <typeparamref name="TItem"/>.
-    /// </summary>
     public abstract class YoyoProjectile<TItem> : YoyoProjectile where TItem : YoyoItem
     {
-        /// <summary>
-        /// Тип снаряда.
-        /// </summary>
         public static new int Type
         {
             get

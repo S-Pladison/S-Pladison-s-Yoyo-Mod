@@ -2,7 +2,6 @@ using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Utils;
 using Terraria;
 using Terraria.ID;
-using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Mod.Yoyos
 {

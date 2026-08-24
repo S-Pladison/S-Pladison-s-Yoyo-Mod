@@ -1,4 +1,4 @@
-using SPYoyoMod.Core;
+﻿using SPYoyoMod.Core;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -7,9 +7,6 @@ namespace SPYoyoMod.Common.Yoyos
 {
     public abstract partial class YoyoProjectile
     {
-        /// <summary>
-        /// Общие для йо-йо модификации.
-        /// </summary>
         [LoadBefore(typeof(YoyoProjectile))]
         private sealed class OverrideGlobalProjectile : GlobalProjectile
         {
@@ -40,9 +37,6 @@ namespace SPYoyoMod.Common.Yoyos
             }
         }
 
-        /// <summary>
-        /// Заглушка <see cref="ModProjectile"/> для инициализации нового йо-йо. Ее глубокая настройка (т.е. превращение в полноценный йо-йо) происходит при реализации класса YoyoProjectile.
-        /// </summary>
         [Autoload(false)]
         private sealed class ModProjectileStub<T> : ModProjectile where T : YoyoProjectile
         {

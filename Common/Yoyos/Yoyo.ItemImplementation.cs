@@ -1,4 +1,4 @@
-using SPYoyoMod.Core;
+﻿using SPYoyoMod.Core;
 using SPYoyoMod.Utils;
 using System.Collections.Generic;
 using Terraria;
@@ -10,9 +10,6 @@ namespace SPYoyoMod.Common.Yoyos
 {
     public abstract partial class YoyoItem
     {
-        /// <summary>
-        /// Общие для йо-йо модификации.
-        /// </summary>
         [LoadBefore(typeof(YoyoItem))]
         private sealed class OverrideGlobalItem : GlobalItem
         {
@@ -53,9 +50,6 @@ namespace SPYoyoMod.Common.Yoyos
             }
         }
 
-        /// <summary>
-        /// Заглушка <see cref="ModItem"/> для инициализации нового йо-йо. Ее глубокая настройка (т.е. превращение в полноценный йо-йо) происходит при реализации класса YoyoItem.
-        /// </summary>
         [Autoload(false)]
         private sealed class ModItemStub<T> : ModItem where T : YoyoItem
         {

@@ -13,7 +13,6 @@ using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Terraria;
 using Terraria.Audio;
 using Terraria.DataStructures;
@@ -702,7 +701,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 parameters["EffectMatrix"].SetValue(Main.GameViewMatrix.EffectMatrix);
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
                 parameters["ScreenPosition"].SetValue(Main.screenPosition);
-                    parameters["OutlineColor"].SetValue(ValorProjectile.GlowColor.ToVector4());
+                parameters["OutlineColor"].SetValue(ValorProjectile.GlowColor.ToVector4());
                 parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
             });
 
