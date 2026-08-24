@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -10,6 +10,20 @@ namespace SPYoyoMod.Utils
 {
     public static class ItemUtils
     {
+        /// <summary>
+        /// Является ли этот предмет ванильным.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVanilla(this Item item)
+            => IsVanilla(item.type);
+
+        /// <summary>
+        /// Является ли предмет с данным типом ванильным.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVanilla(int type)
+            => type < ItemID.Count;
+
         /// <summary>
         /// Является ли этот предмет оружием типа йо-йо.
         /// </summary>

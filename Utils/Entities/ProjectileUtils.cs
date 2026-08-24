@@ -1,4 +1,4 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using SPYoyoMod.Common.Yoyos;
 using System;
 using System.Runtime.CompilerServices;
@@ -76,11 +76,18 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Является ли этот снаряд снарядом ванильным.
+        /// Является ли этот снаряд ванильным.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsVanilla(this Projectile proj)
-            => proj.type < ProjectileID.Count;
+            => IsVanilla(proj.type);
+
+        /// <summary>
+        /// Является ли снаряд с данным типом ванильным.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool IsVanilla(int type)
+            => type < ProjectileID.Count;
 
         /// <summary>
         /// Является ли локальный игрок владельцем данного снаряда.
