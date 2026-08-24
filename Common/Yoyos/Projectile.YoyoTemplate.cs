@@ -1,23 +1,32 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
+using SPYoyoMod.Core;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.Yoyos
 {
-    public abstract partial class YoyoProjectile : GlobalProjectile, IPostDrawYoyoStringProjectile
+    public abstract class YoyoProjectile : GlobalProjectile, IPostDrawYoyoStringProjectile
     {
         private static readonly Dictionary<Type, YoyoProjectile> _definitions = [];
         private static readonly Dictionary<int, YoyoProjectile> _byProjectileType = [];
+        private static readonly Dictionary<Type, YoyoProjectile> _byItemClass = [];
 
+        public virtual int OverrideType => 0;
         public int Type { get; private set; }
-
+        public bool IsReturning => Projectile.ai[0] < 0f;
+        public bool IsOverride => OverrideType > 0;
+        public bool IsVanilla => IsOverride && ProjectileUtils.IsVanilla(OverrideType);
+        public virtual string Texture => null; // TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
+        public virtual float? LifeTime => null;
+        public virtual float? MaxRange => null;
+        public virtual float? TopSpeed => null;
         public Projectile Projectile { get; private set; }
-
         public Item Item
         {
             get
@@ -36,23 +45,6 @@ namespace SPYoyoMod.Common.Yoyos
                 return held;
             }
         }
-
-        public bool IsReturning => Projectile.ai[0] < 0f;
-
-        public bool IsOverride => OverrideType > 0;
-
-        public bool IsVanilla => IsOverride && ProjectileUtils.IsVanilla(OverrideType);
-
-        public virtual int OverrideType => 0;
-
-        // TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
-        public virtual string Texture => null;
-
-        public virtual float? LifeTime => null;
-
-        public virtual float? MaxRange => null;
-
-        public virtual float? TopSpeed => null;
 
         internal abstract Type ItemClass { get; }
 
@@ -81,19 +73,14 @@ namespace SPYoyoMod.Common.Yoyos
         public static bool TryGet<T>(Projectile proj, out T yoyo) where T : YoyoProjectile
             => proj.TryGetGlobalProjectile(out yoyo);
 
-        internal static YoyoProjectile Get(Type type)
-        {
-            if (_definitions.TryGetValue(type, out var proj))
-                return proj;
-
-            throw new InvalidOperationException($"YoyoProjectile '{type.Name}' is not loaded.");
-        }
+        internal static bool TryGet(Type type, out YoyoProjectile yoyo)
+            => _definitions.TryGetValue(type, out yoyo);
 
         private static bool TryGet(int projectileType, out YoyoProjectile yoyo)
             => _byProjectileType.TryGetValue(projectileType, out yoyo);
 
-        internal static bool TryGet(Type type, out YoyoProjectile yoyo)
-            => _definitions.TryGetValue(type, out yoyo);
+        protected static bool TryGetByItemClass(Type itemClass, out YoyoProjectile yoyo)
+            => _byItemClass.TryGetValue(itemClass, out yoyo);
 
         public sealed override void Load()
         {
@@ -127,10 +114,14 @@ namespace SPYoyoMod.Common.Yoyos
             if (_byProjectileType.TryGetValue(Type, out var existing))
                 throw new Exception($"'{typeName}' cannot use projectile type {Type}; already used by '{existing.GetType().FullName}'");
 
+            if (_byItemClass.TryGetValue(ItemClass, out var existingByItem))
+                throw new Exception($"'{typeName}' cannot use {nameof(YoyoItem)} '{ItemClass.Name}'; already used by '{existingByItem.GetType().FullName}'");
+
             if (YoyoItem.TryGetByProjectile(GetType(), out var item) && item.GetType() != ItemClass)
                 throw new Exception($"'{typeName}.{nameof(ItemClass)}' must be '{item.GetType().FullName}'");
 
             _byProjectileType[Type] = this;
+            _byItemClass[ItemClass] = this;
 
             OnLoad();
         }
@@ -141,9 +132,13 @@ namespace SPYoyoMod.Common.Yoyos
 
             _definitions.Remove(GetType());
             _byProjectileType.Remove(Type);
+            _byItemClass.Remove(ItemClass);
 
             if (_definitions.Count == 0)
+            {
                 _byProjectileType.Clear();
+                _byItemClass.Clear();
+            }
         }
 
         protected virtual void OnLoad() { }
@@ -168,6 +163,67 @@ namespace SPYoyoMod.Common.Yoyos
             inst.Projectile = to;
             return inst;
         }
+
+        [LoadBefore(typeof(YoyoProjectile))]
+        private sealed class OverrideGlobalProjectile : GlobalProjectile
+        {
+            public override bool AppliesToEntity(Projectile proj, bool lateInstantiation)
+            {
+                if (!lateInstantiation)
+                    return false;
+
+                return TryGet(proj.type, out var definition) && definition.IsOverride;
+            }
+
+            public override void SetStaticDefaults()
+            {
+                foreach (var definition in ModContent.GetContent<YoyoProjectile>())
+                {
+                    if (!definition.IsOverride)
+                        continue;
+
+                    if (definition.LifeTime.HasValue)
+                        ProjectileID.Sets.YoyosLifeTimeMultiplier[definition.Type] = definition.LifeTime.Value;
+
+                    if (definition.MaxRange.HasValue)
+                        ProjectileID.Sets.YoyosMaximumRange[definition.Type] = definition.MaxRange.Value;
+
+                    if (definition.TopSpeed.HasValue)
+                        ProjectileID.Sets.YoyosTopSpeed[definition.Type] = definition.TopSpeed.Value;
+                }
+            }
+        }
+
+        [Autoload(false)]
+        private sealed class ModProjectileStub<T> : ModProjectile where T : YoyoProjectile
+        {
+            private static T Definition => Get<T>();
+
+            public override string Name => typeof(T).Name;
+            public override string Texture => Definition.Texture;
+
+            public override void SetStaticDefaults()
+            {
+                if (Definition.LifeTime.HasValue)
+                    ProjectileID.Sets.YoyosLifeTimeMultiplier[Type] = Definition.LifeTime.Value;
+
+                if (Definition.MaxRange.HasValue)
+                    ProjectileID.Sets.YoyosMaximumRange[Type] = Definition.MaxRange.Value;
+
+                if (Definition.TopSpeed.HasValue)
+                    ProjectileID.Sets.YoyosTopSpeed[Type] = Definition.TopSpeed.Value;
+            }
+
+            public override void SetDefaults()
+            {
+                Projectile.DamageType = DamageClass.MeleeNoSpeed;
+                Projectile.width = 16;
+                Projectile.height = 16;
+                Projectile.aiStyle = ProjAIStyleID.Yoyo;
+                Projectile.friendly = true;
+                Projectile.penetrate = -1;
+            }
+        }
     }
 
     public abstract class YoyoProjectile<TItem> : YoyoProjectile where TItem : YoyoItem
@@ -176,8 +232,10 @@ namespace SPYoyoMod.Common.Yoyos
         {
             get
             {
-                var item = YoyoItem.Get<TItem>();
-                return Get(item.ProjectileClass).Type;
+                if (!TryGetByItemClass(typeof(TItem), out var proj))
+                    throw new InvalidOperationException($"YoyoProjectile '{typeof(TItem).Name}' is not loaded.");
+
+                return proj.Type;
             }
         }
 

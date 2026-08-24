@@ -1,37 +1,31 @@
-﻿using SPYoyoMod.Utils;
+﻿using SPYoyoMod.Core;
+using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Terraria;
+using Terraria.ID;
 using Terraria.Localization;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.Yoyos
 {
-    public abstract partial class YoyoItem : GlobalItem, ILocalizedModType
+    public abstract class YoyoItem : GlobalItem, ILocalizedModType
     {
         private static readonly Dictionary<Type, YoyoItem> _definitions = [];
         private static readonly Dictionary<int, YoyoItem> _byItemType = [];
         private static readonly Dictionary<Type, YoyoItem> _byProjectileClass = [];
 
-        public int Type { get; private set; }
-
-        public bool IsOverride => OverrideType > 0;
-
-        public bool IsVanilla => ItemUtils.IsVanilla(OverrideType);
-
         public virtual int OverrideType => 0;
-
-        // TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
-        public virtual string Texture => null;
-
+        public int Type { get; private set; }
+        public bool IsOverride => OverrideType > 0;
+        public bool IsVanilla => ItemUtils.IsVanilla(OverrideType);
+        public virtual string Texture => null; // TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
         public virtual LocalizedText Tooltip => this.GetLocalization(nameof(Tooltip), () => "");
-
         public virtual int? GamepadExtraRange => null;
-
         public Item Item { get; private set; }
 
-        internal abstract Type ProjectileClass { get; }
+        protected abstract Type ProjectileClass { get; }
 
         string ILocalizedModType.LocalizationCategory => "Items";
 
@@ -87,7 +81,7 @@ namespace SPYoyoMod.Common.Yoyos
                 if (!GamepadExtraRange.HasValue)
                     throw new Exception($"'{typeName}' must specify {nameof(GamepadExtraRange)}");
 
-                var stub = (ModItem)Activator.CreateInstance(typeof(ModItemStub<>).MakeGenericType(GetType()), nonPublic: true);
+                var stub = (ModItem)Activator.CreateInstance(typeof(ModItemStub<,>).MakeGenericType(GetType(), ProjectileClass), nonPublic: true);
                 Mod.AddContent(stub);
                 Type = stub.Type;
             }
@@ -141,6 +135,84 @@ namespace SPYoyoMod.Common.Yoyos
             inst.Item = to;
             return inst;
         }
+
+        [LoadBefore(typeof(YoyoItem))]
+        private sealed class OverrideGlobalItem : GlobalItem
+        {
+            public override bool AppliesToEntity(Item item, bool lateInstantiation)
+            {
+                if (!lateInstantiation)
+                    return false;
+
+                return TryGet(item.type, out var definition) && definition.IsOverride;
+            }
+
+            public override void SetStaticDefaults()
+            {
+                foreach (var definition in ModContent.GetContent<YoyoItem>())
+                {
+                    if (!definition.IsOverride)
+                        continue;
+
+                    if (definition.GamepadExtraRange.HasValue)
+                        ItemID.Sets.GamepadExtraRange[definition.Type] = definition.GamepadExtraRange.Value;
+
+                    _ = definition.Tooltip;
+                }
+            }
+
+            public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+            {
+                if (!TryGet(item.type, out var definition))
+                    return;
+
+                var value = definition.Tooltip.Value;
+
+                if (value is null || value == "")
+                    return;
+
+                var tooltipLine = new TooltipLine(definition.Mod, "ModTooltip", value);
+                tooltips.InsertDescription(tooltipLine.Split('\n'));
+            }
+        }
+
+        [Autoload(false)]
+        private sealed class ModItemStub<TItem, TProjectile> : ModItem
+            where TItem : YoyoItem
+            where TProjectile : YoyoProjectile
+        {
+            private static TItem Definition => Get<TItem>();
+
+            public override string Name => typeof(TItem).Name;
+            public override string Texture => Definition.Texture;
+            public override LocalizedText Tooltip => Definition.Tooltip;
+
+            public override void SetStaticDefaults()
+            {
+                ItemID.Sets.Yoyo[Type] = true;
+                ItemID.Sets.GamepadExtraRange[Type] = Definition.GamepadExtraRange.Value;
+                ItemID.Sets.GamepadSmartQuickReach[Type] = true;
+            }
+
+            public override void SetDefaults()
+            {
+                Item.DamageType = DamageClass.MeleeNoSpeed;
+                Item.damage = 1;
+                Item.width = 30;
+                Item.height = 26;
+                Item.shootSpeed = 16f;
+
+                Item.UseSound = SoundID.Item1;
+                Item.useStyle = ItemUseStyleID.Shoot;
+                Item.useAnimation = 25;
+                Item.useTime = 25;
+
+                Item.channel = true;
+                Item.noMelee = true;
+                Item.noUseGraphic = true;
+                Item.shoot = YoyoProjectile.Get<TProjectile>().Type;
+            }
+        }
     }
 
     public abstract class YoyoItem<TProjectile> : YoyoItem where TProjectile : YoyoProjectile
@@ -156,7 +228,7 @@ namespace SPYoyoMod.Common.Yoyos
             }
         }
 
-        internal sealed override Type ProjectileClass => typeof(TProjectile);
+        protected sealed override Type ProjectileClass => typeof(TProjectile);
     }
 
     public static class YoyoItemExtensions
