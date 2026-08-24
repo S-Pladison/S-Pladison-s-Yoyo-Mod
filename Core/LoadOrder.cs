@@ -6,8 +6,8 @@ using System.Reflection;
 namespace SPYoyoMod.Core
 {
     /// <summary>
-    /// Указывает, что тип должен быть загружен перед заданными типами.
-    /// Без аргументов — перед всеми остальными (кроме других типов с тем же ограничением).
+    /// Вспомогательный атрибут, указывающий на то, что объекта текущего тип должен быть загружен перед другими заданными объектами перечисленных типов.
+    /// Если аргументов нет, то загрузка происходит перед всеми остальными (кроме других типов с этим же атрибутом).
     /// Учитываются сами типы, их наследники и реализации.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
@@ -17,8 +17,8 @@ namespace SPYoyoMod.Core
     }
 
     /// <summary>
-    /// Указывает, что тип должен быть загружен после заданных типов.
-    /// Без аргументов — после всех остальных (кроме других типов с тем же ограничением).
+    /// Вспомогательный атрибут, указывающий на то, что объекта текущего тип должен быть загружен после других заданных объектов перечисленных типов.
+    /// Если аргументов нет, то загрузка происходит перед после остальными (кроме других типов с этим же атрибутом).
     /// Учитываются сами типы, их наследники и реализации.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
@@ -28,8 +28,7 @@ namespace SPYoyoMod.Core
     }
 
     /// <summary>
-    /// Указывает, что тип должен быть загружен между двумя другими:
-    /// после <paramref name="after"/> и перед <paramref name="before"/>.
+    /// Вспомогательный атрибут, указывающий на то, что объекта текущего тип должен быть загружен между двумя другими объектами перечисленных типов.
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Interface, AllowMultiple = true, Inherited = true)]
     public sealed class LoadBetweenAttribute(Type after, Type before) : Attribute
