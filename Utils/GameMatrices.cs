@@ -1,4 +1,4 @@
-using Microsoft.Xna.Framework;
+ï»¿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using SPYoyoMod.Core;
 using Terraria;
@@ -14,7 +14,7 @@ namespace SPYoyoMod.Utils
         public static Matrix Projection { get; private set; }
         public static Matrix Transform { get => Main.GameViewMatrix.TransformationMatrix; }
 
-        [LoadBefore] //< Äëÿ òîãî, ÷òîáû ïîäïèñêà íà ModEvents.OnPostUpdateCameraPosition âûçûâàëàñü ðàíüøå îñòàëüíûõ...
+        [LoadBefore] //< Ð”Ð»Ñ Ñ‚Ð¾Ð³Ð¾, Ñ‡Ñ‚Ð¾Ð±Ñ‹ Ð¿Ð¾Ð´Ð¿Ð¸ÑÐºÐ° Ð½Ð° ModEvents.OnPostUpdateCameraPosition Ð²Ñ‹Ð·Ñ‹Ð²Ð°Ð»Ð°ÑÑŒ Ñ€Ð°Ð½ÑŒÑˆÐµ Ð¾ÑÑ‚Ð°Ð»ÑŒÐ½Ñ‹Ñ…...
         private sealed class GameMatricesHandler : ILoadable
         {
             private static void RecalculateMatrices()
