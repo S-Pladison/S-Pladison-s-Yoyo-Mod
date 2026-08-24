@@ -33,6 +33,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public override int OverrideType => ItemID.Code1;
 
+        //=/-
+
         public override void SetDefaults(Item item)
         {
             item.crit = 11;
@@ -41,11 +43,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class Code1Projectile : YoyoProjectile<Code1Item>
     {
+        public override int OverrideType => ProjectileID.Code1;
+
+        //=/-
+
         public static readonly int WaveCooldown = GeneralUtils.SecondsToTicks(2f);
         public static readonly int WaveApplyChanceDenominator = 5;
         public static readonly int WaveMinRemainingHits = 3;
-
-        public override int OverrideType => ProjectileID.Code1;
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {

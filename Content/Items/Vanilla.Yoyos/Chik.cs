@@ -31,11 +31,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ChikProjectile : YoyoProjectile<ChikItem>, IInitializableProjectile
     {
+        public override int OverrideType => ProjectileID.Chik;
+
+        //=/-
+
         public static readonly Color GlowColor = new(55, 160, 255);
 
         private YoyoStringRenderer _stringRenderer;
-
-        public override int OverrideType => ProjectileID.Chik;
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {

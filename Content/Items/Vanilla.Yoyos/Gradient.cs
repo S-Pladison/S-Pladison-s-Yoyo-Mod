@@ -42,6 +42,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public override int OverrideType => ItemID.Gradient;
 
+        //=/-
+
         public override void SetDefaults(Item item)
         {
             item.rare = ItemRarityID.LightRed;
@@ -51,6 +53,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class GradientProjectile : YoyoProjectile<GradientItem>
     {
         public override int OverrideType => ProjectileID.Gradient;
+
+        //=/-
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {

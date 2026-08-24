@@ -43,6 +43,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class CascadeProjectile : YoyoProjectile<CascadeItem>, IInitializableProjectile, IEmitLightEntity, IPostDrawPixelatedProjectile
     {
+        public override int OverrideType => ProjectileID.Cascade;
+
+        //=/-
+
         public static readonly int TimeToStartCharging = GeneralUtils.SecondsToTicks(2f);
         public static readonly int TimeToCharge = GeneralUtils.SecondsToTicks(0.7f);
         public static readonly int AddTimeForHit = GeneralUtils.SecondsToTicks(0.2f);
@@ -54,8 +58,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
-
-        public override int OverrideType => ProjectileID.Cascade;
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {

@@ -43,6 +43,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         public override int OverrideType => ItemID.Valor;
 
+        //=/-
+
         public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(Math.Ceiling(1.0f / ValorProjectile.DebuffApplyChanceDenominator * 100.0f));
 
         public override void SetDefaults(Item item)
@@ -53,6 +55,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
     public sealed class ValorProjectile : YoyoProjectile<ValorItem>, IInitializableProjectile, IEmitLightEntity, IPreDrawPixelatedProjectile
     {
+        public override int OverrideType => ProjectileID.Valor;
+
+        //=/-
+
         public static readonly int DebuffApplyChanceDenominator = 9;
         public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
         public static readonly Color GlowColor = new(35, 90, 255);
@@ -61,8 +67,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
-
-        public override int OverrideType => ProjectileID.Valor;
 
         void IInitializableProjectile.Initialize(Projectile proj)
         {
