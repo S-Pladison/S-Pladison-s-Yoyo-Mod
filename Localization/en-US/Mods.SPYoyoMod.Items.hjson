@@ -13,6 +13,15 @@ BlackholeItem: {
 	Tooltip: ""
 }
 
+CascadeItem.Tooltip:
+	'''
+	Hits have a chance to ignite enemies
+	Periodically explodes, dealing area damage
+	'''
+Code1Item.Tooltip: Hits may infect an enemy with a virus that later bursts in a digital pulse
+GradientItem.Tooltip: Hits may unleash a barrage of daggers
+RallyItem.Tooltip: Deals {0}% increased damage when fighting a single enemy
+
 TheStellarThrowItem: {
 	DisplayName: The Stellar Throw
 	Tooltip: ""
@@ -35,3 +44,22 @@ StrangeDrinkItem: {
 		'Don't even think about drinking it'
 		'''
 }
+
+ValorItem.Tooltip:
+	'''
+	{0}% chance to inflict the "{$Buffs.ValorBuff.DisplayName}" debuff
+	If a nearby enemy already has this debuff, the chance is greatly reduced
+	'''
+AmarokItem.Tooltip: ""
+AmazonItem.Tooltip: ""
+ArteryItem.Tooltip: ""
+ChikItem.Tooltip: ""
+Code2Item.Tooltip: ""
+FormatCItem.Tooltip: ""
+HelFireItem.Tooltip: ""
+HiveFiveItem.Tooltip: ""
+KrakenItem.Tooltip: ""
+MalaiseItem.Tooltip: ""
+TerrarianItem.Tooltip: ""
+TheEyeOfCthulhuItem.Tooltip: ""
+YeletsItem.Tooltip: ""

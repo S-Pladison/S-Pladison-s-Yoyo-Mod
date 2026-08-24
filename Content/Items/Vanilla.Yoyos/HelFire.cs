@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+using SPYoyoMod.Common.Yoyos;
+using Terraria.ID;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -8,13 +9,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/HelFire/HelFire";
     }
 
-    public sealed class HelFireItem : VanillaYoyoBaseItem
+    public sealed class HelFireItem : YoyoItem<HelFireProjectile>
     {
-        public override int ItemType => ItemID.HelFire;
+        public override int OverrideType => ItemID.HelFire;
     }
 
-    public sealed class HelFireProjectile : VanillaYoyoBaseProjectile
+    public sealed class HelFireProjectile : YoyoProjectile<HelFireItem>
     {
-        public override int ProjType => ProjectileID.HelFire;
+        public override int OverrideType => ProjectileID.HelFire;
     }
 }

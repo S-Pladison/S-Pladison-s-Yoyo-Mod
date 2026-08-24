@@ -1,6 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
@@ -35,12 +36,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly SoundStyle ExplosionSound = SoundID.Item14;
     }
 
-    public sealed class CascadeItem : VanillaYoyoBaseItem
+    public sealed class CascadeItem : YoyoItem<CascadeProjectile>
     {
-        public override int ItemType => ItemID.Cascade;
+        public override int OverrideType => ItemID.Cascade;
     }
 
-    public sealed class CascadeProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPostDrawPixelatedProjectile, IEmitLightEntity
+    public sealed class CascadeProjectile : YoyoProjectile<CascadeItem>, IInitializableProjectile, IEmitLightEntity, IPostDrawPixelatedProjectile
     {
         public static readonly int TimeToStartCharging = GeneralUtils.SecondsToTicks(2f);
         public static readonly int TimeToCharge = GeneralUtils.SecondsToTicks(0.7f);
@@ -54,10 +55,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
 
-        public override int ProjType => ProjectileID.Cascade;
-        public override bool InstancePerEntity => true;
+        public override int OverrideType => ProjectileID.Cascade;
 
-        void IInitializableProjectile.Initialize(Projectile _)
+        void IInitializableProjectile.Initialize(Projectile proj)
         {
             if (Main.dedServ)
                 return;
@@ -86,7 +86,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             UpdateVisual(proj);
 
             // Если йо-йо возвращается к игроку, прекращаем обработку всей логики
-            if (proj.ai[0] == -1)
+            if (IsReturning)
             {
                 _aiTimer = Math.Max(_aiTimer - 2, 0);
                 return;
@@ -156,19 +156,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
         {
-            bitWriter.WriteBit(_charging);
+            binaryWriter.Write(_charging);
             binaryWriter.Write((ushort)_aiTimer);
         }
 
         public override void ReceiveExtraAI(Projectile proj, BitReader bitReader, BinaryReader binaryReader)
         {
-            _charging = bitReader.ReadBit();
+            _charging = binaryReader.ReadBoolean();
             _aiTimer = binaryReader.ReadUInt16();
         }
 
-        void IEmitLightEntity.EmitLight(Entity proj)
+        void IEmitLightEntity.EmitLight(Entity entity)
         {
-            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
+            Lighting.AddLight(entity.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)
@@ -283,7 +283,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
 
                 particle.LifeTime = GeneralUtils.SecondsToTicks(1.5f);
-                particle.Position = Projectile.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels, ExplosionRadius * 0.85f);
+                particle.Position = proj.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels, ExplosionRadius * 0.85f);
                 particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f);
                 particle.StartColor = new(new Color(50, 50, 50, 255), false);
                 particle.EndColor = new(new Color(0, 0, 0, 0), false);
@@ -292,7 +292,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
             {
-                Position = Projectile.Center,
+                Position = proj.Center,
                 Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
                 Strength = 7f,
                 VibrationCyclesPerSecond = 6f,

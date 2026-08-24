@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
@@ -35,26 +36,21 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly SoundStyle TileHitSound = SoundID.Dig;
     }
 
-    public sealed class TheStellarThrowItem : YoyoBaseItem
+    public sealed class TheStellarThrowItem : YoyoItem<TheStellarThrowProjectile>
     {
         public override string Texture => TheStellarThrowAssets.ItemPath;
-        public override int GamepadExtraRange => 10;
+        public override int? GamepadExtraRange => 10;
 
-        public override void SetDefaults()
+        public override void SetDefaults(Item item)
         {
-            base.SetDefaults();
-
-            Item.damage = 18;
-            Item.knockBack = 3f;
-
-            Item.shoot = ModContent.ProjectileType<TheStellarThrowProjectile>();
-
-            Item.rare = ItemRarityID.Green;
-            Item.value = ItemUtils.SellPrice(platinum: 0, gold: 1, silver: 0, copper: 0);
+            item.damage = 18;
+            item.knockBack = 3f;
+            item.rare = ItemRarityID.Green;
+            item.value = ItemUtils.SellPrice(platinum: 0, gold: 1, silver: 0, copper: 0);
         }
     }
 
-    public sealed class TheStellarThrowProjectile : YoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
+    public sealed class TheStellarThrowProjectile : YoyoProjectile<TheStellarThrowItem>, IInitializableProjectile, IEmitLightEntity, IPreDrawPixelatedProjectile
     {
         public static readonly float SpawnStarRadius = TileUtils.TileSizeInPixels * 15f;
         public static readonly int SpawnStarCooldownMin = GeneralUtils.SecondsToTicks(1.5f);
@@ -63,17 +59,18 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly Color StarColor = new(255, 0, 80);
         public static readonly int TrailPointCount = 15;
 
-        private int _cooldownTimer;
+        private ref float CooldownTimer => ref Projectile.localAI[1];
+
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
 
         public override string Texture => TheStellarThrowAssets.ProjPath;
-        public override float LifeTime => -1f;
-        public override float MaxRange => 235f;
-        public override float TopSpeed => 14f;
+        public override float? LifeTime => -1f;
+        public override float? MaxRange => 235f;
+        public override float? TopSpeed => 14f;
 
-        public override void OnSpawn(IEntitySource source)
+        public override void OnSpawn(Projectile proj, IEntitySource source)
         {
             SetCooldownForStarSpawn();
         }
@@ -97,30 +94,33 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _oldPositions = [];
         }
 
-        public override void OnKill(int timeLeft)
+        public override void OnKill(Projectile proj, int timeLeft)
         {
             _trailRenderer?.Dispose();
         }
 
-        public override void AI()
+        public override void AI(Projectile proj)
         {
-            UpdateVisual();
+            UpdateVisual(proj);
 
-            // Если снаряд не наш, то смысла обрабатывать его логику спавна звезд просто нет
-            if (!Projectile.IsLocalPlayerAsOwner())
+            if (IsReturning)
                 return;
 
-            if (--_cooldownTimer > 0)
+            // Если снаряд не наш, то смысла обрабатывать его логику спавна звезд просто нет
+            if (!proj.IsLocalPlayerAsOwner())
+                return;
+
+            if (--CooldownTimer > 0)
                 return;
 
             var nearbyNPCs = new List<NPC>();
 
             foreach (var npc in Main.ActiveNPCs)
             {
-                if (!npc.CanBeChasedBy(Projectile, false))
+                if (!npc.CanBeChasedBy(proj, false))
                     continue;
 
-                if (Vector2.Distance(npc.Center, Projectile.Center) > SpawnStarRadius)
+                if (Vector2.Distance(npc.Center, proj.Center) > SpawnStarRadius)
                     continue;
 
                 nearbyNPCs.Add(npc);
@@ -137,17 +137,18 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             var starPosition = target.Center - new Vector2((Main.rand.NextBool() ? 1 : -1) * Main.rand.NextFloat(20f, 60f), 50f) * TileUtils.TileSizeInPixels;
             var starSpeed = 32f;
             var starDirection = ProjectileUtils.PredictiveAimDirection(starPosition, target.Center, target.velocity, starSpeed);
+            var styleIndex = Item?.favorited == true ? 3 : Main.rand.Next(0, 3); //< Золотой цвет, если йо-йо в избранном
 
-            Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, starDirection * starSpeed, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, target.whoAmI);
+            Projectile.NewProjectile(proj.GetSource_FromAI(), starPosition, starDirection * starSpeed, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI, styleIndex);
 
             SetCooldownForStarSpawn();
         }
 
-        private void UpdateVisual()
+        private void UpdateVisual(Projectile proj)
         {
             if (_trailRenderer is not null)
             {
-                _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
+                _oldPositions.AddFirst(proj.Center + proj.velocity);
 
                 while (_oldPositions.Count > TrailPointCount)
                     _oldPositions.RemoveLast();
@@ -155,14 +156,14 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                 _trailRenderer.SetPoints(_oldPositions);
             }
 
-            if (Projectile.velocity.Length() >= 3f && Main.rand.NextBool(4))
+            if (proj.velocity.Length() >= 3f && Main.rand.NextBool(4))
             {
                 if (Main.rand.NextBool(3))
                 {
                     var particle = WorldParticleManager.SpawnParticle<StarParticle>();
 
                     particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
-                    particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                    particle.Position = proj.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * proj.width * Main.rand.NextFloat() * 0.5f;
                     particle.StartColor = new Color(255, 175, 65);
                     particle.EndColor = new Color(255, 85, 225);
                     particle.Scale = Main.rand.NextFloat(0.8f, 1.0f);
@@ -172,27 +173,27 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
                     particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
-                    particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * Projectile.width * Main.rand.NextFloat() * 0.5f;
+                    particle.Position = proj.Center + Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)) * proj.width * Main.rand.NextFloat() * 0.5f;
                     particle.StartColor = new Color(255, 50, 160);
                     particle.EndColor = new Color(50, 50, 255);
                     particle.Scale = Main.rand.NextFloat(0.3f, 0.4f);
                 }
             }
 
-            Projectile.rotation -= 0.15f;
+            proj.rotation -= 0.15f;
         }
 
         private void SetCooldownForStarSpawn(int? cooldown = null)
         {
-            _cooldownTimer = cooldown ?? Main.rand.Next(SpawnStarCooldownMin, SpawnStarCooldownMax);
+            CooldownTimer = cooldown ?? Main.rand.Next(SpawnStarCooldownMin, SpawnStarCooldownMax);
         }
 
-        void IEmitLightEntity.EmitLight(Entity _)
+        void IEmitLightEntity.EmitLight(Entity entity)
         {
-            Lighting.AddLight(Projectile.Center, StarColor.ToVector3() * 0.2f);
+            Lighting.AddLight(entity.Center, StarColor.ToVector3() * 0.2f);
         }
 
-        public override Color? GetAlpha(Color lightColor)
+        public override Color? GetAlpha(Projectile proj, Color lightColor)
             => Color.White;
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
@@ -214,32 +215,32 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _trailRenderer.Render();
 
             var starTexture = TheStellarThrowAssets.StarTexture.Value;
-            var starPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var starPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var starOrigin = starTexture.Size() * 0.5f;
             var starColor = new Color(100, 25, 75) * 0.35f;
 
-            Main.spriteBatch.Draw(starTexture, starPosition, null, starColor, Projectile.rotation * 0.05f, starOrigin, proj.scale * 0.6f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, starColor, proj.rotation * 0.05f, starOrigin, proj.scale * 0.6f, SpriteEffects.None, 0f);
 
             starColor = StarColor with { A = 0 };
 
-            Main.spriteBatch.Draw(starTexture, starPosition, null, starColor, Projectile.rotation * 0.1f, starOrigin, proj.scale * 0.4f, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(starTexture, starPosition, null, starColor, proj.rotation * 0.1f, starOrigin, proj.scale * 0.4f, SpriteEffects.None, 0f);
         }
 
-        public override bool PreDraw(ref Color lightColor)
+        public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            var glowPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var glowTexture = TheStellarThrowAssets.GlowTexture.Value;
             var glowOrigin = glowTexture.Size() * 0.5f;
-            var glowScale = Projectile.scale * 1.2f;
+            var glowScale = proj.scale * 1.2f;
 
-            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, Projectile.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, proj.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
 
             return true;
         }
 
-        public override void PostDrawYoyoString(Vector2 mountedCenter)
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(Projectile, mountedCenter));
+            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(proj, mountedCenter));
         }
     }
 
@@ -332,25 +333,6 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;
-        }
-
-        public override void OnSpawn(IEntitySource source)
-        {
-            if (!Projectile.TryGetOwner(out var owner))
-            {
-                StyleIndex = Main.rand.Next(0, 3);
-                return;
-            }
-
-            var heldItem = owner.HeldItem;
-
-            if (heldItem is null || heldItem.type != ModContent.ItemType<TheStellarThrowItem>() || !heldItem.favorited)
-            {
-                StyleIndex = Main.rand.Next(0, 3);
-                return;
-            }
-
-            StyleIndex = 3; //< Единственный, золотой цвет, если игрок отметил йо-йо как *избранный*
         }
 
         void IInitializableProjectile.Initialize(Projectile _)

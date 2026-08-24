@@ -50,7 +50,7 @@ namespace SPYoyoMod.Common
                 .AddTile(TileID.Anvils)
                 .Register();
 
-            Recipe.Create(ModContent.ItemType<BellowingThunderItem>())
+            Recipe.Create(BellowingThunderItem.Type)
                 .AddIngredient(ItemID.CorruptYoyo)
                 .AddIngredient(ItemID.Valor)
                 .AddIngredient(ItemID.JungleYoyo)
@@ -58,7 +58,7 @@ namespace SPYoyoMod.Common
                 .AddTile(TileID.DemonAltar)
                 .Register();
 
-            Recipe.Create(ModContent.ItemType<BellowingThunderItem>())
+            Recipe.Create(BellowingThunderItem.Type)
                 .AddIngredient(ItemID.CrimsonYoyo)
                 .AddIngredient(ItemID.Valor)
                 .AddIngredient(ItemID.JungleYoyo)

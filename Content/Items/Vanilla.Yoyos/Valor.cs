@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Core.Hooks;
@@ -39,13 +40,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly SoundStyle ChainSound = SoundID.Unlock;
     }
 
-    public sealed class ValorItem : VanillaYoyoBaseItem
+    public sealed class ValorItem : YoyoItem<ValorProjectile>
     {
-        public static readonly int DebuffApplyChanceDenominator = 9;
-        public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
+        public override int OverrideType => ItemID.Valor;
 
-        public override int ItemType => ItemID.Valor;
-        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(Math.Ceiling(1.0f / DebuffApplyChanceDenominator * 100.0f));
+        public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(Math.Ceiling(1.0f / ValorProjectile.DebuffApplyChanceDenominator * 100.0f));
 
         public override void SetDefaults(Item item)
         {
@@ -53,8 +52,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile, IPreDrawPixelatedProjectile, IEmitLightEntity
+    public sealed class ValorProjectile : YoyoProjectile<ValorItem>, IInitializableProjectile, IEmitLightEntity, IPreDrawPixelatedProjectile
     {
+        public static readonly int DebuffApplyChanceDenominator = 9;
+        public static readonly float DebuffChanceReductionDistance = MathF.Pow(TileUtils.TileSizeInPixels * 12f, 2f); //< Возводим в степень из-за использования DistanceSquared
         public static readonly Color GlowColor = new(35, 90, 255);
         public static readonly int TrailPointCount = 7;
 
@@ -62,10 +63,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         private StripRenderer _trailRenderer;
         private LinkedList<Vector2> _oldPositions;
 
-        public override int ProjType => ProjectileID.Valor;
-        public override bool InstancePerEntity => true;
+        public override int OverrideType => ProjectileID.Valor;
 
-        void IInitializableProjectile.Initialize(Projectile _)
+        void IInitializableProjectile.Initialize(Projectile proj)
         {
             if (Main.netMode == NetmodeID.Server)
                 return;
@@ -86,7 +86,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             _oldPositions = [];
         }
 
-        public override void OnKill(Projectile projectile, int timeLeft)
+        public override void OnKill(Projectile proj, int timeLeft)
         {
             _trailRenderer?.Dispose();
         }
@@ -121,7 +121,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 dust.velocity = Vector2.Normalize(proj.Center - target.Center).RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1.5f, 4.0f);
             }
 
-            if (!Main.rand.NextBool(ValorItem.DebuffApplyChanceDenominator))
+            if (!Main.rand.NextBool(DebuffApplyChanceDenominator))
                 return;
 
             foreach (var npc in Main.ActiveNPCs)
@@ -132,16 +132,16 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 if (npc.whoAmI == target.whoAmI)
                     continue;
 
-                if (Vector2.DistanceSquared(npc.Center, target.Center) <= ValorItem.DebuffChanceReductionDistance)
+                if (Vector2.DistanceSquared(npc.Center, target.Center) <= DebuffChanceReductionDistance)
                     return;
             }
 
             target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));
         }
 
-        void IEmitLightEntity.EmitLight(Entity proj)
+        void IEmitLightEntity.EmitLight(Entity entity)
         {
-            Lighting.AddLight(proj.Center, GlowColor.ToVector3() * 0.2f);
+            Lighting.AddLight(entity.Center, GlowColor.ToVector3() * 0.2f);
         }
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
@@ -702,7 +702,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 parameters["EffectMatrix"].SetValue(Main.GameViewMatrix.EffectMatrix);
                 parameters["ScreenSize"].SetValue(_renderTarget.Size);
                 parameters["ScreenPosition"].SetValue(Main.screenPosition);
-                parameters["OutlineColor"].SetValue(ValorProjectile.GlowColor.ToVector4());
+                    parameters["OutlineColor"].SetValue(ValorProjectile.GlowColor.ToVector4());
                 parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
             });
 

@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Content.Items.Mod.Yoyos;
+using SPYoyoMod.Content.Items.Mod.Yoyos;
 using Terraria;
 using Terraria.GameContent.ItemDropRules;
 using Terraria.ID;
@@ -14,7 +14,7 @@ namespace SPYoyoMod.Common
             {
                 case ItemID.FloatingIslandFishingCrate:
                 case ItemID.FloatingIslandFishingCrateHard:
-                    itemLoot.Add(ItemDropRule.NotScalingWithLuck(ModContent.ItemType<TheStellarThrowItem>(), 5));
+                    itemLoot.Add(ItemDropRule.NotScalingWithLuck(TheStellarThrowItem.Type, 5));
                     break;
                 default:
                     break;

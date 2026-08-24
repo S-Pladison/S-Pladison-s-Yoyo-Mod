@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+using SPYoyoMod.Common.Yoyos;
+using Terraria.ID;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -8,13 +9,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Amazon/Amazon";
     }
 
-    public sealed class AmazonItem : VanillaYoyoBaseItem
+    public sealed class AmazonItem : YoyoItem<AmazonProjectile>
     {
-        public override int ItemType => ItemID.JungleYoyo;
+        public override int OverrideType => ItemID.JungleYoyo;
     }
 
-    public sealed class AmazonProjectile : VanillaYoyoBaseProjectile
+    public sealed class AmazonProjectile : YoyoProjectile<AmazonItem>
     {
-        public override int ProjType => ProjectileID.JungleYoyo;
+        public override int OverrideType => ProjectileID.JungleYoyo;
     }
 }

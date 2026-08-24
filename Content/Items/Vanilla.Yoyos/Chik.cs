@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
@@ -23,21 +24,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
     }
 
-    public sealed class ChikItem : VanillaYoyoBaseItem
+    public sealed class ChikItem : YoyoItem<ChikProjectile>
     {
-        public override int ItemType => ItemID.Chik;
+        public override int OverrideType => ItemID.Chik;
     }
 
-    public sealed class ChikProjectile : VanillaYoyoBaseProjectile, IInitializableProjectile
+    public sealed class ChikProjectile : YoyoProjectile<ChikItem>, IInitializableProjectile
     {
         public static readonly Color GlowColor = new(55, 160, 255);
 
         private YoyoStringRenderer _stringRenderer;
 
-        public override int ProjType => ProjectileID.Chik;
-        public override bool InstancePerEntity => true;
+        public override int OverrideType => ProjectileID.Chik;
 
-        void IInitializableProjectile.Initialize(Projectile _)
+        void IInitializableProjectile.Initialize(Projectile proj)
         {
             if (Main.dedServ)
                 return;
@@ -57,6 +57,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (IsReturning)
+                return;
+
             for (int i = 0; i < 5; i++)
             {
                 Projectile.NewProjectile(proj.GetSource_OnHit(target), proj.Center, Vector2.Zero, ModContent.ProjectileType<ChikHomingProjectile>(), proj.damage, proj.knockBack, proj.owner, target.whoAmI);

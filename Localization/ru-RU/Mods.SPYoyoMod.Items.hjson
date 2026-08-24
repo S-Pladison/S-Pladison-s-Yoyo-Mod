@@ -17,6 +17,15 @@ BlackholeItem: {
 	Tooltip: ""
 }
 
+CascadeItem.Tooltip:
+	'''
+	Удары имеют шанс поджечь врага
+	Периодически взрывается, нанося при этом урон по области
+	'''
+Code1Item.Tooltip: Удары могут заразить врага вирусом, позже вспыхивающим цифровым импульсом
+GradientItem.Tooltip: Удары могут обрушить на врагов шквал кинжалов
+RallyItem.Tooltip: Наносит на {0}% больше урона в бою с одним врагом
+
 TheStellarThrowItem: {
 	DisplayName: Звездный бросок
 	Tooltip: Звезды падают с небес на врагов, находящихся рядом с йо-йо
@@ -40,3 +49,22 @@ StrangeDrinkItem: {
 		«Даже не думай выпить это!»
 		'''
 }
+
+ValorItem.Tooltip:
+	'''
+	С {0}%-ым шансом накладывает на врага дебафф «{$Buffs.ValorBuff.DisplayName}»
+	Если рядом есть враг с этим же дебаффом, шанс будет значительно понижен
+	'''
+// AmarokItem.Tooltip: ""
+// AmazonItem.Tooltip: ""
+// ArteryItem.Tooltip: ""
+// ChikItem.Tooltip: ""
+// Code2Item.Tooltip: ""
+// FormatCItem.Tooltip: ""
+// HelFireItem.Tooltip: ""
+// HiveFiveItem.Tooltip: ""
+// KrakenItem.Tooltip: ""
+// MalaiseItem.Tooltip: ""
+// TerrarianItem.Tooltip: ""
+// TheEyeOfCthulhuItem.Tooltip: ""
+// YeletsItem.Tooltip: ""

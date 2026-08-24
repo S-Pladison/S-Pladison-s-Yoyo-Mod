@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+using SPYoyoMod.Common.Yoyos;
+using Terraria.ID;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -8,13 +9,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Kraken/Kraken";
     }
 
-    public sealed class KrakenItem : VanillaYoyoBaseItem
+    public sealed class KrakenItem : YoyoItem<KrakenProjectile>
     {
-        public override int ItemType => ItemID.Kraken;
+        public override int OverrideType => ItemID.Kraken;
     }
 
-    public sealed class KrakenProjectile : VanillaYoyoBaseProjectile
+    public sealed class KrakenProjectile : YoyoProjectile<KrakenItem>
     {
-        public override int ProjType => ProjectileID.Kraken;
+        public override int OverrideType => ProjectileID.Kraken;
     }
 }

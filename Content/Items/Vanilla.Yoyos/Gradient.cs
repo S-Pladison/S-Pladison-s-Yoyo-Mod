@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
@@ -37,9 +38,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly SoundStyle DaggerSound = SoundID.DD2_SkyDragonsFuryShot;
     }
 
-    public sealed class GradientItem : VanillaYoyoBaseItem
+    public sealed class GradientItem : YoyoItem<GradientProjectile>
     {
-        public override int ItemType => ItemID.Gradient;
+        public override int OverrideType => ItemID.Gradient;
 
         public override void SetDefaults(Item item)
         {
@@ -47,13 +48,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class GradientProjectile : VanillaYoyoBaseProjectile
+    public sealed class GradientProjectile : YoyoProjectile<GradientItem>
     {
-        public override int ProjType => ProjectileID.Gradient;
+        public override int OverrideType => ProjectileID.Gradient;
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!Main.rand.NextBool(5))
+            if (IsReturning || !Main.rand.NextBool(5))
                 return;
 
             if (target.life <= 0)
@@ -117,7 +118,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
 
-            SoundEngine.PlaySound(GradientAssets.GodraysSound with { Pitch = 1f, }, Projectile.Center);
+            SoundEngine.PlaySound(GradientAssets.GodraysSound with { Pitch = 1f, }, proj.Center);
         }
 
         public override void OnKill(int timeLeft)

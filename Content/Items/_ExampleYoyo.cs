@@ -1,8 +1,10 @@
-﻿using SPYoyoMod.Utils;
+using SPYoyoMod.Common.Yoyos;
+using SPYoyoMod.Utils;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 
-namespace SPYoyoMod.Content.Items.Mod.Yoyos
+namespace SPYoyoMod.Content.Items
 {
     /* Пример создания простого йо-йо. Да, стоит указать откуда берется текстура для предмета и снаряда,
        но с этим то уж справиться можно...
@@ -39,29 +41,26 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
     */
 
     [Autoload(false)]
-    internal sealed class ExampleYoyoItem : YoyoBaseItem
+    internal sealed class ExampleYoyoItem : YoyoItem<ExampleYoyoProjectile>
     {
-        public override int GamepadExtraRange => 15;
+        public override string Texture => $"{nameof(SPYoyoMod)}/Assets/Invisible";
+        public override int? GamepadExtraRange => 15;
 
-        public override void SetDefaults()
+        public override void SetDefaults(Item item)
         {
-            base.SetDefaults();
-
-            Item.damage = 43;
-            Item.knockBack = 2.5f;
-
-            Item.shoot = ModContent.ProjectileType<ExampleYoyoProjectile>();
-
-            Item.rare = ItemRarityID.Lime;
-            Item.value = ItemUtils.SellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
+            item.damage = 43;
+            item.knockBack = 2.5f;
+            item.rare = ItemRarityID.Lime;
+            item.value = ItemUtils.SellPrice(platinum: 0, gold: 1, silver: 50, copper: 0);
         }
     }
 
     [Autoload(false)]
-    internal sealed class ExampleYoyoProjectile : YoyoBaseProjectile
+    internal sealed class ExampleYoyoProjectile : YoyoProjectile<ExampleYoyoItem>
     {
-        public override float LifeTime => -1f;
-        public override float MaxRange => 300f;
-        public override float TopSpeed => 13f;
+        public override string Texture => $"{nameof(SPYoyoMod)}/Assets/Invisible";
+        public override float? LifeTime => -1f;
+        public override float? MaxRange => 300f;
+        public override float? TopSpeed => 13f;
     }
 }

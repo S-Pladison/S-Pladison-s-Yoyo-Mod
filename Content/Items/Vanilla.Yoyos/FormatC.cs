@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+using SPYoyoMod.Common.Yoyos;
+using Terraria.ID;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -8,13 +9,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/FormatC/FormatC";
     }
 
-    public sealed class FormatCItem : VanillaYoyoBaseItem
+    public sealed class FormatCItem : YoyoItem<FormatCProjectile>
     {
-        public override int ItemType => ItemID.FormatC;
+        public override int OverrideType => ItemID.FormatC;
     }
 
-    public sealed class FormatCProjectile : VanillaYoyoBaseProjectile
+    public sealed class FormatCProjectile : YoyoProjectile<FormatCItem>
     {
-        public override int ProjType => ProjectileID.FormatC;
+        public override int OverrideType => ProjectileID.FormatC;
     }
 }

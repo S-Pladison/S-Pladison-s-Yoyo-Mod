@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Core;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
@@ -45,29 +46,25 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly SoundStyle LightningZapSound = SoundID.DD2_LightningAuraZap;
     }
 
-    public sealed class BellowingThunderItem : YoyoBaseItem
+    public sealed class BellowingThunderItem : YoyoItem<BellowingThunderProjectile>
     {
         public const int StormCritBonus = 6;
 
         public override string Texture => BellowingThunderAssets.ItemPath;
+        public override int? GamepadExtraRange => 10;
+
         public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs(StormCritBonus);
-        public override int GamepadExtraRange => 10;
 
-        public override void SetDefaults()
+        public override void SetDefaults(Item item)
         {
-            base.SetDefaults();
-
-            Item.damage = 27;
-            Item.knockBack = 3.5f;
-            Item.crit = 6;
-
-            Item.shoot = ModContent.ProjectileType<BellowingThunderProjectile>();
-
-            Item.rare = ItemRarityID.Orange;
-            Item.value = ItemUtils.SellPrice(platinum: 0, gold: 4, silver: 0, copper: 0);
+            item.damage = 27;
+            item.knockBack = 3.5f;
+            item.crit = 6;
+            item.rare = ItemRarityID.Orange;
+            item.value = ItemUtils.SellPrice(platinum: 0, gold: 4, silver: 0, copper: 0);
         }
 
-        public override void ModifyTooltips(List<TooltipLine> tooltips)
+        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
         {
             var critLine = tooltips.Find(VanillaTooltipLine.CritChance);
 
@@ -81,7 +78,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         }
     }
 
-    public sealed class BellowingThunderProjectile : YoyoBaseProjectile, IInitializableProjectile, IDrawPixelatedProjectile, IEmitLightEntity
+    public sealed class BellowingThunderProjectile : YoyoProjectile<BellowingThunderItem>, IInitializableProjectile, IEmitLightEntity, IDrawPixelatedProjectile
     {
         public static readonly Color GlowColor = new(208, 99, 219);
         public static readonly int TrailPointCount = 5;
@@ -94,13 +91,13 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         private LinkedList<Vector2> _oldPositions;
 
         public override string Texture => BellowingThunderAssets.ProjPath;
-        public override float LifeTime => -1f;
-        public override float MaxRange => 235f;
-        public override float TopSpeed => 14f;
+        public override float? LifeTime => -1f;
+        public override float? MaxRange => 235f;
+        public override float? TopSpeed => 14f;
 
-        public void Initialize(Projectile _)
+        void IInitializableProjectile.Initialize(Projectile proj)
         {
-            _initCritChance = Projectile.CritChance;
+            _initCritChance = proj.CritChance;
 
             if (Main.dedServ)
                 return;
@@ -128,10 +125,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             _oldPositions = [];
 
-            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
+            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(proj);
         }
 
-        public override void OnKill(int timeLeft)
+        public override void OnKill(Projectile proj, int timeLeft)
         {
             if (Main.dedServ)
                 return;
@@ -139,16 +136,16 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _trailRenderer?.Dispose();
             _shadowTrailRenderer?.Dispose();
 
-            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Remove(Projectile);
+            ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Remove(proj);
         }
 
-        public override void AI()
+        public override void AI(Projectile proj)
         {
-            Projectile.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
+            proj.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
 
             if (_trailRenderer is not null) //< Если он не null, то и _shadowTrailRenderer тоже
             {
-                _oldPositions.AddFirst(Projectile.Center + Projectile.velocity);
+                _oldPositions.AddFirst(proj.Center + proj.velocity);
 
                 while (_oldPositions.Count > ShadowTrailPointCount)
                     _oldPositions.RemoveLast();
@@ -159,30 +156,30 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             if (Main.rand.NextBool(7))
             {
-                var dust = Main.dust[Dust.NewDust(Projectile.position, Projectile.width, Projectile.height, DustID.VenomStaff)];
+                var dust = Main.dust[Dust.NewDust(proj.position, proj.width, proj.height, DustID.VenomStaff)];
                 dust.noGravity = true;
                 dust.noLightEmittence = true;
             }
         }
 
-        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!hit.Crit || Projectile.ai[0] == -1 || !Projectile.TryGetOwner(out var owner) || owner.OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0) //< Вторая проверка - возвращается ли йо-йо к игроку
+            if (!hit.Crit || IsReturning || !proj.TryGetOwner(out var owner) || owner.OwnedProjectileCounts<BellowingThunderRingProjectile>() != 0)
                 return;
 
-            var source = Projectile.GetSource_OnHit(target);
+            var source = proj.GetSource_OnHit(target);
             var projType = ModContent.ProjectileType<BellowingThunderRingProjectile>();
-            var ringProjIndex = Projectile.NewProjectile(source, Projectile.Center, Vector2.Zero, projType, Projectile.damage, Projectile.knockBack, Projectile.owner);
+            var ringProjIndex = Projectile.NewProjectile(source, proj.Center, Vector2.Zero, projType, proj.damage, proj.knockBack, proj.owner);
 
             Main.projectile[ringProjIndex].CritChance = _initCritChance;
         }
 
-        void IEmitLightEntity.EmitLight(Entity _)
+        void IEmitLightEntity.EmitLight(Entity entity)
         {
-            Lighting.AddLight(Projectile.Center, GlowColor.ToVector3() * 0.2f);
+            Lighting.AddLight(entity.Center, GlowColor.ToVector3() * 0.2f);
         }
 
-        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile _)
+        void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
         {
             BellowingThunderAssets.TrailEffect
                 .Prepare(parameters =>
@@ -196,28 +193,28 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             _trailRenderer.Render();
         }
 
-        public override bool PreDraw(ref Color lightColor)
+        public override bool PreDraw(Projectile proj, ref Color lightColor)
         {
-            var glowPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var glowTexture = BellowingThunderAssets.GlowTexture.Value;
             var glowOrigin = glowTexture.Size() * 0.5f;
-            var glowScale = Projectile.scale * 1.2f;
+            var glowScale = proj.scale * 1.2f;
 
-            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, Projectile.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
+            Main.spriteBatch.Draw(glowTexture, glowPosition, null, GlowColor, proj.rotation, glowOrigin, glowScale, SpriteEffects.None, 0f);
 
             return true;
         }
 
-        public override void PostDrawYoyoString(Vector2 mountedCenter)
+        public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(Projectile, mountedCenter));
+            _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(proj, mountedCenter));
         }
 
-        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile proj)
         {
-            var timeForVisualEffects = (float)Main.timeForVisualEffects + Projectile.whoAmI * 111f;
+            var timeForVisualEffects = (float)Main.timeForVisualEffects + proj.whoAmI * 111f;
 
-            var electricityPosition = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
+            var electricityPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var electricityTexture = BellowingThunderAssets.ElectricityTexture.Value;
             var electricityOrigin = new Vector2(48, 48);
             var electricityFrameIndex = (int)((timeForVisualEffects * 0.2f) % 16);
@@ -331,15 +328,15 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         {
             Projectile.CritChance = _initCritChance + (Main.IsItStorming ? BellowingThunderItem.StormCritBonus : 0);
 
-            var yoyoProj = Main.ActiveProjectiles.FirstOrDefault(p => p.type == ModContent.ProjectileType<BellowingThunderProjectile>() && p.owner == Projectile.owner && p.IsPrimaryYoyo());
+            var yoyo = Main.ActiveProjectiles.FirstOrDefault(proj => proj.Is<BellowingThunderProjectile>() && proj.owner == Projectile.owner && proj.IsPrimaryYoyo());
 
-            if (yoyoProj is null)
+            if (yoyo is null)
             {
                 Projectile.Kill();
                 return;
             }
 
-            Projectile.Center = yoyoProj.Center;
+            Projectile.Center = yoyo.Center;
 
             if (Projectile.soundDelay <= 0)
             {

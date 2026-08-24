@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+using SPYoyoMod.Common.Yoyos;
+using Terraria.ID;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -8,13 +9,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Amarok/Amarok";
     }
 
-    public sealed class AmarokItem : VanillaYoyoBaseItem
+    public sealed class AmarokItem : YoyoItem<AmarokProjectile>
     {
-        public override int ItemType => ItemID.Amarok;
+        public override int OverrideType => ItemID.Amarok;
     }
 
-    public sealed class AmarokProjectile : VanillaYoyoBaseProjectile
+    public sealed class AmarokProjectile : YoyoProjectile<AmarokItem>
     {
-        public override int ProjType => ProjectileID.Amarok;
+        public override int OverrideType => ProjectileID.Amarok;
     }
 }

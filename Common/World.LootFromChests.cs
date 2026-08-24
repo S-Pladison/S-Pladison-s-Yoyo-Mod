@@ -1,4 +1,4 @@
-﻿using SPYoyoMod.Content.Items.Mod.Yoyos;
+using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Utils;
 using System;
 using System.Collections.Generic;
@@ -24,10 +24,7 @@ namespace SPYoyoMod.Common
         /// <summary>
         /// Импровизированная база данных лута генерируемых в мире сундуков.
         /// </summary>
-        public static readonly List<ChestItemInfo> LootFromChests =
-        [
-            new(ModContent.ItemType<TheStellarThrowItem>(), ChestStyle.Skyware, 0.15f)
-        ];
+        public static readonly List<ChestItemInfo> LootFromChests = [];
 
         /// <summary>
         /// База данных лута, доступ к данным которых производится по типу сундука.
@@ -36,6 +33,9 @@ namespace SPYoyoMod.Common
 
         public override void PostSetupContent()
         {
+            LootFromChests.Clear();
+            LootFromChests.Add(new(TheStellarThrowItem.Type, ChestStyle.Skyware, 0.15f));
+
             _lootFromChestsByChestStyle = LootFromChests
                 .GroupBy(loot => loot.ChestStyle)
                 .ToDictionary(
@@ -46,6 +46,7 @@ namespace SPYoyoMod.Common
 
         public override void Unload()
         {
+            LootFromChests.Clear();
             _lootFromChestsByChestStyle?.Clear();
         }
 

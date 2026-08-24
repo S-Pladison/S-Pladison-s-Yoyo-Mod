@@ -1,4 +1,4 @@
-﻿using Mono.Cecil.Cil;
+using Mono.Cecil.Cil;
 using MonoMod.Cil;
 using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Core.ModSupport;
@@ -107,7 +107,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
             Main.npcChatText = DialogueText.Value;
 
             Main.LocalPlayer.inventory[slotIndex].TurnToAir();
-            Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_GiftOrReward(), ModContent.ItemType<SoulTormentorItem>());
+            Main.LocalPlayer.QuickSpawnItem(Main.LocalPlayer.GetSource_GiftOrReward(), SoulTormentorItem.Type);
 
             return false;
         }

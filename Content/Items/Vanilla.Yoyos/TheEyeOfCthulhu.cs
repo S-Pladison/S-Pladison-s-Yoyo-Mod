@@ -1,4 +1,5 @@
-﻿using Terraria.ID;
+using SPYoyoMod.Common.Yoyos;
+using Terraria.ID;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -8,13 +9,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/TheEyeOfCthulhu/TheEyeOfCthulhu";
     }
 
-    public sealed class TheEyeOfCthulhuItem : VanillaYoyoBaseItem
+    public sealed class TheEyeOfCthulhuItem : YoyoItem<TheEyeOfCthulhuProjectile>
     {
-        public override int ItemType => ItemID.TheEyeOfCthulhu;
+        public override int OverrideType => ItemID.TheEyeOfCthulhu;
     }
 
-    public sealed class TheEyeOfCthulhuProjectile : VanillaYoyoBaseProjectile
+    public sealed class TheEyeOfCthulhuProjectile : YoyoProjectile<TheEyeOfCthulhuItem>
     {
-        public override int ProjType => ProjectileID.TheEyeOfCthulhu;
+        public override int OverrideType => ProjectileID.TheEyeOfCthulhu;
     }
 }

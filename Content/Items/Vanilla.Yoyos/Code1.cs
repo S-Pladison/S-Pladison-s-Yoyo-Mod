@@ -1,6 +1,7 @@
-﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Hooks;
@@ -28,13 +29,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly SoundStyle BurstSound = SoundID.Item77;
     }
 
-    public sealed class Code1Item : VanillaYoyoBaseItem
+    public sealed class Code1Item : YoyoItem<Code1Projectile>
     {
-        public static readonly int WaveCooldown = GeneralUtils.SecondsToTicks(2f);
-        public static readonly int WaveApplyChanceDenominator = 5;
-        public static readonly int WaveMinRemainingHits = 3;
-
-        public override int ItemType => ItemID.Code1;
+        public override int OverrideType => ItemID.Code1;
 
         public override void SetDefaults(Item item)
         {
@@ -42,21 +39,25 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class Code1Projectile : VanillaYoyoBaseProjectile
+    public sealed class Code1Projectile : YoyoProjectile<Code1Item>
     {
-        public override int ProjType => ProjectileID.Code1;
+        public static readonly int WaveCooldown = GeneralUtils.SecondsToTicks(2f);
+        public static readonly int WaveApplyChanceDenominator = 5;
+        public static readonly int WaveMinRemainingHits = 3;
+
+        public override int OverrideType => ProjectileID.Code1;
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (!Main.rand.NextBool(Code1Item.WaveApplyChanceDenominator))
+            if (IsReturning || !Main.rand.NextBool(WaveApplyChanceDenominator))
                 return;
 
             var remainingLife = target.IsChild(out var parent) ? parent.life : target.life;
 
-            if (remainingLife <= damageDone * Code1Item.WaveMinRemainingHits)
+            if (remainingLife <= damageDone * WaveMinRemainingHits)
                 return;
 
-            if (!proj.TryGetOwner(out var owner) || owner.IsCooldownActiveFor<Code1Item>())
+            if (!proj.TryGetOwner(out var owner) || owner.IsCooldownActiveFor<Code1Projectile>())
                 return;
 
             var waveType = ModContent.ProjectileType<Code1DigitalWaveProjectile>();
@@ -75,7 +76,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, waveType, proj.damage, 0f, proj.owner, target.whoAmI);
 
-            owner.SetCooldownFor<Code1Item>(Code1Item.WaveCooldown);
+            owner.SetCooldownFor<Code1Projectile>(WaveCooldown);
         }
     }
 
