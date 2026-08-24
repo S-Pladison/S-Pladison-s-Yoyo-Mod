@@ -151,13 +151,13 @@ namespace SPYoyoMod.Utils
         /// <summary>
         /// Вычисляет направление, в котором нужно выстрелить, чтобы попасть в движущуюся цель с учётом её скорости.
         /// </summary>
-        public static Vector2 PredictiveAimToTarget(Vector2 startPosition, Vector2 targetPosition, Vector2 targetVelocity, float speed)
+        public static Vector2 PredictiveAimDirection(Vector2 origin, Vector2 targetPosition, Vector2 targetVelocity, float projectileSpeed)
         {
-            var toTarget = targetPosition - startPosition;
+            var toTarget = targetPosition - origin;
 
             // Квадратные значения для решения уравнения
             var distanceSquared = toTarget.LengthSquared();
-            var speedSquared = speed * speed;
+            var speedSquared = projectileSpeed * projectileSpeed;
             var targetSpeedSquared = targetVelocity.LengthSquared();
             var targetSpeedAlongToTarget = Vector2.Dot(toTarget, targetVelocity);
 
@@ -181,7 +181,7 @@ namespace SPYoyoMod.Utils
 
             // Вычисление направления к будущей позиции цели
             var futurePosition = targetPosition + targetVelocity * t;
-            var toFutureTarget = futurePosition - startPosition;
+            var toFutureTarget = futurePosition - origin;
             return Vector2.Normalize(toFutureTarget);
         }
     }

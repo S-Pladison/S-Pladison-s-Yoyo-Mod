@@ -136,7 +136,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             var target = nearbyNPCs[Main.rand.Next(nearbyNPCs.Count)];
             var starPosition = target.Center - new Vector2((Main.rand.NextBool() ? 1 : -1) * Main.rand.NextFloat(20f, 60f), 50f) * TileUtils.TileSizeInPixels;
             var starSpeed = 32f;
-            var starDirection = ProjectileUtils.PredictiveAimToTarget(starPosition, target.Center, target.velocity, starSpeed);
+            var starDirection = ProjectileUtils.PredictiveAimDirection(starPosition, target.Center, target.velocity, starSpeed);
 
             Projectile.NewProjectile(Projectile.GetSource_FromAI(), starPosition, starDirection * starSpeed, ModContent.ProjectileType<TheStellarThrowStarProjectile>(), Projectile.damage, Projectile.knockBack, Projectile.owner, target.whoAmI);
 
