@@ -249,7 +249,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         );
 
         private int _initCritChance;
-        private StripRenderer _stripRenderer;
+        private RectangleRenderer _rectangleRenderer;
         private RingRenderer _ringRenderer;
 
         public override string Texture => BellowingThunderAssets.InvisiblePath;
@@ -282,7 +282,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             Projectile.soundDelay = 12;
 
-            _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
+            _rectangleRenderer = new RectangleRenderer(Main.graphics.GraphicsDevice);
             _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 25);
 
             ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Add(Projectile);
@@ -317,7 +317,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             if (Main.dedServ)
                 return;
 
-            _stripRenderer?.Dispose();
+            _rectangleRenderer?.Dispose();
             _ringRenderer?.Dispose();
 
             ModContent.GetInstance<BellowingThunderScreenEffectHandler>().Remove(Projectile);
@@ -400,6 +400,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
 
             var lightningStartPosition = position - Vector2.UnitY * Main.screenHeight;
             var lightningEndPosition = position;
+            var lightningDelta = lightningEndPosition - lightningStartPosition;
 
             BellowingThunderAssets.LightningEffect
                 .Prepare(parameters =>
@@ -408,9 +409,10 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     parameters["Fade"].SetValue(true);
                 });
 
-            _stripRenderer
-                .SetWidth(TileUtils.TileSizeInPixels * 16 * _lightningStrikeWidthEasing.Evaluate(LifeTimeRatio))
-                .SetPoints([lightningStartPosition, lightningEndPosition])
+            _rectangleRenderer
+                .SetSize(lightningDelta.Length(), TileUtils.TileSizeInPixels * 16 * _lightningStrikeWidthEasing.Evaluate(LifeTimeRatio))
+                .SetRotation(lightningDelta.ToRotation())
+                .SetPosition((lightningStartPosition + lightningEndPosition) * 0.5f)
                 .Render();
 
             var starTexture = BellowingThunderAssets.StarTexture.Value;

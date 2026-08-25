@@ -91,7 +91,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             (EasingFunctions.InOutQuad, 0.15f, 1f, 0f)
         );
 
-        private StripRenderer _stripRenderer;
+        private RectangleRenderer _rectangleRenderer;
 
         public override string Texture { get => GradientAssets.InvisiblePath; }
         public NPC Target { get => (int)Projectile.ai[0] >= 0 ? Main.npc[(int)Projectile.ai[0]] : null; }
@@ -120,7 +120,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _stripRenderer = new StripRenderer(Main.graphics.GraphicsDevice, 2);
+            _rectangleRenderer = new RectangleRenderer(Main.graphics.GraphicsDevice);
 
             SoundEngine.PlaySound(GradientAssets.GodraysSound with { Pitch = 1f, }, proj.Center);
         }
@@ -130,7 +130,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _stripRenderer?.Dispose();
+            _rectangleRenderer?.Dispose();
         }
 
         public override void AI()
@@ -231,8 +231,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             // Опускаем позицию отрисовки божественных лучей чуть ниже снаряда
             position = Projectile.Bottom + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
 
-            var lightningStartPosition = position - Vector2.UnitY * TileUtils.TileSizeInPixels * 80;
-            var lightningEndPosition = position;
+            var raysStartPosition = position - Vector2.UnitY * TileUtils.TileSizeInPixels * 80;
+            var raysEndPosition = position;
+            var raysDelta = raysEndPosition - raysStartPosition;
 
             GradientAssets.GodraysEffect
                 .Prepare(parameters =>
@@ -245,9 +246,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 })
                 .Apply();
 
-            _stripRenderer
-                .SetWidth(TileUtils.TileSizeInPixels * 16)
-                .SetPoints([lightningStartPosition, lightningEndPosition])
+            _rectangleRenderer
+                .SetSize(raysDelta.Length(), TileUtils.TileSizeInPixels * 16)
+                .SetRotation(raysDelta.ToRotation())
+                .SetPosition((raysStartPosition + raysEndPosition) * 0.5f)
                 .Render();
         }
     }
