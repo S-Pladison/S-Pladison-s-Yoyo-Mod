@@ -136,7 +136,7 @@ namespace SPYoyoMod
 
             public override void PostSetupContent()
             {
-                if (Main.dedServ)
+                if (!Main.dedServ)
                 {
                     ModEvents.OnPreDraw += CheckResolution;
                     Main.OnResolutionChanged += VanillaResolutionChanged;
