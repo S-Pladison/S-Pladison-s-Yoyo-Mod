@@ -10,22 +10,34 @@ using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common.Yoyos
 {
+    /// <summary>
+    /// Класс, представляющий собой обертку класса <see cref="GlobalItem"/>, позволяющий работать с йо-йо немного проще;<br/>
+    /// Привязывается к определенному типу предмета (см. <see cref="YoyoItem.OverrideType"/>), если хотим модифицировать его;<br/>
+    /// Но, в отличии от <see cref="GlobalItem"/>, если не указывать значение <see cref="YoyoItem.OverrideType"/>, может создать совершено новый предмет (модовый);<br/>
+    /// Зачем это нужно? Да чтобы код был одинаковым как для модовых йо-йо, так и для переделки ванильных... По факту он и не нужен, но я так хочу...<br/>
+    /// </summary>
     public abstract class YoyoItem : GlobalItem, ILocalizedModType
     {
-        private static readonly Dictionary<Type, YoyoItem> _definitions = [];
+        private static readonly Dictionary<Type, YoyoItem> _samples = [];
         private static readonly Dictionary<int, YoyoItem> _byItemType = [];
-        private static readonly Dictionary<Type, YoyoItem> _byProjectileClass = [];
 
+        public abstract Type ProjectileType { get; }
+
+        /// <summary>
+        /// Тип предмета йо-йо, который нужно переделать;<br/>
+        /// Если значение равно 0, то создастся новый йо-йо, и класс будет работать именно с ним;<br/>
+        /// Тип предмета будет хранится в переменной <see cref="YoyoItem.Type"/><br/>
+        /// </summary>
         public virtual int OverrideType => 0;
+
+        public virtual string Texture => null; //< TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
+        public virtual LocalizedText Tooltip => this.GetLocalization(nameof(Tooltip), () => "");
+        public virtual int? GamepadExtraRange => null;
+
         public int Type { get; private set; }
         public bool IsOverride => OverrideType > 0;
         public bool IsVanilla => ItemUtils.IsVanilla(OverrideType);
-        public virtual string Texture => null; // TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
-        public virtual LocalizedText Tooltip => this.GetLocalization(nameof(Tooltip), () => "");
-        public virtual int? GamepadExtraRange => null;
         public Item Item { get; private set; }
-
-        protected abstract Type ProjectileClass { get; }
 
         string ILocalizedModType.LocalizationCategory => "Items";
 
@@ -39,32 +51,38 @@ namespace SPYoyoMod.Common.Yoyos
             return item.type == Type;
         }
 
-        public static T Get<T>() where T : YoyoItem
-        {
-            if (_definitions.TryGetValue(typeof(T), out var item))
-                return (T)item;
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static T GetSample<T>() where T : YoyoItem
+            => (T)GetSample(typeof(T));
 
-            throw new InvalidOperationException($"YoyoItem '{typeof(T).Name}' is not loaded.");
+        public static YoyoItem GetSample(Type type)
+        {
+            if (TryGetSample(type, out var item))
+                return item;
+
+            throw new InvalidOperationException($"YoyoItem '{type.Name}' is not loaded.");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool Is<T>(Item item) where T : YoyoItem
-            => item.type == Get<T>().Type;
+        public static bool TryGetSample(Type type, out YoyoItem yoyo)
+            => _samples.TryGetValue(type, out yoyo);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static bool Is<T>(Item item) where T : YoyoItem
+            => item.type == GetSample<T>().Type;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryGet(int itemType, out YoyoItem yoyo)
             => _byItemType.TryGetValue(itemType, out yoyo);
 
-        internal static bool TryGetByProjectile(Type projectileClass, out YoyoItem yoyo)
-            => _byProjectileClass.TryGetValue(projectileClass, out yoyo);
-
         public sealed override void Load()
         {
-            _definitions[GetType()] = this;
+            _samples[GetType()] = this;
 
             var typeName = GetType().FullName;
 
-            if (ProjectileClass is null || !typeof(YoyoProjectile).IsAssignableFrom(ProjectileClass) || ProjectileClass.IsAbstract)
-                throw new Exception($"'{typeName}.{nameof(ProjectileClass)}' must be a concrete {nameof(YoyoProjectile)} type");
+            if (ProjectileType is null || !typeof(YoyoProjectile).IsAssignableFrom(ProjectileType) || ProjectileType.IsAbstract)
+                throw new Exception($"'{typeName}.{nameof(ProjectileType)}' must be a concrete {nameof(YoyoProjectile)} type");
 
             if (IsOverride)
             {
@@ -81,21 +99,17 @@ namespace SPYoyoMod.Common.Yoyos
                 if (!GamepadExtraRange.HasValue)
                     throw new Exception($"'{typeName}' must specify {nameof(GamepadExtraRange)}");
 
-                var stub = (ModItem)Activator.CreateInstance(typeof(ModItemStub<,>).MakeGenericType(GetType(), ProjectileClass), nonPublic: true);
+                var stub = (ModItem)Activator.CreateInstance(typeof(ModItemStub<,>).MakeGenericType(GetType(), ProjectileType), nonPublic: true);
                 Mod.AddContent(stub);
                 Type = stub.Type;
             }
 
-            if (_byProjectileClass.TryGetValue(ProjectileClass, out var existingByProjectile))
-                throw new Exception($"'{typeName}' cannot use {nameof(YoyoProjectile)} '{ProjectileClass.Name}'; already used by '{existingByProjectile.GetType().FullName}'");
-
             if (_byItemType.TryGetValue(Type, out var existingByType))
                 throw new Exception($"'{typeName}' cannot use item type {Type}; already used by '{existingByType.GetType().FullName}'");
 
-            if (YoyoProjectile.TryGet(ProjectileClass, out var proj) && proj.ItemClass != GetType())
-                throw new Exception($"'{proj.GetType().FullName}.{nameof(YoyoProjectile.ItemClass)}' must be '{typeName}'");
+            if (YoyoProjectile.TryGetSample(ProjectileType, out var proj) && proj.ItemType != GetType())
+                throw new Exception($"'{proj.GetType().FullName}.{nameof(YoyoProjectile.ItemType)}' must be '{typeName}'");
 
-            _byProjectileClass[ProjectileClass] = this;
             _byItemType[Type] = this;
 
             OnLoad();
@@ -105,15 +119,11 @@ namespace SPYoyoMod.Common.Yoyos
         {
             OnUnload();
 
-            _definitions.Remove(GetType());
+            _samples.Remove(GetType());
             _byItemType.Remove(Type);
-            _byProjectileClass.Remove(ProjectileClass);
 
-            if (_definitions.Count == 0)
-            {
+            if (_samples.Count == 0)
                 _byItemType.Clear();
-                _byProjectileClass.Clear();
-            }
         }
 
         protected virtual void OnLoad() { }
@@ -136,6 +146,12 @@ namespace SPYoyoMod.Common.Yoyos
             return inst;
         }
 
+        /// <summary>
+        /// Класс для внесения общих модификакий ванильных йо-йо;<br/>
+        /// Нужен для того, чтобы тот же base.SetStaticDefaults() и base.ModifyTooltips() не прописывать каждый раз...<br/>
+        /// А запечатывать метод и создавать новый виртуальный с другим наименованием не хочу;<br/>
+        /// Поэтому, делает вот такой финт...<br/>
+        /// </summary>
         [LoadBefore(typeof(YoyoItem))]
         private sealed class OverrideGlobalItem : GlobalItem
         {
@@ -176,21 +192,25 @@ namespace SPYoyoMod.Common.Yoyos
             }
         }
 
+        /// <summary>
+        /// Заглушка... Чтобы класс мог создавать новые йо-йо, а не только переопределять существующие.
+        /// </summary>
+        /// <typeparam name="TItem"></typeparam>
+        /// <typeparam name="TProjectile"></typeparam>
         [Autoload(false)]
-        private sealed class ModItemStub<TItem, TProjectile> : ModItem
-            where TItem : YoyoItem
-            where TProjectile : YoyoProjectile
+        private sealed class ModItemStub<TItem, TProjectile> : ModItem where TItem : YoyoItem where TProjectile : YoyoProjectile
         {
-            private static TItem Definition => Get<TItem>();
+            private static TItem Sample => GetSample<TItem>();
 
-            public override string Name => typeof(TItem).Name;
-            public override string Texture => Definition.Texture;
-            public override LocalizedText Tooltip => Definition.Tooltip;
+            public override string Name => typeof(TItem).Name.Replace("Item", ""); //< Мы же не хотим, чтобы "выгруженные" предметы имели в наименовании приписку "Item"
+            public override string Texture => Sample.Texture;
+            public override LocalizedText DisplayName => Sample.GetLocalization(nameof(DisplayName), PrettyPrintName); //< TODO: Заменять ванильные наименования йо-йо?
+            public override LocalizedText Tooltip => Sample.Tooltip;
 
             public override void SetStaticDefaults()
             {
                 ItemID.Sets.Yoyo[Type] = true;
-                ItemID.Sets.GamepadExtraRange[Type] = Definition.GamepadExtraRange.Value;
+                ItemID.Sets.GamepadExtraRange[Type] = Sample.GamepadExtraRange.Value;
                 ItemID.Sets.GamepadSmartQuickReach[Type] = true;
             }
 
@@ -210,25 +230,25 @@ namespace SPYoyoMod.Common.Yoyos
                 Item.channel = true;
                 Item.noMelee = true;
                 Item.noUseGraphic = true;
-                Item.shoot = YoyoProjectile.Get<TProjectile>().Type;
+                Item.shoot = YoyoProjectile.GetSample<TProjectile>().Type;
             }
         }
     }
 
+    /// <summary>
+    /// Класс, представляющий собой обертку класса <see cref="GlobalItem"/>, позволяющий работать с йо-йо немного проще;<br/>
+    /// Привязывается к определенному типу предмета (см. <see cref="YoyoItem.OverrideType"/>), если хотим модифицировать его;<br/>
+    /// Но, в отличии от <see cref="GlobalItem"/>, если не указывать значение <see cref="YoyoItem.OverrideType"/>, может создать совершено новый предмет (модовый);<br/>
+    /// Зачем это нужно? Да чтобы код был одинаковым как для модовых йо-йо, так и для переделки ванильных... По факту он и не нужен, но я так хочу...<br/>
+    /// </summary>
     public abstract class YoyoItem<TProjectile> : YoyoItem where TProjectile : YoyoProjectile
     {
-        public static new int Type
-        {
-            get
-            {
-                if (!TryGetByProjectile(typeof(TProjectile), out var item))
-                    throw new InvalidOperationException($"YoyoItem '{typeof(TProjectile).Name}' is not loaded.");
+        /// <summary>
+        /// Тип переделываемого или создаваемого йо-йо.
+        /// </summary>
+        public static new int Type => GetSample(YoyoProjectile.GetSample<TProjectile>().ItemType).Type;
 
-                return item.Type;
-            }
-        }
-
-        protected sealed override Type ProjectileClass => typeof(TProjectile);
+        public sealed override Type ProjectileType => typeof(TProjectile);
     }
 
     public static class YoyoItemExtensions
