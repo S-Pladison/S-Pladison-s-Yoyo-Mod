@@ -27,7 +27,7 @@ namespace SPYoyoMod.Common.Yoyos
         /// <summary>
         /// Тип снаряда йо-йо, который нужно переделать;<br/>
         /// Если значение равно 0, то создастся новый йо-йо, и класс будет работать именно с ним;<br/>
-        /// Тип снаряда будет хранится в переменной <see cref="YoyoProjectile.Type"/><br/>
+        /// Тип снаряда будет хранится в свойстве <see cref="YoyoProjectile.Type"/><br/>
         /// </summary>
         public virtual int OverrideType => 0;
 
