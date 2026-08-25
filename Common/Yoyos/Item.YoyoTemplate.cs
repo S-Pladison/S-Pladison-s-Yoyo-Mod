@@ -26,7 +26,7 @@ namespace SPYoyoMod.Common.Yoyos
         /// <summary>
         /// Тип предмета йо-йо, который нужно переделать;<br/>
         /// Если значение равно 0, то создастся новый йо-йо, и класс будет работать именно с ним;<br/>
-        /// Тип предмета будет хранится в свойство <see cref="YoyoItem.Type"/><br/>
+        /// Тип предмета будет хранится в свойстве <see cref="YoyoItem.Type"/><br/>
         /// </summary>
         public virtual int OverrideType => 0;
 
