@@ -117,7 +117,7 @@ namespace SPYoyoMod
         private static void ModOnPreDraw(GameTime _)
             => ModEvents.OnPreDraw();
 
-        [LoadAfter(typeof(ModEvents))]
+        [LoadBefore, LoadAfter(typeof(ModEvents))]
         private sealed class EventSystem : ModSystem
         {
             private Point _savedScreenSize;
@@ -219,7 +219,7 @@ namespace SPYoyoMod
             }
         }
 
-        [LoadAfter(typeof(ModEvents))]
+        [LoadBefore, LoadAfter(typeof(ModEvents))]
         private sealed class EventPlayer : ModPlayer
         {
             public override void PlayerConnect()
