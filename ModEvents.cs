@@ -122,15 +122,6 @@ namespace SPYoyoMod
         {
             private Point _savedScreenSize;
 
-            public override void Load()
-            {
-                if (Main.dedServ)
-                    return;
-
-                ModEvents.OnPreDraw += CheckResolution;
-                Main.OnResolutionChanged += VanillaResolutionChanged;
-            }
-
             public override void Unload()
             {
                 if (Main.dedServ)
@@ -145,7 +136,13 @@ namespace SPYoyoMod
 
             public override void PostSetupContent()
             {
-                CheckResolution();
+                if (Main.dedServ)
+                {
+                    ModEvents.OnPreDraw += CheckResolution;
+                    Main.OnResolutionChanged += VanillaResolutionChanged;
+
+                    CheckResolution();
+                }
 
                 ModEvents.OnPostSetupContent();
             }
@@ -157,7 +154,9 @@ namespace SPYoyoMod
                 => ModEvents.OnPreUpdateDusts();
 
             public override void PostUpdateEverything()
-                => ModEvents.OnPostUpdateEverything();
+            {
+                ModEvents.OnPostUpdateEverything();
+            }
 
             private void VanillaResolutionChanged(Vector2 _)
             {
@@ -177,6 +176,8 @@ namespace SPYoyoMod
                 _savedScreenSize = screenSize;
 
                 ModEvents.OnResolutionChanged(screenSize);
+
+                ModContent.GetInstance<SPYoyoMod>().Logger.Info($":D {screenSize}");
             }
 
             private static Point GetActualScreenSize()
