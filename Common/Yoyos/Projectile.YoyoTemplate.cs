@@ -13,8 +13,8 @@ namespace SPYoyoMod.Common.Yoyos
 {
     /// <summary>
     /// Класс, представляющий собой обертку класса <see cref="GlobalProjectile"/>, позволяющий работать с йо-йо немного проще;<br/>
-    /// Привязывается к определенному типу снаряда (см. <see cref="YoyoProjectile.OverrideType"/>), если хотим модифицировать его;<br/>
-    /// Но, в отличии от <see cref="GlobalProjectile"/>, если не указывать значение <see cref="YoyoProjectile.OverrideType"/>, может создать совершено новый предмет (модовый);<br/>
+    /// Привязываемся к определенному типу снаряда (см. <see cref="YoyoProjectile.OverrideType"/>), если хотим модифицировать его;<br/>
+    /// Но в отличии от <see cref="GlobalProjectile"/>, если не указать значение <see cref="YoyoProjectile.OverrideType"/>, может создать совершенно новый предмет (модовый);<br/>
     /// Зачем это нужно? Да чтобы код был одинаковым как для модовых йо-йо, так и для переделки ванильных... По факту он и не нужен, но я так хочу...<br/>
     /// </summary>
     public abstract class YoyoProjectile : GlobalProjectile, IPostDrawYoyoStringProjectile

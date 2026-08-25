@@ -12,8 +12,8 @@ namespace SPYoyoMod.Common.Yoyos
 {
     /// <summary>
     /// Класс, представляющий собой обертку класса <see cref="GlobalItem"/>, позволяющий работать с йо-йо немного проще;<br/>
-    /// Привязывается к определенному типу предмета (см. <see cref="YoyoItem.OverrideType"/>), если хотим модифицировать его;<br/>
-    /// Но, в отличии от <see cref="GlobalItem"/>, если не указывать значение <see cref="YoyoItem.OverrideType"/>, может создать совершено новый предмет (модовый);<br/>
+    /// Привязываемся к определенному типу предмета (см. <see cref="YoyoItem.OverrideType"/>), если хотим модифицировать его;<br/>
+    /// Но в отличии от <see cref="GlobalItem"/>, если не указать значение <see cref="YoyoItem.OverrideType"/>, может создать совершенно новый предмет (модовый);<br/>
     /// Зачем это нужно? Да чтобы код был одинаковым как для модовых йо-йо, так и для переделки ванильных... По факту он и не нужен, но я так хочу...<br/>
     /// </summary>
     public abstract class YoyoItem : GlobalItem, ILocalizedModType
