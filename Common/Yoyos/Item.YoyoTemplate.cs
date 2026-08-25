@@ -26,7 +26,7 @@ namespace SPYoyoMod.Common.Yoyos
         /// <summary>
         /// Тип предмета йо-йо, который нужно переделать;<br/>
         /// Если значение равно 0, то создастся новый йо-йо, и класс будет работать именно с ним;<br/>
-        /// Тип предмета будет хранится в свойстве <see cref="YoyoItem.Type"/><br/>
+        /// Тип предмета можно узнать из свойства <see cref="YoyoItem.Type"/><br/>
         /// </summary>
         public virtual int OverrideType => 0;
 
@@ -147,10 +147,10 @@ namespace SPYoyoMod.Common.Yoyos
         }
 
         /// <summary>
-        /// Класс для внесения общих модификакий ванильных йо-йо;<br/>
+        /// Класс для внесения общих модификаций ванильных йо-йо;<br/>
         /// Нужен для того, чтобы тот же base.SetStaticDefaults() и base.ModifyTooltips() не прописывать каждый раз...<br/>
         /// А запечатывать метод и создавать новый виртуальный с другим наименованием не хочу;<br/>
-        /// Поэтому, делает вот такой финт...<br/>
+        /// Поэтому, делаем вот такой финт...<br/>
         /// </summary>
         [LoadBefore(typeof(YoyoItem))]
         private sealed class OverrideGlobalItem : GlobalItem

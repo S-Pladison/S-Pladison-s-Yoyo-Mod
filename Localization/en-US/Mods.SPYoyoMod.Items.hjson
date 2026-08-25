@@ -1,11 +1,15 @@
-BellowingThunderItem: {
-	DisplayName: Bellowing Thunder
-	Tooltip: ... {0} ...
-}
+AmarokItem.Tooltip: ""
+AmazonItem.Tooltip: ""
+ArteryItem.Tooltip: ""
 
 BearingItem: {
 	DisplayName: Bearing
-	Tooltip: "{0}% increased yoyo duration"
+	Tooltip: ...
+}
+
+BellowingThunderItem: {
+	DisplayName: Bellowing Thunder
+	Tooltip: ...
 }
 
 BlackholeItem: {
@@ -13,53 +17,35 @@ BlackholeItem: {
 	Tooltip: ""
 }
 
-CascadeItem.Tooltip:
-	'''
-	Hits have a chance to ignite enemies
-	Periodically explodes, dealing area damage
-	'''
-Code1Item.Tooltip: Hits may infect an enemy with a virus that later bursts in a digital pulse
-GradientItem.Tooltip: Hits may unleash a barrage of daggers
-RallyItem.Tooltip: Deals {0}% increased damage when fighting a single enemy
-
-TheStellarThrowItem: {
-	DisplayName: The Stellar Throw
-	Tooltip: ""
-}
-
-SoulTormentorItem: {
-	DisplayName: Soul Tormentor
-	Tooltip:
-		'''
-		Charms {0} nearest enemies
-		'No, it's not a love triangle...'
-		'''
-}
-
-StrangeDrinkItem: {
-	DisplayName: Strange Drink
-	Tooltip:
-		'''
-		Might be of interest to the Nurse
-		'Don't even think about drinking it'
-		'''
-}
-
-ValorItem.Tooltip:
-	'''
-	{0}% chance to inflict the "{$Buffs.ValorBuff.DisplayName}" debuff
-	If a nearby enemy already has this debuff, the chance is greatly reduced
-	'''
-AmarokItem.Tooltip: ""
-AmazonItem.Tooltip: ""
-ArteryItem.Tooltip: ""
+CascadeItem.Tooltip: ...
 ChikItem.Tooltip: ""
+Code1Item.Tooltip: ...
 Code2Item.Tooltip: ""
 FormatCItem.Tooltip: ""
+GradientItem.Tooltip: ...
 HelFireItem.Tooltip: ""
 HiveFiveItem.Tooltip: ""
 KrakenItem.Tooltip: ""
 MalaiseItem.Tooltip: ""
+RallyItem.Tooltip: ...
+
+SoulTormentorItem: {
+	DisplayName: Soul Tormentor
+	Tooltip: ...
+}
+
+StrangeDrinkItem: {
+	DisplayName: Strange Drink
+	Tooltip: ...
+}
+
 TerrarianItem.Tooltip: ""
 TheEyeOfCthulhuItem.Tooltip: ""
+
+TheStellarThrowItem: {
+	DisplayName: The Stellar Throw
+	Tooltip: ...
+}
+
+ValorItem.Tooltip: ...
 YeletsItem.Tooltip: ""
