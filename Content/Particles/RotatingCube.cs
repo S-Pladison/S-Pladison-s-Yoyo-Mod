@@ -34,6 +34,11 @@ namespace SPYoyoMod.Content.Particles
         protected override void OnUpdate()
         {
             Velocity *= 0.96f;
+
+            var fade = _fadeEasing.Evaluate(LifeTimeRatio);
+            var color = Color.Lerp(StartColor, EndColor, LifeTimeRatio) with { A = (byte)(255f * fade) };
+
+            Lighting.AddLight(Position, color.ToVector3() * 0.1f);
         }
 
         public override void Draw(SpriteBatch spriteBatch, in Vector2 screenPosition)
