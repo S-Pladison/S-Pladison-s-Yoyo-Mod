@@ -104,13 +104,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void SetDefaults()
         {
+            Projectile.DefaultToVisualEffect();
+
             Projectile.width = 64;
             Projectile.height = 64;
 
             Projectile.timeLeft = InitTimeLeft;
-            Projectile.friendly = true;
-            Projectile.tileCollide = false;
-            Projectile.penetrate = -1;
 
             Projectile.hide = true;
         }
@@ -283,6 +282,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
+            Projectile.noEnchantmentVisuals = true;
             Projectile.extraUpdates = 2;
 
             Projectile.usesLocalNPCImmunity = true;

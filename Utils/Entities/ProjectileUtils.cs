@@ -22,6 +22,7 @@ namespace SPYoyoMod.Utils
             proj.penetrate = -1;
             proj.ignoreWater = true;
             proj.tileCollide = false;
+            proj.noEnchantmentVisuals = true;
             proj.damage = 0;
 
             proj.DamageType = DamageClass.Generic;

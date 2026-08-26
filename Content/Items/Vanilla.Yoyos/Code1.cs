@@ -32,13 +32,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class Code1Item : YoyoItem<Code1Projectile>
     {
         public override int OverrideType => ItemID.Code1;
-
-        //=/-
-
-        public override void SetDefaults(Item item)
-        {
-            item.crit = 11;
-        }
     }
 
     public sealed class Code1Projectile : YoyoProjectile<Code1Item>
@@ -181,12 +174,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             Projectile.width = (int)(MaxWaveRadius * 2);
             Projectile.height = (int)(MaxWaveRadius * 2);
+
             Projectile.timeLeft = GetStateDuration(State.Appear) + GetStateDuration(State.Hold) + GetStateDuration(State.Compress) + GetStateDuration(State.Burst);
             Projectile.hide = true;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
             Projectile.penetrate = -1;
+            Projectile.noEnchantmentVisuals = true;
 
             Projectile.usesLocalNPCImmunity = true;
             Projectile.localNPCHitCooldown = -1;

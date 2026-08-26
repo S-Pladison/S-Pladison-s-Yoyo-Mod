@@ -329,6 +329,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.penetrate = -1;
+            Projectile.noEnchantmentVisuals = true;
             Projectile.extraUpdates = 1;
 
             Projectile.usesLocalNPCImmunity = true;
