@@ -79,7 +79,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 if (otherProj.type != ModContent.ProjectileType<Code1DigitalWaveProjectile>())
                     continue;
 
-                if ((otherProj.As<Code1DigitalWaveProjectile>()?.TargetWhoAmI ?? -1) == target.whoAmI)
+                if ((otherProj.As<Code1DigitalWaveProjectile>()?.Target ?? -1) == target.whoAmI)
                     return true;
             }
 
@@ -114,9 +114,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     {
         private enum State
         {
-            Appear,
-            Hold,
-            Compress,
+            Charge,
             Burst
         }
 
@@ -124,49 +122,41 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly Color BurstColor = new(215, 36, 62);
         public static readonly float MinChargeRadius = TileUtils.TileSizeInPixels * 3f;
         public static readonly float MaxWaveRadius = TileUtils.TileSizeInPixels * 16f;
-        public static readonly int InitTimeLeft = GetStateDuration(State.Appear) + GetStateDuration(State.Hold) + GetStateDuration(State.Compress) + GetStateDuration(State.Burst);
+        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(2f);
+        public static readonly float BurstStartRatio = 0.6f;
+
+        private static readonly EasingBuilder _radiusEasing = new(
+            (EasingFunctions.OutCubic, 0.06f, 0f, 1f),
+            (EasingFunctions.Linear, 0.44f, 1f, 1f),
+            (EasingFunctions.InCubic, 0.10f, 1f, 0.12f),
+            (EasingFunctions.OutExpo, 0.40f, 0.12f, MaxWaveRadius / MinChargeRadius)
+        );
+
+        private static readonly EasingBuilder _strengthEasing = new(
+            (EasingFunctions.OutQuad, 0.06f, 0f, 1f),
+            (EasingFunctions.Linear, 0.54f, 1f, 1f),
+            (EasingFunctions.OutCubic, 0.40f, 1f, 0f)
+        );
 
         private static readonly EasingBuilder _npcOutlineEasing = new(
             (EasingFunctions.OutQuad, 0.10f, 0f, 1f),
-            (EasingFunctions.Linear, 0.75f, 1f, 1f),
-            (EasingFunctions.InCubic, 0.15f, 1f, 0f)
+            (EasingFunctions.Linear, 0.50f, 1f, 1f),
+            (EasingFunctions.InCubic, 0.15f, 1f, 0f),
+            (EasingFunctions.Linear, 0.25f, 0f, 0f)
         );
 
-        private State _state = State.Appear;
-        private int _stateTimer;
         private float _chargeRadius = MinChargeRadius;
+        private State _state = State.Charge;
 
         public override string Texture => Code1Assets.InvisiblePath;
-        public int TargetWhoAmI => (int)Projectile.ai[0];
+
+        public int Target => (int)Projectile.ai[0];
         public bool IsBursting => _state == State.Burst;
-        public float ChargeRadius => _chargeRadius;
-        public float CompressRadius => MathHelper.Max(8f, ChargeRadius * 0.12f);
-        public float StateProgress => MathHelper.Clamp(_stateTimer / (float)GetStateDuration(_state), 0f, 1f);
         public float LifeTimeRatio => 1f - Projectile.timeLeft / (float)InitTimeLeft;
 
-        public float Radius => _state switch
-        {
-            State.Appear => ChargeRadius * EasingFunctions.OutCubic(StateProgress),
-            State.Hold => ChargeRadius,
-            State.Compress => MathHelper.Lerp(ChargeRadius, CompressRadius, EasingFunctions.InCubic(StateProgress)),
-            State.Burst => MathHelper.Lerp(CompressRadius, MaxWaveRadius, EasingFunctions.OutExpo(StateProgress)),
-            _ => ChargeRadius
-        };
-
-        public float Strength => _state switch
-        {
-            State.Appear => EasingFunctions.OutQuad(StateProgress),
-            State.Burst when StateProgress < 0.4f => MathHelper.Lerp(1f, 0.55f, StateProgress / 0.4f),
-            State.Burst => MathHelper.Lerp(0.55f, 0f, EasingFunctions.OutCubic((StateProgress - 0.4f) / 0.6f)),
-            _ => 1f
-        };
-
-        public float Fill => IsBursting ? 0f : 1f; //< Кольцо или круг
-
-        public override void SetStaticDefaults()
-        {
-            ProjectileID.Sets.DrawScreenCheckFluff[Type] = (int)MaxWaveRadius;
-        }
+        public float Radius => _chargeRadius * _radiusEasing.Evaluate(LifeTimeRatio);
+        public float Strength => _strengthEasing.Evaluate(LifeTimeRatio);
+        public float Fill => IsBursting ? 0f : 1f;
 
         public override void SetDefaults()
         {
@@ -175,7 +165,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.width = (int)(MaxWaveRadius * 2);
             Projectile.height = (int)(MaxWaveRadius * 2);
 
-            Projectile.timeLeft = GetStateDuration(State.Appear) + GetStateDuration(State.Hold) + GetStateDuration(State.Compress) + GetStateDuration(State.Burst);
+            Projectile.timeLeft = InitTimeLeft;
             Projectile.hide = true;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
@@ -198,7 +188,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             TryOutlineTarget();
 
             ModContent.GetInstance<Code1ScreenEffectHandler>()?.Add(Projectile);
-
             SoundEngine.PlaySound(Code1Assets.InfectSound with { Pitch = 0.7f, PitchVariance = 0.08f }, Projectile.Center);
         }
 
@@ -214,13 +203,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             if (!IsBursting)
             {
-                if (TryGetTarget(out var npc))
+                var hasTarget = TryGetTarget(out var npc);
+
+                if (hasTarget)
                     RefreshChargeValueFromTarget(npc);
-                else
+
+                if (!hasTarget || LifeTimeRatio >= BurstStartRatio)
                     SetState(State.Burst);
             }
-
-            TickState();
 
             if (Main.dedServ || IsBursting)
                 return;
@@ -254,60 +244,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Lighting.AddLight(Projectile.Center, GetOutlineColor(LifeTimeRatio).ToVector3() * Strength * 0.35f);
         }
 
-        private static int GetStateDuration(State state) => state switch
-        {
-            State.Appear => GeneralUtils.SecondsToTicks(0.12f),
-            State.Hold => GeneralUtils.SecondsToTicks(0.88f),
-            State.Compress => GeneralUtils.SecondsToTicks(0.2f),
-            State.Burst => GeneralUtils.SecondsToTicks(0.8f),
-            _ => 1
-        };
-
-        private void TickState()
-        {
-            _stateTimer++;
-
-            if (_stateTimer < GetStateDuration(_state))
-                return;
-
-            switch (_state)
-            {
-                case State.Appear:
-                    SetState(State.Hold);
-                    break;
-                case State.Hold:
-                    SetState(State.Compress);
-                    break;
-                case State.Compress:
-                    SetState(State.Burst);
-                    break;
-                case State.Burst:
-                    Projectile.Kill();
-                    break;
-            }
-        }
-
         private void SetState(State state)
         {
-            var startBurst = state == State.Burst && _state != State.Burst;
+            if (_state == state)
+                return;
 
             _state = state;
-            _stateTimer = 0;
 
-            if (startBurst)
-                OnStartBurst();
-        }
+            if (state != State.Burst)
+                return;
 
-        private void RefreshChargeValueFromTarget(NPC npc)
-        {
-            Projectile.Center = npc.Center;
+            var burstTimeLeft = InitTimeLeft - (int)(InitTimeLeft * BurstStartRatio);
 
-            var size = (npc.width + npc.height) * 0.5f;
-            _chargeRadius = MinChargeRadius * MathF.Sqrt(Math.Max(size / MinChargeRadius, 1f));
-        }
+            if (Projectile.timeLeft > burstTimeLeft)
+                Projectile.timeLeft = burstTimeLeft;
 
-        private void OnStartBurst()
-        {
             if (Main.dedServ)
                 return;
 
@@ -327,14 +278,22 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             SpawnExplosionParticles();
         }
 
+        private void RefreshChargeValueFromTarget(NPC npc)
+        {
+            Projectile.Center = npc.Center;
+
+            var size = (npc.width + npc.height) * 0.5f;
+            _chargeRadius = MinChargeRadius * MathF.Sqrt(Math.Max(size / MinChargeRadius, 1f));
+        }
+
         private bool TryGetTarget(out NPC npc)
         {
             npc = null;
 
-            if (!Main.npc.IndexInRange(TargetWhoAmI))
+            if (!Main.npc.IndexInRange(Target))
                 return false;
 
-            npc = Main.npc[TargetWhoAmI];
+            npc = Main.npc[Target];
             return npc is not null && npc.active && npc.life > 0;
         }
 
@@ -346,7 +305,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             NPCEffectManager.Outline(new NPCEffectManager.OutlineSettings()
             {
                 NpcWhoAmI = npc.whoAmI,
-                LifeTime = InitTimeLeft - GetStateDuration(State.Burst) / 2, //< Пропадает чуть раньше, чем снаряд волны
+                LifeTime = InitTimeLeft,
                 OutlineColor = lifeTimeRatio => GetOutlineColor(lifeTimeRatio),
                 NpcColor = lifeTimeRatio => GetOutlineColor(lifeTimeRatio) * 0.1f
             });
@@ -357,7 +316,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (!Main.rand.NextBool(10) || Main.dedServ)
                 return;
 
-            var speedScale = _state == State.Compress ? -1.2f : 0.35f;
             var radius = Radius * Main.rand.NextFloat(0.2f, 0.9f);
             var direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
             var color = Main.rand.NextBool() ? ChargeColor : BurstColor;
@@ -365,7 +323,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             particle.LifeTime = GeneralUtils.SecondsToTicks(0.8f);
             particle.Position = Projectile.Center + direction * radius;
-            particle.Velocity = direction * Main.rand.NextFloat(0.5f, 1.8f) * speedScale;
+            particle.Velocity = direction * Main.rand.NextFloat(0.5f, 1.8f);
             particle.StartColor = color;
             particle.EndColor = color;
             particle.Scale = Main.rand.NextFloat(0.55f, 0.85f);
