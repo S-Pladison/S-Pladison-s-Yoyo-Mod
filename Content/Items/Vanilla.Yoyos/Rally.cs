@@ -27,6 +27,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
+        public static readonly LazyAsset<Texture2D> TrailTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flag");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
     }
 
     public sealed class RallyItem : YoyoItem<RallyProjectile>
@@ -36,6 +38,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         //=/-
 
         public override LocalizedText Tooltip => base.Tooltip.WithFormatArgs((int)((RallyProjectile.SoloDamageMultiplier - 1f) * 100f));
+
+        public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
+        {
+            var damageLine = tooltips.Find(VanillaTooltipLine.Damage);
+
+            if (damageLine is null)
+                return;
+
+            ItemUtils.ModifyFirstIntegerInLine(damageLine, static (damage) =>
+            {
+                return (int)(damage * (Main.LocalPlayer.GetModPlayer<RallyPlayer>().IsActive ? RallyProjectile.SoloDamageMultiplier : 1f));
+            });
+        }
     }
 
     public sealed class RallyProjectile : YoyoProjectile<RallyItem>, IInitializableProjectile, IEmitLightEntity
@@ -47,8 +62,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly float SoloDamageMultiplier = 1.5f;
         public static readonly int CombatMemoryTime = GeneralUtils.SecondsToTicks(5f);
         public static readonly Color GlowColor = new(243, 252, 255);
+        public static readonly int TrailPointCount = 5;
 
         private YoyoStringRenderer _stringRenderer;
+        private StripRenderer _trailRenderer;
+        private LinkedList<Vector2> _oldPositions;
         private float _fadeProgress;
         private bool _isBonusActive;
 
@@ -61,6 +79,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 ModContent.Request<Texture2D>(RallyAssets.StringPath, AssetRequestMode.ImmediateLoad).Value,
                 this
             ));
+
+            _trailRenderer = new StripRenderer(Main.graphics.GraphicsDevice, capacity: TrailPointCount)
+            {
+                StartWidth = 16,
+                EndWidth = 8,
+                StartColor = Color.White,
+                EndColor = Color.Transparent
+            };
+
+            _oldPositions = [];
+        }
+
+        public override void OnKill(Projectile proj, int timeLeft)
+        {
+            _trailRenderer?.Dispose();
         }
 
         public override void OnSpawn(Projectile proj, IEntitySource source)
@@ -78,56 +111,67 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             _fadeProgress = MathHelper.Clamp(_fadeProgress + (_isBonusActive ? 0.05f : -0.05f), 0f, 1f);
+
+            if (_trailRenderer is not null)
+            {
+                _oldPositions.AddFirst(proj.Center + proj.velocity);
+
+                while (_oldPositions.Count > TrailPointCount)
+                    _oldPositions.RemoveLast();
+
+                _trailRenderer.SetPoints(_oldPositions);
+            }
         }
 
         public override void ModifyHitNPC(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
         {
             if (!_isBonusActive)
-            {
                 return;
-            }
 
             modifiers.SourceDamage *= SoloDamageMultiplier;
         }
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            var whiteBlue = new Color(220, 235, 255);
-            var brightBlue = new Color(70, 140, 255);
-            var origin = proj.Center;
-            var vector = proj.Center - target.Center;
-
-            if (vector == Vector2.Zero)
-                vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-            else
-                vector.Normalize();
-
-            for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+            if (_fadeProgress >= 0.5f)
             {
-                var velocity = vector.RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1f, 2.5f);
+                var lightBlue = new Color(160, 165, 180);
+                var darkBlue = new Color(115, 140, 205);
+                var origin = proj.Center;
+                var vector = proj.Center - target.Center;
 
-                var dust = Dust.NewDustPerfect(origin, DustID.PortalBoltTrail, velocity, 0, Main.rand.NextBool() ? whiteBlue : brightBlue, Main.rand.NextFloat(0.25f, 0.75f));
-                dust.noLight = true;
+                if (vector == Vector2.Zero)
+                    vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                else
+                    vector.Normalize();
+
+                for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+                {
+                    var velocity = vector.RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1f, 2.5f);
+
+                    var dust = Dust.NewDustPerfect(origin, DustID.PortalBoltTrail, velocity, 0, Main.rand.NextBool() ? lightBlue : darkBlue, Main.rand.NextFloat(0.25f, 0.75f));
+                    dust.noLight = true;
+                }
+
+                for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+                {
+                    var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
+                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
+                    particle.Position = origin;
+                    particle.Velocity = vector.RotatedBy(Main.rand.NextFloat(-1f, 1f)) * Main.rand.NextFloat(1.25f, 3.5f);
+                    particle.StartColor = lightBlue;
+                    particle.EndColor = darkBlue;
+                    particle.Scale = Main.rand.NextFloat(0.5f, 1.2f);
+                }
+
+                var star = WorldParticleManager.SpawnParticle<StarParticle>(WorldParticleFlags.Pixelated);
+                star.LifeTime = GeneralUtils.SecondsToTicks(0.25f);
+                star.Position = origin;
+                star.StartColor = lightBlue;
+                star.EndColor = darkBlue;
+                star.Scale = proj.scale * 3.5f;
+                star.Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
             }
-
-            for (var i = 0; i < 1 + Main.rand.Next(2); i++)
-            {
-                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
-                particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
-                particle.Position = origin;
-                particle.Velocity = vector.RotatedBy(Main.rand.NextFloat(-1f, 1f)) * Main.rand.NextFloat(1.25f, 3.5f);
-                particle.StartColor = whiteBlue;
-                particle.EndColor = brightBlue;
-                particle.Scale = Main.rand.NextFloat(0.5f, 1.2f);
-            }
-
-            var star = WorldParticleManager.SpawnParticle<StarParticle>(WorldParticleFlags.Pixelated);
-            star.LifeTime = GeneralUtils.SecondsToTicks(0.25f);
-            star.Position = origin;
-            star.StartColor = whiteBlue;
-            star.EndColor = brightBlue;
-            star.Scale = proj.scale * 3f;
-            star.Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
 
             if (!proj.TryGetOwner(out var owner))
                 return;
@@ -158,6 +202,29 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             if (_fadeProgress <= 0f)
                 return true;
+
+            if (_trailRenderer is not null)
+            {
+                _trailRenderer.StartColor = GlowColor * _fadeProgress;
+                _trailRenderer.EndColor = Color.Transparent;
+
+                RallyAssets.TrailEffect
+                    .Prepare(parameters =>
+                    {
+                        parameters["Texture0"].SetValue(RallyAssets.TrailTexture.Value);
+                        parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
+                    })
+                    .Apply();
+
+                _trailRenderer.Render();
+
+                // Исправление отрисовки руки
+                if (proj.TryGetOwner(out var owner) && owner.heldProj == proj.whoAmI)
+                {
+                    Main.spriteBatch.End(out var spriteBatchSnapshot);
+                    Main.spriteBatch.Begin(spriteBatchSnapshot);
+                }
+            }
 
             var glowPosition = proj.Center + proj.gfxOffY * Vector2.UnitY - Main.screenPosition;
             var glowTexture = RallyAssets.GlowTexture.Value;
