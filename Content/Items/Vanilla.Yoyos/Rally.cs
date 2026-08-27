@@ -2,6 +2,8 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Yoyos;
+using SPYoyoMod.Content.Particles;
+using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
@@ -80,7 +82,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void ModifyHitNPC(Projectile proj, NPC target, ref NPC.HitModifiers modifiers)
         {
-            if (!_isBonusActive) {
+            if (!_isBonusActive)
+            {
                 return;
             }
 
@@ -89,6 +92,43 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            var whiteBlue = new Color(220, 235, 255);
+            var brightBlue = new Color(70, 140, 255);
+            var origin = proj.Center;
+            var vector = proj.Center - target.Center;
+
+            if (vector == Vector2.Zero)
+                vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+            else
+                vector.Normalize();
+
+            for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+            {
+                var velocity = vector.RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1f, 2.5f);
+
+                var dust = Dust.NewDustPerfect(origin, DustID.PortalBoltTrail, velocity, 0, Main.rand.NextBool() ? whiteBlue : brightBlue, Main.rand.NextFloat(0.25f, 0.75f));
+                dust.noLight = true;
+            }
+
+            for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+            {
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
+                particle.Position = origin;
+                particle.Velocity = vector.RotatedBy(Main.rand.NextFloat(-1f, 1f)) * Main.rand.NextFloat(1.25f, 3.5f);
+                particle.StartColor = whiteBlue;
+                particle.EndColor = brightBlue;
+                particle.Scale = Main.rand.NextFloat(0.5f, 1.2f);
+            }
+
+            var star = WorldParticleManager.SpawnParticle<StarParticle>(WorldParticleFlags.Pixelated);
+            star.LifeTime = GeneralUtils.SecondsToTicks(0.25f);
+            star.Position = origin;
+            star.StartColor = whiteBlue;
+            star.EndColor = brightBlue;
+            star.Scale = proj.scale * 3f;
+            star.Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
+
             if (!proj.TryGetOwner(out var owner))
                 return;
 
@@ -111,7 +151,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (_fadeProgress <= 0f)
                 return;
 
-            Lighting.AddLight(entity.Center, GetGlowColor().ToVector3() * 0.05f);
+            Lighting.AddLight(entity.Center, new Color(145, 160, 255).ToVector3() * _fadeProgress * 0.1f);
         }
 
         public override bool PreDraw(Projectile proj, ref Color lightColor)

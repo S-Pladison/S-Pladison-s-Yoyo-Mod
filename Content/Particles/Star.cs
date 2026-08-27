@@ -20,6 +20,7 @@ namespace SPYoyoMod.Content.Particles
 
         public Color StartColor = Color.White;
         public Color EndColor = Color.White;
+        public float Rotation;
 
         private float _innerScale = 1.0f;
 
@@ -36,9 +37,9 @@ namespace SPYoyoMod.Content.Particles
             var color = Color.Lerp(StartColor, EndColor, LifeTimeRatio);
             var scale = Scale * _scaleEasing.Evaluate(LifeTimeRatio) * 0.8f;
 
-            spriteBatch.Draw(Texture.Value, position, _secondFrameRect, Color.Black * 0.5f, 0f, _origin, scale * 1.2f, SpriteEffects.None, 0f);
-            spriteBatch.Draw(Texture.Value, position, _firstFrameRect, color with { A = 0 }, 0f, _origin, scale, SpriteEffects.None, 0f);
-            spriteBatch.Draw(Texture.Value, position, _firstFrameRect, Color.White with { A = 0 } * 0.75f, 0f, _origin, scale * 0.33f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture.Value, position, _secondFrameRect, Color.Black * 0.5f, Rotation, _origin, scale * 1.2f, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture.Value, position, _firstFrameRect, color with { A = 0 }, Rotation, _origin, scale, SpriteEffects.None, 0f);
+            spriteBatch.Draw(Texture.Value, position, _firstFrameRect, Color.White with { A = 0 } * 0.75f, Rotation, _origin, scale * 0.33f, SpriteEffects.None, 0f);
         }
     }
 }

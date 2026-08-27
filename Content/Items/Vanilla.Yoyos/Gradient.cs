@@ -2,7 +2,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using SPYoyoMod.Common.Yoyos;
-using SPYoyoMod.Content.Items.Mod.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
 using SPYoyoMod.Core.Graphics.Renderers;
@@ -29,7 +28,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public static readonly LazyAsset<Texture2D> DaggerGlowTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_DaggerGlow");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
-        public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
         public static readonly LazyAsset<Texture2D> GlowCircleTexture = LazyAsset<Texture2D>.From($"{AssetPath}/Glow_Circle");
         public static readonly LazyAsset<Effect> GodraysEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Godrays", AssetRequestMode.ImmediateLoad);
@@ -356,7 +354,14 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             if (Projectile.timeLeft == 7)
-                Projectile.NewProjectile(Projectile.GetSource_Death(), Projectile.Bottom, Vector2.Zero, ModContent.ProjectileType<GradientStarProjectile>(), 0, 0, Projectile.owner);
+            {
+                var star = WorldParticleManager.SpawnParticle<StarParticle>(WorldParticleFlags.Pixelated);
+                star.LifeTime = GeneralUtils.SecondsToTicks(0.25f);
+                star.Position = Projectile.Bottom;
+                star.StartColor = new Color(195, 165, 55);
+                star.EndColor = new Color(255, 130, 0);
+                star.Scale = Projectile.scale * 2.75f;
+            }
 
             Projectile.rotation = Projectile.velocity.ToRotation() + MathHelper.PiOver2 + MathF.Sin(Projectile.localAI[0] * MathHelper.TwoPi) * (Projectile.whoAmI % 2 == 0 ? 1 : -1) * 0.1f;
             Projectile.localAI[0] = MathHelper.Max(Projectile.localAI[0] - 0.15f, 0f);
@@ -440,42 +445,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Main.spriteBatch.Draw(daggerTexture.Value, position, null, daggerColor, Projectile.rotation, daggerOrigin, Projectile.scale, SpriteEffects.None, 0);
 
             return false;
-        }
-    }
-
-    public sealed class GradientStarProjectile : ModProjectile, IPostDrawPixelatedProjectile
-    {
-        public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.2f);
-        public static readonly EasingBuilder ScaleEasing = new(
-            (EasingFunctions.InOutExpo, 0.4f, 0f, 1f),
-            (EasingFunctions.InOutQuad, 0.6f, 1f, 0f)
-        );
-
-        public override string Texture { get => TheStellarThrowAssets.InvisiblePath; }
-        public float LifeTimeRatio { get => 1f - Projectile.timeLeft / (float)InitTimeLeft; }
-
-        public override void SetDefaults()
-        {
-            Projectile.DefaultToVisualEffect();
-
-            Projectile.timeLeft = InitTimeLeft;
-        }
-
-        public override bool ShouldUpdatePosition()
-        {
-            return false;
-        }
-
-        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile _)
-        {
-            var position = Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition;
-
-            var starTexture = GradientAssets.StarTexture.Value;
-            var starOrigin = starTexture.Size() * 0.5f;
-            var starScale = ScaleEasing.Evaluate(LifeTimeRatio);
-
-            Main.spriteBatch.Draw(starTexture, position, null, Color.Black * 0.5f, Projectile.rotation * 0.05f, starOrigin, starScale * 0.55f, SpriteEffects.None, 0f);
-            Main.spriteBatch.Draw(starTexture, position, null, new Color(195, 165, 55) with { A = 0 }, Projectile.rotation * 0.1f, starOrigin, starScale * 0.4f, SpriteEffects.None, 0f);
         }
     }
 }
