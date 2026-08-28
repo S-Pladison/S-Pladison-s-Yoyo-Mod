@@ -86,7 +86,7 @@ namespace SPYoyoMod.Core.ModSupport
 
                 if (value is Exception ex)
                 {
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Error(ex);
+                    ModLogger.Error(ex);
                     return null;
                 }
 
@@ -94,7 +94,7 @@ namespace SPYoyoMod.Core.ModSupport
             }
             catch (Exception ex)
             {
-                ModContent.GetInstance<SPYoyoMod>().Logger.Error(ex);
+                ModLogger.Error(ex);
             }
 
             return null;

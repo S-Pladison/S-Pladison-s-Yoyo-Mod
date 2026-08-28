@@ -176,8 +176,6 @@ namespace SPYoyoMod
                 _savedScreenSize = screenSize;
 
                 ModEvents.OnResolutionChanged(screenSize);
-
-                ModContent.GetInstance<SPYoyoMod>().Logger.Info($":D {screenSize}");
             }
 
             private static Point GetActualScreenSize()

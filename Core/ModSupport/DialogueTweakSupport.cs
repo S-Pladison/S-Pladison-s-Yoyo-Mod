@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
-using Terraria.ModLoader;
 
 namespace SPYoyoMod.Core.ModSupport
 {
@@ -42,7 +41,7 @@ namespace SPYoyoMod.Core.ModSupport
             availability ??= () => true;
 
             if (Call("AddButton", npcType, buttonText, iconTexturePath, hoverCallback, availability, frame, customTextOffset) is not bool result || !result)
-                ModContent.GetInstance<SPYoyoMod>().Logger.Error($"Error:[Failed to call 'AddButton'] Mod:[{Instance.Name}] NPCTypes:[{string.Join(",", npcType)}]");
+                ModLogger.Error($"Error:[Failed to call 'AddButton'] Mod:[{Instance.Name}] NPCTypes:[{string.Join(",", npcType)}]");
         }
     }
 }

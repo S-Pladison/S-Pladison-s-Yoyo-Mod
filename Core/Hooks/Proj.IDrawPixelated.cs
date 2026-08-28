@@ -236,7 +236,7 @@ namespace SPYoyoMod.Core.Hooks
                     i => i.MatchLdcI4(1),
                     i => i.MatchCall(typeof(Main).GetMethod("DrawCachedProjs", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(List<int>), typeof(bool)]))))
                 {
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(Impl_DrawPlayers_AfterProjectiles)}\" failed...");
+                    ModLogger.Warn($"IL edit \"{nameof(Impl_DrawPlayers_AfterProjectiles)}\" failed...");
                     return;
                 }
 

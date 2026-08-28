@@ -67,7 +67,7 @@ namespace SPYoyoMod.Core.Hooks
                         i => i.MatchStloc(out num2Index)))
                     {
 
-                        ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                        ModLogger.Warn($"IL edit \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
                         return;
                     }
 
@@ -93,7 +93,7 @@ namespace SPYoyoMod.Core.Hooks
                         i => i.MatchStloc(out num10Index)))
                     {
 
-                        ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                        ModLogger.Warn($"IL edit \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
                         return;
                     }
 
@@ -126,7 +126,7 @@ namespace SPYoyoMod.Core.Hooks
                     }
                     catch (Exception)
                     {
-                        Mod.Logger.Warn($"Hook \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(ThoriumSupport)}\" failed...");
+                        ModLogger.Warn($"Hook \"{nameof(ModifyYoyoStatsImplementation)}..{nameof(ThoriumSupport)}\" failed...");
                     }
                 }
             }

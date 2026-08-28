@@ -53,7 +53,7 @@ namespace SPYoyoMod.Core.Netcode
                 _packetList.Add(packet);
                 _packetIdByTypeDict[type] = id;
 
-                _mod.Logger.Debug($"Registered NetPacket::{type.Name} with ID::{id}");
+                ModLogger.Debug($"Registered NetPacket::{type.Name} with ID::{id}");
             }
         }
 

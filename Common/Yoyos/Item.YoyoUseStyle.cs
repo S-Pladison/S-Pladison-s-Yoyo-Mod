@@ -42,7 +42,7 @@ namespace SPYoyoMod.Common.Yoyos
                     i => i.MatchStloc(out mountedCenterIndex)))
                 {
 
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(YoyoUseStyleGlobalItem)}..{nameof(IL_Main.DrawProj_Inner)}\" failed...");
+                    ModLogger.Warn($"IL edit \"{nameof(YoyoUseStyleGlobalItem)}..{nameof(IL_Main.DrawProj_Inner)}\" failed...");
                     return;
                 }
 

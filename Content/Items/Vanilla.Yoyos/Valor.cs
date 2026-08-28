@@ -376,7 +376,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     i => i.MatchLdfld<NPC>("noTileCollide"),
                     i => i.MatchBrtrue(out _)))
                 {
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(ValorGlobalNPC)}..{nameof(IL_NPC.UpdateNPC_Inner)}\" failed...");
+                    ModLogger.Warn($"IL edit \"{nameof(ValorGlobalNPC)}..{nameof(IL_NPC.UpdateNPC_Inner)}\" failed...");
                     return;
                 }
 

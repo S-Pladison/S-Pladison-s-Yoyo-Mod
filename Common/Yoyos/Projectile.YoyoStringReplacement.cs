@@ -75,7 +75,7 @@ namespace SPYoyoMod.Common.Yoyos
                 }
                 catch (Exception)
                 {
-                    Mod.Logger.Warn($"Hook \"{nameof(YoyoStringReplacementGlobalProjectile)}..{nameof(ThoriumSupport)}\" failed...");
+                    ModLogger.Warn($"Hook \"{nameof(YoyoStringReplacementGlobalProjectile)}..{nameof(ThoriumSupport)}\" failed...");
                 }
             }
         }

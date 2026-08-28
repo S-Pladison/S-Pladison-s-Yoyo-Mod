@@ -45,7 +45,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                     i => i.MatchStloc(num10Index)))
                 {
 
-                    ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                    ModLogger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
                     return;
                 }
 
@@ -88,7 +88,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                             i => i.MatchAdd(),
                             i => i.MatchStloc(num3Index)))
                         {
-                            ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(ThoriumSupport)}\" failed...");
+                            ModLogger.Warn($"IL edit \"{nameof(StringProjectile)}..{nameof(ThoriumSupport)}\" failed...");
                             return;
                         }
 
@@ -98,7 +98,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Accessories
                 }
                 catch (Exception)
                 {
-                    Mod.Logger.Warn($"Hook \"{nameof(StringProjectile)}..{nameof(ThoriumSupport)}\" failed...");
+                    ModLogger.Warn($"Hook \"{nameof(StringProjectile)}..{nameof(ThoriumSupport)}\" failed...");
                 }
             }
         }

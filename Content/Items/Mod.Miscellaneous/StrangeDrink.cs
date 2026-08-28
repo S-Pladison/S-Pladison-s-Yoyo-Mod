@@ -127,7 +127,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
                 i => i.MatchLdloca(out _),
                 i => i.MatchCall(typeof(NPCLoader).GetMethod(nameof(NPCLoader.SetChatButtons), BindingFlags.Static | BindingFlags.Public))))
             {
-                ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StrangeDrinkNurseButtonImplemention)}..{nameof(IL_Main.GUIChatDrawInner)}..{nameof(ModifyButtonText)}\" failed...");
+                ModLogger.Warn($"IL edit \"{nameof(StrangeDrinkNurseButtonImplemention)}..{nameof(IL_Main.GUIChatDrawInner)}..{nameof(ModifyButtonText)}\" failed...");
                 return;
             }
 
@@ -169,7 +169,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
                 i => i.MatchBeq(out _),
                 i => i.MatchRet()))
             {
-                ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StrangeDrinkNurseButtonImplemention)}..{nameof(IL_Main.GUIChatDrawInner)}..{nameof(ModifyOnClickButton)}\" failed...");
+                ModLogger.Warn($"IL edit \"{nameof(StrangeDrinkNurseButtonImplemention)}..{nameof(IL_Main.GUIChatDrawInner)}..{nameof(ModifyOnClickButton)}\" failed...");
                 return;
             }
 
@@ -183,7 +183,7 @@ namespace SPYoyoMod.Content.Items.Mod.Miscellaneous
                 i => i.MatchCall(typeof(SoundEngine).GetMethod("PlaySound", BindingFlags.Static | BindingFlags.NonPublic, [typeof(int), typeof(int), typeof(int), typeof(int), typeof(float), typeof(float)])),
                 i => i.MatchPop()))
             {
-                ModContent.GetInstance<SPYoyoMod>().Logger.Warn($"IL edit \"{nameof(StrangeDrinkNurseButtonImplemention)}..{nameof(IL_Main.GUIChatDrawInner)}..{nameof(ModifyOnClickButton)}\" failed...");
+                ModLogger.Warn($"IL edit \"{nameof(StrangeDrinkNurseButtonImplemention)}..{nameof(IL_Main.GUIChatDrawInner)}..{nameof(ModifyOnClickButton)}\" failed...");
                 return;
             }
 
