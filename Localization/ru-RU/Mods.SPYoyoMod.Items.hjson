@@ -1,5 +1,5 @@
 // AmarokItem.Tooltip: ""
-// AmazonItem.Tooltip: ""
+AmazonItem.Tooltip: Окружает себя вихрем бритвенно-острых листьев
 // ArteryItem.Tooltip: ""
 
 BearingItem: {
@@ -23,26 +23,26 @@ BlackholeItem: {
 
 CascadeItem.Tooltip:
 	'''
-	Удары имеют шанс поджечь врага
-	Периодически взрывается, нанося при этом урон по области
+	Есть шанс наложить дебафф «{$BuffName.OnFire}» при попадании
+	Периодически взрывается, нанося урон по области
 	'''
 // ChikItem.Tooltip: ""
-Code1Item.Tooltip: Удары могут заразить врага вирусом, позже вспыхивающим цифровым импульсом
+Code1Item.Tooltip: Есть шанс заразить противника вирусом, вызывающим цифровой импульс
 // Code2Item.Tooltip: ""
 // FormatCItem.Tooltip: ""
-GradientItem.Tooltip: Удары могут обрушить на врагов шквал кинжалов
+GradientItem.Tooltip: Есть шанс обрушить на противника шквал кинжалов
 // HelFireItem.Tooltip: ""
 // HiveFiveItem.Tooltip: ""
 // KrakenItem.Tooltip: ""
 // MalaiseItem.Tooltip: ""
-RallyItem.Tooltip: Наносит на {0}% больше урона в бою с одним врагом
+RallyItem.Tooltip: Наносит на {0}% больше урона в бою с одним противником
 
 SoulTormentorItem: {
 	DisplayName: Истязатель душ
 	Tooltip:
 		'''
-		Очаровывает {0}-х ближайших врагов
-		Попадание по очарованному врагу также наносит урон остальным
+		Очаровывает {0} ближайших противников
+		Попадание по очарованному противнику наносит урон остальным
 		«Нет, это не любовный треугольник...»
 		'''
 }
@@ -61,12 +61,12 @@ StrangeDrinkItem: {
 
 TheStellarThrowItem: {
 	DisplayName: Звездный бросок
-	Tooltip: Звезды падают с небес на врагов, находящихся рядом с йо-йо
+	Tooltip: Устраивает звездопад на ближайших противников
 }
 
 ValorItem.Tooltip:
 	'''
-	С {0}%-ым шансом накладывает на врага дебафф «{$Buffs.ValorBuff.DisplayName}»
-	Если рядом есть враг с этим же дебаффом, шанс будет значительно понижен
+	Есть {0}%-ный шанс наложить «{$Buffs.ValorBuff.DisplayName}»
+	Шанс снижается, если рядом есть противник с этим эффектом
 	'''
 // YeletsItem.Tooltip: ""
