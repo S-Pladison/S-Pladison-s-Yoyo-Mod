@@ -34,7 +34,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override int OverrideType => ItemID.Code1;
     }
 
-    public sealed class Code1Projectile : YoyoProjectile<Code1Item>
+    public sealed class Code1Projectile : YoyoProjectile<Code1Item>, IHaveHitEffectProjectile
     {
         public override int OverrideType => ProjectileID.Code1;
 
@@ -46,11 +46,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            var infected = IsInfected(target);
-
-            if (!infected)
-                SpawnHitParticles(proj, target);
-
             if (IsReturning || !Main.rand.NextBool(WaveApplyChanceDenominator))
                 return;
 
@@ -64,7 +59,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             var waveType = ModContent.ProjectileType<Code1DigitalWaveProjectile>();
 
-            if (owner.ownedProjectileCounts[waveType] > 0 || infected)
+            if (owner.ownedProjectileCounts[waveType] > 0 || IsInfected(target))
                 return;
 
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, waveType, proj.damage, 0f, proj.owner, target.whoAmI);
@@ -86,9 +81,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             return false;
         }
 
-        private void SpawnHitParticles(Projectile proj, NPC target)
+        void IHaveHitEffectProjectile.HitEffect(Projectile proj, NPC target, NPC.HitInfo hit)
         {
-            if (Main.dedServ)
+            if (Main.dedServ || IsInfected(target))
                 return;
 
             var origin = Vector2.Lerp(proj.Center, target.Center, 0.5f);

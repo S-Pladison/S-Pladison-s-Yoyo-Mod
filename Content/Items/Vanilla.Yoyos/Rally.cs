@@ -53,7 +53,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class RallyProjectile : YoyoProjectile<RallyItem>, IInitializableProjectile, IEmitLightEntity
+    public sealed class RallyProjectile : YoyoProjectile<RallyItem>, IInitializableProjectile, IEmitLightEntity, IHaveHitEffectProjectile
     {
         public override int OverrideType => ProjectileID.Rally;
 
@@ -133,51 +133,54 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            if (_fadeProgress >= 0.5f)
-            {
-                var lightBlue = new Color(160, 165, 180);
-                var darkBlue = new Color(115, 140, 205);
-                var origin = proj.Center;
-                var vector = proj.Center - target.Center;
-
-                if (vector == Vector2.Zero)
-                    vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
-                else
-                    vector.Normalize();
-
-                for (var i = 0; i < 1 + Main.rand.Next(2); i++)
-                {
-                    var velocity = vector.RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1f, 2.5f);
-
-                    var dust = Dust.NewDustPerfect(origin, DustID.PortalBoltTrail, velocity, 0, Main.rand.NextBool() ? lightBlue : darkBlue, Main.rand.NextFloat(0.25f, 0.75f));
-                    dust.noLight = true;
-                }
-
-                for (var i = 0; i < 1 + Main.rand.Next(2); i++)
-                {
-                    var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
-                    particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
-                    particle.Position = origin;
-                    particle.Velocity = vector.RotatedBy(Main.rand.NextFloat(-1f, 1f)) * Main.rand.NextFloat(1.25f, 3.5f);
-                    particle.StartColor = lightBlue;
-                    particle.EndColor = darkBlue;
-                    particle.Scale = Main.rand.NextFloat(0.5f, 1.2f);
-                }
-
-                var star = WorldParticleManager.SpawnParticle<StarParticle>(WorldParticleFlags.Pixelated);
-                star.LifeTime = GeneralUtils.SecondsToTicks(0.25f);
-                star.Position = origin;
-                star.StartColor = lightBlue;
-                star.EndColor = darkBlue;
-                star.Scale = proj.scale * 3.5f;
-                star.Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
-            }
-
             if (!proj.TryGetOwner(out var owner))
                 return;
 
             var rallyPlayer = owner.GetModPlayer<RallyPlayer>();
             rallyPlayer.OnHit(target);
+        }
+
+        void IHaveHitEffectProjectile.HitEffect(Projectile proj, NPC target, NPC.HitInfo hit)
+        {
+            if (Main.dedServ || _fadeProgress < 0.5f)
+                return;
+
+            var lightBlue = new Color(160, 165, 180);
+            var darkBlue = new Color(115, 140, 205);
+            var origin = proj.Center;
+            var vector = proj.Center - target.Center;
+
+            if (vector == Vector2.Zero)
+                vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+            else
+                vector.Normalize();
+
+            for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+            {
+                var velocity = vector.RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1f, 2.5f);
+
+                var dust = Dust.NewDustPerfect(origin, DustID.PortalBoltTrail, velocity, 0, Main.rand.NextBool() ? lightBlue : darkBlue, Main.rand.NextFloat(0.25f, 0.75f));
+                dust.noLight = true;
+            }
+
+            for (var i = 0; i < 1 + Main.rand.Next(2); i++)
+            {
+                var particle = WorldParticleManager.SpawnParticle<LightPointParticle>(WorldParticleFlags.Pixelated);
+                particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
+                particle.Position = origin;
+                particle.Velocity = vector.RotatedBy(Main.rand.NextFloat(-1f, 1f)) * Main.rand.NextFloat(1.25f, 3.5f);
+                particle.StartColor = lightBlue;
+                particle.EndColor = darkBlue;
+                particle.Scale = Main.rand.NextFloat(0.5f, 1.2f);
+            }
+
+            var star = WorldParticleManager.SpawnParticle<StarParticle>(WorldParticleFlags.Pixelated);
+            star.LifeTime = GeneralUtils.SecondsToTicks(0.25f);
+            star.Position = origin;
+            star.StartColor = lightBlue;
+            star.EndColor = darkBlue;
+            star.Scale = proj.scale * 3.5f;
+            star.Rotation = Main.rand.NextFloat(MathHelper.TwoPi);
         }
 
         public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)

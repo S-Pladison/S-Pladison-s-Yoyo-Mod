@@ -53,7 +53,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class ValorProjectile : YoyoProjectile<ValorItem>, IInitializableProjectile, IEmitLightEntity, IPreDrawPixelatedProjectile
+    public sealed class ValorProjectile : YoyoProjectile<ValorItem>, IInitializableProjectile, IEmitLightEntity, IPreDrawPixelatedProjectile, IHaveHitEffectProjectile
     {
         public override int OverrideType => ProjectileID.Valor;
 
@@ -116,14 +116,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
-            for (int i = 0; i < 5; i++)
-            {
-                var dust = Main.dust[Dust.NewDust(proj.position, proj.width, proj.height, Main.rand.NextBool() ? DustID.DungeonWater : DustID.WaterCandle)];
-                dust.noGravity = true;
-                dust.noLightEmittence = true;
-                dust.velocity = Vector2.Normalize(proj.Center - target.Center).RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1.5f, 4.0f);
-            }
-
             if (!Main.rand.NextBool(DebuffApplyChanceDenominator))
                 return;
 
@@ -140,6 +132,20 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             }
 
             target.AddBuff(ModContent.BuffType<ValorBuff>(), GeneralUtils.SecondsToTicks(7f));
+        }
+
+        void IHaveHitEffectProjectile.HitEffect(Projectile proj, NPC target, NPC.HitInfo hit)
+        {
+            if (Main.dedServ)
+                return;
+
+            for (int i = 0; i < 5; i++)
+            {
+                var dust = Main.dust[Dust.NewDust(proj.position, proj.width, proj.height, Main.rand.NextBool() ? DustID.DungeonWater : DustID.WaterCandle)];
+                dust.noGravity = true;
+                dust.noLightEmittence = true;
+                dust.velocity = Vector2.Normalize(proj.Center - target.Center).RotatedBy(Main.rand.NextFloat(-0.5f, 0.5f)) * Main.rand.NextFloat(1.5f, 4.0f);
+            }
         }
 
         void IEmitLightEntity.EmitLight(Entity entity)
