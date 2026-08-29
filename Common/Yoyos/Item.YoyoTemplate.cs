@@ -72,7 +72,7 @@ namespace SPYoyoMod.Common.Yoyos
             => item.type == GetSample<T>().Type;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool TryGet(int itemType, out YoyoItem yoyo)
+        private static bool TryGetSample(int itemType, out YoyoItem yoyo)
             => _byItemType.TryGetValue(itemType, out yoyo);
 
         public sealed override void Load()
@@ -160,7 +160,7 @@ namespace SPYoyoMod.Common.Yoyos
                 if (!lateInstantiation)
                     return false;
 
-                return TryGet(item.type, out var definition) && definition.IsOverride;
+                return TryGetSample(item.type, out var definition) && definition.IsOverride;
             }
 
             public override void SetStaticDefaults()
@@ -179,7 +179,7 @@ namespace SPYoyoMod.Common.Yoyos
 
             public override void ModifyTooltips(Item item, List<TooltipLine> tooltips)
             {
-                if (!TryGet(item.type, out var definition))
+                if (!TryGetSample(item.type, out var definition))
                     return;
 
                 var value = definition.Tooltip.Value;

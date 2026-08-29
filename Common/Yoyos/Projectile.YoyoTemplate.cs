@@ -1,4 +1,6 @@
 using Microsoft.Xna.Framework;
+using Mono.Cecil.Cil;
+using MonoMod.Cil;
 using SPYoyoMod.Core;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
@@ -30,6 +32,13 @@ namespace SPYoyoMod.Common.Yoyos
         /// Тип снаряда можно узнать из свойства <see cref="YoyoProjectile.Type"/><br/>
         /// </summary>
         public virtual int OverrideType => 0;
+
+        /// <summary>
+        /// Отключает ванильные особые эффекты переделываемого йо-йо: доп. снаряды (Terrarian, Hive-Five),
+        /// дебаффы при попадании (Amarok, Cascade, Hel-Fire).<br/>
+        /// Имеет смысл только при переопределении <see cref="IsOverride"/>.
+        /// </summary>
+        public virtual bool DisableVanillaSpecials => false;
 
         public virtual string Texture => null; //< TODO: Сделать замену спрайта при переопределении у ванильных йо-йо?
         public virtual float? LifeTime => null;
@@ -102,7 +111,7 @@ namespace SPYoyoMod.Common.Yoyos
             => proj.TryGetGlobalProjectile(out yoyo);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool TryGet(int projType, out YoyoProjectile yoyo)
+        private static bool TryGetSample(int projType, out YoyoProjectile yoyo)
             => _byProjType.TryGetValue(projType, out yoyo);
 
         public sealed override void Load()
@@ -193,7 +202,45 @@ namespace SPYoyoMod.Common.Yoyos
                 if (!lateInstantiation)
                     return false;
 
-                return TryGet(proj.type, out var definition) && definition.IsOverride;
+                return TryGetSample(proj.type, out var definition) && definition.IsOverride;
+            }
+
+            public override void Load()
+            {
+                // Дебаффы при попадании (Amarok / Cascade / Hel-Fire) накладываются тут;
+                // Подменяем type на тип обычного деревянного йо-йо, чтобы не потерять дебафы от фляг и прочих аксессуаров
+                On_Projectile.StatusNPC += (orig, proj, npcIndex) =>
+                {
+                    if (!ShouldDisableVanillaSpecials(proj))
+                    {
+                        orig(proj, npcIndex);
+                        return;
+                    }
+
+                    // Делаем вид, будто мы обычный никому не нужный йо-йо;
+                    // Это нужно, чтобы эффекты от флясок и аксессуаров продолжали накладываться на врагов,
+                    // в то время как эффекты самих йо-йо отсутствовали...
+                    using (TemporaryValue.Replace(ref proj.type, ProjectileID.WoodYoyo))
+                    {
+                        orig(proj, npcIndex);
+                    }
+                };
+
+                // Ванильные особые эффекты йо-йо завязаны на `if (this.type == ...)`.
+                // Пропускаем все такие if-ы, если включён DisableVanillaSpecials.
+                IL_Projectile.AI_099_2 += il =>
+                {
+                    if (!TrySkipVanillaYoyoTypeChecks(il))
+                        ModLogger.Warn($"IL edit \"{nameof(OverrideGlobalProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                };
+
+                // Ванильные особые эффекты йо-йо завязаны на `if (this.type == ...)`.
+                // Пропускаем все такие if-ы, если включён DisableVanillaSpecials.
+                IL_Projectile.Damage += il =>
+                {
+                    if (!TrySkipVanillaYoyoTypeChecks(il))
+                        ModLogger.Warn($"IL edit \"{nameof(OverrideGlobalProjectile)}..{nameof(IL_Projectile.Damage)}\" failed...");
+                };
             }
 
             public override void SetStaticDefaults()
@@ -212,6 +259,33 @@ namespace SPYoyoMod.Common.Yoyos
                     if (definition.TopSpeed.HasValue)
                         ProjectileID.Sets.YoyosTopSpeed[definition.Type] = definition.TopSpeed.Value;
                 }
+            }
+
+            private static bool ShouldDisableVanillaSpecials(Projectile proj)
+                => TryGetSample(proj.type, out var definition) && definition.DisableVanillaSpecials;
+
+            /// <summary>
+            /// Пропуск тел всех ванильных <c>if (this.type == ...)</c> в методе, если включён <see cref="DisableVanillaSpecials"/>.
+            /// </summary>
+            private static bool TrySkipVanillaYoyoTypeChecks(ILContext il)
+            {
+                var c = new ILCursor(il);
+                var patched = false;
+                ILLabel skip = null;
+
+                while (c.TryGotoNext(MoveType.After,
+                    i => i.MatchLdarg(0),
+                    i => i.MatchLdfld<Projectile>("type"),
+                    i => i.MatchLdcI4(out _),
+                    i => i.MatchBneUn(out skip)))
+                {
+                    c.Emit(OpCodes.Ldarg_0);
+                    c.EmitDelegate(ShouldDisableVanillaSpecials);
+                    c.Emit(OpCodes.Brtrue, skip);
+                    patched = true;
+                }
+
+                return patched;
             }
         }
 
