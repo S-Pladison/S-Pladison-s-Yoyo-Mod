@@ -1,0 +1,18 @@
+[author]
+nickname: sixtydegrees / Scratch Lunin
+[release]
+items: Blackhole (item, proj), TheStellarThrow (item, proj), SoulTormentor (item, proj), StrangeDrink
+[unused]
+items: TitaniumYoyo (item, proj), Ignis (item, proj), EternalConfusion
+
+[author]
+nickname: Skeletony
+[unused]
+items: SpaceKey, SpaceChest (item, tile), FlamingFlower (item, tile)
+
+[author]
+nickname: Dia
+[release]
+items: Bearing
+[unused]
+items: BloomingDeath (item, proj), HallowedBearing
