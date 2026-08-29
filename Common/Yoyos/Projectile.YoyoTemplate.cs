@@ -231,7 +231,7 @@ namespace SPYoyoMod.Common.Yoyos
                 IL_Projectile.AI_099_2 += il =>
                 {
                     if (!TrySkipVanillaYoyoTypeChecks(il))
-                        ModLogger.Warn($"IL edit \"{nameof(OverrideGlobalProjectile)}..{nameof(IL_Projectile.AI_099_2)}\" failed...");
+                        ModLogger.Warn($"IL edit \"{nameof(YoyoProjectile)}.{nameof(OverrideGlobalProjectile)}..{nameof(IL_Projectile.AI_099_2)}..{nameof(TrySkipVanillaYoyoTypeChecks)}\" failed...");
                 };
 
                 // Ванильные особые эффекты йо-йо завязаны на `if (this.type == ...)`.
@@ -239,7 +239,7 @@ namespace SPYoyoMod.Common.Yoyos
                 IL_Projectile.Damage += il =>
                 {
                     if (!TrySkipVanillaYoyoTypeChecks(il))
-                        ModLogger.Warn($"IL edit \"{nameof(OverrideGlobalProjectile)}..{nameof(IL_Projectile.Damage)}\" failed...");
+                        ModLogger.Warn($"IL edit \"{nameof(YoyoProjectile)}.{nameof(OverrideGlobalProjectile)}..{nameof(IL_Projectile.Damage)}..{nameof(TrySkipVanillaYoyoTypeChecks)}\" failed...");
                 };
             }
 
