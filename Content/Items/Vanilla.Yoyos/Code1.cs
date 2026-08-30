@@ -229,6 +229,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
             => CollisionUtils.CheckRectanglevCircle(targetHitbox, Projectile.Center, Radius * 0.85f);
 
+        public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
+        {
+            if (Projectile.TryGetOwner(out var owner))
+                owner.Counterweight(target.Center, Projectile.damage, Projectile.knockBack);
+        }
+
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.HitDirectionOverride = target.Center.X >= Projectile.Center.X ? 1 : -1;
@@ -330,8 +336,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 DistanceFalloff = TileUtils.TileSizeInPixels * 28f,
                 UniqueIdentity = $"{nameof(SPYoyoMod)}:Code1"
             });
-
-            SpawnExplosionParticles();
         }
 
         private void RefreshChargeValueFromTarget(NPC npc)
@@ -383,29 +387,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             particle.StartColor = color;
             particle.EndColor = color;
             particle.Scale = Main.rand.NextFloat(0.45f, 0.7f);
-        }
-
-        private void SpawnExplosionParticles()
-        {
-            if (true || Main.dedServ) //< TODO: Эффект взрыва над бы проработать...
-                return;
-
-            const int count = 7;
-
-            for (var i = 0; i < count; i++)
-            {
-                var angle = MathHelper.TwoPi * i / count + Main.rand.NextFloat(-0.2f, 0.2f);
-                var direction = Vector2.UnitX.RotatedBy(angle);
-                var color = Main.rand.NextBool() ? ChargeColor : BurstColor;
-                var particle = WorldParticleManager.SpawnParticle<RotatingCubeParticle>(WorldParticleFlags.Pixelated);
-
-                particle.LifeTime = GeneralUtils.SecondsToTicks(0.8f);
-                particle.Position = Projectile.Center;
-                particle.Velocity = direction * Main.rand.NextFloat(2.8f, 5.5f);
-                particle.StartColor = color;
-                particle.EndColor = color;
-                particle.Scale = Main.rand.NextFloat(0.7f, 1.1f);
-            }
         }
     }
 

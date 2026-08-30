@@ -227,7 +227,7 @@ namespace SPYoyoMod.Core.Graphics
             Main.spriteBatch.End();
         }
 
-        private static void DrawParticles(List<IWorldParticle> particles)
+        private static void DrawParticles(IReadOnlyList<IWorldParticle> particles)
         {
             for (int i = 0, count = particles.Count; i < count; i++)
                 particles[i].Draw(Main.spriteBatch, Main.screenPosition);
