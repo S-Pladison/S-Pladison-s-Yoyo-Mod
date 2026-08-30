@@ -105,10 +105,7 @@ namespace SPYoyoMod.Core.Graphics
                 device.Clear(Color.Transparent);
                 {
                     Main.spriteBatch.Begin(spriteBatchSpanshot);
-                    foreach (var particle in _particles)
-                    {
-                        particle.Draw(Main.spriteBatch, Main.screenPosition);
-                    }
+                    DrawParticles(_particles);
                     Main.spriteBatch.End();
                 }
                 device.SetRenderTarget(null);
@@ -197,8 +194,12 @@ namespace SPYoyoMod.Core.Graphics
         {
             foreach (var flags in _flagCombinations)
             {
-                _particles[flags].ForEach(p => p.Update());
-                _particles[flags].RemoveAll(p => p.ShouldBeRemoved);
+                var particles = _particles[flags];
+
+                for (int i = 0, count = particles.Count; i < count; i++)
+                    particles[i].Update();
+
+                particles.RemoveAll(p => p.ShouldBeRemoved);
             }
         }
 
@@ -222,11 +223,14 @@ namespace SPYoyoMod.Core.Graphics
             }
 
             Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, Main.Rasterizer, null, GameMatrices.Transform);
-            foreach (var particle in _particles[flags])
-            {
-                particle.Draw(Main.spriteBatch, Main.screenPosition);
-            }
+            DrawParticles(_particles[flags]);
             Main.spriteBatch.End();
+        }
+
+        private static void DrawParticles(List<IWorldParticle> particles)
+        {
+            for (int i = 0, count = particles.Count; i < count; i++)
+                particles[i].Draw(Main.spriteBatch, Main.screenPosition);
         }
     }
 }
