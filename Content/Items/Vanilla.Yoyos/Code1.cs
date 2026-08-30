@@ -4,6 +4,7 @@ using ReLogic.Content;
 using SPYoyoMod.Common.Yoyos;
 using SPYoyoMod.Content.Particles;
 using SPYoyoMod.Core.Graphics;
+using SPYoyoMod.Core.Graphics.Renderers;
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
@@ -24,7 +25,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public const string InvisiblePath = $"{AssetPath}/Invisible";
 
+        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/WaveNoise");
         public static readonly LazyAsset<Effect> ScreenEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Screen");
+        public static readonly LazyAsset<Effect> SphereEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Sphere");
         public static readonly SoundStyle InfectSound = new("Terraria/Sounds/Item_182");
         public static readonly SoundStyle BurstSound = SoundID.Item77;
     }
@@ -100,12 +103,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 particle.Velocity = direction * Main.rand.NextFloat(1.5f, 3.2f);
                 particle.StartColor = color;
                 particle.EndColor = color;
-                particle.Scale = Main.rand.NextFloat(0.55f, 0.85f);
+                particle.Scale = Main.rand.NextFloat(0.45f, 0.7f);
             }
         }
     }
 
-    public sealed class Code1DigitalWaveProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity
+    public sealed class Code1DigitalWaveProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity, IHaveHitEffectProjectile, IPostDrawPixelatedProjectile
     {
         private enum State
         {
@@ -114,34 +117,35 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
 
         public static readonly Color ChargeColor = new(90, 175, 255);
-        public static readonly Color BurstColor = new(215, 36, 62);
+        public static readonly Color BurstColor = new(235, 26, 42);
         public static readonly float MinChargeRadius = TileUtils.TileSizeInPixels * 3f;
         public static readonly float MaxWaveRadius = TileUtils.TileSizeInPixels * 16f;
         public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(2f);
-        public static readonly float BurstStartRatio = 0.6f;
+        public static readonly float BurstStartRatio = 0.75f;
+        public static readonly int BurstDuration = InitTimeLeft - (int)(InitTimeLeft * BurstStartRatio);
 
         private static readonly EasingBuilder _radiusEasing = new(
             (EasingFunctions.OutCubic, 0.06f, 0f, 1f),
-            (EasingFunctions.Linear, 0.44f, 1f, 1f),
+            (EasingFunctions.Linear, 0.59f, 1f, 1f),
             (EasingFunctions.InCubic, 0.10f, 1f, 0.12f),
-            (EasingFunctions.OutExpo, 0.40f, 0.12f, MaxWaveRadius / MinChargeRadius)
+            (EasingFunctions.OutExpo, 0.25f, 0.12f, MaxWaveRadius / MinChargeRadius)
         );
 
         private static readonly EasingBuilder _strengthEasing = new(
             (EasingFunctions.OutQuad, 0.06f, 0f, 1f),
-            (EasingFunctions.Linear, 0.54f, 1f, 1f),
-            (EasingFunctions.OutCubic, 0.40f, 1f, 0f)
+            (EasingFunctions.Linear, 0.69f, 1f, 1f),
+            (EasingFunctions.InCubic, 0.25f, 1f, 0f)
         );
 
         private static readonly EasingBuilder _npcOutlineEasing = new(
             (EasingFunctions.OutQuad, 0.10f, 0f, 1f),
-            (EasingFunctions.Linear, 0.50f, 1f, 1f),
-            (EasingFunctions.InCubic, 0.15f, 1f, 0f),
-            (EasingFunctions.Linear, 0.25f, 0f, 0f)
+            (EasingFunctions.Linear, 0.65f, 1f, 1f),
+            (EasingFunctions.InCubic, 0.25f, 1f, 0f)
         );
 
         private float _chargeRadius = MinChargeRadius;
         private State _state = State.Charge;
+        private RectangleRenderer _sphereRenderer;
 
         public override string Texture => Code1Assets.InvisiblePath;
 
@@ -161,7 +165,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Projectile.height = (int)(MaxWaveRadius * 2);
 
             Projectile.timeLeft = InitTimeLeft;
-            Projectile.hide = true;
             Projectile.friendly = true;
             Projectile.tileCollide = false;
             Projectile.ignoreWater = true;
@@ -180,6 +183,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
+            _sphereRenderer = new RectangleRenderer(Main.graphics.GraphicsDevice);
+
             TryOutlineTarget();
 
             ModContent.GetInstance<Code1ScreenEffectHandler>()?.Add(Projectile);
@@ -190,6 +195,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             if (Main.dedServ)
                 return;
+
+            _sphereRenderer?.Dispose();
 
             ModContent.GetInstance<Code1ScreenEffectHandler>()?.Remove(Projectile);
         }
@@ -220,12 +227,36 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             => IsBursting;
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-            => CollisionUtils.CheckRectanglevCircle(targetHitbox, Projectile.Center, Radius);
+            => CollisionUtils.CheckRectanglevCircle(targetHitbox, Projectile.Center, Radius * 0.85f);
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.HitDirectionOverride = target.Center.X >= Projectile.Center.X ? 1 : -1;
             modifiers.SetCrit();
+        }
+
+        void IHaveHitEffectProjectile.HitEffect(Projectile _, NPC target, NPC.HitInfo hit)
+        {
+            if (Main.dedServ)
+                return;
+
+            var size = new Vector2(target.width, target.height) * 0.8f;
+            var vectorToTarget = target.Center - Projectile.Center;
+
+            for (var i = 0; i < 3 + Main.rand.Next(2); i++)
+            {
+                var position = target.Center + new Vector2(Main.rand.NextFloat(-0.5f, 0.5f) * size.X, Main.rand.NextFloat(-0.5f, 0.5f) * size.Y);
+                var direction = vectorToTarget.LengthSquared() > 0.01f ? Vector2.Normalize(vectorToTarget).RotatedBy(Main.rand.NextFloat(-0.7f, 0.7f)) : Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
+                var color = Main.rand.NextBool() ? ChargeColor : BurstColor;
+                var particle = WorldParticleManager.SpawnParticle<RotatingCubeParticle>(WorldParticleFlags.Pixelated);
+
+                particle.LifeTime = GeneralUtils.SecondsToTicks(0.7f);
+                particle.Position = position;
+                particle.Velocity = direction * Main.rand.NextFloat(1.2f, 2.6f);
+                particle.StartColor = color;
+                particle.EndColor = color;
+                particle.Scale = Main.rand.NextFloat(0.45f, 0.7f);
+            }
         }
 
         public override bool? CanCutTiles()
@@ -239,6 +270,38 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             Lighting.AddLight(Projectile.Center, GetOutlineColor(LifeTimeRatio).ToVector3() * Strength * 0.35f);
         }
 
+        public override bool PreDraw(ref Color lightColor)
+            => false;
+
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile proj)
+        {
+            if (!IsBursting)
+                return;
+
+            var progress = Math.Clamp((BurstDuration - Projectile.timeLeft) / (float)BurstDuration, 0f, 1f);
+            var opacity = 1f - EasingFunctions.InCubic(progress);
+
+            if (opacity <= 0.01f || Radius <= 0f)
+                return;
+
+            Code1Assets.SphereEffect
+                .Prepare(parameters =>
+                {
+                    parameters["Texture0"].SetValue(Code1Assets.NoiseTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(BurstColor.ToVector4());
+                    parameters["Color1"].SetValue(Color.Black.ToVector4());
+                    parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                })
+                .Apply();
+
+            _sphereRenderer
+                .SetColor(Color.White * opacity)
+                .SetSize(Radius * 2f)
+                .SetPosition(proj.Center + proj.gfxOffY * Vector2.UnitY)
+                .Render();
+        }
+
         private void SetState(State state)
         {
             if (_state == state)
@@ -249,10 +312,8 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (state != State.Burst)
                 return;
 
-            var burstTimeLeft = InitTimeLeft - (int)(InitTimeLeft * BurstStartRatio);
-
-            if (Projectile.timeLeft > burstTimeLeft)
-                Projectile.timeLeft = burstTimeLeft;
+            if (Projectile.timeLeft > BurstDuration)
+                Projectile.timeLeft = BurstDuration;
 
             if (Main.dedServ)
                 return;
@@ -321,7 +382,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             particle.Velocity = direction * Main.rand.NextFloat(0.5f, 1.8f);
             particle.StartColor = color;
             particle.EndColor = color;
-            particle.Scale = Main.rand.NextFloat(0.55f, 0.85f);
+            particle.Scale = Main.rand.NextFloat(0.45f, 0.7f);
         }
 
         private void SpawnExplosionParticles()

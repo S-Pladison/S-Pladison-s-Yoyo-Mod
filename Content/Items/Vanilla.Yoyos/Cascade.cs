@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.IO;
 using Terraria;
 using Terraria.Audio;
+using Terraria.DataStructures;
 using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.IO;
@@ -30,8 +31,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
+        public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/WaveNoise");
         public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
-        public static readonly LazyAsset<Effect> RingEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Ring");
+        public static readonly LazyAsset<Effect> SphereEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Sphere");
         public static readonly SoundStyle StartChargingSound = new($"{YoyoPath}Sound_StartCharging");
         public static readonly SoundStyle ExplosionSound = SoundID.Item14;
     }
@@ -44,16 +46,19 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class CascadeProjectile : YoyoProjectile<CascadeItem>, IInitializableProjectile, IEmitLightEntity, IPostDrawPixelatedProjectile
     {
         public override int OverrideType => ProjectileID.Cascade;
+        public override bool DisableVanillaSpecials => true;
+        public override float? LifeTime => -1f;
 
         //=/-
 
         public static readonly int TimeToStartCharging = GeneralUtils.SecondsToTicks(2f);
         public static readonly int TimeToCharge = GeneralUtils.SecondsToTicks(0.7f);
-        public static readonly int AddTimeForHit = GeneralUtils.SecondsToTicks(0.2f);
+        public static readonly int HitsPerMiniExplosion = 3;
         public static readonly Color GlowColor = new(255, 180, 95);
         public static readonly int TrailPointCount = 10;
 
         private int _aiTimer;
+        private int _hitCount;
         private bool _charging;
         private YoyoStringRenderer _stringRenderer;
         private StripRenderer _trailRenderer;
@@ -94,6 +99,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 return;
             }
 
+            if (!proj.IsPrimaryYoyo())
+                return;
+
             _aiTimer++;
 
             switch (_charging)
@@ -106,6 +114,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         SoundEngine.PlaySound(CascadeAssets.StartChargingSound, proj.Center);
 
                         _aiTimer = 0;
+                        _hitCount = 0;
                         _charging = true;
                     }
                     break;
@@ -114,10 +123,10 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         if (_aiTimer < TimeToCharge)
                             break;
 
-                        if (proj.IsLocalPlayerAsOwner())
-                            Projectile.NewProjectile(proj.GetSource_FromAI(), proj.Center, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner);
+                        SpawnExplosion(proj, proj.Center, 1f, proj.GetSource_FromAI());
 
                         _aiTimer = 0;
+                        _hitCount = 0;
                         _charging = false;
                     }
                     break;
@@ -150,10 +159,28 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void OnHitNPC(Projectile proj, NPC target, NPC.HitInfo hit, int damageDone)
         {
+            if (Main.rand.NextBool(3))
+                target.AddBuff(BuffID.OnFire, Main.rand.Next(GeneralUtils.SecondsToTicks(1f), GeneralUtils.SecondsToTicks(4f)));
+
             if (_charging)
                 return;
 
-            _aiTimer += AddTimeForHit;
+            _hitCount++;
+
+            if (_hitCount < HitsPerMiniExplosion)
+                return;
+
+            _hitCount = 0;
+
+            SpawnExplosion(proj, target.Center, 0.45f, proj.GetSource_OnHit(target));
+        }
+
+        private static void SpawnExplosion(Projectile proj, Vector2 position, float scale, IEntitySource source)
+        {
+            if (!proj.IsLocalPlayerAsOwner())
+                return;
+
+            Projectile.NewProjectile(source, position, Vector2.Zero, ModContent.ProjectileType<CascadeExplosionProjectile>(), proj.damage, proj.knockBack, proj.owner, scale);
         }
 
         public override void SendExtraAI(Projectile proj, BitWriter bitWriter, BinaryWriter binaryWriter)
@@ -246,22 +273,29 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         }
     }
 
-    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity
+    public sealed class CascadeExplosionProjectile : ModProjectile, IInitializableProjectile, IEmitLightEntity, IPostDrawPixelatedProjectile
     {
-        public static readonly int ExplosionRadius = TileUtils.TileSizeInPixels * 6;
+        public static readonly int MaxExplosionRadius = TileUtils.TileSizeInPixels * 6;
+        public static readonly int MaxRingThickness = TileUtils.TileSizeInPixels * 5;
         public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(0.33f);
 
-        private RingRenderer _ringRenderer;
+        private RectangleRenderer _sphereRenderer;
 
         public override string Texture => CascadeAssets.InvisiblePath;
+
         public float LifeTimeRatio => 1f - Projectile.timeLeft / (float)InitTimeLeft;
+        public int MaxRadius => Math.Max((int)(MaxExplosionRadius * Scale), 1);
+        public float Radius => MaxRadius * EasingFunctions.OutExpo(LifeTimeRatio);
+        public float Scale => Projectile.ai[0] > 0f ? Projectile.ai[0] : 1f;
+        public float RingThickness => (1f - LifeTimeRatio) * MaxRingThickness * Scale;
+        public float SphereRadius => Math.Max(Radius - RingThickness * 0.55f, 0f);
 
         public override void SetDefaults()
         {
             Projectile.DamageType = DamageClass.MeleeNoSpeed;
 
-            Projectile.width = ExplosionRadius * 2;
-            Projectile.height = ExplosionRadius * 2;
+            Projectile.width = MaxExplosionRadius * 2;
+            Projectile.height = MaxExplosionRadius * 2;
 
             Projectile.timeLeft = InitTimeLeft;
             Projectile.friendly = true;
@@ -278,82 +312,78 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.dedServ)
                 return;
 
-            _ringRenderer = new RingRenderer(Main.graphics.GraphicsDevice, 20);
+            _sphereRenderer = new RectangleRenderer(Main.graphics.GraphicsDevice);
 
-            for (int i = 0; i < 25; i++)
+            for (int i = 0; i < Math.Max((int)(25 * Scale * Scale), 1); i++)
             {
                 var vector = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi));
                 var particle = WorldParticleManager.SpawnParticle<SmokeParticle>(WorldParticleFlags.Pixelated | WorldParticleFlags.Behind);
 
                 particle.LifeTime = GeneralUtils.SecondsToTicks(1.5f);
-                particle.Position = proj.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels, ExplosionRadius * 0.85f);
-                particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f);
+                particle.Position = proj.Center + vector * Main.rand.NextFloat(TileUtils.TileSizeInPixels * Scale, MaxRadius * 0.85f);
+                particle.Velocity = vector * Main.rand.NextFloat(0.2f, 2f) * Scale;
                 particle.StartColor = new(new Color(50, 50, 50, 255), false);
                 particle.EndColor = new(new Color(0, 0, 0, 0), false);
-                particle.Scale = 3f;
+                particle.Scale = 3f * Scale;
             }
 
-            ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
+            if (Scale >= 0.5f)
             {
-                Position = proj.Center,
-                Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
-                Strength = 7f,
-                VibrationCyclesPerSecond = 6f,
-                Frames = 15,
-                DistanceFalloff = 16f * 25f
-            });
+                ScreenEffectManager.Punch(new ScreenEffectManager.PunchSettings()
+                {
+                    Position = proj.Center,
+                    Direction = Vector2.UnitX.RotatedBy(Main.rand.NextFloat(MathHelper.TwoPi)),
+                    Strength = 7f * Scale,
+                    VibrationCyclesPerSecond = 6f,
+                    Frames = Math.Max((int)(15 * Scale), 8),
+                    DistanceFalloff = 16f * 25f * Scale
+                });
+            }
 
-            SoundEngine.PlaySound(CascadeAssets.ExplosionSound, proj.Center);
+            SoundEngine.PlaySound(CascadeAssets.ExplosionSound with { Volume = Scale }, proj.Center);
         }
 
         public override void OnKill(int timeLeft)
         {
-            _ringRenderer?.Dispose();
+            _sphereRenderer?.Dispose();
         }
 
         public override void AI()
         {
-            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
-            var quantity = 5 * (radius / ExplosionRadius);
+            var count = 5 * (Radius / MaxRadius) * Scale;
 
-            for (int k = 0; k < quantity; k++)
+            for (int k = 0; k < count; k++)
             {
                 var angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 var particle = WorldParticleManager.SpawnParticle<LightPointParticle>();
 
                 particle.LifeTime = GeneralUtils.SecondsToTicks(0.5f);
-                particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(angle) * radius * 0.95f;
+                particle.Position = Projectile.Center + Vector2.UnitX.RotatedBy(angle) * Radius * 0.95f;
                 particle.Velocity = Vector2.UnitX.RotatedBy(angle) * 0.5f;
                 particle.StartColor = new Color(255, 135, 90);
                 particle.EndColor = new Color(255, 135, 90);
                 particle.Scale = Main.rand.NextFloat(0.35f, 0.5f);
             }
 
-            for (int k = 0; k < quantity; k++)
+            for (int k = 0; k < count; k++)
             {
                 var angle = Main.rand.NextFloat(MathHelper.TwoPi);
                 var vector = Vector2.UnitX.RotatedBy(angle);
-                var position = Projectile.Center + vector * radius * 0.9f;
-
+                var position = Projectile.Center + vector * Radius * 0.9f;
                 var dust = Dust.NewDustPerfect(position, DustID.Torch, vector, 0, default, Main.rand.NextFloat(1.2f, 2.0f));
+
                 dust.noGravity = true;
             }
         }
 
         public override bool? Colliding(Rectangle projHitbox, Rectangle targetHitbox)
-        {
-            var projCenter = projHitbox.Center.ToVector2();
-            var vectorToTarget = Vector2.Normalize(targetHitbox.Center.ToVector2() - projCenter);
-            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
-
-            return Collision.CheckAABBvLineCollision(targetHitbox.TopLeft(), targetHitbox.Size(), projCenter, projCenter + vectorToTarget * radius);
-        }
+            => CollisionUtils.CheckRectanglevCircle(targetHitbox, Projectile.Center, Radius);
 
         public override void ModifyHitNPC(NPC target, ref NPC.HitModifiers modifiers)
         {
             modifiers.HitDirectionOverride = MathF.Sign((target.Center - Projectile.Center).X);
-            modifiers.SourceDamage += 2f;
-            modifiers.Knockback += 2f;
+            modifiers.SourceDamage += 2f * Scale;
+            modifiers.Knockback += 2f * Scale;
         }
 
         public override void OnHitNPC(NPC target, NPC.HitInfo hit, int damageDone)
@@ -366,33 +396,35 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IEmitLightEntity.EmitLight(Entity _)
         {
-            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - LifeTimeRatio) * 0.4f);
+            Lighting.AddLight(Projectile.Center, Color.Orange.ToVector3() * EasingFunctions.InExpo(1f - LifeTimeRatio) * 0.4f * Scale);
         }
 
-        public override void PostDraw(Color lightColor)
+        void IPostDrawPixelatedProjectile.PostDrawPixelated(Projectile proj)
         {
-            var thickness = (1f - LifeTimeRatio) * TileUtils.TileSizeInPixels * 5f;
-            var radius = ExplosionRadius * EasingFunctions.OutExpo(LifeTimeRatio);
+            var outer = Math.Max(Radius, Math.Abs(Radius - RingThickness));
+            var quadHalf = Math.Max(outer, 1f);
 
-            CascadeAssets.RingEffect
+            CascadeAssets.SphereEffect
                 .Prepare(parameters =>
                 {
-                    parameters["Texture0"].SetValue(CascadeAssets.FlameTexture.Value);
-                    parameters["TransformMatrix"].SetValue(GameMatrices.Transform * GameMatrices.Projection);
-                    parameters["Color0"].SetValue(Color.Lerp(new Color(255, 255, 105), new Color(250, 0, 50), LifeTimeRatio).ToVector4());
-                    parameters["Color1"].SetValue(Color.Lerp(new Color(250, 135, 0), new Color(145, 25, 85), LifeTimeRatio).ToVector4());
-                    parameters["Repeats"].SetValue(3.0f);
+                    parameters["Texture0"].SetValue(CascadeAssets.NoiseTexture.Value);
+                    parameters["Texture1"].SetValue(CascadeAssets.FlameTexture.Value);
+                    parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
+                    parameters["Color0"].SetValue(Color.Lerp(new(255, 255, 105), new(250, 0, 50), LifeTimeRatio).ToVector4());
+                    parameters["Color1"].SetValue(Color.Lerp(new(250, 135, 0), new(145, 25, 85), LifeTimeRatio).ToVector4());
                     parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    parameters["Repeats"].SetValue(6);
+                    parameters["SphereRatio"].SetValue(SphereRadius / quadHalf);
+                    parameters["RingInner"].SetValue(Math.Max(Radius - RingThickness, 0f) / quadHalf);
+                    parameters["RingOuter"].SetValue(outer / quadHalf);
                 })
                 .Apply();
 
-            _ringRenderer
-                .SetThickness(thickness)
-                .SetPointCount((int)MathHelper.Lerp(15, 20, LifeTimeRatio))
-                .SetRadius(radius)
-                .SetPosition(Projectile.Center + Projectile.gfxOffY * Vector2.UnitY - Main.screenPosition);
-
-            _ringRenderer.Render();
+            _sphereRenderer
+                .SetColor(Color.White * (1f - EasingFunctions.InQuad(LifeTimeRatio)))
+                .SetSize(quadHalf * 2f)
+                .SetPosition(proj.Center + proj.gfxOffY * Vector2.UnitY)
+                .Render();
         }
     }
 }
