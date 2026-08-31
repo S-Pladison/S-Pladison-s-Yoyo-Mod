@@ -119,7 +119,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly Color ChargeColor = new(90, 175, 255);
         public static readonly Color BurstColor = new(235, 26, 42);
         public static readonly float MinChargeRadius = TileUtils.TileSizeInPixels * 3f;
-        public static readonly float MaxWaveRadius = TileUtils.TileSizeInPixels * 16f;
+        public static readonly float MaxWaveRadius = TileUtils.TileSizeInPixels * 12f;
         public static readonly int InitTimeLeft = GeneralUtils.SecondsToTicks(2f);
         public static readonly float BurstStartRatio = 0.75f;
         public static readonly int BurstDuration = InitTimeLeft - (int)(InitTimeLeft * BurstStartRatio);

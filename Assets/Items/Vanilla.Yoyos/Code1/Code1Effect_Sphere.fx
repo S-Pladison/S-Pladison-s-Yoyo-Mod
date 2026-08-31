@@ -115,7 +115,21 @@ float4 Code1Sphere(float2 coord : TEXCOORD0, float4 vertexColor : COLOR0) : COLO
     const float coreStart = 0.5;
     const float corePower = 1.35;
     float core = pow(saturate((sphere.dist - coreStart) * 2.0), corePower);
-    color *= sphere.edgeFade * core;
+
+    // Искажаем края сферы
+    float edgeNoise = tex2Dlod(TextureSampler0, float4(sphere.p * 0.45 + Time * 0.08, 0, 0)).r;
+    float edgeMask = saturate(height * 0.7 + edgeNoise * 0.3);
+    float radius = lerp(0.88, 1.0, edgeMask);
+    float softness = lerp(0.12, 0.06, edgeMask);
+    float edge = 1.0 - smoothstep(radius - softness, radius, sphere.dist);
+
+    // Добавляем эффект исчезнавения
+    float burn = saturate(height * 0.45 + edgeNoise * 0.55);
+    float amount = 1.0 - vertexColor.a;
+    float dissolveSoft = 0.16;
+    float dissolve = smoothstep(amount, amount + dissolveSoft, burn);
+
+    color *= edge * core * dissolve;
 
     return color * vertexColor;
 }
