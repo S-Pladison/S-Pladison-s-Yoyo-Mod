@@ -1,14 +1,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Mono.Cecil.Cil;
-using MonoMod.Cil;
 using SPYoyoMod.Core.Graphics.RenderTargets;
 using SPYoyoMod.Utils;
 using SPYoyoMod.Utils.DataStructures;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
@@ -26,6 +22,7 @@ namespace SPYoyoMod.Core.Hooks
 
         /// <summary>
         /// Позволяет отрисовывать пикселизированные эффекты позади снаряда.
+        /// Слой совпадает со слоем самого снаряда, включая <see cref="Projectile.hide"/>.
         /// </summary>
         void PreDrawPixelated(Projectile proj);
     }
@@ -38,144 +35,386 @@ namespace SPYoyoMod.Core.Hooks
 
         /// <summary>
         /// Позволяет отрисовывать пикселизированные эффекты поверх снаряда.
+        /// Слой совпадает со слоем самого снаряда, включая <see cref="Projectile.hide"/>.
         /// </summary>
         void PostDrawPixelated(Projectile proj);
     }
 
     /// <summary>
     /// Позволяет снаряду отрисовывать пикселизированные эффекты.
+    /// Слой совпадает со слоем самого снаряда, включая <see cref="Projectile.hide"/>.
     /// <br/>Интерфейс относится к следующим классам: <see cref="ModProjectile"/> и <see cref="GlobalProjectile"/>
     /// </summary>
     public interface IDrawPixelatedProjectile : IPreHook, IPostHook
     {
-        // Примечание: Данная реализация не учитывает отрисовку скрытых снарядов (proj.hide)
-        // Ясное дело, добавить это не так сложно, но на данный момент это просто не нужно...
         [Autoload(Side = ModSide.Client)]
-        private sealed class DrawPixelatedProjectileImplementation : ILoadable
+        private sealed class DrawPixelatedProjectileImplementation : ModSystem
         {
-            private static ProjectilePixelatedLayer _preDrawProjectilesLayer;
-            private static ProjectilePixelatedLayer _postDrawProjectilesLayer;
-            private static ProjectilePixelatedLayer _postDrawPlayersAfterProjectilesLayer;
-
-            public void Load(Mod mod)
+            private enum Layer
             {
-                _preDrawProjectilesLayer = new(PreDrawPixelatedProjectiles);
-                _postDrawProjectilesLayer = new(PostDrawPixelatedProjectiles);
-                _postDrawPlayersAfterProjectilesLayer = new(PostDrawPixelatedProjectiles);
+                BehindNPCsAndTiles,
+                BehindNPCs,
+                BehindProjectiles,
+                Projectiles,
+                Held,
+                OverPlayers,
+                OverWiresUI
+            }
+
+            private static readonly Layer[] _allLayers = Enum.GetValues<Layer>();
+            private static readonly List<int>[] _preProjectiles = CreateLayerLists();
+            private static readonly List<int>[] _postProjectiles = CreateLayerLists();
+
+            private static readonly List<int> _hideBehindNPCsAndTiles = [];
+            private static readonly List<int> _hideBehindNPCs = [];
+            private static readonly List<int> _hideBehindProjectiles = [];
+            private static readonly List<int> _hideOverPlayers = [];
+            private static readonly List<int> _hideOverWiresUI = [];
+
+            private static ProjectilePixelatedLayer[] _preLayers;
+            private static ProjectilePixelatedLayer[] _postLayers;
+
+            private static bool[] _preDrawByType;
+            private static bool[] _postDrawByType;
+            private static bool _anyPreGlobal;
+            private static bool _anyPostGlobal;
+            private static bool _hasHideLayerContent;
+            private static bool _typeCacheBuilt;
+
+            public override void Load()
+            {
+                _preLayers = new ProjectilePixelatedLayer[_allLayers.Length];
+                _postLayers = new ProjectilePixelatedLayer[_allLayers.Length];
+
+                for (var i = 0; i < _allLayers.Length; i++)
+                {
+                    _preLayers[i] = new(DrawPrePixelatedProjectiles);
+                    _postLayers[i] = new(DrawPostPixelatedProjectiles);
+                }
 
                 ModEvents.OnPostUpdateCameraPosition += RenderProjectilesToTargets;
 
-                // Хук для отрисовки большинства снарядов (без proj.hide и тех, что не в руке игрока)
-                On_Main.DrawProjectiles += (orig, main) =>
+                On_Main.DrawCachedProjs += DrawCachedProjs;
+                On_Main.DrawProjectiles += DrawProjectiles;
+                On_Main.DrawPlayers_AfterProjectiles += DrawPlayersAfterProjectiles;
+            }
+
+            public override void PostSetupContent()
+                => BuildTypeCache();
+
+            public override void Unload()
+            {
+                On_Main.DrawPlayers_AfterProjectiles -= DrawPlayersAfterProjectiles;
+                On_Main.DrawProjectiles -= DrawProjectiles;
+                On_Main.DrawCachedProjs -= DrawCachedProjs;
+
+                ModEvents.OnPostUpdateCameraPosition -= RenderProjectilesToTargets;
+
+                _postLayers = null;
+                _preLayers = null;
+                _postDrawByType = null;
+                _preDrawByType = null;
+                _typeCacheBuilt = false;
+            }
+
+            private static List<int>[] CreateLayerLists()
+            {
+                var lists = new List<int>[_allLayers.Length];
+
+                for (var i = 0; i < _allLayers.Length; i++)
+                    lists[i] = new List<int>(32);
+
+                return lists;
+            }
+
+            private static void ClearLayerLists()
+            {
+                for (var i = 0; i < _allLayers.Length; i++)
                 {
-                    _preDrawProjectilesLayer.DrawToScreen();
-                    orig(main);
-                    _postDrawProjectilesLayer.DrawToScreen();
-                };
-
-                // Хуки для отрисовка пиксельных снарядов у снарядов, что расположены в руках игрока
-                {
-                    // - Зачем нужны IL_Main, если можно сделать то же самое, но с On_Main?
-                    // Не хочу делать постоянные проверки/поиски нужного списка...
-                    // Пример:
-                    // void DrawCachedProjs(List<int> projs) {
-                    //   if (projs == Main.instance.DrawCacheProjsBehindNPCs) {}
-                    //   else (projs == Main.instance.DrawCacheProjsBehindNPCsAndTiles) {}
-                    //   else (...) {}
-                    //   ...
-                    // }
-                    // А текущим методом: просто вызовем наши функции без каких либо проверок
-                    // Такая проблема есть у таких методов, как DrawCachedNPCs и DrawCachedProjs (а может и еще есть, хз)
-
-                    IL_Main.DoDraw += (il) =>
-                    {
-                        Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
-                    };
-
-                    IL_Main.DrawCapture += (il) =>
-                    {
-                        Impl_DrawPlayers_AfterProjectiles(new ILCursor(il));
-                    };
+                    _preProjectiles[i].Clear();
+                    _postProjectiles[i].Clear();
                 }
             }
 
-            public void Unload()
+            private static void BuildTypeCache()
             {
-                ModEvents.OnPostUpdateCameraPosition -= RenderProjectilesToTargets;
+                var count = ProjectileLoader.ProjectileCount;
+                var preByType = new bool[count];
+                var postByType = new bool[count];
+                var preGlobals = new List<GlobalProjectile>();
+                var postGlobals = new List<GlobalProjectile>();
 
-                _postDrawPlayersAfterProjectilesLayer = null;
-                _postDrawProjectilesLayer = null;
-                _preDrawProjectilesLayer = null;
+                for (var type = 0; type < count; type++)
+                {
+                    var modProj = ProjectileLoader.GetProjectile(type);
+                    if (modProj is null)
+                        continue;
+
+                    if (modProj is IPreHook)
+                        preByType[type] = true;
+
+                    if (modProj is IPostHook)
+                        postByType[type] = true;
+                }
+
+                foreach (var global in ModContent.GetContent<GlobalProjectile>())
+                {
+                    if (global is IPreHook)
+                        preGlobals.Add(global);
+
+                    if (global is IPostHook)
+                        postGlobals.Add(global);
+                }
+
+                ApplyGlobalsByType(preByType, preGlobals);
+                ApplyGlobalsByType(postByType, postGlobals);
+
+                _preDrawByType = preByType;
+                _postDrawByType = postByType;
+                _anyPreGlobal = preGlobals.Count > 0;
+                _anyPostGlobal = postGlobals.Count > 0;
+                _typeCacheBuilt = true;
             }
 
-            private static List<int> FindOnscreenProjectiles()
+            private static void ApplyGlobalsByType(bool[] byType, List<GlobalProjectile> globals)
             {
-                var onscreenProjs = new List<int>(Main.projectile.Length / 8);
+                if (globals.Count == 0)
+                    return;
+
+                foreach (var global in globals)
+                {
+                    if (global.ConditionallyAppliesToEntities)
+                        continue;
+
+                    Array.Fill(byType, true);
+                    return;
+                }
+
+                for (var type = 0; type < byType.Length; type++)
+                {
+                    if (byType[type])
+                        continue;
+
+                    if (!TryGetSampleProjectile(type, out var sample))
+                        continue;
+
+                    foreach (var global in globals)
+                    {
+                        if (AppliesToProjectile(global, sample))
+                        {
+                            byType[type] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            private static bool TryGetSampleProjectile(int type, out Projectile sample)
+            {
+                if (ContentSamples.ProjectilesByType.TryGetValue(type, out sample))
+                    return true;
+
+                sample = ProjectileLoader.GetProjectile(type)?.Projectile;
+                return sample is not null;
+            }
+
+            private static bool AppliesToProjectile(GlobalProjectile global, Projectile proj)
+                => global.AppliesToEntity(proj, lateInstantiation: false)
+                || global.AppliesToEntity(proj, lateInstantiation: true);
+
+            private static bool IsHeld(int projIndex)
+            {
+                foreach (var player in Main.ActivePlayers)
+                {
+                    if (player.heldProj == projIndex)
+                        return true;
+                }
+
+                return false;
+            }
+
+            private static bool IsOnScreen(Projectile proj)
+            {
+                var fluff = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
+                var cameraPos = Main.Camera.ScaledPosition;
+                var cameraSize = Main.Camera.ScaledSize;
+                var visibleRectangle = new Rectangle(
+                    (int)cameraPos.X - fluff,
+                    (int)cameraPos.Y - fluff,
+                    (int)cameraSize.X + fluff * 2,
+                    (int)cameraSize.Y + fluff * 2
+                );
+
+                return visibleRectangle.Intersects(proj.Hitbox);
+            }
+
+            private static bool TryGetPixelatedHooks(Projectile proj, out bool hasPre, out bool hasPost)
+            {
+                var type = proj.type;
+
+                hasPre = _preDrawByType[type];
+                hasPost = _postDrawByType[type];
+
+                return hasPre || hasPost;
+            }
+
+            private static void AddToLayer(Layer layer, int projIndex, bool hasPre, bool hasPost)
+            {
+                var index = (int)layer;
+
+                if (hasPre)
+                    _preProjectiles[index].Add(projIndex);
+
+                if (hasPost)
+                    _postProjectiles[index].Add(projIndex);
+
+                if (layer is not Layer.Projectiles and not Layer.Held)
+                    _hasHideLayerContent = true;
+            }
+
+            private static void CollectHideLayers(Projectile proj, bool hasPre, bool hasPost)
+            {
+                _hideBehindNPCsAndTiles.Clear();
+                _hideBehindNPCs.Clear();
+                _hideBehindProjectiles.Clear();
+                _hideOverPlayers.Clear();
+                _hideOverWiresUI.Clear();
+
+                proj.ModProjectile?.DrawBehind(
+                    proj.whoAmI,
+                    _hideBehindNPCsAndTiles,
+                    _hideBehindNPCs,
+                    _hideBehindProjectiles,
+                    _hideOverPlayers,
+                    _hideOverWiresUI
+                );
+
+                foreach (var global in proj.Globals)
+                {
+                    global.DrawBehind(
+                        proj,
+                        proj.whoAmI,
+                        _hideBehindNPCsAndTiles,
+                        _hideBehindNPCs,
+                        _hideBehindProjectiles,
+                        _hideOverPlayers,
+                        _hideOverWiresUI
+                    );
+                }
+
+                var whoAmI = proj.whoAmI;
+
+                if (_hideBehindNPCsAndTiles.Contains(whoAmI))
+                    AddToLayer(Layer.BehindNPCsAndTiles, whoAmI, hasPre, hasPost);
+
+                if (_hideBehindNPCs.Contains(whoAmI))
+                    AddToLayer(Layer.BehindNPCs, whoAmI, hasPre, hasPost);
+
+                if (_hideBehindProjectiles.Contains(whoAmI))
+                    AddToLayer(Layer.BehindProjectiles, whoAmI, hasPre, hasPost);
+
+                if (_hideOverPlayers.Contains(whoAmI))
+                    AddToLayer(Layer.OverPlayers, whoAmI, hasPre, hasPost);
+
+                if (_hideOverWiresUI.Contains(whoAmI))
+                    AddToLayer(Layer.OverWiresUI, whoAmI, hasPre, hasPost);
+            }
+
+            private static void CollectProjectiles()
+            {
+                if (!_typeCacheBuilt)
+                    return;
+
+                ClearLayerLists();
+                _hasHideLayerContent = false;
 
                 foreach (var proj in Main.ActiveProjectiles)
                 {
-                    var offscreenDistance = ProjectileID.Sets.DrawScreenCheckFluff[proj.type];
-                    var visibleRectangle = new Rectangle((int)Main.Camera.ScaledPosition.X - offscreenDistance, (int)Main.Camera.ScaledPosition.Y - offscreenDistance, (int)Main.Camera.ScaledSize.X + offscreenDistance * 2, (int)Main.Camera.ScaledSize.Y + offscreenDistance * 2);
-
-                    if (!visibleRectangle.Intersects(proj.Hitbox))
+                    if (!TryGetPixelatedHooks(proj, out var hasPre, out var hasPost))
                         continue;
 
-                    onscreenProjs.Add(proj.whoAmI);
-                }
+                    if (!IsOnScreen(proj))
+                        continue;
 
-                return onscreenProjs;
+                    if (IsHeld(proj.whoAmI))
+                    {
+                        AddToLayer(Layer.Held, proj.whoAmI, hasPre, hasPost);
+                        continue;
+                    }
+
+                    if (!proj.hide)
+                    {
+                        AddToLayer(Layer.Projectiles, proj.whoAmI, hasPre, hasPost);
+                        continue;
+                    }
+
+                    CollectHideLayers(proj, hasPre, hasPost);
+                }
             }
 
             private static void RenderProjectilesToTargets()
             {
-                var onscreenProjs = FindOnscreenProjectiles();
+                CollectProjectiles();
 
-                if (onscreenProjs.Count == 0)
-                    return;
-
-                var onscreenProjSet = onscreenProjs.ToHashSet();
-                var playerHeldProjs = new List<int>(Main.player.Length / 4);
-                var notHiddenProjs = new List<int>(Main.projectile.Length / 8);
-
-                foreach (var player in Main.ActivePlayers)
+                for (var i = 0; i < _allLayers.Length; i++)
                 {
-                    if (player.heldProj >= 0 && onscreenProjSet.Contains(player.heldProj))
-                        playerHeldProjs.Add(player.heldProj);
+                    _preLayers[i].RenderToTarget(_preProjectiles[i]);
+                    _postLayers[i].RenderToTarget(_postProjectiles[i]);
                 }
-
-                foreach (var projIndex in onscreenProjs)
-                {
-                    ref var proj = ref Main.projectile[projIndex];
-
-                    if (!proj.hide)
-                        notHiddenProjs.Add(proj.whoAmI);
-                }
-
-                _preDrawProjectilesLayer.RenderToTarget(notHiddenProjs);
-                _postDrawProjectilesLayer.RenderToTarget(notHiddenProjs.Except(playerHeldProjs).ToArray());
-                _postDrawPlayersAfterProjectilesLayer.RenderToTarget(playerHeldProjs);
             }
 
-            private static bool PreDrawPixelatedProjectiles(IReadOnlyList<int> projs)
+            private static bool DrawPrePixelatedProjectiles(IReadOnlyList<int> projs)
+                => InvokePixelatedDraw(projs, pre: true);
+
+            private static bool DrawPostPixelatedProjectiles(IReadOnlyList<int> projs)
+                => InvokePixelatedDraw(projs, pre: false);
+
+            private static bool InvokePixelatedDraw(IReadOnlyList<int> projs, bool pre)
             {
                 var anyDrawCalls = false;
 
-                foreach (var projIndex in projs)
+                for (int i = 0, count = projs.Count; i < count; i++)
                 {
-                    ref var proj = ref Main.projectile[projIndex];
+                    ref var proj = ref Main.projectile[projs[i]];
+
+                    if (!proj.active)
+                        continue;
 
                     try
                     {
-                        if (proj.ModProjectile is IPreHook modProj)
+                        if (pre)
                         {
-                            modProj.PreDrawPixelated(proj);
-                            anyDrawCalls = true;
-                        }
+                            if (proj.ModProjectile is IPreHook modProj)
+                            {
+                                modProj.PreDrawPixelated(proj);
+                                anyDrawCalls = true;
+                            }
 
-                        foreach (IPreHook g in IPreHook._hook.Enumerate(proj))
+                            if (_anyPreGlobal)
+                            {
+                                foreach (IPreHook g in IPreHook._hook.Enumerate(proj))
+                                {
+                                    g.PreDrawPixelated(proj);
+                                    anyDrawCalls = true;
+                                }
+                            }
+                        }
+                        else
                         {
-                            g.PreDrawPixelated(proj);
-                            anyDrawCalls = true;
+                            if (proj.ModProjectile is IPostHook modProj)
+                            {
+                                modProj.PostDrawPixelated(proj);
+                                anyDrawCalls = true;
+                            }
+
+                            if (_anyPostGlobal)
+                            {
+                                foreach (IPostHook g in IPostHook._hook.Enumerate(proj))
+                                {
+                                    g.PostDrawPixelated(proj);
+                                    anyDrawCalls = true;
+                                }
+                            }
                         }
                     }
                     catch (Exception)
@@ -187,62 +426,98 @@ namespace SPYoyoMod.Core.Hooks
                 return anyDrawCalls;
             }
 
-            private static bool PostDrawPixelatedProjectiles(IReadOnlyList<int> projs)
+            private static bool TryGetCachedLayer(List<int> projCache, out Layer layer)
             {
-                var anyDrawCalls = false;
+                var main = Main.instance;
 
-                foreach (var projIndex in projs)
+                if (ReferenceEquals(projCache, main.DrawCacheProjsBehindNPCsAndTiles))
                 {
-                    ref var proj = ref Main.projectile[projIndex];
-
-                    try
-                    {
-                        if (proj.ModProjectile is IPostHook modProj)
-                        {
-                            modProj.PostDrawPixelated(proj);
-                            anyDrawCalls = true;
-                        }
-
-                        foreach (IPostHook g in IPostHook._hook.Enumerate(proj))
-                        {
-                            g.PostDrawPixelated(proj);
-                            anyDrawCalls = true;
-                        }
-                    }
-                    catch (Exception)
-                    {
-                        proj.active = false;
-                    }
+                    layer = Layer.BehindNPCsAndTiles;
+                    return true;
                 }
 
-                return anyDrawCalls;
+                if (ReferenceEquals(projCache, main.DrawCacheProjsBehindNPCs))
+                {
+                    layer = Layer.BehindNPCs;
+                    return true;
+                }
+
+                if (ReferenceEquals(projCache, main.DrawCacheProjsBehindProjectiles))
+                {
+                    layer = Layer.BehindProjectiles;
+                    return true;
+                }
+
+                if (ReferenceEquals(projCache, main.DrawCacheProjsOverPlayers))
+                {
+                    layer = Layer.OverPlayers;
+                    return true;
+                }
+
+                if (ReferenceEquals(projCache, main.DrawCacheProjsOverWiresUI))
+                {
+                    layer = Layer.OverWiresUI;
+                    return true;
+                }
+
+                layer = default;
+                return false;
             }
 
-            private static void Impl_DrawPlayers_AfterProjectiles(ILCursor cursor)
+            private static void DrawLayerPair(Layer layer, Action drawVanilla)
             {
-                // DrawCachedProjs(DrawCacheProjsOverPlayers);
+                _preLayers[(int)layer].DrawToScreen();
+                drawVanilla();
+                _postLayers[(int)layer].DrawToScreen();
+            }
 
-                // IL_1762: ldarg.0
-                // IL_1763: ldarg.0
-                // IL_1764: ldfld class [System.Collections] System.Collections.Generic.List`1<int32> Terraria.Main::DrawCacheProjsOverPlayers
-                // IL_1769: ldc.i4.1
-                // IL_176a: call instance void Terraria.Main::DrawCachedProjs(class [System.Collections] System.Collections.Generic.List`1<int32>, bool)
-
-                if (!cursor.TryGotoNext(
-                    MoveType.After,
-                    i => i.MatchLdarg(0),
-                    i => i.MatchLdarg(0),
-                    i => i.MatchLdfld<Main>("DrawCacheProjsOverPlayers"),
-                    i => i.MatchLdcI4(1),
-                    i => i.MatchCall(typeof(Main).GetMethod("DrawCachedProjs", BindingFlags.Instance | BindingFlags.NonPublic, [typeof(List<int>), typeof(bool)]))))
+            private static void DrawCachedProjs(On_Main.orig_DrawCachedProjs orig, Main main, List<int> projCache, bool startSpriteBatch)
+            {
+                if (!_hasHideLayerContent)
                 {
-                    ModLogger.Warn($"IL edit \"{nameof(Impl_DrawPlayers_AfterProjectiles)}\" failed...");
+                    orig(main, projCache, startSpriteBatch);
                     return;
                 }
 
-                cursor.Emit(OpCodes.Ldsfld, typeof(DrawPixelatedProjectileImplementation).GetField(nameof(_postDrawPlayersAfterProjectilesLayer), BindingFlags.Static | BindingFlags.NonPublic));
-                cursor.Emit(OpCodes.Call, typeof(ProjectilePixelatedLayer).GetMethod(nameof(ProjectilePixelatedLayer.DrawToScreen), BindingFlags.Instance | BindingFlags.Public));
+                if (!TryGetCachedLayer(projCache, out var layer))
+                {
+                    orig(main, projCache, startSpriteBatch);
+                    return;
+                }
+
+                var pre = _preLayers[(int)layer];
+                var post = _postLayers[(int)layer];
+
+                if (startSpriteBatch)
+                {
+                    pre.DrawToScreen();
+                    orig(main, projCache, startSpriteBatch);
+                    post.DrawToScreen();
+                    return;
+                }
+
+                if (!pre.CanBeDrawn && !post.CanBeDrawn)
+                {
+                    orig(main, projCache, startSpriteBatch);
+                    return;
+                }
+
+                Main.spriteBatch.End(out var snapshot);
+                pre.DrawToScreen();
+                Main.spriteBatch.Begin(snapshot);
+
+                orig(main, projCache, startSpriteBatch);
+
+                Main.spriteBatch.End();
+                post.DrawToScreen();
+                Main.spriteBatch.Begin(snapshot);
             }
+
+            private static void DrawProjectiles(On_Main.orig_DrawProjectiles orig, Main main)
+                => DrawLayerPair(Layer.Projectiles, () => orig(main));
+
+            private static void DrawPlayersAfterProjectiles(On_Main.orig_DrawPlayers_AfterProjectiles orig, Main main)
+                => DrawLayerPair(Layer.Held, () => orig(main));
         }
 
         private sealed class ProjectilePixelatedLayer(Func<IReadOnlyList<int>, bool> drawAction)
@@ -250,14 +525,18 @@ namespace SPYoyoMod.Core.Hooks
             private readonly ScreenRenderTarget _renderTarget = ScreenRenderTarget.Create(ScreenRenderTargetScale.Half);
             private readonly Func<IReadOnlyList<int>, bool> _drawAction = drawAction;
 
-            private bool _canBeDrawnToScreen = false;
+            private bool _canBeDrawnToScreen;
+
+            public bool CanBeDrawn => _canBeDrawnToScreen;
 
             public void RenderToTarget(IReadOnlyList<int> projectiles)
             {
+                _canBeDrawnToScreen = false;
+
                 if (projectiles.Count == 0)
                     return;
 
-                var spriteBatchSpanshot = new SpriteBatchSnapshot
+                var spriteBatchSnapshot = new SpriteBatchSnapshot
                 {
                     SortMode = SpriteSortMode.Deferred,
                     BlendState = BlendState.AlphaBlend,
@@ -273,15 +552,15 @@ namespace SPYoyoMod.Core.Hooks
 
                 var device = Main.graphics.GraphicsDevice;
 
-                device.BlendState = spriteBatchSpanshot.BlendState;
-                device.SamplerStates[0] = spriteBatchSpanshot.SamplerState;
-                device.DepthStencilState = spriteBatchSpanshot.DepthStencilState;
-                device.RasterizerState = spriteBatchSpanshot.RasterizerState;
+                device.BlendState = spriteBatchSnapshot.BlendState;
+                device.SamplerStates[0] = spriteBatchSnapshot.SamplerState;
+                device.DepthStencilState = spriteBatchSnapshot.DepthStencilState;
+                device.RasterizerState = spriteBatchSnapshot.RasterizerState;
 
                 device.SetRenderTarget(_renderTarget);
                 device.Clear(Color.Transparent);
                 {
-                    Main.spriteBatch.Begin(spriteBatchSpanshot);
+                    Main.spriteBatch.Begin(spriteBatchSnapshot);
                     _canBeDrawnToScreen = _drawAction(projectiles);
                     Main.spriteBatch.End();
                 }
