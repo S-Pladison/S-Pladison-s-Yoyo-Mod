@@ -1,4 +1,5 @@
-﻿using SPYoyoMod.Common;
+﻿using Microsoft.Xna.Framework;
+using SPYoyoMod.Common;
 using System.Runtime.CompilerServices;
 using Terraria;
 using Terraria.ModLoader;
@@ -13,6 +14,24 @@ namespace SPYoyoMod.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static int OwnedProjectileCounts<T>(this Player player) where T : ModProjectile
             => player.ownedProjectileCounts[ModContent.ProjectileType<T>()];
+
+        /// <summary>
+        /// Смещение спрайта тела в анимации игрока.
+        /// </summary>
+        public static Vector2 GetBodyFrameOffset(this Player player)
+        {
+            var offset = player.bodyPosition;
+            var frame = player.bodyFrame.Y / player.bodyFrame.Height;
+
+            if ((uint)frame < Main.OffsetsPlayerHeadgear.Length)
+            {
+                var headgear = Main.OffsetsPlayerHeadgear[frame];
+                headgear.Y -= 2f;
+                offset += new Vector2(headgear.X * player.direction, headgear.Y * player.gravDir);
+            }
+
+            return offset;
+        }
 
         /// <summary>
         /// Возвращает оставшееся время кулдауна для <typeparamref name="T"/> в тиках.
