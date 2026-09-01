@@ -17,6 +17,11 @@ BlackholeItem: {
 	Tooltip: ""
 }
 
+BowOfDivinePriestessItem: {
+	DisplayName: Bow of the Divine Priestess
+	Tooltip: ""
+}
+
 CascadeItem.Tooltip: ...
 ChikItem.Tooltip: ""
 Code1Item.Tooltip: ...

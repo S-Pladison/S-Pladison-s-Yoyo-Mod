@@ -21,6 +21,11 @@ BlackholeItem: {
 	// Tooltip: ""
 }
 
+BowOfDivinePriestessItem: {
+	DisplayName: Бант божественной жрицы
+	// Tooltip: ""
+}
+
 CascadeItem.Tooltip:
 	'''
 	Есть шанс наложить дебафф «{$BuffName.OnFire}» при попадании
