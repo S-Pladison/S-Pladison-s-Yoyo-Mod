@@ -57,7 +57,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (remainingLife <= damageDone * WaveMinRemainingHits)
                 return;
 
-            if (!proj.TryGetOwner(out var owner) || owner.IsCooldownActiveFor<Code1Projectile>())
+            if (!proj.TryGetOwner(out var owner) || owner.IsCooldownActiveFor<Code1Item>())
                 return;
 
             var waveType = ModContent.ProjectileType<Code1DigitalWaveProjectile>();
@@ -67,7 +67,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
             Projectile.NewProjectile(proj.GetSource_OnHit(target), target.Center, Vector2.Zero, waveType, proj.damage, 0f, proj.owner, target.whoAmI);
 
-            owner.SetCooldownFor<Code1Projectile>(WaveCooldown);
+            owner.SetCooldownFor<Code1Item>(WaveCooldown);
         }
 
         private bool IsInfected(NPC target)

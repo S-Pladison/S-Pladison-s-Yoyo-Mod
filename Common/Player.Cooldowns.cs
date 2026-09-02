@@ -1,4 +1,5 @@
 ﻿using SPYoyoMod.Core;
+using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Terraria.ModLoader;
@@ -8,32 +9,31 @@ namespace SPYoyoMod.Common
     [LoadBefore, LoadAfter(typeof(ModEvents))]
     public sealed class CooldownPlayer : ModPlayer
     {
-        private readonly Dictionary<object, Cooldown> _timers = [];
+        private readonly Dictionary<string, Cooldown> _timers = [];
 
-        public int this[object key]
-        {
-            get => Get(key);
-            set => Set(key, value);
-        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static string ToKey(Type type) => type.FullName ?? type.Name;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public int Get<T>() => Get(typeof(T));
 
-        public int Get(object key) => TryGet(key, out var cooldown) ? cooldown.Remaining : 0;
+        public int Get(Type type) => type is null ? 0 : Get(ToKey(type));
+
+        public int Get(string key) => TryGet(key, out var cooldown) ? cooldown.Remaining : 0;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public void Set<T>(int ticks) => Set(typeof(T), ticks);
 
-        public void Set(object key, int ticks)
+        public void Set(Type type, int ticks)
         {
-            if (key is null)
-                return;
+            if (type is not null)
+                Set(ToKey(type), ticks);
+        }
 
-            if (ticks <= 0)
-            {
-                _timers.Remove(key);
+        public void Set(string key, int ticks)
+        {
+            if (string.IsNullOrEmpty(key) || ticks <= 0)
                 return;
-            }
 
             if (!_timers.TryGetValue(key, out var cooldown))
                 _timers[key] = cooldown = new Cooldown();
@@ -44,17 +44,24 @@ namespace SPYoyoMod.Common
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool IsActive<T>() => IsActive(typeof(T));
 
-        public bool IsActive(object key) => TryGet(key, out var cooldown) && cooldown.IsActive;
+        public bool IsActive(Type type) => type is not null && IsActive(ToKey(type));
+
+        public bool IsActive(string key) => TryGet(key, out var cooldown) && cooldown.IsActive;
 
         public override void PostUpdate()
         {
-            foreach (var cooldown in _timers.Values)
+            foreach (var (key, cooldown) in _timers)
+            {
                 cooldown.Update();
+
+                if (!cooldown.IsActive)
+                    _timers.Remove(key);
+            }
         }
 
-        private bool TryGet(object key, out Cooldown cooldown)
+        private bool TryGet(string key, out Cooldown cooldown)
         {
-            if (key is not null)
+            if (!string.IsNullOrEmpty(key))
                 return _timers.TryGetValue(key, out cooldown);
 
             cooldown = null;
@@ -66,7 +73,11 @@ namespace SPYoyoMod.Common
             public int Remaining { get; private set; }
             public bool IsActive => Remaining > 0;
 
-            public void Set(int ticks) => Remaining = ticks > 0 ? ticks : 0;
+            public void Set(int ticks)
+            {
+                if (ticks > Remaining)
+                    Remaining = ticks;
+            }
 
             public void Update()
             {

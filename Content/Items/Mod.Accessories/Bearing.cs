@@ -1,7 +1,6 @@
 using SPYoyoMod.Core.Hooks;
 using SPYoyoMod.Utils;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Terraria;
 using Terraria.ID;
 using Terraria.Localization;
@@ -36,28 +35,25 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             // Ищем все предметы, в дереве рецептов которых присутствует подшипник
             ModEvents.OnPostSetupRecipes += (recipes) =>
             {
-                var tasks = new List<Task>();
+                var stack = new Stack<int>();
+                stack.Push(ModContent.ItemType<BearingItem>());
 
-                void FindItems(int itemType)
+                while (stack.Count > 0)
                 {
-                    for (var i = recipes.Length - 1; i > 0; i--)
+                    var itemType = stack.Pop();
+
+                    if (!_itemTypeWithBearingEffectSet.Add(itemType))
+                        continue;
+
+                    for (var i = 0; i < recipes.Length; i++)
                     {
                         var recipe = recipes[i];
+                        var type = recipe.createItem.type;
 
-                        if (recipe.TryGetIngredient(itemType, out var _) && !_itemTypeWithBearingEffectSet.Contains(recipe.createItem.type))
-                        {
-                            _itemTypeWithBearingEffectSet.Add(recipe.createItem.type);
-
-                            tasks.Add(Task.Run(() => FindItems(recipe.createItem.type)));
-                        }
+                        if (type > 0 && recipe.TryGetIngredient(itemType, out var _))
+                            stack.Push(type);
                     }
                 }
-
-                FindItems(ModContent.ItemType<BearingItem>());
-
-                Task.WaitAll([.. tasks]);
-
-                _itemTypeWithBearingEffectSet.Add(ModContent.ItemType<BearingItem>());
             };
         }
 
@@ -66,15 +62,10 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             _itemTypeWithBearingEffectSet.Clear();
         }
 
-        public static bool HasEffect(Player player)
+        public override void UpdateAccessory(Item item, Player player, bool hideVisual)
         {
-            foreach (var type in _itemTypeWithBearingEffectSet)
-            {
-                if (player.GetEquipmentInfoFor(type).Functional)
-                    return true;
-            }
-
-            return false;
+            if (_itemTypeWithBearingEffectSet.Contains(item.type))
+                player.SetCustomFlagFor<BearingItem>();
         }
     }
 
@@ -85,7 +76,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
 
         public void ModifyYoyoStats(Projectile proj, ref YoyoStatModifiers statModifiers)
         {
-            if (!proj.TryGetOwner(out var owner) || !BearingGlobalItem.HasEffect(owner))
+            if (!proj.TryGetOwner(out var owner) || !owner.HasCustomFlagFor<BearingItem>())
                 return;
 
             statModifiers.LifeTime += BearingItem.PercentageStatBonus / 100.0f;
