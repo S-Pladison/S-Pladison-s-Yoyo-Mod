@@ -76,5 +76,21 @@ namespace SPYoyoMod.Utils
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsCooldownActiveFor(this Player player, object key)
             => player.GetModPlayer<CooldownPlayer>().IsActive(key);
+
+        /// <summary>
+        /// Получить информацию о предмете касательно того, установлен ли он в слотах снаряжения.
+        /// Можно узнать, установлен ли предмет в функциональный слот, в слот визуала, и должен ли он использовать краситель.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EquipmentInfo GetEquipmentInfoFor<T>(this Player player) where T : ModItem
+            => player.GetModPlayer<EquipmentPlayer>().Get<T>();
+
+        /// <summary>
+        /// Получить информацию о предмете касательно того, установлен ли он в слотах снаряжения.
+        /// Можно узнать, установлен ли предмет в функциональный слот, в слот визуала, и должен ли он использовать краситель.
+        /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static EquipmentInfo GetEquipmentInfoFor(this Player player, int itemType)
+            => player.GetModPlayer<EquipmentPlayer>().Get(itemType);
     }
 }

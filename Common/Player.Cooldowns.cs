@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using SPYoyoMod.Core;
+using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Terraria.ModLoader;
 
 namespace SPYoyoMod.Common
 {
+    [LoadBefore, LoadAfter(typeof(ModEvents))]
     public sealed class CooldownPlayer : ModPlayer
     {
         private readonly Dictionary<object, Cooldown> _timers = [];
