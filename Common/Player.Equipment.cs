@@ -26,7 +26,7 @@ namespace SPYoyoMod.Common
         public bool Visual { get; init; }
 
         /// <summary>
-        /// Отображается ли сейчас эффект.
+        /// Отображается ли сейчас предмет.
         /// </summary>
         public bool Visible { get; init; }
 
