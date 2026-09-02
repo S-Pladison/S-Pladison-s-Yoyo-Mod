@@ -83,7 +83,7 @@ namespace SPYoyoMod.Common
                 if (!Player.IsItemSlotUnlockedAndUsable(i))
                     continue;
 
-                ApplyRow(armorSlots[i], armorSlots[i + vanityOffset], dyeSlots[i], (uint)i < (uint)hidden.Length && hidden[i]);
+                ApplyRow(armorSlots[i], armorSlots[i + vanityOffset], dyeSlots[i], i < hidden.Length && hidden[i]);
             }
         }
 
