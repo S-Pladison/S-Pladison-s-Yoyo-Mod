@@ -165,7 +165,7 @@ namespace SPYoyoMod.Core.Graphics.Renderers
                         _lerpColors[i] = colorData.Glow ? colorData.Value : Lighting.GetColor(tileCoords, colorData.Value);
                     }
 
-                    var color = ColorUtils.MultipleLerp(segment.Index / (float)segmentCount, _lerpColors);
+                    var color = ColorUtils.Lerp(segment.Index / (float)segmentCount, _lerpColors);
                     segment.Draw(spriteBatch, Texture, origin, context.Offset, color);
                 }
             }

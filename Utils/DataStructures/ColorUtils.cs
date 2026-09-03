@@ -8,10 +8,16 @@ namespace SPYoyoMod.Utils
 {
     public static class ColorUtils
     {
+        /// <summary>
+        /// Вычисляет произведение двух цветов.
+        /// </summary>
         public static Color Multiply(Color first, Color second)
             => new((byte)(first.R * second.R / 255f), (byte)(first.G * second.G / 255f), (byte)(first.B * second.B / 255f), (byte)(first.A * second.A / 255f));
 
-        public static Color MultipleLerp(float t, params Color[] colors)
+        /// <summary>
+        /// Линейная интерполяция между несколькими цветами.
+        /// </summary>
+        public static Color Lerp(float t, params Color[] colors)
         {
             if (t >= 1) return colors[^1];
 
@@ -23,9 +29,9 @@ namespace SPYoyoMod.Utils
         }
 
         /// <summary>
-        /// Определяет цвет красителя для снарежения. Если красителя нет, то возвращает белый цвет.
+        /// Определяет цвет красителя для снаряжения. Если красителя нет, то возвращает белый цвет.
         /// </summary>
-        public static Color GetDyeColor(int dye, Player player)
+        public static Color DyeColor(int dye, Player player)
         {
             if (dye <= 0)
                 return Color.White;

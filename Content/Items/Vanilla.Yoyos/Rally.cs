@@ -261,7 +261,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
                 foreach (var segment in segments)
                 {
-                    var color = ColorUtils.MultipleLerp(segment.Index / (float)segmentCount, Color.Transparent, Color.Transparent, glowColor);
+                    var color = ColorUtils.Lerp(segment.Index / (float)segmentCount, Color.Transparent, Color.Transparent, glowColor);
                     segment.Draw(spriteBatch, Texture, origin, context.Offset, color);
                 }
             }
