@@ -1,5 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using System;
+using System.Runtime.CompilerServices;
+using Terraria;
+using Terraria.Graphics.Shaders;
 
 namespace SPYoyoMod.Utils
 {
@@ -17,6 +20,21 @@ namespace SPYoyoMod.Utils
             var index = Math.Max(0, (int)(t / num));
 
             return Color.Lerp(colors[index], colors[index + 1], (t - num * index) / num);
+        }
+
+        /// <summary>
+        /// Определяет цвет красителя для снарежения. Если красителя нет, то возвращает белый цвет.
+        /// </summary>
+        public static Color GetDyeColor(int dye, Player player)
+        {
+            if (dye <= 0)
+                return Color.White;
+
+            [UnsafeAccessor(UnsafeAccessorKind.Field, Name = "_uColor")]
+            static extern ref Vector3 GetShaderUColor(ArmorShaderData shader);
+
+            var shader = GameShaders.Armor.GetSecondaryShader(dye, player);
+            return shader is null ? Color.White : new Color(GetShaderUColor(shader));
         }
     }
 }
