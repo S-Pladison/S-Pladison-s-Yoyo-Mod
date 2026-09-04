@@ -16,3 +16,8 @@ nickname: Dia
 items: Bearing
 [unused]
 items: BloomingDeath (item, proj), HallowedBearing
+
+[author]
+nickname: Decrypt
+[release]
+items: BowOfDivinePriestess
