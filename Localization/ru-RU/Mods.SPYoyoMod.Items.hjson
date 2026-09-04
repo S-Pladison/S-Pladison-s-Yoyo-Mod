@@ -1,5 +1,9 @@
 // AmarokItem.Tooltip: ""
-AmazonItem.Tooltip: Окружает себя вихрем бритвенно-острых листьев
+AmazonItem.Tooltip:
+	'''
+	Есть шанс прикрепить врага к земле
+	Попадание по закрепленному врагу выпускает бритвенно-острые листья
+	'''
 // ArteryItem.Tooltip: ""
 
 BearingItem: {
@@ -28,7 +32,7 @@ BowOfDivinePriestessItem: {
 
 CascadeItem.Tooltip:
 	'''
-	Есть шанс наложить дебафф «{$BuffName.OnFire}» при попадании
+	Есть шанс при попадании наложить дебафф «{$BuffName.OnFire}»
 	Периодически взрывается, нанося урон по области
 	'''
 // ChikItem.Tooltip: ""
