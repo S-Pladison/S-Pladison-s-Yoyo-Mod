@@ -23,7 +23,7 @@ BlackholeItem: {
 
 BowOfDivinePriestessItem: {
 	DisplayName: Бант божественной жрицы
-	// Tooltip: ""
+	Tooltip: Дает возможность ходить по воде
 }
 
 CascadeItem.Tooltip:
