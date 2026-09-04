@@ -1,5 +1,7 @@
 using SPYoyoMod.Common.Yoyos;
+using Terraria;
 using Terraria.ID;
+using Terraria.ModLoader;
 
 namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 {
@@ -17,5 +19,23 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class AmazonProjectile : YoyoProjectile<AmazonItem>
     {
         public override int OverrideType => ProjectileID.JungleYoyo;
+    }
+
+    public sealed class AmazonGlobalNPC : GlobalNPC
+    {
+        public override void Load()
+        {
+
+        }
+
+        public override void Unload()
+        {
+            
+        }
+
+        public override bool PreAI(NPC npc)
+        {
+            return true;
+        }
     }
 }
