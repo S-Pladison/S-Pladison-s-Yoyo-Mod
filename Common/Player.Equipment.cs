@@ -117,7 +117,7 @@ namespace SPYoyoMod.Common
             var dye = dyeItem is { IsAir: false } ? dyeItem.dye : 0;
 
             if (hasFunctional)
-                ApplyItem(functional, true, false, !hasVanity && !hidden, dye);
+                ApplyItem(functional, true, false, !hidden, dye);
 
             if (hasVanity)
                 ApplyItem(vanity, false, true, true, dye);
