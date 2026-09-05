@@ -17,7 +17,7 @@ namespace SPYoyoMod.Utils
         /// <param name="centerCoord">Координата плитки, откуда начинается поиск.</param>
         /// <param name="tilesFromCenter">Расстояние проверки от центра.</param>
         /// <param name="predicate">Условие поиска плитки.</param>
-        /// <param name="tileCoord">Резулат поиска.</param>
+        /// <param name="tileCoord">Результат поиска.</param>
         public static bool TryFindTileSpiralTraverse(Point centerCoord, int tilesFromCenter, Predicate<Point> predicate, out Point tileCoord)
         {
             tileCoord = default;
@@ -88,7 +88,7 @@ namespace SPYoyoMod.Utils
         /// <param name="centerCoord">Координата плитки, откуда начинается поиск.</param>
         /// <param name="tilesFromCenter">Радиус проверки.</param>
         /// <param name="predicate">Условие поиска плитки.</param>
-        /// <param name="tileCoord">Резулат поиска.</param>
+        /// <param name="tileCoord">Результат поиска.</param>
         public static bool TryFindClosestTile(Point centerCoord, int tilesFromCenter, Predicate<Point> predicate, out Point tileCoord)
         {
             tileCoord = default;
