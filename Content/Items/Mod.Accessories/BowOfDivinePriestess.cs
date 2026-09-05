@@ -529,7 +529,7 @@ namespace SPYoyoMod.Content.Items.Mod.Accessories
             device.SetRenderTarget(target);
             device.Clear(Color.Transparent);
             device.BlendState = BlendState.AlphaBlend;
-            device.SamplerStates[0] = SamplerState.LinearWrap;
+            device.SamplerStates.Set(SamplerState.LinearWrap);
             device.DepthStencilState = DepthStencilState.None;
             device.RasterizerState = RasterizerState.CullCounterClockwise;
 

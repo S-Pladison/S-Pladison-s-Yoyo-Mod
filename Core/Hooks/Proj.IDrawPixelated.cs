@@ -553,7 +553,7 @@ namespace SPYoyoMod.Core.Hooks
                 var device = Main.graphics.GraphicsDevice;
 
                 device.BlendState = spriteBatchSnapshot.BlendState;
-                device.SamplerStates[0] = spriteBatchSnapshot.SamplerState;
+                device.SamplerStates.Set(spriteBatchSnapshot.SamplerState);
                 device.DepthStencilState = spriteBatchSnapshot.DepthStencilState;
                 device.RasterizerState = spriteBatchSnapshot.RasterizerState;
 
