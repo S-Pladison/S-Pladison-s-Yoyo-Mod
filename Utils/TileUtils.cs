@@ -1,7 +1,5 @@
 using Microsoft.Xna.Framework;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Terraria;
 
 namespace SPYoyoMod.Utils
@@ -19,7 +17,7 @@ namespace SPYoyoMod.Utils
         /// <param name="centerCoord">Координата плитки, откуда начинается поиск.</param>
         /// <param name="tilesFromCenter">Расстояние проверки от центра.</param>
         /// <param name="predicate">Условие поиска плитки.</param>
-        /// <param name="tileCoord">Резулат поиска. Является координатой плитки.</param>
+        /// <param name="tileCoord">Резулат поиска.</param>
         public static bool TryFindTileSpiralTraverse(Point centerCoord, int tilesFromCenter, Predicate<Point> predicate, out Point tileCoord)
         {
             tileCoord = default;
@@ -88,55 +86,42 @@ namespace SPYoyoMod.Utils
         /// Производит поиск ближайшей плитки в определенном радиусе от центра.
         /// </summary>
         /// <param name="centerCoord">Координата плитки, откуда начинается поиск.</param>
-        /// <param name="tilesFromCenter">Расстояние проверки от центра.</param>
+        /// <param name="tilesFromCenter">Радиус проверки.</param>
         /// <param name="predicate">Условие поиска плитки.</param>
-        /// <param name="tileCoord">Резулат поиска. Является координатой плитки.</param>
+        /// <param name="tileCoord">Резулат поиска.</param>
         public static bool TryFindClosestTile(Point centerCoord, int tilesFromCenter, Predicate<Point> predicate, out Point tileCoord)
         {
-            var tileInCircleList = new List<Point>(tilesFromCenter * tilesFromCenter + 1);
+            tileCoord = default;
+            tilesFromCenter = Math.Max(tilesFromCenter, 0);
 
-            // Работаем лишь с 1/4 круга (верхняя левая)
-            for (var x = -tilesFromCenter; x < 0; x++)
+            var found = false;
+            var closestDistSq = int.MaxValue;
+            var radiusSq = tilesFromCenter * tilesFromCenter;
+
+            for (var y = -tilesFromCenter; y <= tilesFromCenter; y++)
             {
-                for (var y = -tilesFromCenter; y < 0; y++)
+                for (var x = -tilesFromCenter; x <= tilesFromCenter; x++)
                 {
-                    var distance = Math.Sqrt(Math.Pow(x - centerCoord.X, 2) + Math.Pow(y - centerCoord.Y, 2));
+                    var distSq = x * x + y * y;
 
-                    if (distance <= tilesFromCenter)
-                    {
-                        for (var j = y; j < 0; j++)
-                        {
-                            tileInCircleList.Add(new(centerCoord.X + x, centerCoord.Y + j));
-                            tileInCircleList.Add(new(centerCoord.X + x, centerCoord.Y - j));
-                            tileInCircleList.Add(new(centerCoord.X - x, centerCoord.Y + j));
-                            tileInCircleList.Add(new(centerCoord.X - x, centerCoord.Y - j));
-                        }
-                        break;
-                    }
+                    if (distSq > radiusSq || distSq >= closestDistSq)
+                        continue;
+
+                    var point = new Point(centerCoord.X + x, centerCoord.Y + y);
+
+                    if (!WorldGen.InWorld(point.X, point.Y) || !predicate(point))
+                        continue;
+
+                    closestDistSq = distSq;
+                    tileCoord = point;
+                    found = true;
+
+                    if (distSq == 0)
+                        return true;
                 }
             }
 
-            // Нужно добавить отдельные тайлы из 'креста' круга, т.к. ранее мы их не добавляли
-            for (var x = centerCoord.X - tilesFromCenter; x <= centerCoord.X + tilesFromCenter; x++)
-            {
-                for (var y = centerCoord.Y - tilesFromCenter; y <= centerCoord.Y + tilesFromCenter; y++)
-                {
-                    tileInCircleList.Add(new(x, y));
-                }
-            }
-
-            var tileInfoList = tileInCircleList
-                .Select(p => new Tuple<Point, double>(p, Math.Sqrt(Math.Pow(p.X - centerCoord.X, 2) + Math.Pow(p.Y - centerCoord.Y, 2))))
-                .Where(t => WorldGen.InWorld(t.Item1.X, t.Item1.Y) && predicate(t.Item1));
-
-            if (!tileInfoList.Any())
-            {
-                tileCoord = default;
-                return false;
-            }
-
-            tileCoord = tileInfoList.Aggregate((min, next) => min.Item2 < next.Item2 ? min : next).Item1;
-            return true;
+            return found;
         }
     }
 }
