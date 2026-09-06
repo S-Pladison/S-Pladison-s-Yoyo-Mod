@@ -31,7 +31,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
         public static readonly LazyAsset<Texture2D> GlowCircleTexture = LazyAsset<Texture2D>.From($"{AssetPath}/Glow_Circle");
         public static readonly LazyAsset<Effect> GodraysEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Godrays", AssetRequestMode.ImmediateLoad);
-        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{AssetPath}/TrailEffect");
         public static readonly SoundStyle GodraysSound = SoundID.DD2_BetsyWindAttack;
         public static readonly SoundStyle DaggerSound = SoundID.DD2_SkyDragonsFuryShot;
     }
@@ -413,18 +413,26 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         {
             var opacity = OpacityEasing.Evaluate(LifeTimeRatio);
 
+            var color0 = Color.White.ToVector4();
+            var color1 = new Color(195, 165, 10).ToVector4();
+
             GradientAssets.TrailEffect
                 .Prepare(parameters =>
                 {
                     parameters["Texture0"].SetValue(GradientAssets.FlameTexture.Value);
                     parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
-                    parameters["Color0"].SetValue(Color.White.ToVector4());
-                    parameters["Color1"].SetValue(new Color(195, 165, 10).ToVector4());
+                    parameters["Color0"].SetValue(color0);
+                    parameters["Color1"].SetValue(color1);
+                    parameters["Color2"].SetValue(color0);
+                    parameters["Color3"].SetValue(color1);
                     parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / GradientAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                     parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly + Projectile.whoAmI * 15.08f);
                     parameters["Opacity"].SetValue(opacity);
+                    parameters["Intensity"].SetValue(3f);
+                    parameters["FadePower"].SetValue(3f);
+                    parameters["ColorMode"].SetValue(1f);
                 })
-                .Apply();
+                .Apply("Flame");
 
             _trailRenderer.Render();
 

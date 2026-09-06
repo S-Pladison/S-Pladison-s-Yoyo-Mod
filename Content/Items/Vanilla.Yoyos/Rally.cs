@@ -28,7 +28,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public static readonly LazyAsset<Texture2D> GlowTexture = LazyAsset<Texture2D>.From($"{AssetPath}/YoyoGlow_WithShadow");
         public static readonly LazyAsset<Texture2D> TrailTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flag");
-        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{AssetPath}/TrailEffect");
     }
 
     public sealed class RallyItem : YoyoItem<RallyProjectile>
@@ -217,9 +217,11 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                         parameters["Texture0"].SetValue(RallyAssets.TrailTexture.Value);
                         parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Transform * GameMatrices.Projection);
                     })
-                    .Apply();
+                    .Apply("Simple");
 
+                Main.graphics.GraphicsDevice.SamplerStates.Set(out var orig, SamplerState.PointClamp);
                 _trailRenderer.Render();
+                Main.graphics.GraphicsDevice.SamplerStates.Set(orig);
 
                 // Исправление отрисовки руки
                 if (proj.TryGetOwner(out var owner) && owner.heldProj == proj.whoAmI)

@@ -31,7 +31,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
-        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{AssetPath}/TrailEffect");
         public static readonly SoundStyle StarSound = SoundID.Item9;
         public static readonly SoundStyle TileHitSound = SoundID.Dig;
     }
@@ -209,8 +209,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     parameters["Color3"].SetValue(new Color(60, 55, 90).ToVector4());
                     parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                     parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    parameters["Opacity"].SetValue(1f);
+                    parameters["Intensity"].SetValue(3f);
+                    parameters["FadePower"].SetValue(3f);
+                    parameters["ColorMode"].SetValue(1f);
                 })
-                .Apply();
+                .Apply("Flame");
 
             _trailRenderer.Render();
 
@@ -481,8 +485,12 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     parameters["Color3"].SetValue(Style.TrailEndZero.ToVector4());
                     parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / TheStellarThrowAssets.FlameTexture.Value.Width / 128.0f / 4.0f);
                     parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    parameters["Opacity"].SetValue(1f);
+                    parameters["Intensity"].SetValue(3f);
+                    parameters["FadePower"].SetValue(3f);
+                    parameters["ColorMode"].SetValue(1f);
                 })
-                .Apply();
+                .Apply("Flame");
 
             _trailRenderer.Render();
 

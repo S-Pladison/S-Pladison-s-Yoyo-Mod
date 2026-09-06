@@ -37,7 +37,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
         public static readonly LazyAsset<Texture2D> CircleTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Circle");
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> LightningTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Lightning");
-        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{AssetPath}/TrailEffect");
         public static readonly LazyAsset<Effect> LightningEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Lightning");
         public static readonly LazyAsset<Effect> ScreenEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Screen");
         public static readonly LazyAsset<Effect> SilhouetteEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Silhouette");
@@ -186,7 +186,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
                     parameters["Texture0"].SetValue(TextureAssets.MagicPixel.Value);
                     parameters["TransformMatrix"].SetValue(GameMatrices.World * GameMatrices.Effect * GameMatrices.Projection);
                 })
-                .Apply();
+                .Apply("Simple");
 
             _shadowTrailRenderer.Render();
             _trailRenderer.Render();
@@ -479,7 +479,7 @@ namespace SPYoyoMod.Content.Items.Mod.Yoyos
             var device = Main.graphics.GraphicsDevice;
 
             device.BlendState = spriteBatchSpanshot.BlendState;
-            device.SamplerStates[0] = spriteBatchSpanshot.SamplerState;
+            device.SamplerStates.Set(spriteBatchSpanshot.SamplerState);
             device.DepthStencilState = spriteBatchSpanshot.DepthStencilState;
             device.RasterizerState = spriteBatchSpanshot.RasterizerState;
 

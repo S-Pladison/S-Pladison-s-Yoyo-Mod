@@ -32,7 +32,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
         public static readonly LazyAsset<Texture2D> StarTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Star");
         public static readonly LazyAsset<Texture2D> FlameTexture = LazyAsset<Texture2D>.From($"{YoyoPath}_Flame");
         public static readonly LazyAsset<Texture2D> NoiseTexture = LazyAsset<Texture2D>.From($"{AssetPath}/WaveNoise");
-        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Trail");
+        public static readonly LazyAsset<Effect> TrailEffect = LazyAsset<Effect>.From($"{AssetPath}/TrailEffect");
         public static readonly LazyAsset<Effect> SphereEffect = LazyAsset<Effect>.From($"{YoyoPath}Effect_Sphere");
         public static readonly SoundStyle StartChargingSound = new($"{YoyoPath}Sound_StartCharging");
         public static readonly SoundStyle ExplosionSound = SoundID.Item14;
@@ -213,8 +213,12 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                     parameters["Color3"].SetValue(new Color(145, 25, 85).ToVector4());
                     parameters["Repeats"].SetValue(_trailRenderer.Points.Distance() / CascadeAssets.FlameTexture.Value.Width / 128.0f / 3.0f);
                     parameters["Time"].SetValue(Main.GlobalTimeWrappedHourly);
+                    parameters["Opacity"].SetValue(1f);
+                    parameters["Intensity"].SetValue(2f);
+                    parameters["FadePower"].SetValue(2f);
+                    parameters["ColorMode"].SetValue(0f);
                 })
-                .Apply();
+                .Apply("Flame");
 
             _trailRenderer.Render();
 
