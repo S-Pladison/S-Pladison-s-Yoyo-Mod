@@ -73,9 +73,5 @@ TheStellarThrowItem: {
 	Tooltip: Устраивает звездопад на ближайших противников
 }
 
-ValorItem.Tooltip:
-	'''
-	Есть {0}%-ный шанс наложить «{$Buffs.ValorBuff.DisplayName}»
-	Шанс снижается, если рядом есть противник с этим эффектом
-	'''
+// ValorItem.Tooltip: ""
 // YeletsItem.Tooltip: ""

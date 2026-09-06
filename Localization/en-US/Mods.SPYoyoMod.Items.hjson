@@ -52,5 +52,5 @@ TheStellarThrowItem: {
 	Tooltip: ...
 }
 
-ValorItem.Tooltip: ...
+ValorItem.Tooltip: ""
 YeletsItem.Tooltip: ""
