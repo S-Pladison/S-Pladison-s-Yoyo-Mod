@@ -22,7 +22,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
     public sealed class RallyAssets
     {
         public const string AssetPath = $"{nameof(SPYoyoMod)}/Assets";
-        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Rally/Rally";
+        public const string YoyoPath = $"{AssetPath}/Items/Vanilla.Yoyos/Rally";
 
         public const string StringPath = $"{AssetPath}/FishingLine_WithShadow";
 

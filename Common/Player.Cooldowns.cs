@@ -9,7 +9,7 @@ namespace SPYoyoMod.Common
     [LoadBefore, LoadAfter(typeof(ModEvents))]
     public sealed class CooldownPlayer : ModPlayer
     {
-        private readonly Dictionary<string, Cooldown> _timers = [];
+        private readonly Dictionary<string, Cooldown> _cooldowns = [];
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string ToKey(Type type) => type.FullName ?? type.Name;
@@ -35,8 +35,8 @@ namespace SPYoyoMod.Common
             if (string.IsNullOrEmpty(key) || ticks <= 0)
                 return;
 
-            if (!_timers.TryGetValue(key, out var cooldown))
-                _timers[key] = cooldown = new Cooldown();
+            if (!_cooldowns.TryGetValue(key, out var cooldown))
+                _cooldowns[key] = cooldown = new Cooldown();
 
             cooldown.Set(ticks);
         }
@@ -50,19 +50,19 @@ namespace SPYoyoMod.Common
 
         public override void PostUpdate()
         {
-            foreach (var (key, cooldown) in _timers)
+            foreach (var (key, cooldown) in _cooldowns)
             {
                 cooldown.Update();
 
                 if (!cooldown.IsActive)
-                    _timers.Remove(key);
+                    _cooldowns.Remove(key);
             }
         }
 
         private bool TryGet(string key, out Cooldown cooldown)
         {
             if (!string.IsNullOrEmpty(key))
-                return _timers.TryGetValue(key, out cooldown);
+                return _cooldowns.TryGetValue(key, out cooldown);
 
             cooldown = null;
             return false;

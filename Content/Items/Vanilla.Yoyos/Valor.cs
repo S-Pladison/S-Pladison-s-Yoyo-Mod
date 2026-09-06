@@ -94,9 +94,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         void IPreDrawPixelatedProjectile.PreDrawPixelated(Projectile proj)
         {
-            if (_trailRenderer is null)
-                return;
-
             ValorAssets.TrailEffect
                 .Prepare(parameters =>
                 {
@@ -122,9 +119,6 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDrawYoyoString(Projectile proj, Vector2 mountedCenter)
         {
-            if (_stringRenderer is null)
-                return;
-
             _stringRenderer.Render(Main.spriteBatch, YoyoStringRendererContext.FromProjectile(proj, mountedCenter));
         }
     }
