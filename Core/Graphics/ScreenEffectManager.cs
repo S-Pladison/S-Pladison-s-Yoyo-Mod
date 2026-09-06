@@ -106,7 +106,7 @@ namespace SPYoyoMod.Core.Graphics
             void ILoadable.Load(Mod mod)
             {
                 Filters.Scene[FilterName] = new Filter(
-                    new ScreenShaderData(ModContent.Request<Effect>($"{nameof(SPYoyoMod)}/Assets/ScreenEffect_Flash"), $"ScreenFlash"), EffectPriority.VeryHigh
+                    new ScreenShaderData(ModContent.Request<Effect>($"{nameof(SPYoyoMod)}/Assets/ScreenEffect"), $"ScreenFlash"), EffectPriority.VeryHigh
                 );
 
                 ModEvents.OnPostUpdateEverything += Update;

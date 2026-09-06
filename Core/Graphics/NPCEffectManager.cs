@@ -18,7 +18,7 @@ namespace SPYoyoMod.Core.Graphics
         /// <summary>
         /// Общий 'Effect', используемый всеми типами визульных эффектов.
         /// </summary>
-        private static readonly LazyAsset<Effect> _effect = LazyAsset<Effect>.From($"{nameof(SPYoyoMod)}/Assets/NPCEffects");
+        private static readonly LazyAsset<Effect> _effect = LazyAsset<Effect>.From($"{nameof(SPYoyoMod)}/Assets/NPCEffect");
 
         // [Обводка]
 
