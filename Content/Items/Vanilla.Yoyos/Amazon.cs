@@ -107,6 +107,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool InstancePerEntity => true;
         public AnchorData Data { get; private set; }
+        public bool IsAnchored => Data is not null;
+
+        private static readonly NPCObserver _npcObserver = NPCObserver.Create(npc => !npc.TryGetGlobalNPC(out AmazonGlobalNPC amazonNPC) || !amazonNPC.IsAnchored);
 
         public override void Load()
         {
@@ -159,14 +162,21 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
                 if (Main.netMode != NetmodeID.Server)
                     return;
 
-                foreach (var npc in Main.ActiveNPCs)
+                foreach (var npc in _npcObserver.GetEntityInstances())
                 {
-                    if (!npc.TryGetGlobalNPC(out AmazonGlobalNPC amazonNPC) || amazonNPC.Data is null)
+                    if (!npc.TryGetGlobalNPC(out AmazonGlobalNPC amazonNPC) || !amazonNPC.IsAnchored)
                         continue;
 
                     NetHandler.Send<AmazonAnchorPacket>(player.whoAmI, null, (byte)npc.whoAmI, (ushort)npc.type, amazonNPC.Data);
                 }
             };
+
+            ModEvents.OnWorldUnload += _npcObserver.Clear;
+        }
+
+        public override void Unload()
+        {
+            ModEvents.OnWorldUnload -= _npcObserver.Clear;
         }
 
         public override void OnKill(NPC npc)
@@ -176,7 +186,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override bool PreAI(NPC npc)
         {
-            if (Data is null)
+            if (!IsAnchored)
                 return true;
 
             Data.TimeLeft--;
@@ -184,7 +194,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.netMode != NetmodeID.MultiplayerClient)
                 CheckAnchor(npc);
 
-            if (Data is not null && Data.TimeLeft <= 0)
+            if (IsAnchored && Data.TimeLeft <= 0)
                 SetAnchorData(npc, null);
 
             return true;
@@ -192,7 +202,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         public override void PostDraw(NPC npc, SpriteBatch spriteBatch, Vector2 screenPos, Color drawColor)
         {
-            if (Data is null)
+            if (!IsAnchored)
                 return;
 
             DrawDebug(spriteBatch, Data.WorldPosition - screenPos);
@@ -226,7 +236,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
             if (Main.netMode == NetmodeID.MultiplayerClient || !CanBeAnchored(npc))
                 return;
 
-            if (Data is not null && IsValidAnchorTile(Data.Tile))
+            if (IsAnchored && IsValidAnchorTile(Data.Tile))
             {
                 SetAnchorData(npc, new AnchorData(Data.Tile, Data.Length, Math.Max(Data.TimeLeft, AmazonProjectile.AttachDuration)));
                 return;
@@ -248,7 +258,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private void Release(NPC npc)
         {
-            if (Data is null)
+            if (!IsAnchored)
                 return;
 
             SetAnchorData(npc, null);
@@ -256,7 +266,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private void CheckAnchor(NPC npc)
         {
-            if (Data is null)
+            if (!IsAnchored)
                 return;
 
             if (!IsValidAnchorTile(Data.Tile))
@@ -279,7 +289,13 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private void SetAnchorData(NPC npc, AnchorData data)
         {
+            if (IsAnchored)
+                _npcObserver.Remove(npc);
+
             Data = data;
+
+            if (IsAnchored)
+                _npcObserver.Add(npc);
 
             if (Main.netMode == NetmodeID.Server)
                 NetHandler.Send<AmazonAnchorPacket>(null, null, (byte)npc.whoAmI, (ushort)npc.type, Data);
@@ -287,7 +303,7 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private void Constrain(NPC npc)
         {
-            if (Data is null)
+            if (!IsAnchored)
                 return;
 
             var tilePos = Data.WorldPosition;
@@ -311,12 +327,9 @@ namespace SPYoyoMod.Content.Items.Vanilla.Yoyos
 
         private static bool AnyAnchoredNear(NPC target)
         {
-            foreach (var npc in Main.ActiveNPCs)
+            foreach (var npc in _npcObserver.GetEntityInstances())
             {
                 if (npc.whoAmI == target.whoAmI)
-                    continue;
-
-                if (!npc.TryGetGlobalNPC(out AmazonGlobalNPC amazonNPC) || amazonNPC.Data is null)
                     continue;
 
                 if (Vector2.DistanceSquared(npc.Center, target.Center) <= MathF.Pow(AmazonProjectile.AttachChanceReductionDistance, 2))
